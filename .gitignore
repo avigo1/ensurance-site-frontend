@@ -1,0 +1,34 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Node/npm (if using build tools)
+node_modules/
+package-lock.json
+dist/
+
+# WordPress
+wp-config-local.php
+wp-content/cache/
+wp-content/uploads/
+
+# Local development
+.claude/
+*.log
+
+# Theme files managed directly on SiteGround (not version controlled here)
+# style.css contains legacy GeoDirectory CSS - edit only via SiteGround directly
+style.css
+kadence-style-child-min.css

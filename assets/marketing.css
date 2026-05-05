@@ -1,0 +1,397 @@
+/*
+ * marketing.css — Ensurance Site Frontend
+ *
+ * Loaded ONLY on marketing pages (homepage, about, contact, etc.)
+ * Never loaded on GeoDirectory, blog, or account pages.
+ *
+ * STRUCTURE:
+ *   1. Design Tokens (edit these to rebrand the site)
+ *   2. Reset & Base
+ *   3. Layout Utilities
+ *   4. Typography
+ *   5. Buttons
+ *   6. Header
+ *   7. Footer
+ *   8. Components (add per-component sections as built)
+ *   9. Responsive
+ */
+
+/* ============================================================================
+   1. DESIGN TOKENS
+   To rebrand: edit ONLY this block. All rules below reference these variables.
+   ============================================================================ */
+
+:root {
+    /* Brand Colors */
+    --color-primary:        #0073E6;
+    --color-primary-dark:   #0D4095;
+    --color-primary-light:  #e6f0f8;
+    --color-accent:         #F5A524;
+    --color-accent-dark:    #d98e18;
+
+    /* Neutral Colors */
+    --color-text:           #1e293b;
+    --color-text-muted:     #64748b;
+    --color-text-light:     #94a3b8;
+    --color-background:     #ffffff;
+    --color-background-alt: #f7f8fc;
+    --color-border:         #e2e8f0;
+
+    /* Status Colors */
+    --color-success:        #16a34a;
+    --color-success-light:  #dcfce7;
+    --color-error:          #dc2626;
+
+    /* Typography */
+    --font-heading:         'Manrope', sans-serif;
+    --font-body:            'Inter', sans-serif;
+    --font-size-xs:         0.75rem;    /* 12px */
+    --font-size-sm:         0.875rem;   /* 14px */
+    --font-size-base:       1rem;       /* 16px */
+    --font-size-lg:         1.125rem;   /* 18px */
+    --font-size-xl:         1.25rem;    /* 20px */
+    --font-size-2xl:        1.5rem;     /* 24px */
+    --font-size-3xl:        1.875rem;   /* 30px */
+    --font-size-4xl:        2.25rem;    /* 36px */
+    --font-size-5xl:        3rem;       /* 48px */
+
+    /* Spacing */
+    --space-1:  0.25rem;
+    --space-2:  0.5rem;
+    --space-3:  0.75rem;
+    --space-4:  1rem;
+    --space-6:  1.5rem;
+    --space-8:  2rem;
+    --space-12: 3rem;
+    --space-16: 4rem;
+    --space-20: 5rem;
+    --space-24: 6rem;
+
+    /* Layout */
+    --container-max:    1200px;
+    --container-pad:    1.5rem;
+
+    /* Borders */
+    --radius-sm:   6px;
+    --radius-md:   12px;
+    --radius-lg:   16px;
+    --radius-full: 9999px;
+
+    /* Shadows */
+    --shadow-sm:  0 1px 3px rgba(0, 0, 0, 0.08);
+    --shadow-md:  0 4px 12px rgba(0, 0, 0, 0.10);
+    --shadow-lg:  0 8px 24px rgba(0, 0, 0, 0.12);
+
+    /* Transitions */
+    --transition: 0.2s ease;
+}
+
+/* ============================================================================
+   2. RESET & BASE
+   ============================================================================ */
+
+.page-home *,
+.page-home *::before,
+.page-home *::after,
+.site-header *,
+.site-header *::before,
+.site-header *::after,
+.site-footer *,
+.site-footer *::before,
+.site-footer *::after {
+    box-sizing: border-box;
+}
+
+/* ============================================================================
+   3. LAYOUT UTILITIES
+   ============================================================================ */
+
+.container {
+    max-width: var(--container-max);
+    margin: 0 auto;
+    padding: 0 var(--container-pad);
+}
+
+.section {
+    padding: var(--space-20) 0;
+}
+
+.section--alt {
+    background-color: var(--color-background-alt);
+}
+
+/* ============================================================================
+   4. TYPOGRAPHY
+   ============================================================================ */
+
+.page-home h1,
+.page-home h2,
+.page-home h3,
+.page-home h4 {
+    font-family: var(--font-heading);
+    font-weight: 800;
+    color: var(--color-text);
+    line-height: 1.2;
+}
+
+.page-home p {
+    font-family: var(--font-body);
+    color: var(--color-text-muted);
+    line-height: 1.7;
+}
+
+/* ============================================================================
+   5. BUTTONS
+   ============================================================================ */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: 0.75rem 1.75rem;
+    border-radius: var(--radius-full);
+    font-family: var(--font-body);
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    text-decoration: none;
+    transition: all var(--transition);
+    cursor: pointer;
+    border: 2px solid transparent;
+    white-space: nowrap;
+}
+
+.btn--primary {
+    background: var(--color-accent);
+    color: #ffffff;
+    border-color: var(--color-accent);
+}
+
+.btn--primary:hover {
+    background: var(--color-accent-dark);
+    border-color: var(--color-accent-dark);
+    color: #ffffff;
+}
+
+.btn--secondary {
+    background: transparent;
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.btn--secondary:hover {
+    background: var(--color-primary);
+    color: #ffffff;
+}
+
+.btn--white {
+    background: #ffffff;
+    color: var(--color-primary);
+    border-color: #ffffff;
+}
+
+.btn--white:hover {
+    background: var(--color-primary-light);
+    border-color: var(--color-primary-light);
+}
+
+/* ============================================================================
+   6. HEADER
+   ============================================================================ */
+
+.site-header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: #ffffff;
+    border-bottom: 1px solid var(--color-border);
+    box-shadow: var(--shadow-sm);
+}
+
+.site-header__inner {
+    max-width: var(--container-max);
+    margin: 0 auto;
+    padding: 0 var(--container-pad);
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-8);
+}
+
+.site-header__logo img {
+    display: block;
+}
+
+.site-header__nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+}
+
+.site-header__nav a {
+    font-family: var(--font-body);
+    font-size: var(--font-size-base);
+    font-weight: 500;
+    color: var(--color-text);
+    text-decoration: none;
+    transition: color var(--transition);
+}
+
+.site-header__nav a:hover {
+    color: var(--color-primary);
+}
+
+.site-header__mobile-toggle {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: var(--space-2);
+}
+
+.site-header__mobile-toggle span {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background: var(--color-text);
+    border-radius: 2px;
+    transition: all var(--transition);
+}
+
+/* ============================================================================
+   7. FOOTER
+   ============================================================================ */
+
+.site-footer {
+    background: linear-gradient(165deg, var(--color-primary), var(--color-primary-dark));
+    color: #ffffff;
+    padding-top: var(--space-16);
+}
+
+.site-footer__inner {
+    max-width: var(--container-max);
+    margin: 0 auto;
+    padding: 0 var(--container-pad) var(--space-12);
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: var(--space-16);
+}
+
+.site-footer__brand p {
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    color: rgba(255, 255, 255, 0.6);
+    margin-top: var(--space-4);
+    font-style: italic;
+}
+
+.site-footer__links {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-8);
+}
+
+.site-footer__col h4 {
+    font-family: var(--font-heading);
+    font-size: var(--font-size-sm);
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: var(--space-4);
+}
+
+.site-footer__col ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.site-footer__col a {
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    transition: color var(--transition);
+}
+
+.site-footer__col a:hover {
+    color: var(--color-accent);
+}
+
+.site-footer__bottom {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: var(--space-6) var(--container-pad);
+    max-width: var(--container-max);
+    margin: 0 auto;
+}
+
+.site-footer__bottom p {
+    font-family: var(--font-body);
+    font-size: var(--font-size-xs);
+    color: rgba(255, 255, 255, 0.4);
+    text-align: center;
+}
+
+/* ============================================================================
+   8. COMPONENTS
+   Add new component sections here as components are built in /components/
+   ============================================================================ */
+
+/* Hero — see components/hero.php */
+
+/* CTA Block — see components/cta-block.php */
+
+/* Feature Grid — see components/feature-grid.php */
+
+/* ============================================================================
+   9. RESPONSIVE
+   ============================================================================ */
+
+@media (max-width: 1024px) {
+    :root {
+        --container-pad: 1.25rem;
+    }
+}
+
+@media (max-width: 768px) {
+    :root {
+        --font-size-5xl: 2.25rem;
+        --font-size-4xl: 1.875rem;
+        --space-20: 3rem;
+        --space-16: 2.5rem;
+    }
+
+    .site-header__nav,
+    .site-header__cta {
+        display: none;
+    }
+
+    .site-header__mobile-toggle {
+        display: flex;
+    }
+
+    .site-footer__inner {
+        grid-template-columns: 1fr;
+        gap: var(--space-8);
+    }
+
+    .site-footer__links {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .site-footer__links {
+        grid-template-columns: 1fr;
+    }
+}
