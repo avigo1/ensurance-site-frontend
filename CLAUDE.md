@@ -7,6 +7,21 @@
 
 ---
 
+## Current Focus
+
+The frontend is being rebuilt from Gutenberg blocks to code-driven PHP templates. Work is organized into four phases. Each phase has a standalone plan in `/plans/` — detailed enough to hand off to a new agent with no prior context.
+
+| Phase | Plan | Status |
+|-------|------|--------|
+| 1 — Infrastructure & Deployment Pipeline | [plans/phase-1-infrastructure.md](plans/phase-1-infrastructure.md) | Mostly complete — Day 2 (SiteGround connection) remains |
+| 2 — Header, Footer & Design Foundation | [plans/phase-2-foundation.md](plans/phase-2-foundation.md) | Not started — awaiting design mockups |
+| 3 — Homepage Build | [plans/phase-3-homepage-build.md](plans/phase-3-homepage-build.md) | Not started — awaiting Phase 2 |
+| 4 — QA, Review & Go-Live | [plans/phase-4-launch.md](plans/phase-4-launch.md) | Not started — awaiting Phase 3 |
+
+**If you are a new agent starting work**: Read the plan for the current phase first. Each plan contains all the context, file paths, commands, and exit criteria you need.
+
+---
+
 ## Quick Start
 
 ### Connect to SiteGround
