@@ -30,4 +30,3 @@ get_header('marketing');
 </main>
 
 <?php get_footer('marketing'); ?>
-<!-- pipeline test -->
