@@ -2,7 +2,8 @@
 
 **Project**: ensurance-site-frontend  
 **Repository**: https://github.com/avigo1/ensurance-site-frontend  
-**Deployment**: SiteGround via Git  
+**Deployment**: SiteGround via Git (staging-first workflow)  
+**Staging**: staging14.ensurance.com  
 **Production**: ensurance.com  
 
 ---
@@ -13,7 +14,7 @@ The frontend is being rebuilt from Gutenberg blocks to code-driven PHP templates
 
 | Phase | Plan | Status |
 |-------|------|--------|
-| 1 — Infrastructure & Deployment Pipeline | [plans/phase-1-infrastructure.md](plans/phase-1-infrastructure.md) | Mostly complete — Day 2 (SiteGround connection) remains |
+| 1 — Infrastructure & Deployment Pipeline | [plans/phase-1-infrastructure.md](plans/phase-1-infrastructure.md) | **Complete** |
 | 2 — Header, Footer & Design Foundation | [plans/phase-2-foundation.md](plans/phase-2-foundation.md) | Not started — awaiting design mockups |
 | 3 — Homepage Build | [plans/phase-3-homepage-build.md](plans/phase-3-homepage-build.md) | Not started — awaiting Phase 2 |
 | 4 — QA, Review & Go-Live | [plans/phase-4-launch.md](plans/phase-4-launch.md) | Not started — awaiting Phase 3 |
@@ -30,7 +31,18 @@ The frontend is being rebuilt from Gutenberg blocks to code-driven PHP templates
 ssh ensurance
 ```
 
-This connects to `ssh.ensurance.com:18765` with the configured identity. (Configured in `~/.ssh/config`.)
+This connects to `ssh.ensurance.com:18765` as `u2514-jukueftqhhlm` using `~/.ssh/siteground`. Full command if alias fails:
+
+```bash
+ssh -i ~/.ssh/siteground -p 18765 u2514-jukueftqhhlm@ssh.ensurance.com
+```
+
+### SiteGround Theme Paths
+
+| Environment | Path |
+|-------------|------|
+| Production | `/home/u2514-jukueftqhhlm/www/ensurance.com/public_html/wp-content/themes/kadence-child/` |
+| Staging | `/home/u2514-jukueftqhhlm/www/staging14.ensurance.com/public_html/wp-content/themes/kadence-child/` |
 
 ### Clone This Repo
 
@@ -38,19 +50,22 @@ This connects to `ssh.ensurance.com:18765` with the configured identity. (Config
 cd ~/Documents/Github
 git clone https://github.com/avigo1/ensurance-site-frontend.git
 cd ensurance-site-frontend
+git checkout staging
 ```
 
 ### Deploy Changes
 
-After making changes locally:
+**Always deploy to staging first, verify, then promote to production.**
 
 ```bash
-git add .
-git commit -m "Your descriptive message"
-git push
+# Deploy to staging14.ensurance.com
+deploy-staging
+
+# Deploy to ensurance.com (production)
+deploy-prod
 ```
 
-Changes appear on production within 1 minute via SiteGround's Git integration.
+These aliases are configured in `~/.zshrc`. They push to GitHub and pull to SiteGround in one command.
 
 ---
 
@@ -271,9 +286,35 @@ wp_enqueue_script('marketing', get_stylesheet_directory_uri() . '/assets/marketi
 
 ## Deployment Workflow
 
-### Before Every Push
+### Branch Strategy
 
-Run this checklist:
+| Branch | Deploys to |
+|--------|-----------|
+| `staging` | staging14.ensurance.com |
+| `main` | ensurance.com (production) |
+
+Always work on `staging`. Merge to `main` only when verified on staging.
+
+### Standard Workflow
+
+```bash
+# 1. Make sure you're on the staging branch
+git checkout staging
+
+# 2. Make your changes, then commit
+git add .
+git commit -m "Add hero section to homepage"
+
+# 3. Deploy to staging and verify on staging14.ensurance.com
+deploy-staging
+
+# 4. When satisfied, promote to production
+git checkout main
+git merge staging
+deploy-prod
+```
+
+### Before Every Push
 
 - [ ] Changes are only in marketing pages (page-*.php, components/, assets/)
 - [ ] No edits to `style.css`
@@ -281,30 +322,11 @@ Run this checklist:
 - [ ] CSS uses design tokens (var(--color-*), var(--space-*))
 - [ ] All templates call `get_header('marketing')` and `get_footer('marketing')`
 
-### Deploy
+### Verify After Deploying to Production
 
-```bash
-# See changes
-git status
-
-# Stage all changes
-git add .
-
-# Write a clear commit message
-git commit -m "Add hero section to homepage"
-
-# Push to GitHub (auto-deploys to SiteGround)
-git push
-```
-
-### Verify on Production
-
-After pushing:
-
-1. Wait 1 minute for SiteGround to sync
-2. Visit https://ensurance.com/
-3. Verify the change appears
-4. Check a GeoDirectory page (e.g., https://ensurance.com/insurance-agencies/) — should be unchanged
+1. Visit https://ensurance.com/
+2. Verify the change appears
+3. Check a GeoDirectory page (e.g., https://ensurance.com/insurance-agencies/) — should be unchanged
 
 ---
 
@@ -312,7 +334,7 @@ After pushing:
 
 ### Connecting to SiteGround
 
-Your SSH config (`~/.ssh/config`) has:
+SSH config (`~/.ssh/config`):
 
 ```
 Host ensurance
@@ -329,30 +351,39 @@ Connect with:
 ssh ensurance
 ```
 
-Navigate to the theme directory:
+### Theme Paths on SiteGround
 
 ```bash
-cd /home/u2514-jukueftqhhlm/public_html/wp-content/themes/kadence-child/
+# Production
+cd /home/u2514-jukueftqhhlm/www/ensurance.com/public_html/wp-content/themes/kadence-child/
+
+# Staging
+cd /home/u2514-jukueftqhhlm/www/staging14.ensurance.com/public_html/wp-content/themes/kadence-child/
 ```
 
-### Git Deployment
+### Deploy Aliases (`~/.zshrc`)
 
-SiteGround is configured to auto-pull from GitHub and deploy to `/wp-content/themes/kadence-child/`. Pushes to `main` branch deploy automatically.
+```bash
+alias deploy-staging="git push origin staging && ssh ensurance /home/u2514-jukueftqhhlm/deploy-staging.sh"
+alias deploy-prod="git push origin main && ssh ensurance /home/u2514-jukueftqhhlm/deploy-prod.sh"
+```
+
+### Deploy Scripts on SiteGround
+
+- `/home/u2514-jukueftqhhlm/deploy-staging.sh` — pulls `staging` branch to staging site
+- `/home/u2514-jukueftqhhlm/deploy-prod.sh` — pulls `main` branch to production site
 
 ---
 
 ## Troubleshooting
 
-### Change doesn't appear on production
+### Change doesn't appear after deploy
 
 1. Verify push succeeded: `git log --oneline` (should show your commit)
-2. Wait 1 minute (SiteGround sync delay)
-3. Hard-refresh browser: `Cmd+Shift+R` (Mac) or `Ctrl+Shift+R` (Windows)
-4. Check SiteGround Git deployment status via SSH:
+2. Hard-refresh browser: `Cmd+Shift+R`
+3. Check what's on SiteGround:
    ```bash
-   ssh ensurance
-   cd public_html/wp-content/themes/kadence-child/
-   git log --oneline -5
+   ssh ensurance "git -C /home/u2514-jukueftqhhlm/www/staging14.ensurance.com/public_html/wp-content/themes/kadence-child log --oneline -5"
    ```
 
 ### CSS not applying
@@ -381,7 +412,7 @@ This creates a new commit that undoes the previous one, keeping history intact.
 - [ ] Add Contact page template
 - [ ] Implement WordPress nav menus (currently hardcoded in header)
 - [ ] Add blog/news section (integrate with existing blog)
-- [ ] Set up staging environment on SiteGround
+- [x] Set up staging environment on SiteGround (staging14.ensurance.com — complete)
 - [ ] Add automated tests
 
 ---
