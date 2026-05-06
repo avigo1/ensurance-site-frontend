@@ -10,17 +10,29 @@
 - **Live site**: https://ensurance.com (WordPress on SiteGround, Kadence child theme)
 - **GitHub repo**: https://github.com/avigo1/ensurance-site-frontend
 - **Local repo path**: `/Users/austinvigo/Documents/Github/ensurance-site-frontend/`
-- **Deploy command**: `git push && ssh ensurance '/home/u2514-jukueftqhhlm/deploy-theme.sh'`
+- **Deploy to staging**: `deploy-staging` (from `staging` branch)
+- **Deploy to production**: `deploy-prod` (from `main` branch — see critical note below)
 
 ### Prerequisites
 
-- Phase 1 complete (GitHub → SiteGround pipeline working)
+- Phase 1 complete (GitHub → SiteGround pipeline working) ✅
 - Phase 2 complete (production header and footer built, design tokens finalized)
 - Design mockups for the homepage sections are available
 
+### Critical: How `page-home.php` Goes Live
+
+WordPress automatically applies `page-{slug}.php` to any WordPress page whose slug matches. The homepage slug is `home`, so the moment `page-home.php` exists on the `main` branch and is deployed, it replaces the live homepage — no WP Admin action needed.
+
+**Current state:**
+- `page-home.php` exists on `staging` only (intentionally absent from `main`)
+- All Phase 3 work happens on `staging` and is verified on staging14.ensurance.com
+- Merging `page-home.php` to `main` + running `deploy-prod` IS the go-live switch (handled in Phase 4)
+
+Do not merge `staging` to `main` until Phase 4 sign-off.
+
 ### What the Homepage Is
 
-The homepage template is `page-home.php`. It currently renders a placeholder. The goal of this phase is to replace the placeholder with real content sections, each built as a reusable PHP component in `/components/`.
+The homepage template is `page-home.php`. It currently renders a placeholder on staging. The goal of this phase is to replace the placeholder with real content sections, each built as a reusable PHP component in `/components/`.
 
 The homepage uses:
 - `header-marketing.php` — shared marketing header (built in Phase 2)
@@ -214,9 +226,10 @@ Build section by section. Deploy after each component is done to catch issues ea
 
 ```bash
 # After each component
+git checkout staging
 git add components/ assets/marketing.css
 git commit -m "Add {component-name} component"
-git push && ssh ensurance '/home/u2514-jukueftqhhlm/deploy-theme.sh'
+deploy-staging
 ```
 
 Verify on production after each push.
@@ -237,4 +250,4 @@ Phase 3 is complete when:
 
 ## What Comes Next
 
-**Phase 4** — QA, stakeholder review, and go-live (switch the WordPress homepage to use `page-home.php`).
+**Phase 4** — QA, stakeholder review, and go-live (merge `page-home.php` to `main` + `deploy-prod` — this automatically switches the live homepage, no WP Admin action needed).
