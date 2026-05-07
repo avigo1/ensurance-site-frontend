@@ -347,6 +347,30 @@
    Add new component sections here as components are built in /components/
    ============================================================================ */
 
+/* Hello World Demo */
+
+.hello-world-demo {
+    min-height: 60vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-6);
+    background: var(--color-background-alt);
+}
+
+.hello-world-demo__label {
+    font-family: var(--font-heading);
+    font-size: var(--font-size-2xl);
+    font-weight: 700;
+    color: var(--color-primary);
+    display: none;
+}
+
+.hello-world-demo__label.is-visible {
+    display: block;
+}
+
 /* Hero — see components/hero.php */
 
 /* CTA Block — see components/cta-block.php */
