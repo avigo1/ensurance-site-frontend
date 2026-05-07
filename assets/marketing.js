@@ -1,36 +1,61 @@
 /**
  * marketing.js — Ensurance Site Frontend
- *
- * Loaded only on marketing pages. Vanilla JS only — no jQuery dependency.
- *
- * SECTIONS:
- *   1. Mobile nav toggle
- *   2. Smooth scroll
- *   3. Component scripts (add per-component as built)
+ * Loaded only on marketing pages. Vanilla JS, no jQuery.
  */
 
 document.addEventListener('DOMContentLoaded', function () {
 
     // =========================================================================
-    // 1. MOBILE NAV TOGGLE
+    // 1. "FOR YOU" DROPDOWN
     // =========================================================================
 
-    const toggle = document.querySelector('.site-header__mobile-toggle');
-    const nav    = document.querySelector('.site-header__nav');
-    const cta    = document.querySelector('.site-header__cta');
+    const dropdownToggle = document.querySelector('.site-header__dropdown-toggle');
+    const dropdown       = document.getElementById('dropdown-for-you');
 
-    if (toggle && nav) {
-        toggle.addEventListener('click', function () {
-            const isOpen = toggle.getAttribute('aria-expanded') === 'true';
-            toggle.setAttribute('aria-expanded', String(!isOpen));
-            nav.classList.toggle('is-open');
-            if (cta) cta.classList.toggle('is-open');
+    if (dropdownToggle && dropdown) {
+        dropdownToggle.addEventListener('click', function () {
+            const isOpen = this.getAttribute('aria-expanded') === 'true';
+            this.setAttribute('aria-expanded', String(!isOpen));
+            dropdown.classList.toggle('is-open', !isOpen);
+        });
+
+        // Close when clicking anywhere outside the dropdown's parent <li>
+        document.addEventListener('click', function (e) {
+            if (!dropdownToggle.closest('.has-dropdown').contains(e.target)) {
+                dropdownToggle.setAttribute('aria-expanded', 'false');
+                dropdown.classList.remove('is-open');
+            }
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                dropdownToggle.setAttribute('aria-expanded', 'false');
+                dropdown.classList.remove('is-open');
+                dropdownToggle.focus();
+            }
         });
     }
 
     // =========================================================================
-    // 2. SMOOTH SCROLL
-    // Handles anchor links like <a href="#section"> scrolling smoothly
+    // 2. MOBILE NAV TOGGLE
+    // =========================================================================
+
+    const mobileToggle = document.querySelector('.site-header__mobile-toggle');
+    const mobileNav    = document.getElementById('mobile-nav');
+
+    if (mobileToggle && mobileNav) {
+        mobileToggle.addEventListener('click', function () {
+            const isOpen = this.getAttribute('aria-expanded') === 'true';
+            this.setAttribute('aria-expanded', String(!isOpen));
+            this.classList.toggle('is-open', !isOpen);
+            mobileNav.classList.toggle('is-open', !isOpen);
+            mobileNav.setAttribute('aria-hidden', String(isOpen));
+            this.setAttribute('aria-label', isOpen ? 'Open menu' : 'Close menu');
+        });
+    }
+
+    // =========================================================================
+    // 3. SMOOTH SCROLL
     // =========================================================================
 
     document.querySelectorAll('a[href^="#"]').forEach(function (anchor) {
@@ -42,10 +67,5 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     });
-
-    // =========================================================================
-    // 3. COMPONENT SCRIPTS
-    // Add component-specific JS here as components are built.
-    // =========================================================================
 
 });
