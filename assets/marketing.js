@@ -45,15 +45,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // =========================================================================
     // 3. COMPONENT SCRIPTS
+    // Add component-specific JS here as components are built.
     // =========================================================================
-
-    const helloBtn   = document.getElementById('hello-world-btn');
-    const helloLabel = document.getElementById('hello-world-label');
-
-    if (helloBtn && helloLabel) {
-        helloBtn.addEventListener('click', function () {
-            helloLabel.classList.toggle('is-visible');
-        });
-    }
 
 });

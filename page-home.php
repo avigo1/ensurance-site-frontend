@@ -12,11 +12,19 @@ get_header('marketing');
 
 <main class="page-home">
 
-    <div class="hello-world-demo">
-        <button class="btn btn--primary hello-world-demo__btn" id="hello-world-btn">
-            Press Me
-        </button>
-        <p class="hello-world-demo__label" id="hello-world-label">Hello World</p>
+    <!-- PLACEHOLDER: Replace with actual homepage sections -->
+    <!-- Each section should be a component in /components/ -->
+    <!-- Example: <?php get_template_part('components/hero'); ?> -->
+
+    <div style="min-height: 60vh; display: flex; align-items: center; justify-content: center; background: var(--color-background-alt);">
+        <div style="text-align: center; padding: 4rem 2rem;">
+            <h1 style="font-family: var(--font-heading); font-size: 2.5rem; color: var(--color-primary); margin-bottom: 1rem;">
+                Homepage Coming Soon
+            </h1>
+            <p style="font-family: var(--font-body); font-size: 1.125rem; color: var(--color-text-muted); max-width: 480px; margin: 0 auto;">
+                The new homepage is under development. Replace this placeholder with components from <code>/components/</code>.
+            </p>
+        </div>
     </div>
 
 </main>
