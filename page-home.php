@@ -12,23 +12,20 @@ get_header('marketing');
 
 <main class="page-home">
 
-    <section class="under-construction">
-        <div class="under-construction__badge">Under Construction</div>
-        <h1 class="under-construction__heading">
-            We're building something <span class="under-construction__accent">new</span>.
-        </h1>
-        <p class="under-construction__text">
-            Our website is getting a fresh look. In the meantime, you can still find an insurance agent or get a free quote.
-        </p>
-        <div class="under-construction__actions">
-            <a href="<?php echo esc_url(home_url('/insurance-agencies/')); ?>" class="btn btn--primary">
-                Find an Agent
-            </a>
-            <a href="<?php echo esc_url(home_url('/get-a-quote/')); ?>" class="btn btn--secondary">
-                Get a Free Quote
-            </a>
+    <!-- PLACEHOLDER: Replace with actual homepage sections -->
+    <!-- Each section should be a component in /components/ -->
+    <!-- Example: <?php get_template_part('components/hero'); ?> -->
+
+    <div style="min-height: 60vh; display: flex; align-items: center; justify-content: center; background: var(--color-background-alt);">
+        <div style="text-align: center; padding: 4rem 2rem;">
+            <h1 style="font-family: var(--font-heading); font-size: 2.5rem; color: var(--color-primary); margin-bottom: 1rem;">
+                Homepage Coming Soon
+            </h1>
+            <p style="font-family: var(--font-body); font-size: 1.125rem; color: var(--color-text-muted); max-width: 480px; margin: 0 auto;">
+                The new homepage is under development. Replace this placeholder with components from <code>/components/</code>.
+            </p>
         </div>
-    </section>
+    </div>
 
 </main>
 
