@@ -12,39 +12,24 @@
     <div class="site-header__inner">
 
         <a href="<?php echo esc_url(home_url('/')); ?>" class="site-header__logo">
-            <img src="<?php echo esc_url(get_stylesheet_directory_uri()); ?>/assets/images/logo.png"
-                 alt="<?php bloginfo('name'); ?>"
+            <img src="<?php echo esc_url(get_stylesheet_directory_uri()); ?>/assets/images/logo-icon.svg"
+                 alt=""
+                 class="site-header__logo-icon"
+                 width="36"
                  height="36">
-            <span class="site-header__tagline">SERVING NATIONWIDE.</span>
+            <span class="site-header__logo-text">Ensurance</span>
         </a>
 
-        <nav class="site-header__nav" aria-label="Main navigation">
-            <ul>
-                <li class="has-dropdown">
-                    <button class="site-header__dropdown-toggle"
-                            aria-expanded="false"
-                            aria-controls="dropdown-for-you">
-                        For You
-                        <svg class="site-header__chevron" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                            <path d="M3 5l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </button>
-                    <ul class="site-header__dropdown" id="dropdown-for-you" role="menu">
-                        <li><a href="<?php echo esc_url(home_url('/auto-insurance/')); ?>" role="menuitem">Auto Insurance</a></li>
-                        <li><a href="<?php echo esc_url(home_url('/home-insurance/')); ?>" role="menuitem">Home Insurance</a></li>
-                        <li><a href="<?php echo esc_url(home_url('/life-insurance/')); ?>" role="menuitem">Life Insurance</a></li>
-                        <li><a href="<?php echo esc_url(home_url('/health-insurance/')); ?>" role="menuitem">Health Insurance</a></li>
-                    </ul>
-                </li>
-                <li><a href="<?php echo esc_url(home_url('/how-it-works/')); ?>">How it works</a></li>
-                <li><a href="<?php echo esc_url(home_url('/why-ensurance/')); ?>">Why Ensurance</a></li>
-                <li><a href="<?php echo esc_url(home_url('/faq/')); ?>">FAQ</a></li>
-            </ul>
-        </nav>
+        <div class="site-header__right">
+            <nav class="site-header__nav" aria-label="Main navigation">
+                <ul>
+                    <li><a href="#">How it works</a></li>
+                    <li><a href="#">Coverage types</a></li>
+                </ul>
+            </nav>
 
-        <div class="site-header__cta">
-            <a href="<?php echo esc_url(home_url('/agent-login/')); ?>" class="btn btn--dark">
-                Agent login
+            <a href="#" class="site-header__cta-btn">
+                Get matched
             </a>
         </div>
 
@@ -59,16 +44,10 @@
 
     <nav class="site-header__mobile-nav" id="mobile-nav" aria-label="Mobile navigation" aria-hidden="true">
         <ul>
-            <li class="mobile-section-label"><span>For You</span></li>
-            <li class="sub-item"><a href="<?php echo esc_url(home_url('/auto-insurance/')); ?>">Auto Insurance</a></li>
-            <li class="sub-item"><a href="<?php echo esc_url(home_url('/home-insurance/')); ?>">Home Insurance</a></li>
-            <li class="sub-item"><a href="<?php echo esc_url(home_url('/life-insurance/')); ?>">Life Insurance</a></li>
-            <li class="sub-item"><a href="<?php echo esc_url(home_url('/health-insurance/')); ?>">Health Insurance</a></li>
-            <li><a href="<?php echo esc_url(home_url('/how-it-works/')); ?>">How it works</a></li>
-            <li><a href="<?php echo esc_url(home_url('/why-ensurance/')); ?>">Why Ensurance</a></li>
-            <li><a href="<?php echo esc_url(home_url('/faq/')); ?>">FAQ</a></li>
+            <li><a href="#">How it works</a></li>
+            <li><a href="#">Coverage types</a></li>
             <li class="mobile-cta">
-                <a href="<?php echo esc_url(home_url('/agent-login/')); ?>" class="btn btn--dark">Agent login</a>
+                <a href="#" class="site-header__cta-btn">Get matched</a>
             </li>
         </ul>
     </nav>
