@@ -69,6 +69,51 @@ These aliases are configured in `~/.zshrc`. They push to GitHub and pull to Site
 
 ---
 
+## Figma Workflow
+
+Design-to-code for marketing pages is streamlined via Figma MCP (Model Context Protocol) integration. Claude can read Figma designs directly and build templates.
+
+### How It Works
+
+1. **Share a Figma link** — paste the design file URL
+2. **Specify what to build** — "build the hero section from Frame X" or "build the homepage from this file"
+3. **Claude extracts design data** — reads layout, colors, fonts, spacing, components directly from Figma
+4. **Build happens automatically** — outputs `page-*.php`, `/components/*.php`, and CSS all mapped to your design tokens
+
+### Example
+
+```
+You: "Here's the homepage design: https://www.figma.com/design/abc123/... — build it"
+
+Claude: [reads Figma file] [extracts colors, spacing, typography] [generates page-home.php and components]
+```
+
+### What Claude Pulls from Figma
+
+- Exact colors, fonts, font sizes, line heights, letter spacing
+- Spacing and padding (maps to `--space-*` variables)
+- Component structure and variants
+- Text content (headings, body copy)
+- Layout and responsive breakpoints
+
+### Constraints
+
+- All CSS must use `var(--color-*)` and `var(--space-*)` design tokens (no hardcoded values)
+- All templates must use `get_header('marketing')` and `get_footer('marketing')`
+- Components go in `/components/` as PHP partials
+- Pages go in `page-*.php` templates
+- Styling is `assets/marketing.css` only
+
+### Figma MCP Configuration
+
+- **Server**: `figma-developer-mcp` (installed on demand via npx)
+- **API Key**: Stored in `.claude/settings.local.json` (gitignored)
+- **Config**: `.mcp.json` (approved in `.claude/settings.json`)
+
+No additional setup needed — just paste a Figma link.
+
+---
+
 ## Architecture Overview
 
 This repository is the **WordPress theme** for Ensurance.com. It controls all frontend rendering: page templates, headers, footers, styling, and components.
