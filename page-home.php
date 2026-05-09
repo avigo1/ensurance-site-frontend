@@ -19,11 +19,8 @@ get_header('marketing');
     <div style="min-height: 60vh; display: flex; align-items: center; justify-content: center; background: var(--color-background-alt);">
         <div style="text-align: center; padding: 4rem 2rem;">
             <h1 style="font-family: var(--font-heading); font-size: 2.5rem; color: var(--color-primary); margin-bottom: 1rem;">
-                Homepage Coming Soon
+                Hello World
             </h1>
-            <p style="font-family: var(--font-body); font-size: 1.125rem; color: var(--color-text-muted); max-width: 480px; margin: 0 auto;">
-                The new homepage is under development. Replace this placeholder with components from <code>/components/</code>.
-            </p>
         </div>
     </div>
 

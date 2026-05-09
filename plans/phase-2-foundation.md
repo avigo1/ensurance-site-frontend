@@ -181,6 +181,14 @@ Phase 2 is complete when:
 
 ---
 
+## Refinement (TODO)
+
+Issues discovered during implementation that need future attention:
+
+- [ ] **Page background color conflict**: The header/page background appears gray instead of white on staging. WordPress Gutenberg block editor has its own color settings that are conflicting with the theme's `--color-background: #FDFBF7` token. Need to investigate whether Gutenberg inline styles or the Kadence parent theme are injecting a background color, and override or disable them for marketing pages.
+
+---
+
 ## What Comes Next
 
 **Phase 3** — Build the homepage sections using components.
