@@ -37,11 +37,16 @@
     --color-background-alt: #f7f8fc;
     --color-border:         #e2e8f0;
 
-    /* Header Colors */
-    --color-header-bg:      rgba(253, 251, 247, 0.8);
-    --color-header-border:  rgba(231, 229, 228, 0.6);
-    --color-header-cta:     #193CB8;
-    --color-header-cta-shadow: rgba(25, 60, 184, 0.2);
+    /* Header Colors (Figma: Nav · Sticky Glass) */
+    --color-header-pill-bg:     #FFFFFF;
+    --color-header-pill-stroke: #1F3A5F;
+    --color-header-pill-shadow: 0 4px 32px -4px rgba(10, 15, 26, 0.03);
+    --color-header-pill-blur:   blur(20px);
+
+    /* Header layout (from Figma frame) */
+    --header-outer-padding-y:   24px;
+    --header-outer-padding-x:   40px;
+    --header-pill-padding:      14px 18px 14px 28px;
 
     /* Status Colors */
     --color-success:        #16a34a;
@@ -214,185 +219,41 @@
 }
 
 /* ============================================================================
-   6. HEADER
+   6. HEADER — Shell only (Figma frame: "Nav · Sticky Glass" / "Glass Pill")
+   Interior content (logo, nav, CTA) is added per-component in a later task.
    ============================================================================ */
 
+/* Outer sticky wrapper — matches Figma frame 12:2 (padding 24px 40px) */
 .site-header {
     position: sticky;
     top: 0;
     z-index: 1000;
-    background: var(--color-header-bg);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--color-header-border);
-}
-
-.site-header__inner {
-    max-width: var(--container-max);
-    margin: 0 auto;
-    padding: 16px 32px;
-    height: 72px;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.site-header__logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    text-decoration: none;
-}
-
-.site-header__logo-icon {
-    display: block;
-    width: 36px;
-    height: 36px;
-    flex-shrink: 0;
-}
-
-.site-header__logo-text {
-    font-family: var(--font-body);
-    font-size: 20px;
-    font-weight: 400;
-    line-height: 28px;
-    letter-spacing: -0.95px;
-    color: var(--color-text);
-}
-
-.site-header__right {
-    display: flex;
-    align-items: center;
-    gap: 36px;
-}
-
-.site-header__nav ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    gap: 36px;
-}
-
-.site-header__nav a {
-    font-family: var(--font-body);
-    font-size: 14px;
-    font-weight: 400;
-    line-height: 20px;
-    letter-spacing: -0.15px;
-    color: var(--color-text-muted);
-    text-decoration: none;
-    transition: color var(--transition);
-}
-
-.site-header__nav a:hover {
-    color: var(--color-text);
-}
-
-.site-header__cta-btn {
-    display: inline-flex;
-    align-items: center;
     justify-content: center;
-    height: 40px;
-    padding: 10px 21px;
-    background: var(--color-header-cta);
-    color: #ffffff;
-    font-family: var(--font-body);
-    font-size: 14px;
-    font-weight: 500;
-    line-height: 20px;
-    letter-spacing: -0.15px;
-    text-decoration: none;
-    border-radius: var(--radius-full);
-    box-shadow: 0px 1px 2px -1px var(--color-header-cta-shadow),
-                0px 1px 3px 0px var(--color-header-cta-shadow);
-    transition: all var(--transition);
+    align-items: center;
+    padding: var(--header-outer-padding-y) var(--header-outer-padding-x);
+    background: transparent;
+    pointer-events: none; /* let the pill capture interaction; wrapper is just a layout shell */
 }
 
-.site-header__cta-btn:hover {
-    opacity: 0.9;
-    color: #ffffff;
-}
-
-/* Hamburger toggle (hidden at desktop) */
-.site-header__mobile-toggle {
-    display: none;
-    flex-direction: column;
-    gap: 5px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: var(--space-2);
-    flex-shrink: 0;
-}
-
-.site-header__mobile-toggle span {
-    display: block;
-    width: 22px;
-    height: 2px;
-    background: var(--color-text);
-    border-radius: 2px;
-    transition: transform var(--transition), opacity var(--transition);
-    transform-origin: center;
-}
-
-.site-header__mobile-toggle.is-open span:nth-child(1) {
-    transform: translateY(7px) rotate(45deg);
-}
-
-.site-header__mobile-toggle.is-open span:nth-child(2) {
-    opacity: 0;
-    transform: scaleX(0);
-}
-
-.site-header__mobile-toggle.is-open span:nth-child(3) {
-    transform: translateY(-7px) rotate(-45deg);
-}
-
-/* Mobile nav drawer */
-.site-header__mobile-nav {
-    display: none;
-    border-top: 1px solid var(--color-header-border);
-    background: var(--color-header-bg);
-    -webkit-backdrop-filter: blur(12px);
-    backdrop-filter: blur(12px);
-}
-
-.site-header__mobile-nav.is-open {
-    display: block;
-}
-
-.site-header__mobile-nav ul {
-    list-style: none;
-    margin: 0;
-    padding: var(--space-4) 0;
+/* Glass Pill — matches Figma frame 12:3 */
+.site-header__pill {
+    pointer-events: auto;
+    flex: 1 1 auto;
+    align-self: stretch;
     display: flex;
-    flex-direction: column;
-}
-
-.site-header__mobile-nav li a:not(.site-header__cta-btn) {
-    display: block;
-    padding: var(--space-3) 32px;
-    font-family: var(--font-body);
-    font-size: 14px;
-    font-weight: 400;
-    color: var(--color-text-muted);
-    text-decoration: none;
-}
-
-.site-header__mobile-nav li a:not(.site-header__cta-btn):hover {
-    color: var(--color-text);
-}
-
-.site-header__mobile-nav .mobile-cta {
-    padding: var(--space-4) 32px;
-}
-
-.site-header__mobile-nav .mobile-cta .site-header__cta-btn {
-    display: block;
-    text-align: center;
-    width: 100%;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 40px;
+    padding: var(--header-pill-padding);
+    min-height: 60px; /* keeps the empty shell visible until content lands */
+    background: var(--color-header-pill-bg);
+    border: 1px solid var(--color-header-pill-stroke);
+    border-radius: 999px;
+    box-shadow: var(--color-header-pill-shadow);
+    -webkit-backdrop-filter: var(--color-header-pill-blur);
+    backdrop-filter: var(--color-header-pill-blur);
 }
 
 /* ============================================================================
@@ -491,14 +352,15 @@
 @media (max-width: 1024px) {
     :root {
         --container-pad: 1.25rem;
+        --header-outer-padding-x: 24px;
     }
+}
 
-    .site-header__right {
-        display: none;
-    }
-
-    .site-header__mobile-toggle {
-        display: flex;
+@media (max-width: 600px) {
+    :root {
+        --header-outer-padding-y: 16px;
+        --header-outer-padding-x: 16px;
+        --header-pill-padding: 12px 16px;
     }
 }
 
