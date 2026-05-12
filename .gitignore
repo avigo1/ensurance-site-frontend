@@ -27,6 +27,7 @@ wp-content/uploads/
 # Local development
 .claude/
 *.log
+plans/
 
 # Theme files managed directly on SiteGround (not version controlled here)
 # style.css contains legacy GeoDirectory CSS - edit only via SiteGround directly
