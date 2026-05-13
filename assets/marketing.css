@@ -47,6 +47,16 @@
     --header-outer-padding-y:   24px;
     --header-outer-padding-x:   40px;
     --header-pill-padding:      14px 18px 14px 28px;
+    --header-pill-gap:          40px;
+    --header-links-gap:         32px;
+
+    /* Header interior — Figma child colors */
+    --color-nav-brand:          #1F3A5F;  /* logo mark + wordmark */
+    --color-nav-link:           #667085;  /* nav links */
+    --color-nav-link-hover:     #1F3A5F;
+    --color-nav-cta-bg:         #2B8673;  /* Get Matched unique green */
+    --color-nav-cta-text:       #FFFFFF;
+    --font-display:             'Bricolage Grotesque', 'Manrope', sans-serif;
 
     /* Status Colors */
     --color-success:        #16a34a;
@@ -243,17 +253,130 @@
     align-self: stretch;
     display: flex;
     flex-direction: row;
-    justify-content: center;
     align-items: center;
-    gap: 40px;
+    gap: var(--header-pill-gap);
     padding: var(--header-pill-padding);
-    min-height: 60px; /* keeps the empty shell visible until content lands */
     background: var(--color-header-pill-bg);
     border: 1px solid var(--color-header-pill-stroke);
     border-radius: 999px;
     box-shadow: var(--color-header-pill-shadow);
     -webkit-backdrop-filter: var(--color-header-pill-blur);
     backdrop-filter: var(--color-header-pill-blur);
+}
+
+/* ----------------------------------------------------------------------------
+   Pill interior — Figma children of frame 12:3
+   Layout: Logo (left) · Links (fills, centered) · Agent Login · CTA (right)
+   ---------------------------------------------------------------------------- */
+
+/* Reset for all buttons inside the pill */
+.site-header__pill button {
+    appearance: none;
+    -webkit-appearance: none;
+    background: transparent;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+/* LEFT — Logo (32px navy disc + Bricolage Grotesque wordmark) */
+.site-header__logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.site-header__logo-mark {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--color-nav-brand);
+    flex-shrink: 0;
+}
+
+.site-header__logo-text {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 20px;
+    letter-spacing: -0.03em;
+    color: var(--color-nav-brand);
+}
+
+/* MIDDLE — Links group (Figma "Links" frame has sizing.horizontal: fill,
+   so it stretches and pushes Logo to the left, Agent Login + CTA to the right) */
+.site-header__links {
+    flex: 1 1 auto;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--header-links-gap);
+}
+
+.site-header__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--font-heading);
+    font-weight: 400;
+    font-size: 14px;
+    color: var(--color-nav-link);
+    transition: color var(--transition);
+}
+
+.site-header__link:hover {
+    color: var(--color-nav-link-hover);
+}
+
+.site-header__link-chevron {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    flex-shrink: 0;
+}
+
+/* RIGHT — Agent Login (60% opacity per Figma) */
+.site-header__agent-login {
+    flex-shrink: 0;
+    font-family: var(--font-heading);
+    font-weight: 400;
+    font-size: 14px;
+    color: var(--color-nav-link);
+    opacity: 0.6;
+    transition: opacity var(--transition);
+}
+
+.site-header__agent-login:hover {
+    opacity: 1;
+}
+
+/* RIGHT — Get Matched CTA (unique green #2B8673 from Figma fill_R7TAFT) */
+.site-header__cta {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 22px;
+    background: var(--color-nav-cta-bg);
+    color: var(--color-nav-cta-text);
+    font-family: var(--font-heading);
+    font-weight: 500;
+    font-size: 14px;
+    border-radius: 999px;
+    transition: opacity var(--transition), transform var(--transition);
+}
+
+.site-header__cta:hover {
+    opacity: 0.92;
+}
+
+.site-header__cta:active {
+    transform: scale(0.98);
 }
 
 /* ============================================================================
