@@ -62,9 +62,8 @@ function ensurance_marketing_assets() {
 }
 add_action('wp_enqueue_scripts', 'ensurance_marketing_assets');
 
-// Google Fonts for marketing pages — loaded conditionally so legacy pages
-// remain untouched. Bricolage Grotesque (display/logo), Manrope (UI/headings),
-// Inter (body). Added as a new function per the section-2 rules.
+// Google Fonts for marketing pages — Bricolage Grotesque (display/logo),
+// Manrope (UI/headings), Inter (body). Loaded only on marketing pages.
 function ensurance_marketing_fonts() {
     if (is_front_page() || is_page_template('page-home.php')) {
         wp_enqueue_style(

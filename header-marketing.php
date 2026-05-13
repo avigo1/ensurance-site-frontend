@@ -11,13 +11,13 @@
 <header class="site-header" role="banner">
     <div class="site-header__pill">
 
-        <!-- Logo -->
+        <!-- LEFT — Logo + wordmark -->
         <button type="button" class="site-header__logo" aria-label="Ensurance home">
             <span class="site-header__logo-mark" aria-hidden="true"></span>
             <span class="site-header__logo-text">Ensurance</span>
         </button>
 
-        <!-- Nav links -->
+        <!-- MIDDLE — Nav links (stretches to fill, matches Figma "Links" frame with horizontal: fill) -->
         <div class="site-header__links">
             <button type="button" class="site-header__link">How it works</button>
             <button type="button" class="site-header__link" aria-haspopup="menu" aria-expanded="false">
@@ -31,11 +31,9 @@
             <button type="button" class="site-header__link">FAQ</button>
         </div>
 
-        <!-- Agent login -->
-        <button type="button" class="site-header__agent-login">Agent login</button>
-
-        <!-- CTA -->
-        <button type="button" class="site-header__cta">Get matched</button>
+        <!-- RIGHT — Agent Login + Get Matched CTA -->
+        <button type="button" class="site-header__agent-login">Agent Login</button>
+        <button type="button" class="site-header__cta">Get Matched</button>
 
     </div>
 </header>

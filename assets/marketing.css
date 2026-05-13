@@ -38,23 +38,25 @@
     --color-border:         #e2e8f0;
 
     /* Header Colors (Figma: Nav · Sticky Glass) */
-    --color-header-pill-bg:     transparent;
+    --color-header-pill-bg:     #FFFFFF;
     --color-header-pill-stroke: #1F3A5F;
     --color-header-pill-shadow: 0 4px 32px -4px rgba(10, 15, 26, 0.03);
     --color-header-pill-blur:   blur(20px);
-
-    /* Header interior (Figma: Glass Pill children) */
-    --color-nav-brand:          #1F3A5F;
-    --color-nav-link:           #667085;
-    --color-nav-link-hover:     #1F3A5F;
-    --color-nav-cta-bg:         #2B8673;
-    --color-nav-cta-text:       #FFFFFF;
-    --font-display:             'Bricolage Grotesque', 'Manrope', sans-serif;
 
     /* Header layout (from Figma frame) */
     --header-outer-padding-y:   24px;
     --header-outer-padding-x:   40px;
     --header-pill-padding:      14px 18px 14px 28px;
+    --header-pill-gap:          40px;
+    --header-links-gap:         32px;
+
+    /* Header interior — Figma child colors */
+    --color-nav-brand:          #1F3A5F;  /* logo mark + wordmark */
+    --color-nav-link:           #667085;  /* nav links */
+    --color-nav-link-hover:     #1F3A5F;
+    --color-nav-cta-bg:         #2B8673;  /* Get Matched unique green */
+    --color-nav-cta-text:       #FFFFFF;
+    --font-display:             'Bricolage Grotesque', 'Manrope', sans-serif;
 
     /* Status Colors */
     --color-success:        #16a34a;
@@ -251,9 +253,8 @@
     align-self: stretch;
     display: flex;
     flex-direction: row;
-    justify-content: center;
     align-items: center;
-    gap: 40px;
+    gap: var(--header-pill-gap);
     padding: var(--header-pill-padding);
     background: var(--color-header-pill-bg);
     border: 1px solid var(--color-header-pill-stroke);
@@ -264,11 +265,11 @@
 }
 
 /* ----------------------------------------------------------------------------
-   Pill interior — buttons only (no links / no functionality yet)
-   Figma children of frame 12:3: Logo, Links, Agent login, CTA
+   Pill interior — Figma children of frame 12:3
+   Layout: Logo (left) · Links (fills, centered) · Agent Login · CTA (right)
    ---------------------------------------------------------------------------- */
 
-/* Shared reset for all <button> elements inside the pill */
+/* Reset for all buttons inside the pill */
 .site-header__pill button {
     appearance: none;
     -webkit-appearance: none;
@@ -280,13 +281,15 @@
     color: inherit;
     cursor: pointer;
     line-height: 1;
+    white-space: nowrap;
 }
 
-/* Logo — 32px navy ellipse + wordmark */
+/* LEFT — Logo (32px navy disc + Bricolage Grotesque wordmark) */
 .site-header__logo {
     display: inline-flex;
     align-items: center;
     gap: 10px;
+    flex-shrink: 0;
 }
 
 .site-header__logo-mark {
@@ -305,11 +308,14 @@
     color: var(--color-nav-brand);
 }
 
-/* Links group */
+/* MIDDLE — Links group (Figma "Links" frame has sizing.horizontal: fill,
+   so it stretches and pushes Logo to the left, Agent Login + CTA to the right) */
 .site-header__links {
+    flex: 1 1 auto;
     display: inline-flex;
+    justify-content: center;
     align-items: center;
-    gap: 32px;
+    gap: var(--header-links-gap);
 }
 
 .site-header__link {
@@ -334,8 +340,9 @@
     flex-shrink: 0;
 }
 
-/* Agent login — same link styling, 60% opacity per Figma */
+/* RIGHT — Agent Login (60% opacity per Figma) */
 .site-header__agent-login {
+    flex-shrink: 0;
     font-family: var(--font-heading);
     font-weight: 400;
     font-size: 14px;
@@ -348,8 +355,9 @@
     opacity: 1;
 }
 
-/* CTA — "Get matched" pill button */
+/* RIGHT — Get Matched CTA (unique green #2B8673 from Figma fill_R7TAFT) */
 .site-header__cta {
+    flex-shrink: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
