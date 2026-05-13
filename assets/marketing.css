@@ -38,10 +38,18 @@
     --color-border:         #e2e8f0;
 
     /* Header Colors (Figma: Nav · Sticky Glass) */
-    --color-header-pill-bg:     #FFFFFF;
+    --color-header-pill-bg:     transparent;
     --color-header-pill-stroke: #1F3A5F;
     --color-header-pill-shadow: 0 4px 32px -4px rgba(10, 15, 26, 0.03);
     --color-header-pill-blur:   blur(20px);
+
+    /* Header interior (Figma: Glass Pill children) */
+    --color-nav-brand:          #1F3A5F;
+    --color-nav-link:           #667085;
+    --color-nav-link-hover:     #1F3A5F;
+    --color-nav-cta-bg:         #2B8673;
+    --color-nav-cta-text:       #FFFFFF;
+    --font-display:             'Bricolage Grotesque', 'Manrope', sans-serif;
 
     /* Header layout (from Figma frame) */
     --header-outer-padding-y:   24px;
@@ -247,13 +255,120 @@
     align-items: center;
     gap: 40px;
     padding: var(--header-pill-padding);
-    min-height: 60px; /* keeps the empty shell visible until content lands */
     background: var(--color-header-pill-bg);
     border: 1px solid var(--color-header-pill-stroke);
     border-radius: 999px;
     box-shadow: var(--color-header-pill-shadow);
     -webkit-backdrop-filter: var(--color-header-pill-blur);
     backdrop-filter: var(--color-header-pill-blur);
+}
+
+/* ----------------------------------------------------------------------------
+   Pill interior — buttons only (no links / no functionality yet)
+   Figma children of frame 12:3: Logo, Links, Agent login, CTA
+   ---------------------------------------------------------------------------- */
+
+/* Shared reset for all <button> elements inside the pill */
+.site-header__pill button {
+    appearance: none;
+    -webkit-appearance: none;
+    background: transparent;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+    line-height: 1;
+}
+
+/* Logo — 32px navy ellipse + wordmark */
+.site-header__logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.site-header__logo-mark {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--color-nav-brand);
+    flex-shrink: 0;
+}
+
+.site-header__logo-text {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 20px;
+    letter-spacing: -0.03em;
+    color: var(--color-nav-brand);
+}
+
+/* Links group */
+.site-header__links {
+    display: inline-flex;
+    align-items: center;
+    gap: 32px;
+}
+
+.site-header__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--font-heading);
+    font-weight: 400;
+    font-size: 14px;
+    color: var(--color-nav-link);
+    transition: color var(--transition);
+}
+
+.site-header__link:hover {
+    color: var(--color-nav-link-hover);
+}
+
+.site-header__link-chevron {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    flex-shrink: 0;
+}
+
+/* Agent login — same link styling, 60% opacity per Figma */
+.site-header__agent-login {
+    font-family: var(--font-heading);
+    font-weight: 400;
+    font-size: 14px;
+    color: var(--color-nav-link);
+    opacity: 0.6;
+    transition: opacity var(--transition);
+}
+
+.site-header__agent-login:hover {
+    opacity: 1;
+}
+
+/* CTA — "Get matched" pill button */
+.site-header__cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 22px;
+    background: var(--color-nav-cta-bg);
+    color: var(--color-nav-cta-text);
+    font-family: var(--font-heading);
+    font-weight: 500;
+    font-size: 14px;
+    border-radius: 999px;
+    transition: opacity var(--transition), transform var(--transition);
+}
+
+.site-header__cta:hover {
+    opacity: 0.92;
+}
+
+.site-header__cta:active {
+    transform: scale(0.98);
 }
 
 /* ============================================================================

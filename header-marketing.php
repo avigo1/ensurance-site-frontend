@@ -10,6 +10,32 @@
 
 <header class="site-header" role="banner">
     <div class="site-header__pill">
-        <!-- Interior content (logo, nav, CTA) added in a later task -->
+
+        <!-- Logo -->
+        <button type="button" class="site-header__logo" aria-label="Ensurance home">
+            <span class="site-header__logo-mark" aria-hidden="true"></span>
+            <span class="site-header__logo-text">Ensurance</span>
+        </button>
+
+        <!-- Nav links -->
+        <div class="site-header__links">
+            <button type="button" class="site-header__link">How it works</button>
+            <button type="button" class="site-header__link" aria-haspopup="menu" aria-expanded="false">
+                <span>Coverage</span>
+                <svg class="site-header__link-chevron" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+                    <path d="M2.5 3.75L5 6.25L7.5 3.75" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+            <button type="button" class="site-header__link">Why Ensurance</button>
+            <button type="button" class="site-header__link">For agents</button>
+            <button type="button" class="site-header__link">FAQ</button>
+        </div>
+
+        <!-- Agent login -->
+        <button type="button" class="site-header__agent-login">Agent login</button>
+
+        <!-- CTA -->
+        <button type="button" class="site-header__cta">Get matched</button>
+
     </div>
 </header>

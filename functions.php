@@ -62,6 +62,21 @@ function ensurance_marketing_assets() {
 }
 add_action('wp_enqueue_scripts', 'ensurance_marketing_assets');
 
+// Google Fonts for marketing pages — loaded conditionally so legacy pages
+// remain untouched. Bricolage Grotesque (display/logo), Manrope (UI/headings),
+// Inter (body). Added as a new function per the section-2 rules.
+function ensurance_marketing_fonts() {
+    if (is_front_page() || is_page_template('page-home.php')) {
+        wp_enqueue_style(
+            'ensurance-marketing-fonts',
+            'https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap',
+            array(),
+            null
+        );
+    }
+}
+add_action('wp_enqueue_scripts', 'ensurance_marketing_fonts');
+
 // ============================================================================
 // 3. GEODIRECTORY CUSTOMIZATIONS
 // ============================================================================
