@@ -269,8 +269,11 @@
    Layout: Logo (left) · Links (fills, centered) · Agent Login · CTA (right)
    ---------------------------------------------------------------------------- */
 
-/* Reset for all buttons inside the pill */
-.site-header__pill button {
+/* Reset for buttons inside the pill.
+   :where() zeros the specificity of `button` so component classes
+   (e.g. .site-header__cta) can override the background without
+   needing to inflate their own selectors. */
+.site-header__pill :where(button) {
     appearance: none;
     -webkit-appearance: none;
     background: transparent;
