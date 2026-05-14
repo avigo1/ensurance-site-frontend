@@ -20,12 +20,17 @@
         <!-- MIDDLE — Nav links (stretches to fill, matches Figma "Links" frame with horizontal: fill) -->
         <div class="site-header__links">
             <button type="button" class="site-header__link">How it works</button>
-            <button type="button" class="site-header__link" aria-haspopup="menu" aria-expanded="false">
-                <span>Coverage</span>
-                <svg class="site-header__link-chevron" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-                    <path d="M2.5 3.75L5 6.25L7.5 3.75" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </button>
+            <div class="nav-dropdown">
+                <button type="button" class="site-header__link nav-dropdown__trigger" aria-haspopup="menu" aria-expanded="false">
+                    <span>Coverage</span>
+                    <svg class="site-header__link-chevron" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+                        <path d="M2.5 3.75L5 6.25L7.5 3.75" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <div class="nav-dropdown__panel">
+                    <?php get_template_part( 'components/coverage-dropdown' ); ?>
+                </div>
+            </div>
             <button type="button" class="site-header__link">Why Ensurance</button>
             <button type="button" class="site-header__link">For agents</button>
             <button type="button" class="site-header__link">FAQ</button>

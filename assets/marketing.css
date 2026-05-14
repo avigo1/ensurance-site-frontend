@@ -55,6 +55,7 @@
     --color-nav-link:           #667085;  /* nav links */
     --color-nav-link-hover:     #1F3A5F;
     --color-nav-cta-bg:         #2B8673;  /* Get Matched unique green */
+    --color-nav-cta-bg-hover:         #249663;  /* Get Matched unique green */
     --color-nav-cta-text:       #FFFFFF;
     --font-display:             'Bricolage Grotesque', 'Manrope', sans-serif;
 
@@ -376,6 +377,7 @@
 
 .site-header__cta:hover {
     opacity: 0.92;
+    background: var(--color-nav-cta-bg-hover);
 }
 
 .site-header__cta:active {
@@ -464,6 +466,134 @@
    8. COMPONENTS
    Add new component sections here as components are built in /components/
    ============================================================================ */
+
+/* ----------------------------------------------------------------------------
+   Nav Dropdown — generic hover-open shell used by header dropdowns
+   Wraps a trigger button + a panel. Bridges the gap between trigger and panel
+   so cursor travel keeps it open. Chevron inside the trigger rotates 180°.
+   ---------------------------------------------------------------------------- */
+
+.nav-dropdown {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.nav-dropdown__panel {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    /* Padding-top creates an invisible bridge so the cursor can cross from
+       trigger to visible panel without the dropdown closing. */
+    padding-top: 16px;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+    z-index: 1001;
+}
+
+.nav-dropdown:hover .nav-dropdown__panel,
+.nav-dropdown:focus-within .nav-dropdown__panel {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* Chevron points up while the dropdown is open. */
+.nav-dropdown:hover .site-header__link-chevron,
+.nav-dropdown:focus-within .site-header__link-chevron {
+    transform: rotate(180deg);
+}
+
+.site-header__link-chevron {
+    transition: transform 0.15s ease;
+}
+
+/* ----------------------------------------------------------------------------
+   Coverage Dropdown — Figma node 51:2 ("Dropdown · Panel")
+   See components/coverage-dropdown.php
+   ---------------------------------------------------------------------------- */
+
+.coverage-dropdown {
+    width: 560px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    padding: 12px;
+    background: #FFFFFF;
+    border: 1px solid #1F3A5F;
+    border-radius: 24px;
+    box-shadow: 0 20px 60px -8px rgba(10, 15, 26, 0.07);
+}
+
+.coverage-dropdown__item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px 12px 12px;
+    border-radius: 14px;
+    background: transparent;
+    text-decoration: none;
+    color: inherit;
+    transition: background-color var(--transition);
+}
+
+.coverage-dropdown__item:hover,
+.coverage-dropdown__item:focus-visible {
+    background: #EAECF0;
+    outline: none;
+}
+
+.coverage-dropdown__icon {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    color: #1F3A5F;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: color var(--transition);
+}
+
+.coverage-dropdown__item:hover .coverage-dropdown__icon,
+.coverage-dropdown__item:focus-visible .coverage-dropdown__icon {
+    color: #2B8673;
+}
+
+.coverage-dropdown__labels {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.coverage-dropdown__title {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 1.35;
+    color: #1F3A5F;
+    transition: color var(--transition);
+    white-space: nowrap;
+}
+
+.coverage-dropdown__item:hover .coverage-dropdown__title,
+.coverage-dropdown__item:focus-visible .coverage-dropdown__title {
+    color: #2B8673;
+}
+
+.coverage-dropdown__subtitle {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 300;
+    font-size: 12px;
+    line-height: 1.35;
+    color: #475467;
+    opacity: 0.85;
+    white-space: nowrap;
+}
 
 /* Hero — see components/hero.php */
 
