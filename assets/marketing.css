@@ -122,7 +122,6 @@
 .site-footer *::before,
 .site-footer *::after {
     box-sizing: border-box;
-    background: var(--color-header-pill-bg);
 }
 
 /* ============================================================================
@@ -295,7 +294,6 @@
     align-items: center;
     gap: 10px;
     flex-shrink: 0;
-    box-shadow: 0px 0px 0px 0px rgba(0, 0, 0, 0);
 }
 
 .site-header__logo-mark {
