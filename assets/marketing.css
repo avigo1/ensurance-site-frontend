@@ -413,11 +413,6 @@
     color: #fff;
 }
 
-.site-footer a:hover {
-    text-decoration: none;
-    opacity: 0.7;
-}
-
 /* Top row — brand + link columns (Figma frame 20:3) */
 .site-footer__top {
     display: flex;
@@ -505,6 +500,7 @@
 
 .site-footer__link:hover {
     opacity: 0.7;
+    color: #ffffff;
 }
 
 /* Divider (Figma rect 20:34) */
