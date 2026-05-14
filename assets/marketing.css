@@ -410,7 +410,12 @@
 /* Footer links — anchors with no routing wired yet */
 .site-footer a {
     text-decoration: none;
-    color: inherit;
+    color: #fff;
+}
+
+.site-footer a:hover {
+    text-decoration: none;
+    opacity: 0.7;
 }
 
 /* Top row — brand + link columns (Figma frame 20:3) */
