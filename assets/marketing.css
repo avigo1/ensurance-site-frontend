@@ -376,6 +376,7 @@
 }
 
 .site-header__cta:hover {
+    color: var(--color-nav-cta-text);
     background: var(--color-nav-cta-bg-hover);
 }
 
