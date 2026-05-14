@@ -360,7 +360,7 @@
 }
 
 /* RIGHT — Get Matched CTA (unique green #2B8673 from Figma fill_R7TAFT) */
-.site-header__cta {
+a.site-header__cta {
     flex-shrink: 0;
     display: inline-flex;
     align-items: center;
@@ -375,8 +375,9 @@
     transition: transform var(--transition), background-color 200ms ease;
 }
 
-.site-header__cta:hover {
+a.site-header__cta:hover {
     background: var(--color-nav-cta-bg-hover);
+    color: var(--color-nav-cta-text);
 }
 
 .site-header__cta:active {
