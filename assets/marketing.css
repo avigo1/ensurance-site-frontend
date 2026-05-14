@@ -407,18 +407,10 @@
     gap: 80px;
 }
 
-/* Button reset for footer links (no functionality wired yet) */
-.site-footer button {
-    appearance: none;
-    -webkit-appearance: none;
-    background: transparent;
-    border: 0;
-    margin: 0;
-    padding: 0;
-    font: inherit;
+/* Footer links — anchors with no routing wired yet */
+.site-footer a {
+    text-decoration: none;
     color: inherit;
-    cursor: pointer;
-    text-align: left;
 }
 
 /* Top row — brand + link columns (Figma frame 20:3) */

@@ -18,32 +18,32 @@
 
                 <div class="site-footer__col">
                     <h4 class="site-footer__col-title">Product</h4>
-                    <button type="button" class="site-footer__link">How it works</button>
-                    <button type="button" class="site-footer__link">Coverage</button>
-                    <button type="button" class="site-footer__link">Why Ensurance</button>
-                    <button type="button" class="site-footer__link">FAQ</button>
+                    <a href="#" class="site-footer__link">How it works</a>
+                    <a href="#" class="site-footer__link">Coverage</a>
+                    <a href="#" class="site-footer__link">Why Ensurance</a>
+                    <a href="#" class="site-footer__link">FAQ</a>
                 </div>
 
                 <div class="site-footer__col">
                     <h4 class="site-footer__col-title">Company</h4>
-                    <button type="button" class="site-footer__link">About</button>
-                    <button type="button" class="site-footer__link">Press</button>
-                    <button type="button" class="site-footer__link">Contact</button>
+                    <a href="#" class="site-footer__link">About</a>
+                    <a href="#" class="site-footer__link">Press</a>
+                    <a href="#" class="site-footer__link">Contact</a>
                 </div>
 
                 <div class="site-footer__col">
                     <h4 class="site-footer__col-title">For Agents</h4>
-                    <button type="button" class="site-footer__link">Become a partner</button>
-                    <button type="button" class="site-footer__link">Agent login</button>
-                    <button type="button" class="site-footer__link">Network standards</button>
+                    <a href="#" class="site-footer__link">Become a partner</a>
+                    <a href="#" class="site-footer__link">Agent login</a>
+                    <a href="#" class="site-footer__link">Network standards</a>
                 </div>
 
                 <div class="site-footer__col">
                     <h4 class="site-footer__col-title">Legal</h4>
-                    <button type="button" class="site-footer__link">Privacy</button>
-                    <button type="button" class="site-footer__link">Terms</button>
-                    <button type="button" class="site-footer__link">Licenses</button>
-                    <button type="button" class="site-footer__link">Disclosures</button>
+                    <a href="#" class="site-footer__link">Privacy</a>
+                    <a href="#" class="site-footer__link">Terms</a>
+                    <a href="#" class="site-footer__link">Licenses</a>
+                    <a href="#" class="site-footer__link">Disclosures</a>
                 </div>
 
             </div>
