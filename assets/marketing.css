@@ -55,7 +55,7 @@
     --color-nav-link:           #667085;  /* nav links */
     --color-nav-link-hover:     #1F3A5F;
     --color-nav-cta-bg:         #2B8673;  /* Get Matched unique green */
-    --color-nav-cta-bg-hover:         #249663;  /* Get Matched unique green */
+    --color-nav-cta-bg-hover:         #236D5E; 
     --color-nav-cta-text:       #FFFFFF;
     --font-display:             'Bricolage Grotesque', 'Manrope', sans-serif;
 
@@ -372,7 +372,7 @@
     font-weight: 500;
     font-size: 14px;
     border-radius: 999px;
-    transition: opacity var(--transition), transform var(--transition);
+    transition: opacity var(--transition), transform var(--transition), background-color 200ms ease;
 }
 
 .site-header__cta:hover {
