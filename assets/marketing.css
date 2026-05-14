@@ -372,11 +372,10 @@
     font-weight: 500;
     font-size: 14px;
     border-radius: 999px;
-    transition: opacity var(--transition), transform var(--transition), background-color 200ms ease;
+    transition: transform var(--transition), background-color 200ms ease;
 }
 
 .site-header__cta:hover {
-    opacity: 0.92;
     background: var(--color-nav-cta-bg-hover);
 }
 
