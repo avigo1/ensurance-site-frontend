@@ -53,9 +53,9 @@
     /* Header interior — Figma child colors */
     --color-nav-brand:          #1F3A5F;  /* logo mark + wordmark */
     --color-nav-link:           #667085;  /* nav links */
-    --color-nav-link-hover:     #1F3A5F;
+    --color-nav-link-hover:     #236D5E;
     --color-nav-cta-bg:         #2B8673;  /* Get Matched unique green */
-    --color-nav-cta-bg-hover:         #236D5E; 
+    --color-nav-cta-bg-hover:   #236D5E; 
     --color-nav-cta-text:       #FFFFFF;
     --font-display:             'Bricolage Grotesque', 'Manrope', sans-serif;
 
@@ -360,7 +360,7 @@
 }
 
 .site-header__agent-login:hover {
-    opacity: 1;
+    color: var(--color-nav-link-hover);
 }
 
 /* RIGHT — Get Matched CTA (unique green #2B8673 from Figma fill_R7TAFT) */
