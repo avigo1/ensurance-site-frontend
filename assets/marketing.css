@@ -695,6 +695,25 @@
     }
 }
 
+/* Footer top row stacks below its 1280px design width — the fixed 380px brand
+   block + four nowrap link columns cannot fit the row layout below this. */
+@media (max-width: 1280px) {
+    .site-footer__top {
+        flex-direction: column;
+        gap: 48px;
+    }
+
+    .site-footer__brand {
+        width: 100%;
+    }
+
+    .site-footer__links {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        gap: 40px;
+    }
+}
+
 @media (max-width: 1024px) {
     .site-footer {
         padding: 64px 40px 48px;
@@ -715,21 +734,6 @@
 
     .site-footer__inner {
         gap: 56px;
-    }
-
-    .site-footer__top {
-        flex-direction: column;
-        gap: 48px;
-    }
-
-    .site-footer__brand {
-        width: 100%;
-    }
-
-    .site-footer__links {
-        flex-wrap: wrap;
-        justify-content: flex-start;
-        gap: 40px;
     }
 
     .site-footer__bottom {
