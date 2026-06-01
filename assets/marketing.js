@@ -68,4 +68,32 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    // =========================================================================
+    // 4. HOMEPAGE TRACKING — data-event clicks + FAQ expand
+    // Pushes to window.dataLayer when present. Safe no-op otherwise.
+    // FAQ tracks by `data-faq` key (never the question text — keeps PII out
+    // of the analytics layer).
+    // =========================================================================
+
+    document.querySelectorAll('[data-event]').forEach(function (el) {
+        el.addEventListener('click', function () {
+            const eventName = el.getAttribute('data-event');
+            if (eventName && window.dataLayer && Array.isArray(window.dataLayer)) {
+                window.dataLayer.push({ event: eventName, page: 'home' });
+            }
+        });
+    });
+
+    document.querySelectorAll('.faq-list details').forEach(function (item) {
+        item.addEventListener('toggle', function () {
+            if (item.open && window.dataLayer && Array.isArray(window.dataLayer)) {
+                window.dataLayer.push({
+                    event: 'faq_expand',
+                    page: 'home',
+                    faq_key: item.getAttribute('data-faq') || 'faq_item'
+                });
+            }
+        });
+    });
+
 });
