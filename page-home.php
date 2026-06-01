@@ -2,28 +2,24 @@
 /**
  * Template Name: Home Page (Marketing)
  *
- * The homepage template. Uses the marketing header and footer,
- * completely bypassing the Kadence theme header/footer.
- * Build sections here using components from /components/.
+ * Homepage entry template. Uses the marketing header/footer (bypassing Kadence).
+ * Section partials live in /components/ and consume copy from
+ * components/_homepage-data.php (single source of truth for homepage content).
  */
 
-get_header('marketing');
+$home = require __DIR__ . '/components/_homepage-data.php';
+
+get_header( 'marketing' );
 ?>
 
-<main class="page-home">
+<main class="page-home" id="main">
 
-    <!-- PLACEHOLDER: Replace with actual homepage sections -->
-    <!-- Each section should be a component in /components/ -->
-    <!-- Example: <?php get_template_part('components/hero'); ?> -->
-
-    <div style="min-height: 60vh; display: flex; align-items: center; justify-content: center; background: var(--color-background-alt);">
-        <div style="text-align: center; padding: 4rem 2rem;">
-            <h1 style="font-family: var(--font-heading); font-size: 2.5rem; color: var(--color-primary); margin-bottom: 1rem;">
-               Homepage
-            </h1>
-        </div>
-    </div>
+    <?php
+    // SECTION 1 — Hero
+    $hero = $home['hero'];
+    include __DIR__ . '/components/hero.php';
+    ?>
 
 </main>
 
-<?php get_footer('marketing'); ?>
+<?php get_footer( 'marketing' ); ?>

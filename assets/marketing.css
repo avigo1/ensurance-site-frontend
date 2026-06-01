@@ -670,11 +670,407 @@
     white-space: nowrap;
 }
 
-/* Hero — see components/hero.php */
+/* ----------------------------------------------------------------------------
+   Homepage shared tokens
+   Sections share section padding, eyebrow style, and a brand-accented
+   "soft" navy palette. Scoped under .page-home to avoid leakage.
+   ---------------------------------------------------------------------------- */
 
-/* CTA Block — see components/cta-block.php */
+.page-home {
+    --home-brand:           #1F3A5F;
+    --home-secondary:       #5B7C99;
+    --home-accent:          #2B8673;
+    --home-accent-hover:    #236D5E;
+    --home-surface:         #FFFFFF;
+    --home-surface-soft:    #F7F9FC;
+    --home-text:            #1B2430;
+    --home-text-muted:      #667085;
+    --home-text-strong:     #344054;
+    --home-border:          #D9E2EC;
+    --home-border-soft:     #EAECF0;
+    --home-shadow-card:     0 14px 36px rgba(31, 58, 95, 0.08);
+    --home-shadow-soft:     0 22px 70px rgba(31, 58, 95, 0.12);
 
-/* Feature Grid — see components/feature-grid.php */
+    background: var(--home-surface-soft);
+    color: var(--home-text);
+    font-family: var(--font-body);
+    line-height: 1.6;
+}
+
+.page-home .eyebrow {
+    margin: 0 0 14px;
+    color: var(--home-secondary);
+    font-family: var(--font-heading);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.page-home h1,
+.page-home h2,
+.page-home h3 {
+    color: var(--home-brand);
+    letter-spacing: -0.04em;
+    line-height: 1.08;
+    margin: 0;
+}
+
+/* ----------------------------------------------------------------------------
+   Hero — components/hero.php
+   ---------------------------------------------------------------------------- */
+
+.page-home .hero {
+    position: relative;
+    padding: 88px 0 78px;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 12% 14%, rgba(91, 124, 153, 0.12), transparent 36%),
+        var(--home-surface-soft);
+}
+
+.page-home .hero::after {
+    content: "";
+    position: absolute;
+    inset: auto -18% -24% 48%;
+    height: 440px;
+    border-radius: 999px;
+    background: rgba(91, 124, 153, 0.10);
+    filter: blur(24px);
+    pointer-events: none;
+}
+
+.hero__grid {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1.02fr) minmax(340px, 0.98fr);
+    gap: 64px;
+    align-items: center;
+}
+
+.hero__headline {
+    max-width: 760px;
+    font-size: clamp(2.6rem, 5.6vw, 4.5rem);
+    font-weight: 800;
+}
+
+.hero__subtitle {
+    max-width: 680px;
+    margin-top: 24px;
+    color: var(--home-text-strong);
+    font-size: clamp(1.15rem, 1.7vw, 1.35rem);
+    line-height: 1.55;
+}
+
+.hero__support {
+    max-width: 640px;
+    margin-top: 18px;
+    color: var(--home-text-muted);
+    font-size: 1.05rem;
+}
+
+.hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: center;
+    margin-top: 32px;
+}
+
+.hero__trust-line {
+    margin-top: 18px;
+    color: var(--home-text-muted);
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+/* CTA buttons — homepage variants override the base .btn--primary/secondary
+   so the page-home palette stays self-consistent (green accent, navy outline). */
+.page-home .btn {
+    min-height: 52px;
+    padding: 13px 24px;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 0.98rem;
+    letter-spacing: -0.01em;
+    border-width: 1px;
+}
+
+.page-home .btn--primary {
+    background: var(--home-accent);
+    border-color: var(--home-accent);
+    color: #fff;
+    box-shadow: 0 12px 28px rgba(43, 134, 115, 0.22);
+}
+
+.page-home .btn--primary:hover {
+    background: var(--home-accent-hover);
+    border-color: var(--home-accent-hover);
+    color: #fff;
+}
+
+.page-home .btn--secondary {
+    background: var(--home-surface);
+    border-color: var(--home-border);
+    color: var(--home-brand);
+}
+
+.page-home .btn--secondary:hover {
+    background: var(--home-surface);
+    border-color: var(--home-secondary);
+    color: var(--home-brand);
+}
+
+/* "What happens next" module — Figma: numbered 4-step pill inside hero copy */
+.next-module {
+    max-width: 690px;
+    margin-top: 26px;
+    padding: 20px;
+    border: 1px solid rgba(217, 226, 236, 0.92);
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.82);
+    box-shadow: 0 10px 28px rgba(31, 58, 95, 0.06);
+    backdrop-filter: blur(8px);
+}
+
+.next-module__label {
+    margin: 0 0 12px;
+    color: var(--home-brand);
+    font-family: var(--font-heading);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.next-module__steps {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: next-step;
+}
+
+.next-module__steps li {
+    position: relative;
+    min-height: 32px;
+    padding-left: 42px;
+    color: var(--home-text-strong);
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.35;
+    counter-increment: next-step;
+}
+
+.next-module__steps li::before {
+    content: counter(next-step);
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 9px;
+    background: var(--home-accent);
+    color: #fff;
+    font-family: var(--font-heading);
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+/* Hero flow-card preview — right column, glassy panel with status header,
+   gradient path bar, and 4 numbered steps mirroring the next-module. */
+.hero__panel {
+    position: relative;
+    z-index: 1;
+}
+
+.flow-card {
+    position: relative;
+    padding: 28px;
+    border: 1px solid var(--home-border);
+    border-radius: 36px;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: var(--home-shadow-soft);
+    backdrop-filter: blur(18px);
+}
+
+.flow-card::before {
+    content: "";
+    position: absolute;
+    inset: 16px;
+    border-radius: 28px;
+    border: 1px solid rgba(217, 226, 236, 0.7);
+    pointer-events: none;
+}
+
+.flow-card__header {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 22px;
+    color: var(--home-brand);
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 0.95rem;
+}
+
+.flow-card__status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: var(--home-accent);
+    box-shadow: 0 0 0 6px rgba(43, 134, 115, 0.16);
+}
+
+.flow-card__path {
+    position: relative;
+    z-index: 1;
+    padding: 18px;
+    margin-bottom: 16px;
+    border-radius: 22px;
+    border: 1px solid rgba(217, 226, 236, 0.92);
+    background: linear-gradient(135deg, rgba(31, 58, 95, 0.06), rgba(91, 124, 153, 0.08));
+}
+
+.flow-card__path-label {
+    margin: 0;
+    color: var(--home-brand);
+    font-family: var(--font-heading);
+    font-size: 0.84rem;
+    font-weight: 800;
+}
+
+.flow-card__path-label--end {
+    text-align: right;
+}
+
+.flow-card__path-line {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin: 12px 0;
+}
+
+.flow-card__path-line span {
+    display: block;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--home-secondary);
+    opacity: 0.45;
+}
+
+.flow-card__path-line span:last-child {
+    background: linear-gradient(135deg, var(--home-secondary) 0%, var(--home-accent) 100%);
+    opacity: 0.85;
+}
+
+.flow-card__steps {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.flow-step {
+    display: grid;
+    grid-template-columns: 46px 1fr;
+    gap: 16px;
+    padding: 16px;
+    border: 1px solid var(--home-border-soft);
+    border-radius: 20px;
+    background: var(--home-surface-soft);
+}
+
+.flow-step__number {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    background: #fff;
+    border: 1px solid var(--home-border);
+    color: var(--home-brand);
+    font-family: var(--font-heading);
+    font-weight: 800;
+}
+
+.flow-step__title {
+    margin: 0;
+    align-self: center;
+    color: var(--home-brand);
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: -0.02em;
+    line-height: 1.3;
+}
+
+.flow-step--active .flow-step__number,
+.flow-step--ready .flow-step__number,
+.flow-step--complete .flow-step__number {
+    background: var(--home-accent);
+    border-color: var(--home-accent);
+    color: #fff;
+}
+
+/* Hero responsive — collapses to single column at tablet width, tightens
+   padding on small screens, full-width buttons on mobile. */
+@media (max-width: 980px) {
+    .hero__grid {
+        grid-template-columns: 1fr;
+        gap: 48px;
+    }
+    .page-home .hero {
+        padding: 64px 0 60px;
+    }
+    .hero__panel {
+        max-width: 680px;
+    }
+}
+
+@media (max-width: 700px) {
+    .page-home .hero {
+        padding: 48px 0 52px;
+    }
+    .hero__headline {
+        font-size: clamp(2.25rem, 11vw, 3.25rem);
+    }
+    .hero__actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .page-home .btn {
+        width: 100%;
+    }
+    .next-module__steps {
+        grid-template-columns: 1fr;
+    }
+    .flow-card {
+        padding: 22px;
+        border-radius: 28px;
+    }
+    .flow-card::before {
+        display: none;
+    }
+    .flow-step {
+        grid-template-columns: 40px 1fr;
+        padding: 14px;
+    }
+    .flow-step__number {
+        width: 40px;
+        height: 40px;
+    }
+}
 
 /* ============================================================================
    9. RESPONSIVE
