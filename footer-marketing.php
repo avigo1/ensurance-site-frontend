@@ -1,61 +1,64 @@
+<?php
+/**
+ * Marketing footer.
+ *
+ * Two link groups (site + legal) match the redesigned footer. Routes line up
+ * with the header and homepage CTAs.
+ *
+ * TODO: pages for /how-it-works, /coverage, /trust-and-privacy, /for-agents,
+ * /privacy, /terms, /licenses, /contact do not exist yet (Phase 3 — Homepage
+ * Build / Phase 4 — Launch). Links resolve to 404 until those ship.
+ */
+$footer_site_nav = array(
+    array( 'label' => 'How it works',      'href' => '/how-it-works' ),
+    array( 'label' => 'Coverage types',    'href' => '/coverage' ),
+    array( 'label' => 'Trust and privacy', 'href' => '/trust-and-privacy' ),
+    array( 'label' => 'For agents',        'href' => '/for-agents' ),
+);
+
+$footer_legal_nav = array(
+    array( 'label' => 'Privacy',  'href' => '/privacy' ),
+    array( 'label' => 'Terms',    'href' => '/terms' ),
+    array( 'label' => 'Licenses', 'href' => '/licenses' ),
+    array( 'label' => 'Contact',  'href' => '/contact' ),
+);
+?>
+
 <footer class="site-footer" role="contentinfo">
     <div class="site-footer__inner">
 
-        <!-- Top row — brand + link columns (Figma frame 20:3) -->
         <div class="site-footer__top">
 
-            <!-- Brand block (Figma frame 20:4) -->
             <div class="site-footer__brand">
-                <div class="site-footer__logo">
-                    <span class="site-footer__logo-mark" aria-hidden="true"></span>
-                    <span class="site-footer__logo-text">Ensurance</span>
-                </div>
-                <p class="site-footer__tagline">Smartly matched: independent agents meet shoppers. Private, calm, and always free for you.</p>
+                <a class="site-footer__brand-lockup" href="<?php echo esc_url( home_url( '/' ) ); ?>" aria-label="Ensurance home">
+                    <span class="site-footer__brand-mark" aria-hidden="true">E</span>
+                    <span class="site-footer__brand-text">Ensurance</span>
+                </a>
+                <p class="site-footer__description">
+                    Ensurance helps shoppers start one guided insurance request that licensed agents, agencies, or approved insurance partners can use to review available carriers and provide quote options where available.
+                </p>
             </div>
 
-            <!-- Link columns (Figma frame 20:9) -->
-            <div class="site-footer__links">
+            <nav class="site-footer__nav" aria-label="Footer navigation">
+                <?php foreach ( $footer_site_nav as $item ) : ?>
+                    <a class="site-footer__link" href="<?php echo esc_url( home_url( $item['href'] ) ); ?>">
+                        <?php echo esc_html( $item['label'] ); ?>
+                    </a>
+                <?php endforeach; ?>
+            </nav>
 
-                <div class="site-footer__col">
-                    <h4 class="site-footer__col-title">Product</h4>
-                    <a href="#" class="site-footer__link">How it works</a>
-                    <a href="#" class="site-footer__link">Coverage</a>
-                    <a href="#" class="site-footer__link">Why Ensurance</a>
-                    <a href="#" class="site-footer__link">FAQ</a>
-                </div>
+            <nav class="site-footer__nav" aria-label="Legal navigation">
+                <?php foreach ( $footer_legal_nav as $item ) : ?>
+                    <a class="site-footer__link" href="<?php echo esc_url( home_url( $item['href'] ) ); ?>">
+                        <?php echo esc_html( $item['label'] ); ?>
+                    </a>
+                <?php endforeach; ?>
+            </nav>
 
-                <div class="site-footer__col">
-                    <h4 class="site-footer__col-title">Company</h4>
-                    <a href="#" class="site-footer__link">About</a>
-                    <a href="#" class="site-footer__link">Press</a>
-                    <a href="#" class="site-footer__link">Contact</a>
-                </div>
-
-                <div class="site-footer__col">
-                    <h4 class="site-footer__col-title">For Agents</h4>
-                    <a href="#" class="site-footer__link">Become a partner</a>
-                    <a href="#" class="site-footer__link">Agent login</a>
-                    <a href="#" class="site-footer__link">Network standards</a>
-                </div>
-
-                <div class="site-footer__col">
-                    <h4 class="site-footer__col-title">Legal</h4>
-                    <a href="#" class="site-footer__link">Privacy</a>
-                    <a href="#" class="site-footer__link">Terms</a>
-                    <a href="#" class="site-footer__link">Licenses</a>
-                    <a href="#" class="site-footer__link">Disclosures</a>
-                </div>
-
-            </div>
         </div>
 
-        <!-- Divider (Figma rect 20:34) -->
-        <div class="site-footer__divider" aria-hidden="true"></div>
-
-        <!-- Bottom row (Figma frame 20:35) -->
         <div class="site-footer__bottom">
-            <p class="site-footer__copyright">&copy; 2026 Ensurance, Inc. &nbsp;&middot;&nbsp; Licensed in 50 states.</p>
-            <p class="site-footer__credit">Built quietly in California.</p>
+            <p class="site-footer__copyright">&copy; <?php echo esc_html( date( 'Y' ) ); ?> Ensurance. All rights reserved.</p>
         </div>
 
     </div>
