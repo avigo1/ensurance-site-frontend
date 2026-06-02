@@ -5,8 +5,12 @@
  * Edit text here; markup stays in the section partials under /components/.
  * Returns an associative array consumed by page-home.php.
  *
- * Route placeholders below are intentional. None of these pages exist yet —
- * each link is annotated with a TODO at the point of use.
+ * Routes follow the canonical Ensurance site map:
+ *   /start, /how-it-works, /coverage, /for-agents, /contact,
+ *   /auto-insurance-quote, /home-insurance, /renters-insurance,
+ *   /life-insurance, /business-insurance, /health-insurance.
+ * These templates do not yet live in this repo — they will be built later.
+ * Until then, links resolve to 404 in WordPress; the URLs themselves are final.
  */
 
 return array(
@@ -26,9 +30,7 @@ return array(
             ),
         ),
         'actions' => array(
-            // TODO: Missing route — "/start" (guided request flow)
             array( 'label' => 'Start your request',   'href' => '/start',         'variant' => 'primary',   'event' => 'hero_start_request_click' ),
-            // TODO: Missing route — "/how-it-works"
             array( 'label' => 'How Ensurance works',  'href' => '/how-it-works',  'variant' => 'secondary', 'event' => 'hero_how_it_works_click' ),
         ),
         'trust_line' => 'Structured request flow. Licensed review. Quote options where available.',
@@ -56,7 +58,6 @@ return array(
         'headline' => 'A clearer way to begin insurance shopping.',
         'lead'     => 'Insurance shopping often makes people start over with every carrier, form, or website. Ensurance gives you a more organized first step.',
         'body'     => 'Start with one guided request. Ensurance structures your information so licensed professionals can review available carriers and respond with quote options where available.',
-        // TODO: Missing route — "/start"
         'action' => array( 'label' => 'Start your request', 'href' => '/start', 'variant' => 'primary', 'event' => 'one_request_start_click' ),
         'cards' => array(
             array( 'number' => '01', 'title' => 'Share your insurance need once',       'body' => 'Capture the details needed for review.' ),
@@ -74,7 +75,6 @@ return array(
             array( 'number' => '3', 'title' => 'Licensed professionals review available carriers', 'body' => 'Available carriers can be evaluated.' ),
             array( 'number' => '4', 'title' => 'You receive quote options where available',        'body' => 'A licensed professional can explain next steps.' ),
         ),
-        // TODO: Missing route — "/start"
         'action'     => array( 'label' => 'Start your guided request', 'href' => '/start', 'variant' => 'primary', 'event' => 'process_start_request_click' ),
         'trust_line' => 'Availability, eligibility, carrier participation, and licensed professional review determine which quote options may be available.',
     ),
@@ -95,7 +95,6 @@ return array(
         'eyebrow'  => 'Protected insurance shopping',
         'headline' => 'A more protected way to start your insurance request.',
         'lead'     => 'Insurance shopping involves personal details. Ensurance is designed to make that process more structured, intentional, and clear.',
-        // TODO: Missing route — "/start"
         'action'   => array( 'label' => 'Start your request', 'href' => '/start', 'variant' => 'primary', 'event' => 'protected_start_request_click' ),
         'disclosure' => 'Your information is used to structure your request and support licensed review. Availability and quote options vary.',
         'trust_points' => array(
@@ -111,18 +110,13 @@ return array(
         'eyebrow'  => 'Coverage types',
         'headline' => 'Start a guided request for the coverage you need.',
         'cards' => array(
-            // TODO: Missing route — "/auto-insurance"
-            array( 'title' => 'Auto insurance',     'body' => 'Start a guided auto request with a clearer path to available carrier options through licensed review.',     'href' => '/auto-insurance',     'label' => 'Start auto request',     'event' => 'coverage_auto_click' ),
-            // TODO: Missing route — "/home-insurance"
-            array( 'title' => 'Home insurance',     'body' => 'Start a guided home request with a clearer path to available carrier options through licensed review.',     'href' => '/home-insurance',     'label' => 'Start home request',     'event' => 'coverage_home_click' ),
-            // TODO: Missing route — "/renters-insurance"
-            array( 'title' => 'Renters insurance',  'body' => 'Start a guided renters request with a clearer path to available carrier options through licensed review.',  'href' => '/renters-insurance',  'label' => 'Start renters request',  'event' => 'coverage_renters_click' ),
-            // TODO: Missing route — "/life-insurance"
-            array( 'title' => 'Life insurance',     'body' => 'Start a guided life request with a clearer path to available carrier options through licensed review.',     'href' => '/life-insurance',     'label' => 'Start life request',     'event' => 'coverage_life_click' ),
-            // TODO: Missing route — "/business-insurance"
-            array( 'title' => 'Business insurance', 'body' => 'Start a guided business request with a clearer path to available carrier options through licensed review.', 'href' => '/business-insurance', 'label' => 'Start business request', 'event' => 'coverage_business_click' ),
-            // TODO: Missing route — "/health-insurance"
-            array( 'title' => 'Health insurance',   'body' => 'Start a guided health request with a clearer path to available carrier options through licensed review.',   'href' => '/health-insurance',   'label' => 'Start health request',   'event' => 'coverage_health_click' ),
+            // Note: auto coverage uses the canonical "/auto-insurance-quote" route, not "/auto-insurance".
+            array( 'title' => 'Auto insurance',     'body' => 'Start a guided auto request with a clearer path to available carrier options through licensed review.',     'href' => '/auto-insurance-quote', 'label' => 'Start auto request',     'event' => 'coverage_auto_click' ),
+            array( 'title' => 'Home insurance',     'body' => 'Start a guided home request with a clearer path to available carrier options through licensed review.',     'href' => '/home-insurance',       'label' => 'Start home request',     'event' => 'coverage_home_click' ),
+            array( 'title' => 'Renters insurance',  'body' => 'Start a guided renters request with a clearer path to available carrier options through licensed review.',  'href' => '/renters-insurance',    'label' => 'Start renters request',  'event' => 'coverage_renters_click' ),
+            array( 'title' => 'Life insurance',     'body' => 'Start a guided life request with a clearer path to available carrier options through licensed review.',     'href' => '/life-insurance',       'label' => 'Start life request',     'event' => 'coverage_life_click' ),
+            array( 'title' => 'Business insurance', 'body' => 'Start a guided business request with a clearer path to available carrier options through licensed review.', 'href' => '/business-insurance',   'label' => 'Start business request', 'event' => 'coverage_business_click' ),
+            array( 'title' => 'Health insurance',   'body' => 'Start a guided health request with a clearer path to available carrier options through licensed review.',   'href' => '/health-insurance',     'label' => 'Start health request',   'event' => 'coverage_health_click' ),
         ),
     ),
 
@@ -137,7 +131,6 @@ return array(
         'eyebrow'  => 'Questions before you start',
         'headline' => 'Clear answers for a controlled request process.',
         'lead'     => 'Ensurance helps shoppers start with clarity and realistic expectations.',
-        // TODO: Missing route — "/start"
         'action'   => array( 'label' => 'Start your request', 'href' => '/start', 'variant' => 'primary', 'event' => 'faq_start_request_click' ),
     ),
 
@@ -179,9 +172,7 @@ return array(
         'headline' => 'A clearer path to insurance quote options starts here.',
         'body'     => 'Ensurance helps organize your information and create a clearer path to available quote options through licensed agents, agencies, or approved insurance partners.',
         'actions' => array(
-            // TODO: Missing route — "/start"
             array( 'label' => 'Start your request',  'href' => '/start',         'variant' => 'primary',   'event' => 'final_start_request_click' ),
-            // TODO: Missing route — "/how-it-works"
             array( 'label' => 'See how it works',    'href' => '/how-it-works',  'variant' => 'secondary', 'event' => 'final_how_it_works_click' ),
         ),
         'trust_line' => 'No pressure. Clearer steps. Licensed professional review.',
