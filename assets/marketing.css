@@ -37,26 +37,15 @@
     --color-background-alt: #f7f8fc;
     --color-border:         #e2e8f0;
 
-    /* Header Colors (Figma: Nav · Sticky Glass) */
-    --color-header-pill-bg:     #FFFFFF;
-    --color-header-pill-stroke: #1F3A5F;
-    --color-header-pill-shadow: 0 4px 32px -4px rgba(10, 15, 26, 0.03);
-    --color-header-pill-blur:   blur(20px);
-
-    /* Header layout (from Figma frame) */
-    --header-outer-padding-y:   24px;
-    --header-outer-padding-x:   40px;
-    --header-pill-padding:      14px 18px 14px 28px;
-    --header-pill-gap:          40px;
-    --header-links-gap:         32px;
-
-    /* Header interior — Figma child colors */
+    /* Header interior */
     --color-nav-brand:          #1F3A5F;  /* logo mark + wordmark */
+    --color-nav-brand-soft:     #5B7C99;  /* gradient stop for the logo mark */
     --color-nav-link:           #667085;  /* nav links */
     --color-nav-link-hover:     #236D5E;
-    --color-nav-cta-bg:         #2B8673;  /* Get Matched unique green */
-    --color-nav-cta-bg-hover:   #236D5E; 
+    --color-nav-cta-bg:         #2B8673;
+    --color-nav-cta-bg-hover:   #236D5E;
     --color-nav-cta-text:       #FFFFFF;
+    --gradient-brand:           linear-gradient(145deg, var(--color-nav-brand), var(--color-nav-brand-soft));
     --font-display:             'Bricolage Grotesque', 'Manrope', sans-serif;
 
     /* Status Colors */
@@ -230,51 +219,35 @@
 }
 
 /* ============================================================================
-   6. HEADER — Shell only (Figma frame: "Nav · Sticky Glass" / "Glass Pill")
-   Interior content (logo, nav, CTA) is added per-component in a later task.
+   6. HEADER — Sticky bar with brand, primary nav, and CTA
+   Layout: Brand (left) · Nav links + CTA (right). Mobile collapses nav into
+   a hamburger-triggered panel anchored below the header.
    ============================================================================ */
 
-/* Outer sticky wrapper — matches Figma frame 12:2 (padding 24px 40px) */
 .site-header {
     position: sticky;
     top: 0;
     z-index: 1000;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: var(--header-outer-padding-y) var(--header-outer-padding-x);
-    background: transparent;
-    pointer-events: none; /* let the pill capture interaction; wrapper is just a layout shell */
+    background: rgba(253, 251, 247, 0.92);
+    border-bottom: 1px solid var(--color-border);
+    -webkit-backdrop-filter: blur(18px);
+    backdrop-filter: blur(18px);
 }
 
-/* Glass Pill — matches Figma frame 12:3 */
-.site-header__pill {
-    pointer-events: auto;
-    flex: 1 1 auto;
-    align-self: stretch;
+.site-header__inner {
+    position: relative;
+    max-width: 1280px;
+    min-height: 76px;
+    margin: 0 auto;
+    padding: 0 40px;
     display: flex;
-    flex-direction: row;
     align-items: center;
-    gap: var(--header-pill-gap);
-    padding: var(--header-pill-padding);
-    background: var(--color-header-pill-bg);
-    border: 1px solid var(--color-header-pill-stroke);
-    border-radius: 999px;
-    box-shadow: var(--color-header-pill-shadow);
-    -webkit-backdrop-filter: var(--color-header-pill-blur);
-    backdrop-filter: var(--color-header-pill-blur);
+    justify-content: space-between;
+    gap: 28px;
 }
 
-/* ----------------------------------------------------------------------------
-   Pill interior — Figma children of frame 12:3
-   Layout: Logo (left) · Links (fills, centered) · Agent Login · CTA (right)
-   ---------------------------------------------------------------------------- */
-
-/* Reset for buttons inside the pill.
-   :where() zeros the specificity of `button` so component classes
-   (e.g. .site-header__cta) can override the background without
-   needing to inflate their own selectors. */
-.site-header__pill :where(button) {
+/* Reset for buttons inside the header */
+.site-header button {
     appearance: none;
     -webkit-appearance: none;
     background: transparent;
@@ -285,107 +258,170 @@
     color: inherit;
     cursor: pointer;
     line-height: 1;
-    white-space: nowrap;
 }
 
-/* LEFT — Logo (32px navy disc + Bricolage Grotesque wordmark) */
-.site-header__logo {
+/* Brand — logo mark + wordmark */
+.site-header__brand {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     flex-shrink: 0;
+    text-decoration: none;
+    color: var(--color-nav-brand);
 }
 
-.site-header__logo:hover {
-    box-shadow: 0px 0px 0px 0px rgba(0, 0, 0, 0);
-}
-
-.site-header__logo-mark {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: var(--color-nav-brand);
-    flex-shrink: 0;
-}
-
-.site-header__logo-text {
+.site-header__brand-mark {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 14px;
+    background: var(--gradient-brand);
+    color: #fff;
     font-family: var(--font-display);
     font-weight: 800;
-    font-size: 20px;
+    font-size: 18px;
+    letter-spacing: -0.05em;
+}
+
+.site-header__brand-text {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.12rem;
     letter-spacing: -0.03em;
     color: var(--color-nav-brand);
 }
 
-/* MIDDLE — Links group (Figma "Links" frame has sizing.horizontal: fill,
-   so it stretches and pushes Logo to the left, Agent Login + CTA to the right) */
-.site-header__links {
-    flex: 1 1 auto;
-    display: inline-flex;
-    justify-content: center;
+/* Primary nav — link list + trailing CTA */
+.site-header__nav {
+    display: flex;
     align-items: center;
-    gap: var(--header-links-gap);
+    gap: 24px;
 }
 
-.site-header__link {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
+.site-header__nav-link {
     font-family: var(--font-heading);
-    font-weight: 400;
-    font-size: 14px;
+    font-weight: 700;
+    font-size: 0.95rem;
     color: var(--color-nav-link);
+    text-decoration: none;
     transition: color var(--transition);
 }
 
-.site-header__link:hover {
+.site-header__nav-link:hover,
+.site-header__nav-link:focus-visible {
     color: var(--color-nav-link-hover);
+    outline: none;
 }
 
-.site-header__link-chevron {
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    flex-shrink: 0;
-}
-
-/* RIGHT — Agent Login (60% opacity per Figma) */
-.site-header__agent-login {
-    flex-shrink: 0;
-    font-family: var(--font-heading);
-    font-weight: 400;
-    font-size: 14px;
-    color: var(--color-nav-link);
-    opacity: 0.6;
-    transition: opacity var(--transition);
-}
-
-.site-header__agent-login:hover {
-    color: var(--color-nav-link-hover);
-}
-
-/* RIGHT — Get Matched CTA (unique green #2B8673 from Figma fill_R7TAFT) */
 .site-header__cta {
     flex-shrink: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 12px 22px;
+    padding: 10px 18px;
     background: var(--color-nav-cta-bg);
     color: var(--color-nav-cta-text);
     font-family: var(--font-heading);
-    font-weight: 500;
-    font-size: 14px;
+    font-weight: 700;
+    font-size: 0.95rem;
     border-radius: 999px;
-    transition: transform var(--transition), background-color 200ms ease;
+    text-decoration: none;
+    box-shadow: 0 10px 24px rgba(40, 182, 115, 0.22);
+    transition: background-color 200ms ease, transform var(--transition);
 }
 
-.site-header__cta:hover {
-    color: var(--color-nav-cta-text);
+.site-header__cta:hover,
+.site-header__cta:focus-visible {
     background: var(--color-nav-cta-bg-hover);
+    color: var(--color-nav-cta-text);
+    outline: none;
 }
 
 .site-header__cta:active {
     transform: scale(0.98);
+}
+
+/* Mobile hamburger — hidden on desktop */
+.site-header__mobile-toggle {
+    display: none;
+    width: 40px;
+    height: 40px;
+    padding: 8px;
+    flex-shrink: 0;
+}
+
+.site-header__mobile-toggle-bar {
+    display: block;
+    width: 24px;
+    height: 2px;
+    margin: 5px auto;
+    background: var(--color-nav-brand);
+    transition: transform var(--transition), opacity var(--transition);
+}
+
+@media (max-width: 980px) {
+    .site-header__inner {
+        padding: 0 20px;
+    }
+
+    .site-header__mobile-toggle {
+        display: block;
+    }
+
+    .site-header__nav {
+        position: absolute;
+        top: 100%;
+        left: 16px;
+        right: 16px;
+        display: none;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 4px;
+        padding: 14px;
+        background: #fff;
+        border: 1px solid var(--color-border);
+        border-radius: 22px;
+        box-shadow: 0 20px 60px -8px rgba(10, 15, 26, 0.07);
+    }
+
+    .site-header__nav.is-open {
+        display: flex;
+    }
+
+    .site-header__nav-link {
+        padding: 12px 14px;
+        border-radius: 12px;
+    }
+
+    .site-header__nav-link:hover,
+    .site-header__nav-link:focus-visible {
+        background: var(--color-background-alt);
+    }
+
+    .site-header__cta {
+        margin-top: 8px;
+        justify-content: center;
+    }
+
+    .site-header__mobile-toggle.is-open .site-header__mobile-toggle-bar:nth-child(1) {
+        transform: translateY(7px) rotate(45deg);
+    }
+
+    .site-header__mobile-toggle.is-open .site-header__mobile-toggle-bar:nth-child(2) {
+        opacity: 0;
+    }
+
+    .site-header__mobile-toggle.is-open .site-header__mobile-toggle-bar:nth-child(3) {
+        transform: translateY(-7px) rotate(-45deg);
+    }
+}
+
+@media (max-width: 600px) {
+    .site-header__inner {
+        min-height: 64px;
+        padding: 0 16px;
+    }
 }
 
 /* ============================================================================
@@ -543,53 +579,9 @@
    ============================================================================ */
 
 /* ----------------------------------------------------------------------------
-   Nav Dropdown — generic hover-open shell used by header dropdowns
-   Wraps a trigger button + a panel. Bridges the gap between trigger and panel
-   so cursor travel keeps it open. Chevron inside the trigger rotates 180°.
-   ---------------------------------------------------------------------------- */
-
-.nav-dropdown {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-}
-
-.nav-dropdown__panel {
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%) translateY(4px);
-    /* Padding-top creates an invisible bridge so the cursor can cross from
-       trigger to visible panel without the dropdown closing. */
-    padding-top: 16px;
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-    transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
-    z-index: 1001;
-}
-
-.nav-dropdown:hover .nav-dropdown__panel,
-.nav-dropdown:focus-within .nav-dropdown__panel {
-    opacity: 1;
-    visibility: visible;
-    pointer-events: auto;
-    transform: translateX(-50%) translateY(0);
-}
-
-/* Chevron points up while the dropdown is open. */
-.nav-dropdown:hover .site-header__link-chevron,
-.nav-dropdown:focus-within .site-header__link-chevron {
-    transform: rotate(180deg);
-}
-
-.site-header__link-chevron {
-    transition: transform 0.15s ease;
-}
-
-/* ----------------------------------------------------------------------------
    Coverage Dropdown — Figma node 51:2 ("Dropdown · Panel")
-   See components/coverage-dropdown.php
+   See components/coverage-dropdown.php. Currently unused by the header;
+   retained for reuse on the future /coverage page.
    ---------------------------------------------------------------------------- */
 
 .coverage-dropdown {
@@ -1685,15 +1677,6 @@
 @media (max-width: 1024px) {
     :root {
         --container-pad: 1.25rem;
-        --header-outer-padding-x: 24px;
-    }
-}
-
-@media (max-width: 600px) {
-    :root {
-        --header-outer-padding-y: 16px;
-        --header-outer-padding-x: 16px;
-        --header-pill-padding: 12px 16px;
     }
 }
 

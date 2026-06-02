@@ -8,37 +8,52 @@
 <body <?php body_class(); ?>>
 <?php wp_body_open(); ?>
 
-<header class="site-header" role="banner">
-    <div class="site-header__pill">
+<?php
+/**
+ * Primary nav items.
+ *
+ * Routes match the canonical homepage routes in components/_homepage-data.php.
+ * TODO: pages for /how-it-works, /coverage, /trust-and-privacy, /for-agents,
+ * /start do not exist yet (Phase 3 — Homepage Build). Links will resolve to
+ * 404 until those templates ship.
+ */
+$primary_nav = array(
+    array( 'label' => 'How it works',      'href' => '/how-it-works' ),
+    array( 'label' => 'Coverage types',    'href' => '/coverage' ),
+    array( 'label' => 'Trust and privacy', 'href' => '/trust-and-privacy' ),
+    array( 'label' => 'For agents',        'href' => '/for-agents' ),
+);
+?>
 
-        <!-- LEFT — Logo + wordmark -->
-        <button type="button" class="site-header__logo" aria-label="Ensurance home">
-            <span class="site-header__logo-mark" aria-hidden="true"></span>
-            <span class="site-header__logo-text">Ensurance</span>
+<header class="site-header" role="banner">
+    <div class="site-header__inner">
+
+        <a class="site-header__brand" href="<?php echo esc_url( home_url( '/' ) ); ?>" aria-label="Ensurance home">
+            <span class="site-header__brand-mark" aria-hidden="true">E</span>
+            <span class="site-header__brand-text">Ensurance</span>
+        </a>
+
+        <button type="button"
+                class="site-header__mobile-toggle"
+                aria-controls="primary-nav"
+                aria-expanded="false"
+                aria-label="Open navigation">
+            <span class="site-header__mobile-toggle-bar" aria-hidden="true"></span>
+            <span class="site-header__mobile-toggle-bar" aria-hidden="true"></span>
+            <span class="site-header__mobile-toggle-bar" aria-hidden="true"></span>
         </button>
 
-        <!-- MIDDLE — Nav links (stretches to fill, matches Figma "Links" frame with horizontal: fill) -->
-        <div class="site-header__links">
-            <button type="button" class="site-header__link">How it works</button>
-            <div class="nav-dropdown">
-                <button type="button" class="site-header__link nav-dropdown__trigger" aria-haspopup="menu" aria-expanded="false">
-                    <span>Coverage</span>
-                    <svg class="site-header__link-chevron" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-                        <path d="M2.5 3.75L5 6.25L7.5 3.75" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </button>
-                <div class="nav-dropdown__panel">
-                    <?php get_template_part( 'components/coverage-dropdown' ); ?>
-                </div>
-            </div>
-            <button type="button" class="site-header__link">Why Ensurance</button>
-            <button type="button" class="site-header__link">For agents</button>
-            <button type="button" class="site-header__link">FAQ</button>
-        </div>
+        <nav id="primary-nav" class="site-header__nav" aria-label="Primary navigation">
+            <?php foreach ( $primary_nav as $item ) : ?>
+                <a class="site-header__nav-link" href="<?php echo esc_url( home_url( $item['href'] ) ); ?>">
+                    <?php echo esc_html( $item['label'] ); ?>
+                </a>
+            <?php endforeach; ?>
 
-        <!-- RIGHT — Agent Login + Get Matched CTA -->
-        <button type="button" class="site-header__agent-login">Agent Login</button>
-        <button type="button" class="site-header__cta">Get Matched</button>
+            <a class="site-header__cta"
+               href="<?php echo esc_url( home_url( '/start' ) ); ?>"
+               data-event="nav_start_request_click">Start your request</a>
+        </nav>
 
     </div>
 </header>

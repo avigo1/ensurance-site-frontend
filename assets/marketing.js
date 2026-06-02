@@ -6,56 +6,48 @@
 document.addEventListener('DOMContentLoaded', function () {
 
     // =========================================================================
-    // 1. "FOR YOU" DROPDOWN
-    // =========================================================================
-
-    const dropdownToggle = document.querySelector('.site-header__dropdown-toggle');
-    const dropdown       = document.getElementById('dropdown-for-you');
-
-    if (dropdownToggle && dropdown) {
-        dropdownToggle.addEventListener('click', function () {
-            const isOpen = this.getAttribute('aria-expanded') === 'true';
-            this.setAttribute('aria-expanded', String(!isOpen));
-            dropdown.classList.toggle('is-open', !isOpen);
-        });
-
-        // Close when clicking anywhere outside the dropdown's parent <li>
-        document.addEventListener('click', function (e) {
-            if (!dropdownToggle.closest('.has-dropdown').contains(e.target)) {
-                dropdownToggle.setAttribute('aria-expanded', 'false');
-                dropdown.classList.remove('is-open');
-            }
-        });
-
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') {
-                dropdownToggle.setAttribute('aria-expanded', 'false');
-                dropdown.classList.remove('is-open');
-                dropdownToggle.focus();
-            }
-        });
-    }
-
-    // =========================================================================
-    // 2. MOBILE NAV TOGGLE
+    // 1. MOBILE NAV TOGGLE
+    // Hamburger button collapses/expands the primary nav on small screens.
     // =========================================================================
 
     const mobileToggle = document.querySelector('.site-header__mobile-toggle');
-    const mobileNav    = document.getElementById('mobile-nav');
+    const primaryNav   = document.getElementById('primary-nav');
 
-    if (mobileToggle && mobileNav) {
+    if (mobileToggle && primaryNav) {
+        const closeNav = function () {
+            mobileToggle.setAttribute('aria-expanded', 'false');
+            mobileToggle.setAttribute('aria-label', 'Open navigation');
+            mobileToggle.classList.remove('is-open');
+            primaryNav.classList.remove('is-open');
+        };
+
+        const openNav = function () {
+            mobileToggle.setAttribute('aria-expanded', 'true');
+            mobileToggle.setAttribute('aria-label', 'Close navigation');
+            mobileToggle.classList.add('is-open');
+            primaryNav.classList.add('is-open');
+        };
+
         mobileToggle.addEventListener('click', function () {
             const isOpen = this.getAttribute('aria-expanded') === 'true';
-            this.setAttribute('aria-expanded', String(!isOpen));
-            this.classList.toggle('is-open', !isOpen);
-            mobileNav.classList.toggle('is-open', !isOpen);
-            mobileNav.setAttribute('aria-hidden', String(isOpen));
-            this.setAttribute('aria-label', isOpen ? 'Open menu' : 'Close menu');
+            if (isOpen) { closeNav(); } else { openNav(); }
+        });
+
+        // Tapping a link inside the open panel closes it.
+        primaryNav.addEventListener('click', function (e) {
+            if (e.target.closest('a')) closeNav();
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && primaryNav.classList.contains('is-open')) {
+                closeNav();
+                mobileToggle.focus();
+            }
         });
     }
 
     // =========================================================================
-    // 3. SMOOTH SCROLL
+    // 2. SMOOTH SCROLL
     // =========================================================================
 
     document.querySelectorAll('a[href^="#"]').forEach(function (anchor) {
@@ -69,7 +61,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // =========================================================================
-    // 4. HOMEPAGE TRACKING — data-event clicks + FAQ expand
+    // 3. HOMEPAGE TRACKING — data-event clicks + FAQ expand
     // Pushes to window.dataLayer when present. Safe no-op otherwise.
     // FAQ tracks by `data-faq` key (never the question text — keeps PII out
     // of the analytics layer).
