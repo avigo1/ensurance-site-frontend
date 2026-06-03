@@ -1342,16 +1342,23 @@
     color: #fff;
 }
 
-.section-copy--light h2 {
+/* Navy band ("Trust and privacy") light-text overrides.
+   Anchored to .section--protected so they beat the page-scoped color
+   rules (.page-home/.page-how-it-works/.page-coverage *) on any page
+   using this section. */
+.section--protected h2,
+.section--protected h3,
+.section--protected .section-copy--light h2 {
     color: #fff;
 }
 
-.section-copy--light .section-lead {
-    color: rgba(255, 255, 255, 0.78);
+.section--protected .section-copy--light .section-lead {
+    color: rgba(255, 255, 255, 0.86);
 }
 
-.eyebrow--light {
-    color: rgba(255, 255, 255, 0.72);
+.section--protected .eyebrow,
+.section--protected .eyebrow--light {
+    color: rgba(255, 255, 255, 0.78);
 }
 
 .trust-panel {
@@ -1397,10 +1404,23 @@
     border: 1px solid rgba(255, 255, 255, 0.18);
     border-radius: 16px;
     background: rgba(255, 255, 255, 0.08);
-    color: rgba(255, 255, 255, 0.82);
+    color: rgba(255, 255, 255, 0.86);
     font-size: 0.92rem;
     font-weight: 600;
     line-height: 1.5;
+}
+
+/* Page-scoped paragraph color (.page-* p) outranks the base .ad-disclosure
+   color, so anchor a higher-specificity rule to the navy band. */
+.section--protected .ad-disclosure {
+    color: rgba(255, 255, 255, 0.86);
+}
+
+/* Same problem for the trust-panel paragraph: page-scoped p color and
+   .trust-panel p have equal specificity; anchor to .section--protected to
+   guarantee the light text wins. */
+.section--protected .trust-panel p {
+    color: rgba(255, 255, 255, 0.88);
 }
 
 /* ----------------------------------------------------------------------------
