@@ -75,6 +75,38 @@ function ensurance_marketing_assets() {
             true
         );
     }
+
+    // /start — guided intake. Loads the shared marketing CSS/JS so the
+    // header, footer, buttons, and design tokens stay consistent, plus
+    // page-specific styles and the wizard controller.
+    if (is_page_template('page-start.php')) {
+        wp_enqueue_style(
+            'ensurance-marketing',
+            get_stylesheet_directory_uri() . '/assets/marketing.css',
+            array(),
+            filemtime(get_stylesheet_directory() . '/assets/marketing.css')
+        );
+        wp_enqueue_script(
+            'ensurance-marketing',
+            get_stylesheet_directory_uri() . '/assets/marketing.js',
+            array(),
+            filemtime(get_stylesheet_directory() . '/assets/marketing.js'),
+            true
+        );
+        wp_enqueue_style(
+            'ensurance-start',
+            get_stylesheet_directory_uri() . '/assets/start.css',
+            array('ensurance-marketing'),
+            filemtime(get_stylesheet_directory() . '/assets/start.css')
+        );
+        wp_enqueue_script(
+            'ensurance-start',
+            get_stylesheet_directory_uri() . '/assets/start.js',
+            array(),
+            filemtime(get_stylesheet_directory() . '/assets/start.js'),
+            true
+        );
+    }
 }
 add_action('wp_enqueue_scripts', 'ensurance_marketing_assets');
 
@@ -94,6 +126,15 @@ function ensurance_marketing_fonts() {
         wp_enqueue_style(
             'ensurance-investor-fonts',
             'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap',
+            array(),
+            null
+        );
+    }
+
+    if (is_page_template('page-start.php')) {
+        wp_enqueue_style(
+            'ensurance-marketing-fonts',
+            'https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap',
             array(),
             null
         );
