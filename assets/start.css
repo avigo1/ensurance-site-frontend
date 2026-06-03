@@ -290,39 +290,76 @@
     font-size: 0.88rem;
 }
 
-.start-field input,
-.start-field select,
-.start-field textarea {
+/* Inputs are prefixed with .page-start so we beat Kadence's form field rules
+   on specificity (was getting overridden to white-on-white). Colors are set
+   explicitly rather than via the `background` shorthand so a parent rule
+   setting background-image cannot leak through. */
+.page-start .start-field input,
+.page-start .start-field select,
+.page-start .start-field textarea {
     width: 100%;
     min-height: 50px;
     padding: 12px 14px;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
-    background: #fff;
+    background-color: #fff;
+    background-image: none;
     color: var(--color-text);
+    -webkit-text-fill-color: var(--color-text);
     font: inherit;
     transition: border-color var(--transition), box-shadow var(--transition);
+    appearance: none;
+    -webkit-appearance: none;
 }
 
-.start-field textarea {
+.page-start .start-field select {
+    /* Keep the native dropdown caret on Safari/iOS now that appearance is none. */
+    background-image:
+        linear-gradient(45deg, transparent 50%, var(--color-text) 50%),
+        linear-gradient(135deg, var(--color-text) 50%, transparent 50%);
+    background-position:
+        calc(100% - 18px) calc(50% - 2px),
+        calc(100% - 13px) calc(50% - 2px);
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+    padding-right: 38px;
+}
+
+.page-start .start-field textarea {
     min-height: 150px;
     resize: vertical;
     line-height: 1.55;
 }
 
-.start-field input:focus,
-.start-field select:focus,
-.start-field textarea:focus {
+.page-start .start-field input::placeholder,
+.page-start .start-field textarea::placeholder {
+    color: var(--color-text-muted);
+    opacity: 1;
+}
+
+.page-start .start-field input:focus,
+.page-start .start-field select:focus,
+.page-start .start-field textarea:focus {
     outline: none;
     border-color: var(--color-nav-cta-bg);
     box-shadow: 0 0 0 4px rgba(43, 134, 115, 0.18);
 }
 
-.start-field input[aria-invalid="true"],
-.start-field select[aria-invalid="true"],
-.start-field textarea[aria-invalid="true"] {
+.page-start .start-field input[aria-invalid="true"],
+.page-start .start-field select[aria-invalid="true"],
+.page-start .start-field textarea[aria-invalid="true"] {
     border-color: var(--color-error);
     box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.12);
+}
+
+/* Chrome autofill repaints the background yellow and the text white-ish; pin
+   both back to the page's palette. */
+.page-start .start-field input:-webkit-autofill,
+.page-start .start-field input:-webkit-autofill:focus,
+.page-start .start-field textarea:-webkit-autofill {
+    -webkit-text-fill-color: var(--color-text);
+    -webkit-box-shadow: 0 0 0 1000px #fff inset;
+    caret-color: var(--color-text);
 }
 
 /* ============================================================================
