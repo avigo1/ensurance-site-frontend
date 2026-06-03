@@ -59,6 +59,22 @@ function ensurance_marketing_assets() {
             true
         );
     }
+
+    if (is_page_template('page-investor-brief.php')) {
+        wp_enqueue_style(
+            'ensurance-investor',
+            get_stylesheet_directory_uri() . '/assets/investor.css',
+            array(),
+            filemtime(get_stylesheet_directory() . '/assets/investor.css')
+        );
+        wp_enqueue_script(
+            'ensurance-investor',
+            get_stylesheet_directory_uri() . '/assets/investor.js',
+            array(),
+            filemtime(get_stylesheet_directory() . '/assets/investor.js'),
+            true
+        );
+    }
 }
 add_action('wp_enqueue_scripts', 'ensurance_marketing_assets');
 
@@ -69,6 +85,15 @@ function ensurance_marketing_fonts() {
         wp_enqueue_style(
             'ensurance-marketing-fonts',
             'https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap',
+            array(),
+            null
+        );
+    }
+
+    if (is_page_template('page-investor-brief.php')) {
+        wp_enqueue_style(
+            'ensurance-investor-fonts',
+            'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap',
             array(),
             null
         );
