@@ -33,6 +33,47 @@
     box-sizing: border-box;
 }
 
+/* CTA palette — base .btn--primary defaults to the yellow accent. /start is a
+   shopper-trust surface, so primary actions should ride the green nav-cta
+   palette (same green as the header CTA and the homepage). Scoped to
+   .page-start so no other template is affected. */
+.page-start .btn {
+    min-height: 52px;
+    padding: 13px 24px;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 0.98rem;
+    letter-spacing: -0.01em;
+    border-width: 1px;
+}
+
+.page-start .btn--primary {
+    background: var(--color-nav-cta-bg);
+    border-color: var(--color-nav-cta-bg);
+    color: var(--color-nav-cta-text);
+    box-shadow: 0 12px 28px rgba(43, 134, 115, 0.22);
+}
+
+.page-start .btn--primary:hover,
+.page-start .btn--primary:focus {
+    background: var(--color-nav-cta-bg-hover);
+    border-color: var(--color-nav-cta-bg-hover);
+    color: var(--color-nav-cta-text);
+}
+
+.page-start .btn--secondary {
+    background: #fff;
+    border-color: var(--color-border);
+    color: var(--color-nav-brand);
+}
+
+.page-start .btn--secondary:hover,
+.page-start .btn--secondary:focus {
+    background: #fff;
+    border-color: var(--color-nav-brand-soft);
+    color: var(--color-nav-brand);
+}
+
 /* ============================================================================
    2. WELCOME (start-intro)
    ============================================================================ */
