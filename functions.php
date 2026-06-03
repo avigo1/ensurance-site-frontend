@@ -44,7 +44,7 @@ add_action('wp_enqueue_scripts', 'kadence_child_enqueue_styles');
 // Add new marketing page conditions here as pages are built.
 
 function ensurance_marketing_assets() {
-    if (is_front_page() || is_page_template('page-home.php') || is_page_template('page-how-it-works.php')) {
+    if (is_front_page() || is_page_template('page-home.php') || is_page_template('page-how-it-works.php') || is_page_template('page-coverage.php')) {
         wp_enqueue_style(
             'ensurance-marketing',
             get_stylesheet_directory_uri() . '/assets/marketing.css',
@@ -113,7 +113,7 @@ add_action('wp_enqueue_scripts', 'ensurance_marketing_assets');
 // Google Fonts for marketing pages — Bricolage Grotesque (display/logo),
 // Manrope (UI/headings), Inter (body). Loaded only on marketing pages.
 function ensurance_marketing_fonts() {
-    if (is_front_page() || is_page_template('page-home.php') || is_page_template('page-how-it-works.php')) {
+    if (is_front_page() || is_page_template('page-home.php') || is_page_template('page-how-it-works.php') || is_page_template('page-coverage.php')) {
         wp_enqueue_style(
             'ensurance-marketing-fonts',
             'https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap',
