@@ -138,8 +138,12 @@
    ============================================================================ */
 
 .start-wizard {
-    padding: 0 0 var(--space-24);
+    padding: var(--space-12) 0 var(--space-24);
     scroll-margin-top: 96px;
+    /* Soft slate band differentiates the action area from the cream welcome
+       screen above and helps the white form-card read as a focused surface. */
+    background: #eef2f7;
+    border-top: 1px solid var(--color-border);
 }
 
 .start-wizard__shell {
