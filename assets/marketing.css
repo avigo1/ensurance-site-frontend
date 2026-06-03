@@ -1711,7 +1711,7 @@
     box-shadow: var(--home-shadow-soft);
 }
 
-.answer-block__eyebrow {
+.page-how-it-works .answer-block__eyebrow {
     margin: 0 0 12px;
     color: rgba(255, 255, 255, 0.7);
     font-family: var(--font-heading);
@@ -1721,7 +1721,7 @@
     text-transform: uppercase;
 }
 
-.answer-block__headline {
+.page-how-it-works .answer-block__headline {
     margin: 0 0 16px;
     color: #fff;
     font-family: var(--font-heading);
@@ -1731,9 +1731,9 @@
     line-height: 1.2;
 }
 
-.answer-block__body {
+.page-how-it-works .answer-block__body {
     margin: 12px 0 0;
-    color: rgba(255, 255, 255, 0.86);
+    color: rgba(255, 255, 255, 0.92);
     font-size: 1rem;
     line-height: 1.65;
 }
@@ -1748,7 +1748,7 @@
     box-shadow: var(--home-shadow-card);
 }
 
-.info-card__headline {
+.page-how-it-works .info-card__headline {
     margin: 0;
     color: var(--home-brand);
     font-family: var(--font-heading);
@@ -1758,14 +1758,14 @@
     line-height: 1.25;
 }
 
-.info-card__body {
+.page-how-it-works .info-card__body {
     margin: 14px 0 0;
     color: var(--home-text-muted);
     font-size: 1rem;
     line-height: 1.65;
 }
 
-.info-card__list {
+.page-how-it-works .info-card__list {
     margin: 20px 0 0;
     padding: 0;
     list-style: none;
@@ -1773,7 +1773,7 @@
     gap: 10px;
 }
 
-.info-card__list li {
+.page-how-it-works .info-card__list li {
     position: relative;
     padding-left: 28px;
     color: var(--home-text-strong);
@@ -1781,7 +1781,7 @@
     line-height: 1.5;
 }
 
-.info-card__list li::before {
+.page-how-it-works .info-card__list li::before {
     content: "";
     position: absolute;
     left: 0;
@@ -1806,7 +1806,7 @@
     border-radius: 24px;
 }
 
-.not-card__list {
+.page-how-it-works .not-card__list {
     margin: 20px 0 0;
     padding: 0;
     list-style: none;
@@ -1814,7 +1814,7 @@
     gap: 10px;
 }
 
-.not-card__list li {
+.page-how-it-works .not-card__list li {
     position: relative;
     padding-left: 28px;
     color: var(--home-text-strong);
@@ -1822,7 +1822,7 @@
     line-height: 1.5;
 }
 
-.not-card__list li::before {
+.page-how-it-works .not-card__list li::before {
     content: "";
     position: absolute;
     left: 4px;
@@ -1833,7 +1833,7 @@
     border-radius: 2px;
 }
 
-.instead-card {
+.page-how-it-works .instead-card {
     padding: 32px;
     background: var(--home-brand);
     color: #fff;
@@ -1841,7 +1841,7 @@
     box-shadow: var(--home-shadow-soft);
 }
 
-.instead-card__eyebrow {
+.page-how-it-works .instead-card__eyebrow {
     margin: 0 0 12px;
     color: rgba(255, 255, 255, 0.7);
     font-family: var(--font-heading);
@@ -1851,9 +1851,9 @@
     text-transform: uppercase;
 }
 
-.instead-card__body {
+.page-how-it-works .instead-card__body {
     margin: 12px 0 0;
-    color: rgba(255, 255, 255, 0.88);
+    color: rgba(255, 255, 255, 0.92);
     font-size: 1rem;
     line-height: 1.65;
 }
