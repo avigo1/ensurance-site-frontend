@@ -21,6 +21,24 @@
    ============================================================================ */
 
 .page-start {
+    /* Re-declare the homepage palette tokens here so the shared section
+       partials (.next-module, etc.) that reference --home-* resolve on
+       /start the same way they do on /. Without this the numbered pills in
+       the "What happens next" module fall back to transparent. */
+    --home-brand:           #1F3A5F;
+    --home-secondary:       #5B7C99;
+    --home-accent:          #2B8673;
+    --home-accent-hover:    #236D5E;
+    --home-surface:         #FFFFFF;
+    --home-surface-soft:    #F7F9FC;
+    --home-text:            #1B2430;
+    --home-text-muted:      #667085;
+    --home-text-strong:     #344054;
+    --home-border:          #D9E2EC;
+    --home-border-soft:     #EAECF0;
+    --home-shadow-card:     0 14px 36px rgba(31, 58, 95, 0.08);
+    --home-shadow-soft:     0 22px 70px rgba(31, 58, 95, 0.12);
+
     background:
         radial-gradient(circle at 12% 12%, rgba(91, 124, 153, 0.08), transparent 38%),
         var(--color-background);
