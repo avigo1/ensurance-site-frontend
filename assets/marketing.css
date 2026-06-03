@@ -104,6 +104,9 @@
 .page-home *,
 .page-home *::before,
 .page-home *::after,
+.page-how-it-works *,
+.page-how-it-works *::before,
+.page-how-it-works *::after,
 .site-header *,
 .site-header *::before,
 .site-header *::after,
@@ -138,14 +141,19 @@
 .page-home h1,
 .page-home h2,
 .page-home h3,
-.page-home h4 {
+.page-home h4,
+.page-how-it-works h1,
+.page-how-it-works h2,
+.page-how-it-works h3,
+.page-how-it-works h4 {
     font-family: var(--font-heading);
     font-weight: 800;
     color: var(--color-text);
     line-height: 1.2;
 }
 
-.page-home p {
+.page-home p,
+.page-how-it-works p {
     font-family: var(--font-body);
     color: var(--color-text-muted);
     line-height: 1.7;
@@ -620,12 +628,14 @@
 }
 
 /* ----------------------------------------------------------------------------
-   Homepage shared tokens
-   Sections share section padding, eyebrow style, and a brand-accented
-   "soft" navy palette. Scoped under .page-home to avoid leakage.
+   Marketing-page shared tokens
+   Sections share padding, eyebrow style, and a brand-accented "soft" navy
+   palette. Opt-in classes: .page-home, .page-how-it-works. Add more pages
+   to each scoped selector below as new marketing templates ship.
    ---------------------------------------------------------------------------- */
 
-.page-home {
+.page-home,
+.page-how-it-works {
     --home-brand:           #1F3A5F;
     --home-secondary:       #5B7C99;
     --home-accent:          #2B8673;
@@ -646,7 +656,8 @@
     line-height: 1.6;
 }
 
-.page-home .eyebrow {
+.page-home .eyebrow,
+.page-how-it-works .eyebrow {
     margin: 0 0 14px;
     color: var(--home-secondary);
     font-family: var(--font-heading);
@@ -658,7 +669,10 @@
 
 .page-home h1,
 .page-home h2,
-.page-home h3 {
+.page-home h3,
+.page-how-it-works h1,
+.page-how-it-works h2,
+.page-how-it-works h3 {
     color: var(--home-brand);
     letter-spacing: -0.04em;
     line-height: 1.08;
@@ -669,7 +683,8 @@
    Hero — components/hero.php
    ---------------------------------------------------------------------------- */
 
-.page-home .hero {
+.page-home .hero,
+.page-how-it-works .hero {
     position: relative;
     padding: 88px 0 78px;
     overflow: hidden;
@@ -678,7 +693,8 @@
         var(--home-surface-soft);
 }
 
-.page-home .hero::after {
+.page-home .hero::after,
+.page-how-it-works .hero::after {
     content: "";
     position: absolute;
     inset: auto -18% -24% 48%;
@@ -736,7 +752,8 @@
 
 /* CTA buttons — homepage variants override the base .btn--primary/secondary
    so the page-home palette stays self-consistent (green accent, navy outline). */
-.page-home .btn {
+.page-home .btn,
+.page-how-it-works .btn {
     min-height: 52px;
     padding: 13px 24px;
     font-family: var(--font-heading);
@@ -746,26 +763,30 @@
     border-width: 1px;
 }
 
-.page-home .btn--primary {
+.page-home .btn--primary,
+.page-how-it-works .btn--primary {
     background: var(--home-accent);
     border-color: var(--home-accent);
     color: #fff;
     box-shadow: 0 12px 28px rgba(43, 134, 115, 0.22);
 }
 
-.page-home .btn--primary:hover {
+.page-home .btn--primary:hover,
+.page-how-it-works .btn--primary:hover {
     background: var(--home-accent-hover);
     border-color: var(--home-accent-hover);
     color: #fff;
 }
 
-.page-home .btn--secondary {
+.page-home .btn--secondary,
+.page-how-it-works .btn--secondary {
     background: var(--home-surface);
     border-color: var(--home-border);
     color: var(--home-brand);
 }
 
-.page-home .btn--secondary:hover {
+.page-home .btn--secondary:hover,
+.page-how-it-works .btn--secondary:hover {
     background: var(--home-surface);
     border-color: var(--home-secondary);
     color: var(--home-brand);
@@ -1025,11 +1046,13 @@
    Shared section primitives — used by sections 2-10
    ---------------------------------------------------------------------------- */
 
-.page-home .section {
+.page-home .section,
+.page-how-it-works .section {
     padding: 96px 0;
 }
 
-.page-home .section--soft {
+.page-home .section--soft,
+.page-how-it-works .section--soft {
     background:
         radial-gradient(circle at 12% 12%, rgba(91, 124, 153, 0.10), transparent 32%),
         var(--home-surface-soft);
@@ -1665,5 +1688,194 @@
     .site-footer__top {
         grid-template-columns: 1fr;
         gap: 32px;
+    }
+}
+
+/* ============================================================================
+   /how-it-works — section-specific styles
+   Shares hero, process, FAQ, and final-CTA partials with the homepage.
+   Only the sections unique to /how-it-works are styled below.
+   ============================================================================ */
+
+/* ----- Direct answer (AI-search canonical block) ---------------------------- */
+
+.section--direct-answer {
+    background: var(--home-surface);
+}
+
+.answer-block {
+    padding: 32px;
+    background: var(--home-brand);
+    color: #fff;
+    border-radius: 24px;
+    box-shadow: var(--home-shadow-soft);
+}
+
+.answer-block__eyebrow {
+    margin: 0 0 12px;
+    color: rgba(255, 255, 255, 0.7);
+    font-family: var(--font-heading);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.answer-block__headline {
+    margin: 0 0 16px;
+    color: #fff;
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+}
+
+.answer-block__body {
+    margin: 12px 0 0;
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 1rem;
+    line-height: 1.65;
+}
+
+/* ----- Human help when needed ---------------------------------------------- */
+
+.section--human-help .info-card {
+    padding: 32px;
+    background: var(--home-surface);
+    border: 1px solid var(--home-border);
+    border-radius: 24px;
+    box-shadow: var(--home-shadow-card);
+}
+
+.info-card__headline {
+    margin: 0;
+    color: var(--home-brand);
+    font-family: var(--font-heading);
+    font-size: 1.3rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+}
+
+.info-card__body {
+    margin: 14px 0 0;
+    color: var(--home-text-muted);
+    font-size: 1rem;
+    line-height: 1.65;
+}
+
+.info-card__list {
+    margin: 20px 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 10px;
+}
+
+.info-card__list li {
+    position: relative;
+    padding-left: 28px;
+    color: var(--home-text-strong);
+    font-size: 0.98rem;
+    line-height: 1.5;
+}
+
+.info-card__list li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.55em;
+    width: 12px;
+    height: 12px;
+    border-radius: 999px;
+    background: var(--home-accent);
+    box-shadow: 0 0 0 4px rgba(43, 134, 115, 0.16);
+}
+
+/* ----- What Ensurance is not ----------------------------------------------- */
+
+.section--not {
+    background: var(--home-surface);
+}
+
+.not-card {
+    padding: 32px;
+    background: var(--home-surface-soft);
+    border: 1px solid var(--home-border);
+    border-radius: 24px;
+}
+
+.not-card__list {
+    margin: 20px 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 10px;
+}
+
+.not-card__list li {
+    position: relative;
+    padding-left: 28px;
+    color: var(--home-text-strong);
+    font-size: 0.98rem;
+    line-height: 1.5;
+}
+
+.not-card__list li::before {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 0.7em;
+    width: 14px;
+    height: 2px;
+    background: var(--home-secondary);
+    border-radius: 2px;
+}
+
+.instead-card {
+    padding: 32px;
+    background: var(--home-brand);
+    color: #fff;
+    border-radius: 24px;
+    box-shadow: var(--home-shadow-soft);
+}
+
+.instead-card__eyebrow {
+    margin: 0 0 12px;
+    color: rgba(255, 255, 255, 0.7);
+    font-family: var(--font-heading);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.instead-card__body {
+    margin: 12px 0 0;
+    color: rgba(255, 255, 255, 0.88);
+    font-size: 1rem;
+    line-height: 1.65;
+}
+
+/* ----- Responsive: stack two-column sections at tablet width --------------- */
+
+@media (max-width: 960px) {
+    .page-how-it-works .two-column {
+        grid-template-columns: 1fr;
+        gap: 36px;
+    }
+
+    .page-how-it-works .section-copy--sticky {
+        position: static;
+    }
+}
+
+@media (max-width: 768px) {
+    .answer-block,
+    .section--human-help .info-card,
+    .not-card,
+    .instead-card {
+        padding: 24px;
     }
 }

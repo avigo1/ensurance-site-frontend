@@ -14,7 +14,7 @@ if ( ! isset( $faq_intro ) || ! is_array( $faq_intro ) || ! isset( $faq ) || ! i
 $action = $faq_intro['action'];
 ?>
 
-<section class="section section--faq">
+<section class="section section--faq" id="faq">
     <div class="container two-column two-column--start">
 
         <div class="section-copy section-copy--sticky">
