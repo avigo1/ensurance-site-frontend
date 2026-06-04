@@ -2,24 +2,24 @@
 /**
  * Template Name: For Shoppers (Marketing)
  *
- * /for-shoppers — Shopper-facing overview. Explains the controlled request
- * experience, what makes Ensurance different from a quote-comparison or
- * lead-marketplace site, and how shopper control and privacy work in practice.
+ * /for-shoppers — Shopper-facing overview. Mirrors the Figma layout:
+ * centered hero, problem framing, In-short answer card, value cards,
+ * what-happens-next step row, shopper control checklist, real-help quote
+ * callout, comparison (✕ vs ✓), privacy cards, FAQ list, dark CTA band.
  *
- * Reuses the marketing component set. Section copy is the single source of
- * truth in components/_for-shoppers-data.php.
+ * Each section is its own partial under /components/. Copy lives in
+ * components/_for-shoppers-data.php (single source of truth).
  *
  * Workbook compliance:
- *   - Direct-answer (AI-search) block renders within the first 150 words
- *     of visible content (right after the hero).
+ *   - "In short" answer card renders within the first 150 words of visible
+ *     content (third section).
  *   - WebPage, BreadcrumbList, and FAQPage JSON-LD emitted in wp_head.
  *   - All CTAs carry data-event attributes for tracking via marketing.js.
- *   - Approved positioning language; no instant-quote or guarantee claims.
+ *   - Approved positioning language only; no instant-quote / guarantee claims.
  */
 
 $for_shoppers = require __DIR__ . '/components/_for-shoppers-data.php';
 
-// Page-specific <title> and metadata. Filters bail on non-target pages.
 add_filter( 'pre_get_document_title', function ( $title ) use ( $for_shoppers ) {
     return $for_shoppers['meta']['title'];
 } );
@@ -80,7 +80,7 @@ add_action( 'wp_head', function () use ( $for_shoppers ) {
     );
 
     $faq_entities = array();
-    foreach ( $for_shoppers['faq'] as $item ) {
+    foreach ( $for_shoppers['faq_section']['items'] as $item ) {
         $faq_entities[] = array(
             '@type'          => 'Question',
             'name'           => $item['question'],
@@ -108,52 +108,49 @@ get_header( 'marketing' );
 <main class="page-for-shoppers" id="main">
 
     <?php
-    // 1 — Hero (two-column with shopper-journey flow card)
+    // 1 — Hero (centered, pill eyebrow, dual CTAs, trust dots)
     $hero = $for_shoppers['hero'];
-    include __DIR__ . '/components/hero.php';
+    include __DIR__ . '/components/hero-centered.php';
 
-    // 2 — Direct answer / AI-search canonical block (within first 150 words)
-    $direct_answer = $for_shoppers['direct_answer'];
-    include __DIR__ . '/components/direct-answer.php';
+    // 2 — The problem (centered intro + 3 plain cards)
+    $problem = $for_shoppers['problem'];
+    include __DIR__ . '/components/problem-cards.php';
 
-    // 3 — The problem (3 reframed cards under a centered section header)
-    $proof_header = $for_shoppers['problem'];
-    $proof        = $for_shoppers['problem']['cards'];
-    include __DIR__ . '/components/proof-strip.php';
+    // 3 — In short (bordered answer card — AI-search direct answer)
+    $answer = $for_shoppers['answer'];
+    include __DIR__ . '/components/answer-card.php';
 
-    // 4 — What Ensurance does (two-column copy + numbered cards on right)
-    $one_request = $for_shoppers['what_we_do'];
-    include __DIR__ . '/components/one-request.php';
+    // 4 — What Ensurance does (centered intro + 3 numbered value cards)
+    $value = $for_shoppers['value'];
+    include __DIR__ . '/components/value-cards.php';
 
-    // 5 — What happens next (4-step process grid)
-    $process = $for_shoppers['steps'];
-    include __DIR__ . '/components/process.php';
+    // 5 — What happens next (centered intro + 4-step row)
+    $steps_section = $for_shoppers['steps'];
+    include __DIR__ . '/components/steps-row.php';
 
-    // 6 — Shopper control (copy + bullet card)
-    $human_help = $for_shoppers['shopper_control'];
-    include __DIR__ . '/components/human-help.php';
+    // 6 — Shopper control (copy + checklist card, two-col)
+    $control = $for_shoppers['control'];
+    include __DIR__ . '/components/control-checklist.php';
 
-    // 7 — Real, licensed humans (navy band, copy + trust panel)
-    $protected = $for_shoppers['protected'];
-    include __DIR__ . '/components/protected.php';
+    // 7 — Real, licensed humans (quote card + copy, two-col)
+    $callout = $for_shoppers['callout'];
+    include __DIR__ . '/components/quote-callout.php';
 
-    // 8 — No quote chaos (what Ensurance is not + instead reframe)
-    $not_section = $for_shoppers['not_section'];
-    include __DIR__ . '/components/what-ensurance-is-not.php';
+    // 8 — No quote chaos (centered intro + ✕/✓ comparison)
+    $comparison = $for_shoppers['comparison'];
+    include __DIR__ . '/components/comparison.php';
 
-    // 9 — Privacy (3 trust cards under a centered section header + footnote)
-    $proof_header = $for_shoppers['privacy'];
-    $proof        = $for_shoppers['privacy']['cards'];
-    include __DIR__ . '/components/proof-strip.php';
+    // 9 — Privacy (centered intro + 3 icon cards + footnote)
+    $privacy = $for_shoppers['privacy'];
+    include __DIR__ . '/components/privacy-cards.php';
 
-    // 10 — FAQ
-    $faq_intro = $for_shoppers['faq_intro'];
-    $faq       = $for_shoppers['faq'];
-    include __DIR__ . '/components/faq.php';
+    // 10 — FAQ (centered intro + stacked Q/A list)
+    $faq_section = $for_shoppers['faq_section'];
+    include __DIR__ . '/components/faq-stacked.php';
 
-    // 11 — Final CTA
-    $final_cta = $for_shoppers['final_cta'];
-    include __DIR__ . '/components/final-cta.php';
+    // 11 — Final CTA (full-bleed dark band)
+    $cta_band = $for_shoppers['cta_band'];
+    include __DIR__ . '/components/final-cta-band.php';
     ?>
 
 </main>

@@ -1183,27 +1183,6 @@
     display: inline-block;
 }
 
-.section-header--centered .section-lead {
-    max-width: 720px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-/* proof-strip used as a labeled section (e.g. /for-shoppers problem + privacy)
-   wraps the card grid in <section class="section section--proof">, picking up
-   standard section padding. Add breathing room between the header and the grid,
-   and between the grid and the optional footnote. */
-.section--proof .proof-strip__grid {
-    margin-top: 12px;
-}
-.section--proof .section-header + .proof-strip__grid {
-    margin-top: 0;
-}
-.section--proof .proof-strip__grid + .section-header {
-    margin-top: 36px;
-    margin-bottom: 0;
-}
-
 .trust-line {
     margin-top: 18px;
     color: var(--home-text-muted);
@@ -1987,5 +1966,701 @@
     .not-card,
     .instead-card {
         padding: 24px;
+    }
+}
+
+/* ============================================================================
+   /for-shoppers — Figma-accurate section system.
+   Scoped to .page-for-shoppers. Uses the existing --home-* token set
+   (navy --home-brand for headings/dark surfaces, teal --home-accent for
+   eyebrow pills / primary CTAs / ✓ icons). Section layouts mirror the
+   Figma: centered hero, centered intros, comparison, checklist card,
+   quote callout, privacy grid, stacked FAQ, dark CTA band.
+   ============================================================================ */
+
+/* ----- Shared shopper tokens (a few extras on top of --home-* family) ----- */
+.page-for-shoppers {
+    --shopper-pill-bg:      rgba(43, 134, 115, 0.10);
+    --shopper-pill-bg-mute: rgba(31, 58, 95, 0.06);
+    --shopper-card-bg:      #FAFAF7;
+    --shopper-card-border:  #E8E6DE;
+    --shopper-card-radius:  16px;
+    --shopper-section-pad:  104px;
+}
+
+/* Page-bg alternation: every other section reads "soft", others read white.
+   The .section--alt class flips the bg. */
+.page-for-shoppers main {
+    background: var(--home-surface);
+}
+.page-for-shoppers .section {
+    padding: var(--shopper-section-pad) 0;
+    background: var(--home-surface);
+}
+.page-for-shoppers .section.section--alt {
+    background: var(--home-surface-soft);
+}
+
+/* ----- Pill eyebrow (replaces the all-caps text eyebrow on this page) ----- */
+.page-for-shoppers .eyebrow-pill {
+    display: inline-block;
+    padding: 7px 14px;
+    border-radius: 999px;
+    background: var(--shopper-pill-bg);
+    color: var(--home-accent);
+    font-family: var(--font-heading);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+.page-for-shoppers .eyebrow-pill--muted {
+    background: var(--shopper-pill-bg-mute);
+    color: var(--home-secondary);
+}
+
+/* ----- Centered intro (eyebrow + h2 + lead) used across sections ----- */
+.page-for-shoppers .intro-centered {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    max-width: 1080px;
+    margin: 0 auto 52px;
+}
+.page-for-shoppers .intro-centered__headline {
+    margin-top: 16px;
+    font-size: clamp(2rem, 3.6vw, 2.5rem);
+    line-height: 1.16;
+    letter-spacing: -0.02em;
+    max-width: 18ch;
+}
+.page-for-shoppers .intro-centered__lead {
+    margin-top: 20px;
+    max-width: 720px;
+    color: var(--home-text-strong);
+    font-size: clamp(1.05rem, 1.4vw, 1.19rem);
+    line-height: 1.58;
+}
+
+/* ----- Section: hero (centered) ----- */
+.page-for-shoppers .hero--centered {
+    padding: 120px 0 112px;
+    background: var(--home-surface);
+    text-align: center;
+}
+.page-for-shoppers .hero--centered::after { content: none; } /* kill inherited blob */
+.page-for-shoppers .hero-centered {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 900px;
+}
+.page-for-shoppers .hero-centered__headline {
+    margin-top: 28px;
+    color: var(--home-brand);
+    font-size: clamp(2.4rem, 5.4vw, 3.75rem);
+    font-weight: 800;
+    line-height: 1.06;
+    letter-spacing: -0.025em;
+}
+.page-for-shoppers .hero-centered__body {
+    margin-top: 24px;
+    max-width: 680px;
+    color: var(--home-text-strong);
+    font-size: clamp(1.05rem, 1.5vw, 1.25rem);
+    line-height: 1.52;
+}
+.page-for-shoppers .hero-centered__actions {
+    display: flex;
+    gap: 14px;
+    margin-top: 38px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.page-for-shoppers .hero-centered__microcopy {
+    margin-top: 18px;
+    color: var(--home-text-muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+.page-for-shoppers .hero-centered__trust {
+    list-style: none;
+    margin: 34px 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 28px;
+    color: var(--home-text-strong);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+.page-for-shoppers .hero-centered__trust li {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.page-for-shoppers .hero-centered__trust-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--home-accent);
+}
+
+/* ----- Cards row (3 across) — shared by problem/value/privacy ----- */
+.page-for-shoppers .cards-row {
+    display: grid;
+    gap: 20px;
+}
+.page-for-shoppers .cards-row--3 {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+/* ----- Section: problem (plain cards) ----- */
+.page-for-shoppers .plain-card {
+    padding: 28px;
+    background: var(--shopper-card-bg);
+    border: 1px solid var(--shopper-card-border);
+    border-radius: var(--shopper-card-radius);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.page-for-shoppers .plain-card__title {
+    margin: 0;
+    color: var(--home-brand);
+    font-family: var(--font-heading);
+    font-size: 1.19rem;
+    font-weight: 700;
+    letter-spacing: -0.012em;
+    line-height: 1.3;
+}
+.page-for-shoppers .plain-card__body {
+    margin: 0;
+    color: var(--home-text-strong);
+    font-size: 0.97rem;
+    line-height: 1.54;
+}
+
+/* ----- Section: answer-card ("In short") ----- */
+.page-for-shoppers .section--answer {
+    padding: 88px 0;
+}
+.page-for-shoppers .answer-card {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 44px 48px;
+    background: var(--home-surface);
+    border: 1.5px solid color-mix(in srgb, var(--home-accent) 35%, var(--home-border));
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    box-shadow: var(--home-shadow-soft);
+}
+.page-for-shoppers .answer-card__headline {
+    color: var(--home-brand);
+    font-size: clamp(1.45rem, 2.2vw, 1.65rem);
+    font-weight: 800;
+    line-height: 1.24;
+    letter-spacing: -0.015em;
+}
+.page-for-shoppers .answer-card__body {
+    margin: 0;
+    color: var(--home-text-strong);
+    font-size: 1.125rem;
+    line-height: 1.62;
+}
+
+/* ----- Section: value cards (numbered pill) ----- */
+.page-for-shoppers .value-card {
+    padding: 30px;
+    background: var(--home-surface);
+    border: 1px solid var(--home-border);
+    border-radius: var(--shopper-card-radius);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    box-shadow: var(--home-shadow-card);
+}
+.page-for-shoppers .value-card__number {
+    align-self: flex-start;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: var(--shopper-pill-bg);
+    color: var(--home-accent);
+    font-family: var(--font-heading);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+}
+.page-for-shoppers .value-card__title {
+    margin: 0;
+    color: var(--home-brand);
+    font-family: var(--font-heading);
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.012em;
+    line-height: 1.28;
+}
+.page-for-shoppers .value-card__body {
+    margin: 0;
+    color: var(--home-text-strong);
+    font-size: 0.97rem;
+    line-height: 1.54;
+}
+
+/* ----- Section: steps row (4-step horizontal) ----- */
+.page-for-shoppers .steps-row {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+}
+.page-for-shoppers .step-item {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+.page-for-shoppers .step-item__badge {
+    display: inline-grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--home-accent);
+    color: #fff;
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 1.125rem;
+}
+.page-for-shoppers .step-item__title {
+    margin: 0;
+    color: var(--home-brand);
+    font-family: var(--font-heading);
+    font-size: 1.125rem;
+    font-weight: 700;
+    letter-spacing: -0.012em;
+    line-height: 1.24;
+}
+.page-for-shoppers .step-item__body {
+    margin: 0;
+    color: var(--home-text-strong);
+    font-size: 0.94rem;
+    line-height: 1.52;
+}
+
+/* ----- Section: two-column (copy + card, or card + copy) ----- */
+.page-for-shoppers .two-col {
+    display: grid;
+    grid-template-columns: 1fr 440px;
+    gap: 72px;
+    align-items: center;
+}
+.page-for-shoppers .two-col--card-copy {
+    grid-template-columns: 440px 1fr;
+}
+.page-for-shoppers .two-col__copy {
+    display: flex;
+    flex-direction: column;
+}
+.page-for-shoppers .two-col__copy .eyebrow-pill {
+    align-self: flex-start;
+}
+.page-for-shoppers .two-col__headline {
+    margin-top: 16px;
+    color: var(--home-brand);
+    font-size: clamp(1.85rem, 3.2vw, 2.375rem);
+    font-weight: 800;
+    line-height: 1.16;
+    letter-spacing: -0.022em;
+}
+.page-for-shoppers .two-col__body {
+    margin: 20px 0 0;
+    color: var(--home-text-strong);
+    font-size: clamp(1rem, 1.3vw, 1.125rem);
+    line-height: 1.6;
+}
+.page-for-shoppers .two-col__body + .two-col__body {
+    margin-top: 16px;
+}
+
+/* ----- Section: shopper-control checklist card ----- */
+.page-for-shoppers .checklist-card {
+    list-style: none;
+    margin: 0;
+    padding: 12px 28px;
+    background: var(--home-surface);
+    border: 1px solid var(--home-border);
+    border-radius: 18px;
+    box-shadow: var(--home-shadow-card);
+}
+.page-for-shoppers .checklist-card__row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--home-border-soft);
+}
+.page-for-shoppers .checklist-card__row:last-child { border-bottom: 0; }
+.page-for-shoppers .checklist-card__check {
+    flex: 0 0 24px;
+    display: inline-grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--home-accent);
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 800;
+    line-height: 1;
+}
+.page-for-shoppers .checklist-card__label {
+    color: var(--home-text);
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+/* ----- Section: quote callout (dark card + copy) ----- */
+.page-for-shoppers .quote-card {
+    margin: 0;
+    padding: 44px 40px;
+    background: var(--home-brand);
+    border-radius: 18px;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    box-shadow: var(--home-shadow-soft);
+}
+.page-for-shoppers .quote-card__quote {
+    margin: 0;
+    color: #fff;
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: -0.012em;
+}
+.page-for-shoppers .quote-card__attribution {
+    color: color-mix(in srgb, var(--home-accent) 55%, #fff);
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+/* ----- Section: comparison ✕ vs ✓ ----- */
+.page-for-shoppers .comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+.page-for-shoppers .compare-card {
+    padding: 32px 32px 20px;
+    border-radius: 18px;
+    border: 1px solid var(--home-border);
+    background: var(--shopper-card-bg);
+}
+.page-for-shoppers .compare-card--is {
+    background: var(--home-surface);
+    border-color: color-mix(in srgb, var(--home-accent) 35%, var(--home-border));
+}
+.page-for-shoppers .compare-card__label {
+    margin: 0 0 8px;
+    color: var(--home-text-muted);
+    font-family: var(--font-heading);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+.page-for-shoppers .compare-card__label--is {
+    color: var(--home-accent);
+}
+.page-for-shoppers .compare-card__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.page-for-shoppers .compare-card__row {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--home-border-soft);
+}
+.page-for-shoppers .compare-card__row:last-child { border-bottom: 0; }
+.page-for-shoppers .compare-card__icon {
+    flex: 0 0 24px;
+    display: inline-grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    font-size: 0.78rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-top: 2px;
+}
+.page-for-shoppers .compare-card__icon--not {
+    background: var(--home-border-soft);
+    color: var(--home-text-muted);
+}
+.page-for-shoppers .compare-card__icon--is {
+    background: var(--home-accent);
+    color: #fff;
+}
+.page-for-shoppers .compare-card__text {
+    color: var(--home-text);
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.42;
+}
+.page-for-shoppers .compare-card--not .compare-card__text {
+    color: var(--home-text-muted);
+}
+
+/* ----- Section: privacy cards ----- */
+.page-for-shoppers .privacy-card {
+    padding: 30px 28px;
+    background: color-mix(in srgb, var(--home-accent) 4%, var(--home-surface));
+    border: 1px solid color-mix(in srgb, var(--home-accent) 25%, var(--home-border));
+    border-radius: var(--shopper-card-radius);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+.page-for-shoppers .privacy-card__icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--shopper-pill-bg);
+    position: relative;
+}
+.page-for-shoppers .privacy-card__icon::before {
+    content: "";
+    position: absolute;
+    inset: 14px;
+    border-radius: 50%;
+    background: var(--home-accent);
+}
+.page-for-shoppers .privacy-card__title {
+    margin: 0;
+    color: var(--home-brand);
+    font-family: var(--font-heading);
+    font-size: 1.19rem;
+    font-weight: 700;
+    letter-spacing: -0.012em;
+    line-height: 1.3;
+}
+.page-for-shoppers .privacy-card__body {
+    margin: 0;
+    color: var(--home-text-strong);
+    font-size: 0.97rem;
+    line-height: 1.54;
+}
+.page-for-shoppers .privacy-footnote {
+    margin-top: 28px;
+    text-align: center;
+    color: var(--home-text-muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+/* ----- Section: stacked FAQ ----- */
+.page-for-shoppers .section--faq-stacked .intro-centered {
+    max-width: 860px;
+}
+.page-for-shoppers .faq-stacked {
+    max-width: 860px;
+    margin: 48px auto 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+.page-for-shoppers .faq-stacked__item {
+    background: var(--shopper-card-bg);
+    border: 1px solid var(--shopper-card-border);
+    border-radius: 14px;
+    padding: 26px 30px;
+    transition: border-color 0.15s ease;
+}
+.page-for-shoppers .faq-stacked__item[open] {
+    border-color: color-mix(in srgb, var(--home-accent) 30%, var(--home-border));
+}
+.page-for-shoppers .faq-stacked__question {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    color: var(--home-brand);
+    font-family: var(--font-heading);
+    font-size: 1.125rem;
+    font-weight: 700;
+    line-height: 1.34;
+    letter-spacing: -0.012em;
+}
+.page-for-shoppers .faq-stacked__question::-webkit-details-marker { display: none; }
+.page-for-shoppers .faq-stacked__toggle {
+    flex: 0 0 24px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--shopper-pill-bg);
+    position: relative;
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+.page-for-shoppers .faq-stacked__toggle::before,
+.page-for-shoppers .faq-stacked__toggle::after {
+    content: "";
+    position: absolute;
+    background: var(--home-accent);
+    border-radius: 1px;
+    top: 50%;
+    left: 50%;
+}
+.page-for-shoppers .faq-stacked__toggle::before {
+    width: 10px;
+    height: 2px;
+    transform: translate(-50%, -50%);
+}
+.page-for-shoppers .faq-stacked__toggle::after {
+    width: 2px;
+    height: 10px;
+    transform: translate(-50%, -50%);
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.page-for-shoppers .faq-stacked__item[open] .faq-stacked__toggle::after {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(90deg);
+}
+.page-for-shoppers .faq-stacked__answer {
+    margin: 10px 0 0;
+    color: var(--home-text-strong);
+    font-size: 1rem;
+    line-height: 1.58;
+}
+
+/* ----- Section: dark CTA band ----- */
+.page-for-shoppers .section--cta-band {
+    background: var(--home-brand);
+    padding: 112px 0;
+}
+.page-for-shoppers .cta-band {
+    max-width: 820px;
+    margin: 0 auto;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.page-for-shoppers .cta-band__headline {
+    margin: 0;
+    color: #fff;
+    font-family: var(--font-heading);
+    font-size: clamp(2rem, 4.4vw, 2.875rem);
+    font-weight: 800;
+    line-height: 1.14;
+    letter-spacing: -0.022em;
+    max-width: 18ch;
+}
+.page-for-shoppers .cta-band__body {
+    margin: 20px 0 0;
+    max-width: 620px;
+    color: color-mix(in srgb, var(--home-accent) 35%, #fff);
+    font-size: clamp(1.05rem, 1.4vw, 1.19rem);
+    line-height: 1.56;
+}
+.page-for-shoppers .cta-band__actions {
+    display: flex;
+    gap: 14px;
+    margin-top: 34px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.page-for-shoppers .cta-band__microcopy {
+    margin-top: 22px;
+    color: color-mix(in srgb, var(--home-accent) 35%, #fff);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+/* Buttons on the dark CTA band: invert primary to white-on-brand,
+   and outline-secondary to white-on-transparent. */
+.page-for-shoppers .btn--on-dark-primary {
+    background: #fff;
+    color: var(--home-brand);
+    border: 1.5px solid #fff;
+}
+.page-for-shoppers .btn--on-dark-primary:hover {
+    background: color-mix(in srgb, var(--home-accent) 10%, #fff);
+    color: var(--home-brand);
+    border-color: color-mix(in srgb, var(--home-accent) 10%, #fff);
+}
+.page-for-shoppers .btn--on-dark-secondary {
+    background: transparent;
+    color: #fff;
+    border: 1.5px solid color-mix(in srgb, var(--home-accent) 45%, #fff);
+}
+.page-for-shoppers .btn--on-dark-secondary:hover {
+    background: color-mix(in srgb, var(--home-accent) 18%, transparent);
+    color: #fff;
+    border-color: #fff;
+}
+
+/* ----- Responsive (tablet and below) ----- */
+@media (max-width: 960px) {
+    .page-for-shoppers {
+        --shopper-section-pad: 72px;
+    }
+    .page-for-shoppers .cards-row--3,
+    .page-for-shoppers .comparison-grid {
+        grid-template-columns: 1fr;
+    }
+    .page-for-shoppers .steps-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .page-for-shoppers .two-col,
+    .page-for-shoppers .two-col--card-copy {
+        grid-template-columns: 1fr;
+        gap: 36px;
+    }
+    .page-for-shoppers .two-col__copy .eyebrow-pill {
+        align-self: center;
+    }
+    .page-for-shoppers .two-col__copy {
+        text-align: center;
+        align-items: center;
+    }
+    .page-for-shoppers .answer-card {
+        padding: 32px 28px;
+    }
+    .page-for-shoppers .quote-card {
+        padding: 32px 28px;
+    }
+    .page-for-shoppers .quote-card__quote {
+        font-size: 1.25rem;
+    }
+}
+
+@media (max-width: 560px) {
+    .page-for-shoppers .steps-row {
+        grid-template-columns: 1fr;
+    }
+    .page-for-shoppers .hero--centered {
+        padding: 88px 0 72px;
+    }
+    .page-for-shoppers .section--answer {
+        padding: 64px 0;
+    }
+    .page-for-shoppers .section--cta-band {
+        padding: 88px 0;
     }
 }
