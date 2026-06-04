@@ -107,8 +107,11 @@
 .page-how-it-works *,
 .page-how-it-works *::before,
 .page-how-it-works *::after,
+.page-for-shoppers *,
 .page-coverage *,
+.page-for-shoppers *::before,
 .page-coverage *::before,
+.page-for-shoppers *::after,
 .page-coverage *::after,
 .site-header *,
 .site-header *::before,
@@ -149,9 +152,13 @@
 .page-how-it-works h2,
 .page-how-it-works h3,
 .page-how-it-works h4,
+.page-for-shoppers h1,
 .page-coverage h1,
+.page-for-shoppers h2,
 .page-coverage h2,
+.page-for-shoppers h3,
 .page-coverage h3,
+.page-for-shoppers h4,
 .page-coverage h4 {
     font-family: var(--font-heading);
     font-weight: 800;
@@ -161,6 +168,7 @@
 
 .page-home p,
 .page-how-it-works p,
+.page-for-shoppers p,
 .page-coverage p {
     font-family: var(--font-body);
     color: var(--color-text-muted);
@@ -644,6 +652,7 @@
 
 .page-home,
 .page-how-it-works,
+.page-for-shoppers,
 .page-coverage {
     --home-brand:           #1F3A5F;
     --home-secondary:       #5B7C99;
@@ -667,6 +676,7 @@
 
 .page-home .eyebrow,
 .page-how-it-works .eyebrow,
+.page-for-shoppers .eyebrow,
 .page-coverage .eyebrow {
     margin: 0 0 14px;
     color: var(--home-secondary);
@@ -683,8 +693,11 @@
 .page-how-it-works h1,
 .page-how-it-works h2,
 .page-how-it-works h3,
+.page-for-shoppers h1,
 .page-coverage h1,
+.page-for-shoppers h2,
 .page-coverage h2,
+.page-for-shoppers h3,
 .page-coverage h3 {
     color: var(--home-brand);
     letter-spacing: -0.04em;
@@ -698,6 +711,7 @@
 
 .page-home .hero,
 .page-how-it-works .hero,
+.page-for-shoppers .hero,
 .page-coverage .hero {
     position: relative;
     padding: 88px 0 78px;
@@ -709,6 +723,7 @@
 
 .page-home .hero::after,
 .page-how-it-works .hero::after,
+.page-for-shoppers .hero::after,
 .page-coverage .hero::after {
     content: "";
     position: absolute;
@@ -769,6 +784,7 @@
    so the page-home palette stays self-consistent (green accent, navy outline). */
 .page-home .btn,
 .page-how-it-works .btn,
+.page-for-shoppers .btn,
 .page-coverage .btn {
     min-height: 52px;
     padding: 13px 24px;
@@ -781,6 +797,7 @@
 
 .page-home .btn--primary,
 .page-how-it-works .btn--primary,
+.page-for-shoppers .btn--primary,
 .page-coverage .btn--primary {
     background: var(--home-accent);
     border-color: var(--home-accent);
@@ -790,6 +807,7 @@
 
 .page-home .btn--primary:hover,
 .page-how-it-works .btn--primary:hover,
+.page-for-shoppers .btn--primary:hover,
 .page-coverage .btn--primary:hover {
     background: var(--home-accent-hover);
     border-color: var(--home-accent-hover);
@@ -798,6 +816,7 @@
 
 .page-home .btn--secondary,
 .page-how-it-works .btn--secondary,
+.page-for-shoppers .btn--secondary,
 .page-coverage .btn--secondary {
     background: var(--home-surface);
     border-color: var(--home-border);
@@ -806,6 +825,7 @@
 
 .page-home .btn--secondary:hover,
 .page-how-it-works .btn--secondary:hover,
+.page-for-shoppers .btn--secondary:hover,
 .page-coverage .btn--secondary:hover {
     background: var(--home-surface);
     border-color: var(--home-secondary);
@@ -1021,6 +1041,7 @@
         gap: 48px;
     }
     .page-home .hero,
+    .page-for-shoppers .hero,
     .page-coverage .hero {
         padding: 64px 0 60px;
     }
@@ -1031,6 +1052,7 @@
 
 @media (max-width: 700px) {
     .page-home .hero,
+    .page-for-shoppers .hero,
     .page-coverage .hero {
         padding: 48px 0 52px;
     }
@@ -1042,6 +1064,7 @@
         align-items: stretch;
     }
     .page-home .btn,
+    .page-for-shoppers .btn,
     .page-coverage .btn {
         width: 100%;
     }
@@ -1071,12 +1094,14 @@
 
 .page-home .section,
 .page-how-it-works .section,
+.page-for-shoppers .section,
 .page-coverage .section {
     padding: 96px 0;
 }
 
 .page-home .section--soft,
 .page-how-it-works .section--soft,
+.page-for-shoppers .section--soft,
 .page-coverage .section--soft {
     background:
         radial-gradient(circle at 12% 12%, rgba(91, 124, 153, 0.10), transparent 32%),
@@ -1087,11 +1112,13 @@
    their background so the Kadence parent body color cannot bleed through.
    The "navy band" .section--protected sets its own background already, so
    only the default .section needs a base surface here. */
+.page-for-shoppers main > .section:not(.section--soft):not(.section--protected),
 .page-coverage main > .section:not(.section--soft):not(.section--protected) {
     background: var(--home-surface-soft);
 }
 
 /* Proof strip is a direct child of <main> with no .section class. */
+.page-for-shoppers main > .proof-strip,
 .page-coverage main > .proof-strip {
     background: var(--home-surface-soft);
 }
@@ -1154,6 +1181,27 @@
 
 .section-header--centered .eyebrow {
     display: inline-block;
+}
+
+.section-header--centered .section-lead {
+    max-width: 720px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* proof-strip used as a labeled section (e.g. /for-shoppers problem + privacy)
+   wraps the card grid in <section class="section section--proof">, picking up
+   standard section padding. Add breathing room between the header and the grid,
+   and between the grid and the optional footnote. */
+.section--proof .proof-strip__grid {
+    margin-top: 12px;
+}
+.section--proof .section-header + .proof-strip__grid {
+    margin-top: 0;
+}
+.section--proof .proof-strip__grid + .section-header {
+    margin-top: 36px;
+    margin-bottom: 0;
 }
 
 .trust-line {
@@ -1673,6 +1721,7 @@
         padding: 36px;
     }
     .page-home .section,
+    .page-for-shoppers .section,
     .page-coverage .section {
         padding: 72px 0;
     }
@@ -1680,6 +1729,7 @@
 
 @media (max-width: 700px) {
     .page-home .section,
+    .page-for-shoppers .section,
     .page-coverage .section {
         padding: 56px 0;
     }
