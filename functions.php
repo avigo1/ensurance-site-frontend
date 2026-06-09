@@ -143,6 +143,96 @@ function ensurance_marketing_fonts() {
 add_action('wp_enqueue_scripts', 'ensurance_marketing_fonts');
 
 // ============================================================================
+// 2b. HOMEPAGE (AUTO-FORWARD DESIGN) — SELF-CONTAINED ASSETS
+// ============================================================================
+// The homepage ships a complete, standalone design system (assets/home.css +
+// assets/home.js) ported verbatim from the bespoke package. Its generic
+// selectors (.hero, .section, .container, .btn-primary) would collide with the
+// shared marketing.css, so on the homepage we DEQUEUE the marketing bundle and
+// fonts (enqueued at the default priority 10 by the functions above) and load
+// the homepage's own assets instead. Runs at priority 20 so the dequeue applies
+// after the priority-10 enqueues. New function — existing functions untouched.
+
+function ensurance_home_assets() {
+    if ( ! ( is_front_page() || is_page_template('page-home.php') ) ) {
+        return;
+    }
+
+    // Drop the shared marketing bundle so it cannot fight the homepage design.
+    wp_dequeue_style('ensurance-marketing');
+    wp_dequeue_script('ensurance-marketing');
+    wp_dequeue_style('ensurance-marketing-fonts');
+
+    // Inter (400–800) — the only family the homepage design uses.
+    wp_enqueue_style(
+        'ensurance-home-fonts',
+        'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap',
+        array(),
+        null
+    );
+    wp_enqueue_style(
+        'ensurance-home',
+        get_stylesheet_directory_uri() . '/assets/home.css',
+        array(),
+        filemtime(get_stylesheet_directory() . '/assets/home.css')
+    );
+    wp_enqueue_script(
+        'ensurance-home',
+        get_stylesheet_directory_uri() . '/assets/home.js',
+        array(),
+        filemtime(get_stylesheet_directory() . '/assets/home.js'),
+        true
+    );
+}
+add_action('wp_enqueue_scripts', 'ensurance_home_assets', 20);
+
+// ============================================================================
+// 2c. GOOGLE TAG MANAGER (GTM-5GRHH8LL) — SITE-WIDE
+// ============================================================================
+// Ported from the package's includes/tracking-head.php (head script) and
+// includes/tracking-body.php (noscript iframe). GTM is a site-wide container,
+// so it loads on every page via wp_head + wp_body_open. No GA4 base tag is
+// added here (GA4 is configured inside the GTM container).
+//
+// IMPORTANT: verify GTM is not already injected by a plugin (e.g. GTM4WP,
+// Site Kit) before relying on this. If it is, set ENSURANCE_LOAD_GTM to false
+// in wp-config.php or here to avoid a duplicate container firing.
+
+if ( ! defined('ENSURANCE_LOAD_GTM') ) {
+    define('ENSURANCE_LOAD_GTM', true);
+}
+
+function ensurance_gtm_head() {
+    if ( ! ENSURANCE_LOAD_GTM ) {
+        return;
+    }
+    ?>
+<!-- Google Tag Manager -->
+<script>window.dataLayer = window.dataLayer || [];</script>
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-5GRHH8LL');</script>
+<!-- End Google Tag Manager -->
+    <?php
+}
+add_action('wp_head', 'ensurance_gtm_head', 1);
+
+function ensurance_gtm_body() {
+    if ( ! ENSURANCE_LOAD_GTM ) {
+        return;
+    }
+    ?>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5GRHH8LL"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+    <?php
+}
+add_action('wp_body_open', 'ensurance_gtm_body', 1);
+
+// ============================================================================
 // 3. GEODIRECTORY CUSTOMIZATIONS
 // ============================================================================
 
