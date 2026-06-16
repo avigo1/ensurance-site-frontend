@@ -632,7 +632,7 @@ a {
 
 .whatis h2 {
   font-size: var(--text-4xl);
-  line-height: var(--leading-snug);
+  line-height: var(--leading-tight);
   margin-top: var(--space-4);
   max-width: 480px;
 }
