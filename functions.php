@@ -163,10 +163,11 @@ function ensurance_home_assets() {
     wp_dequeue_script('ensurance-marketing');
     wp_dequeue_style('ensurance-marketing-fonts');
 
-    // Inter (400–800) — the only family the homepage design uses.
+    // Calm Intelligence type system: Albert Sans (display H1–H3), Rubik (body/UI),
+    // JetBrains Mono (step numbers, status labels). One stylesheet, all three.
     wp_enqueue_style(
         'ensurance-home-fonts',
-        'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap',
+        'https://fonts.googleapis.com/css2?family=Albert+Sans:wght@700;800;900&family=Rubik:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap',
         array(),
         null
     );

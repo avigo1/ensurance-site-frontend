@@ -1,36 +1,45 @@
 <?php
 /**
- * Marketing footer — Homepage (auto-forward design).
+ * Marketing footer — Homepage (Calm Intelligence redesign).
  *
- * Self-contained chrome for the homepage only, ported verbatim from the
- * bespoke package's includes/footer.php + the mobile sticky CTA that sat
- * after the footer in index.php. Called via get_footer('home').
+ * Self-contained chrome for the homepage only. Called via get_footer('home')
+ * from page-home.php so it does NOT affect the shared marketing footer.
  *
- * Links are WP-resolved with home_url(); the logo and copy are unchanged.
+ * Dark column footer matching the homepage v1 design. The mobile sticky CTA
+ * (kept after the footer) and the .site-footer / .mobile-sticky-cta classes are
+ * relied upon by assets/home.js — keep them intact. Links are WP-resolved.
  */
 ?>
 <footer class="site-footer">
   <div class="container footer-grid">
-    <div>
-      <a class="brand footer-brand" href="<?php echo esc_url( home_url( '/' ) ); ?>" aria-label="Ensurance.com homepage">
+    <div class="footer-brand">
+      <a class="brand" href="<?php echo esc_url( home_url( '/' ) ); ?>" aria-label="Ensurance.com homepage">
         <img src="<?php echo esc_url( get_stylesheet_directory_uri() . '/assets/images/simple_navy_logo_with_registered_trademark.png' ); ?>" alt="Ensurance.com" class="brand-logo-image" />
       </a>
-      <p>Ensurance helps shoppers start a guided insurance quote request online and move toward clearer quote options through licensed review when appropriate.</p>
+      <p>Online first. Human when it matters.</p>
     </div>
-    <nav aria-label="Footer navigation">
-      <a href="<?php echo esc_url( home_url( '/how-it-works' ) ); ?>">How it works</a>
-      <a href="<?php echo esc_url( home_url( '/coverage' ) ); ?>">Coverage types</a>
-      <a href="<?php echo esc_url( home_url( '/trust-center' ) ); ?>">Trust Center</a>
-      <a href="<?php echo esc_url( home_url( '/for-agents' ) ); ?>">For agents</a>
-    </nav>
-    <nav aria-label="Legal navigation">
-      <a href="<?php echo esc_url( home_url( '/privacy' ) ); ?>">Privacy</a>
-      <a href="<?php echo esc_url( home_url( '/terms' ) ); ?>">Terms</a>
-      <a href="<?php echo esc_url( home_url( '/contact' ) ); ?>">Contact</a>
-    </nav>
+    <div class="footer-cols">
+      <nav class="footer-col" aria-label="Ensurance">
+        <p class="footer-col__title">Ensurance</p>
+        <a href="<?php echo esc_url( home_url( '/how-it-works' ) ); ?>">How it works</a>
+        <a href="<?php echo esc_url( home_url( '/coverage' ) ); ?>">Coverage types</a>
+        <a href="<?php echo esc_url( home_url( '/trust-center' ) ); ?>">Trust Center</a>
+      </nav>
+      <nav class="footer-col" aria-label="For agents">
+        <p class="footer-col__title">For agents</p>
+        <a href="<?php echo esc_url( home_url( '/for-agents' ) ); ?>">Join the network</a>
+        <a href="<?php echo esc_url( home_url( '/agent-sign-in' ) ); ?>">Agent sign in</a>
+      </nav>
+      <nav class="footer-col" aria-label="Trust">
+        <p class="footer-col__title">Trust</p>
+        <a href="<?php echo esc_url( home_url( '/privacy' ) ); ?>">Privacy</a>
+        <a href="<?php echo esc_url( home_url( '/licensing' ) ); ?>">Licensing</a>
+        <a href="<?php echo esc_url( home_url( '/how-we-protect-you' ) ); ?>">How we protect you</a>
+      </nav>
+    </div>
   </div>
-  <div class="container footer-bottom">
-    <p>&copy; <?php echo esc_html( date( 'Y' ) ); ?> Ensurance. All rights reserved.</p>
+  <div class="footer-bottom">
+    <p>&copy; <?php echo esc_html( date( 'Y' ) ); ?> Ensurance. Insurance products are offered through licensed independent agents.</p>
   </div>
 </footer>
 
