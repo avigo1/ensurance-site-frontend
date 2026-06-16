@@ -1247,3 +1247,52 @@ a.card:hover .coverage-tile__arrow {
     border-radius: var(--radius-card);
   }
 }
+
+/* ── Override leftover global Customizer "Additional CSS" ──────────────
+   wp-admin → Appearance → Customize → Additional CSS (emitted as
+   <style id="wp-custom-css">) sets, site-wide:
+     h2 { line-height: 36px !important; }
+     h3 { line-height: 30px !important; }
+     p  { line-height: 24px !important; }
+   Those bare-element !important rules crush the homepage's display
+   headings (48px text in a 36px line box) and flatten body copy. Re-assert
+   the intended leading here with class-level specificity + !important so it
+   legitimately wins the !important cascade. Scoped to homepage classes only
+   (home.css loads on the homepage), so legacy/GeoDirectory pages are
+   untouched. Proper long-term fix is to scope or remove those Customizer
+   rules; this neutralizes them for the homepage without that risk. */
+.hero h1 {
+  line-height: var(--leading-hero) !important;
+}
+
+.section-head h2,
+.faq__head h2,
+.final-card h2 {
+  line-height: var(--leading-tight) !important;
+}
+
+.whatis h2 {
+  line-height: 1.3 !important;
+}
+
+.step-card h3,
+.coverage-tile h3,
+.why-tile h3 {
+  line-height: var(--leading-snug) !important;
+}
+
+.eyebrow {
+  line-height: 1.4 !important;
+}
+
+.hero__subtitle,
+.hero__finetext,
+.section-head p,
+.whatis__intro,
+.step-card p,
+.coverage-tile p,
+.why-tile p,
+.final-card p,
+.faq-list details p {
+  line-height: var(--leading-body) !important;
+}
