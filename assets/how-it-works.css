@@ -524,3 +524,16 @@
     border-radius: var(--radius-card-lg);
   }
 }
+
+/* ── Heading color over Kadence global typography ─────────────────
+   Same issue as the homepage (see home.css): Kadence's inline global CSS
+   colors bare h1/h2/h3 white (--global-palette3 is #ffffff), so on this
+   page's light hero and sections the headings render invisible. Pin the
+   light-background headings to navy. The dark quote-options panel
+   (.qo__head h2) keeps its own white color and is excluded. The shared
+   .section-head h2 is handled in home.css. */
+.hiw-hero__title,
+.t-card h3,
+.hiw-why h3 {
+  color: var(--text-heading) !important;
+}

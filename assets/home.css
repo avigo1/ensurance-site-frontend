@@ -134,7 +134,6 @@ html {
 
 body {
   margin: 0;
-  background: var(--bg-page);
   color: var(--text-body);
   font-family: var(--font-sans);
   font-size: var(--text-md);
@@ -1295,4 +1294,36 @@ a.card:hover .coverage-tile__arrow {
 .final-card p,
 .faq-list details p {
   line-height: var(--leading-body) !important;
+}
+
+/* ── Page background + heading color over parent-theme / plugin globals ──
+   These standalone pages render inside the Kadence parent theme alongside
+   site-wide plugin CSS. Two parent/plugin rules fight this design system,
+   so re-assert the intended values here. Scoped to the standalone-design
+   body classes (Kadence emits them via body_class()), so non-design pages
+   are never touched even if this file is ever combined more broadly.
+
+   1) Background — AyeCode UI / Bootstrap (GeoDirectory, the `aui_bs5` body
+      class) ships `body { background-color: initial !important }`, which beat
+      the old plain `body { background: var(--bg-page) }` and let the dark
+      Kadence base show through these pages' transparent hero/sections.
+   2) Heading color — Kadence's inline global typography colors bare h1/h2/h3
+      from --global-palette3, which is #ffffff on this site, so default
+      headings render white (invisible once the background is light). Pin the
+      light-background headings to navy; dark-context headings (.hero h1,
+      .final-card h2) keep their own white color and are excluded. */
+html body.home,
+html body.page-template-page-home-php,
+html body.page-template-page-how-it-works-php {
+  background: var(--bg-page) !important;
+}
+
+.section-head h2,
+.whatis h2,
+.step-card h3,
+.coverage-tile h3,
+.coverage-featured h3,
+.why-tile h3,
+.faq__head h2 {
+  color: var(--text-heading) !important;
 }
