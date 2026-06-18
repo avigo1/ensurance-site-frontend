@@ -729,3 +729,23 @@ html body.page-template-page-coverage-php {
 .callout__title {
   line-height: var(--leading-snug) !important;
 }
+
+/* ── Heading colors over Kadence global typography ────────────────
+   Kadence's inline global CSS (emitted in wp_head, after our bundle)
+   colors bare h1/h2/h3 from --global-palette3, which is #ffffff on this
+   site (headings normally sit on dark hero imagery). On our light
+   sections that renders headings invisible. Re-assert the navy heading
+   color for every light-background heading. The dark-panel headings
+   (.cov-flow__head h2, .cov-flow__sub, .final-card h2) keep their own
+   white/light color and are intentionally excluded here. ──────────── */
+.cov-hero__title,
+.cov-head h2,
+.cov-detail__main h3,
+.cov-steps .step-card h3,
+.faq__head h2 {
+  color: var(--text-heading) !important;
+}
+
+.cov-hero__title .accent {
+  color: var(--accent) !important;
+}
