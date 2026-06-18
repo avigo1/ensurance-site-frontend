@@ -21,6 +21,25 @@
   --warn-border: #f3dca6;
 }
 
+/* ── Page background ──────────────────────────────────────────────
+   The page chrome runs inside the Kadence parent theme alongside
+   site-wide plugin stylesheets (AyeCode UI / Bootstrap from
+   GeoDirectory — note the `aui_bs5` body class). Those ship
+   `body { background-color: initial !important }` resets that override
+   home.css's plain `body { background: var(--bg-page) }`, letting the
+   dark Kadence base color show through our transparent hero and
+   sections. Re-assert the Calm Intelligence background with higher
+   specificity + !important (Kadence emits `page-template-page-coverage-php`
+   via body_class()) so it wins the cascade, and paint the main wrapper
+   too as a belt-and-suspenders. ──────────────────────────────────── */
+html body.page-template-page-coverage-php {
+  background: var(--bg-page) !important;
+}
+
+.page-coverage {
+  background: var(--bg-page);
+}
+
 /* Sticky-header offset for in-page anchor jumps (#paths, #process, #start). */
 #paths,
 #process,
