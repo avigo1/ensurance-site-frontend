@@ -369,6 +369,69 @@ function ensurance_trust_center_assets() {
 add_action('wp_enqueue_scripts', 'ensurance_trust_center_assets', 20);
 
 // ============================================================================
+// 2b-v. FOR AGENTS (CALM INTELLIGENCE REDESIGN) — SELF-CONTAINED ASSETS
+// ============================================================================
+// /for-agents ships the same standalone design system as the homepage. It
+// reuses assets/home.css + assets/home.js for tokens, chrome and base
+// components, and layers assets/for-agents.css + assets/for-agents.js on top
+// for the page-specific sections (dark asymmetric hero with the structured-
+// request preview, bulk-leads vs. structured-request compare, dark controlled-
+// flow panel, connected request stepper, coverage-line chips, participation
+// tiles, agent-access CTA card) and the scroll-reveal motion. As with the
+// homepage, we DEQUEUE the shared marketing bundle (if enqueued at priority 10)
+// so its generic selectors cannot fight this design. Runs at priority 20 so the
+// dequeue lands after the priority-10 enqueues. New function — existing
+// functions untouched.
+
+function ensurance_for_agents_assets() {
+    if ( ! is_page_template('page-for-agents.php') ) {
+        return;
+    }
+
+    // Drop the shared marketing bundle so it cannot fight this design.
+    wp_dequeue_style('ensurance-marketing');
+    wp_dequeue_script('ensurance-marketing');
+    wp_dequeue_style('ensurance-marketing-fonts');
+
+    // Shared Calm Intelligence type system + base (same as the homepage).
+    wp_enqueue_style(
+        'ensurance-home-fonts',
+        'https://fonts.googleapis.com/css2?family=Albert+Sans:wght@700;800;900&family=Rubik:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap',
+        array(),
+        null
+    );
+    wp_enqueue_style(
+        'ensurance-home',
+        get_stylesheet_directory_uri() . '/assets/home.css',
+        array(),
+        filemtime(get_stylesheet_directory() . '/assets/home.css')
+    );
+    wp_enqueue_script(
+        'ensurance-home',
+        get_stylesheet_directory_uri() . '/assets/home.js',
+        array(),
+        filemtime(get_stylesheet_directory() . '/assets/home.js'),
+        true
+    );
+
+    // Page-specific layer — loaded AFTER home.css/home.js via dependency.
+    wp_enqueue_style(
+        'ensurance-for-agents',
+        get_stylesheet_directory_uri() . '/assets/for-agents.css',
+        array('ensurance-home'),
+        filemtime(get_stylesheet_directory() . '/assets/for-agents.css')
+    );
+    wp_enqueue_script(
+        'ensurance-for-agents',
+        get_stylesheet_directory_uri() . '/assets/for-agents.js',
+        array('ensurance-home'),
+        filemtime(get_stylesheet_directory() . '/assets/for-agents.js'),
+        true
+    );
+}
+add_action('wp_enqueue_scripts', 'ensurance_for_agents_assets', 20);
+
+// ============================================================================
 // 2c. GOOGLE TAG MANAGER (GTM-5GRHH8LL) — SITE-WIDE
 // ============================================================================
 // Ported from the package's includes/tracking-head.php (head script) and
