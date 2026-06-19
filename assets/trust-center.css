@@ -1,0 +1,560 @@
+/* ===================================================================
+   Ensurance — "Trust Center" page (Trust and Privacy)
+   Calm Intelligence redesign (standalone design parity).
+
+   Loads ON TOP OF assets/home.css, which provides the design tokens,
+   chrome (header/footer), buttons, the FAQ accordion and the final CTA.
+   This file adds only the sections unique to /trust-center:
+     - light document hero with breadcrumb, badge and feature cues
+     - the sticky table-of-contents + numbered explainer sections
+     - the left-bordered "lead" definition rows
+     - the noisy-vs-controlled compare
+     - the neutral "trust page vs. Privacy Policy" note
+   The TOC scroll-spy lives in assets/trust-center.js.
+
+   Everything is prefixed `.tc-` (or reuses shared base classes) and the
+   parent-theme defenses at the bottom are scoped to this template's body
+   class, so no other page is affected.
+   =================================================================== */
+
+/* ── Page background over parent-theme / plugin globals ──────────────
+   Same issue handled on the homepage and /coverage: AyeCode UI / Bootstrap
+   (GeoDirectory, the `aui_bs5` body class) ships
+   `body { background-color: initial !important }`, which beats home.css's
+   plain `body { background: var(--bg-page) }` and lets the dark Kadence base
+   show through the transparent sections. Re-assert with higher specificity +
+   !important (Kadence emits `page-template-page-trust-center-php` via
+   body_class()), and paint the wrapper too as belt-and-suspenders. Scoped to
+   this template's body class, so non-design pages are never touched. */
+html body.page-template-page-trust-center-php {
+  background: var(--bg-page) !important;
+}
+
+.page-trust-center {
+  background: var(--bg-page);
+}
+
+/* Sticky-header offset for in-page anchor jumps. */
+.tc-section,
+#start {
+  scroll-margin-top: 96px;
+}
+
+/* ── Hero (light document head) ──────────────────────────────────── */
+
+.tc-hero {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-card);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.tc-hero__glow {
+  position: absolute;
+  top: -160px;
+  right: -90px;
+  width: 480px;
+  height: 480px;
+  border-radius: 50%;
+  background: rgba(43, 134, 115, 0.08);
+  filter: blur(90px);
+  pointer-events: none;
+}
+
+.tc-hero__inner {
+  position: relative;
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: var(--space-7) var(--container-pad) var(--space-8);
+}
+
+.tc-breadcrumb {
+  display: flex;
+  gap: 8px;
+  margin-bottom: var(--space-6);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+}
+
+.tc-breadcrumb a {
+  color: var(--text-muted);
+}
+
+.tc-breadcrumb a:hover {
+  color: var(--text-heading);
+}
+
+.tc-breadcrumb span[aria-hidden] {
+  color: var(--text-faint);
+}
+
+.tc-breadcrumb__current {
+  color: var(--text-heading);
+}
+
+.tc-hero__body {
+  max-width: 760px;
+}
+
+.tc-hero__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  background: var(--accent-50);
+  border: 1px solid var(--accent-100);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  font-weight: var(--weight-medium);
+  color: var(--accent);
+}
+
+.tc-hero__badge svg {
+  color: var(--accent);
+}
+
+.tc-hero__title {
+  font-size: var(--text-5xl);
+  line-height: var(--leading-hero);
+  letter-spacing: var(--tracking-display);
+  margin: var(--space-4) 0 0;
+  max-width: 680px;
+}
+
+.tc-hero__sub {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-light);
+  color: var(--text-body);
+  margin: var(--space-5) 0 0;
+  line-height: var(--leading-body);
+  max-width: 680px;
+}
+
+.tc-hero__cues {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: var(--space-5);
+}
+
+.tc-cue {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--navy-50);
+  border: 1px solid var(--navy-100);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--navy-700);
+}
+
+.tc-cue svg {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.tc-hero__actions {
+  justify-content: flex-start;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+}
+
+.tc-hero__fine {
+  margin-top: var(--space-5);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.tc-hero__fine a {
+  color: var(--accent);
+  font-weight: var(--weight-medium);
+}
+
+/* ── Document grid (sticky TOC + content column) ─────────────────── */
+
+.tc-doc {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: var(--space-6) var(--container-pad) 0;
+  display: grid;
+  grid-template-columns: 252px 1fr;
+  gap: var(--space-8);
+  align-items: start;
+}
+
+.tc-toc {
+  position: sticky;
+  top: 92px;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tc-toc__label {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin: 0 0 var(--space-3);
+  padding-left: 14px;
+}
+
+.tc-toc__link {
+  display: flex;
+  gap: 10px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: var(--text-sm);
+  line-height: 1.35;
+  color: var(--text-muted);
+  background: transparent;
+  border-left: 2px solid transparent;
+  font-weight: var(--weight-light);
+  transition: color var(--duration-fast) var(--ease-out),
+    background var(--duration-fast) var(--ease-out);
+}
+
+.tc-toc__link:hover {
+  color: var(--text-heading);
+}
+
+.tc-toc__link.is-active {
+  color: var(--text-heading);
+  background: var(--accent-50);
+  border-left: 2px solid var(--accent);
+  font-weight: 600;
+}
+
+.tc-toc__n {
+  font-family: var(--font-mono);
+  color: var(--text-faint);
+  font-size: var(--text-xs);
+  flex-shrink: 0;
+  width: 16px;
+}
+
+.tc-toc__link.is-active .tc-toc__n {
+  color: var(--accent);
+}
+
+.tc-doc__main {
+  min-width: 0;
+  max-width: 760px;
+}
+
+/* ── Numbered section ────────────────────────────────────────────── */
+
+.tc-section {
+  padding-top: var(--space-7);
+  border-top: 1px solid var(--border-soft);
+  margin-top: var(--space-7);
+}
+
+.tc-section__head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: var(--space-4);
+}
+
+.tc-section__n {
+  font-family: var(--font-mono);
+  font-size: var(--text-md);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.tc-section h2 {
+  font-size: var(--text-3xl);
+  line-height: var(--leading-tight);
+  margin: 0;
+}
+
+.tc-p {
+  font-size: var(--text-md);
+  color: var(--text-body);
+  line-height: var(--leading-body);
+  font-weight: var(--weight-light);
+  margin: 0 0 var(--space-4);
+}
+
+/* ── Lead rows (left-bordered title + body) ──────────────────────── */
+
+.tc-lead {
+  margin: 0 0 var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.tc-lead__item {
+  padding-left: var(--space-4);
+  border-left: 2px solid var(--accent-100);
+}
+
+.tc-lead__title {
+  margin: 0;
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--text-heading);
+}
+
+.tc-lead__body {
+  margin: 4px 0 0;
+  font-size: var(--text-md);
+  color: var(--text-body);
+  font-weight: var(--weight-light);
+  line-height: var(--leading-body);
+}
+
+/* ── Inline arrow links ──────────────────────────────────────────── */
+
+.tc-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-5);
+  margin: var(--space-2) 0 var(--space-4);
+}
+
+.tc-arrowlink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent);
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+}
+
+.tc-arrowlink:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* ── Compare (noisy way vs controlled flow) ──────────────────────── */
+
+.tc-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+  margin: 0 0 var(--space-4);
+}
+
+.tc-compare__col {
+  border-radius: var(--radius-card);
+  padding: var(--space-5);
+}
+
+.tc-compare__col--bad {
+  background: var(--gray-50);
+  border: 1px solid var(--border-soft);
+}
+
+.tc-compare__col--good {
+  background: var(--surface-card);
+  border: 1px solid var(--accent-100);
+  box-shadow: var(--shadow-card);
+}
+
+.tc-compare__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  font-weight: var(--weight-medium);
+  margin-bottom: var(--space-3);
+}
+
+.tc-compare__col--bad .tc-compare__label {
+  color: var(--gray-500);
+}
+
+.tc-compare__col--good .tc-compare__label {
+  color: var(--accent);
+}
+
+.tc-compare__items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tc-compare__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-light);
+  line-height: var(--leading-body);
+}
+
+.tc-compare__col--bad .tc-compare__item {
+  color: var(--text-muted);
+}
+
+.tc-compare__col--good .tc-compare__item {
+  color: var(--text-body);
+}
+
+.tc-compare__mark {
+  flex-shrink: 0;
+  margin-top: 1px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--border-soft);
+  color: var(--gray-500);
+}
+
+.tc-compare__mark--good {
+  background: var(--accent-50);
+  border: none;
+  color: var(--accent);
+}
+
+/* ── Neutral note (trust page vs Privacy Policy) ─────────────────── */
+
+.tc-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: var(--surface-brand);
+  border: 1px solid var(--navy-100);
+  border-radius: var(--radius-icon);
+  padding: 18px 20px;
+}
+
+.tc-note__icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid var(--navy-100);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--secondary);
+}
+
+.tc-note__text {
+  margin: 0;
+  font-size: var(--text-md);
+  font-weight: var(--weight-light);
+  color: var(--text-strong);
+  line-height: var(--leading-body);
+}
+
+.tc-note__text a {
+  color: var(--accent);
+  font-weight: var(--weight-medium);
+}
+
+/* ── FAQ (reuses .faq-list from home.css) ────────────────────────── */
+
+.tc-faq {
+  margin-top: var(--space-2);
+}
+
+/* ── Final CTA (reuses .final-cta / .final-card from home.css) ───── */
+
+.tc-final {
+  margin-top: var(--space-9);
+}
+
+.tc-final__fine {
+  margin-top: var(--space-5);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
+.tc-final__fine a {
+  color: #fff;
+  font-weight: var(--weight-medium);
+}
+
+/* ── Responsive ──────────────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .tc-doc {
+    grid-template-columns: 1fr;
+  }
+  .tc-toc {
+    position: static;
+    top: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .tc-toc__label {
+    width: 100%;
+    padding-left: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .tc-hero__title {
+    font-size: var(--text-4xl);
+  }
+}
+
+@media (max-width: 560px) {
+  .tc-compare {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Re-assert intended leading over the global Customizer !important
+   rules (h2 36px / h3 30px / p 24px), scoped to trust-center classes only.
+   See the matching block in home.css for the rationale. ───────────── */
+
+.tc-hero__title {
+  line-height: var(--leading-hero) !important;
+}
+
+.tc-section h2 {
+  line-height: var(--leading-tight) !important;
+}
+
+.tc-lead__title {
+  line-height: var(--leading-snug) !important;
+}
+
+.tc-hero__sub,
+.tc-p,
+.tc-lead__body,
+.tc-note__text,
+.tc-hero__fine,
+.tc-final__fine {
+  line-height: var(--leading-body) !important;
+}
+
+/* ── Heading colors over Kadence global typography ────────────────
+   Kadence's inline global CSS colors bare h1/h2/h3 from --global-palette3,
+   which is #ffffff on this site, so on these light sections the headings
+   render invisible. Pin every light-background heading to navy. The dark
+   final-CTA heading (.final-card h2) keeps its own white color and is
+   handled in home.css, so it is intentionally excluded here. ───────── */
+.tc-hero__title,
+.tc-section h2 {
+  color: var(--text-heading) !important;
+}
