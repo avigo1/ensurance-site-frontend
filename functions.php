@@ -432,6 +432,72 @@ function ensurance_for_agents_assets() {
 add_action('wp_enqueue_scripts', 'ensurance_for_agents_assets', 20);
 
 // ============================================================================
+// 2b-vi. AUTO INSURANCE (CALM INTELLIGENCE REDESIGN) — SELF-CONTAINED ASSETS
+// ============================================================================
+// /auto-insurance-quote-request ships the same standalone design system as the
+// homepage. It reuses assets/home.css + assets/home.js for tokens, chrome and
+// base components, and layers assets/auto-insurance-quote-request.css +
+// assets/auto-insurance-quote-request.js on top for the page-specific sections
+// (light hero with the guided-request stage track, scattered-vs-structured
+// compare, the four request-area cards, the four-step process, the dark licensed-
+// review panel) and the scroll-reveal motion. As with the homepage, we DEQUEUE
+// the shared marketing bundle (if enqueued at priority 10) so its generic
+// selectors cannot fight this design. Runs at priority 20 so the dequeue lands
+// after the priority-10 enqueues. The slug check (is_page) is a belt-and-braces
+// fallback so the assets load even if the template is matched by the page-{slug}
+// hierarchy rather than an explicit Template assignment. New function — existing
+// functions untouched.
+
+function ensurance_auto_insurance_quote_request_assets() {
+    if ( ! is_page_template('page-auto-insurance-quote-request.php')
+        && ! is_page('auto-insurance-quote-request') ) {
+        return;
+    }
+
+    // Drop the shared marketing bundle so it cannot fight this design.
+    wp_dequeue_style('ensurance-marketing');
+    wp_dequeue_script('ensurance-marketing');
+    wp_dequeue_style('ensurance-marketing-fonts');
+
+    // Shared Calm Intelligence type system + base (same as the homepage).
+    wp_enqueue_style(
+        'ensurance-home-fonts',
+        'https://fonts.googleapis.com/css2?family=Albert+Sans:wght@700;800;900&family=Rubik:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap',
+        array(),
+        null
+    );
+    wp_enqueue_style(
+        'ensurance-home',
+        get_stylesheet_directory_uri() . '/assets/home.css',
+        array(),
+        filemtime(get_stylesheet_directory() . '/assets/home.css')
+    );
+    wp_enqueue_script(
+        'ensurance-home',
+        get_stylesheet_directory_uri() . '/assets/home.js',
+        array(),
+        filemtime(get_stylesheet_directory() . '/assets/home.js'),
+        true
+    );
+
+    // Page-specific layer — loaded AFTER home.css/home.js via dependency.
+    wp_enqueue_style(
+        'ensurance-auto-insurance',
+        get_stylesheet_directory_uri() . '/assets/auto-insurance-quote-request.css',
+        array('ensurance-home'),
+        filemtime(get_stylesheet_directory() . '/assets/auto-insurance-quote-request.css')
+    );
+    wp_enqueue_script(
+        'ensurance-auto-insurance',
+        get_stylesheet_directory_uri() . '/assets/auto-insurance-quote-request.js',
+        array('ensurance-home'),
+        filemtime(get_stylesheet_directory() . '/assets/auto-insurance-quote-request.js'),
+        true
+    );
+}
+add_action('wp_enqueue_scripts', 'ensurance_auto_insurance_quote_request_assets', 20);
+
+// ============================================================================
 // 2c. GOOGLE TAG MANAGER (GTM-5GRHH8LL) — SITE-WIDE
 // ============================================================================
 // Ported from the package's includes/tracking-head.php (head script) and
