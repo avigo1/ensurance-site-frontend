@@ -133,7 +133,7 @@ $ensurance_svg_allowed = array(
 );
 
 // Resolved destinations.
-$start_url    = esc_url( home_url( '/auto-insurance-quote-request' ) );
+$start_url    = esc_url( home_url( '/auto-insurance-quote' ) );
 $privacy_url  = esc_url( home_url( '/privacy' ) );
 $terms_url    = esc_url( home_url( '/terms' ) );
 $hiw_url      = esc_url( home_url( '/how-it-works' ) );

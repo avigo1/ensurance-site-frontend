@@ -45,7 +45,7 @@
 
 <div aria-label="Mobile quote request action" class="mobile-sticky-cta">
   <span>Quote help, less chaos.</span>
-  <a class="btn btn-primary" data-cta-text="Start My Auto Quote Request" data-page-type="homepage" data-track="mobile_sticky_cta_click" href="<?php echo esc_url( home_url( '/auto-insurance-quote-request' ) ); ?>">Start My Auto Quote Request</a>
+  <a class="btn btn-primary" data-cta-text="Start My Auto Quote Request" data-page-type="homepage" data-track="mobile_sticky_cta_click" href="<?php echo esc_url( home_url( '/auto-insurance-quote' ) ); ?>">Start My Auto Quote Request</a>
 </div>
 
 <?php wp_footer(); ?>

@@ -114,7 +114,7 @@ $ensurance_svg_allowed = array(
     'rect'   => array( 'x' => true, 'y' => true, 'width' => true, 'height' => true, 'rx' => true ),
 );
 
-$start_url = esc_url( home_url( '/auto-insurance-quote-request' ) );
+$start_url = esc_url( home_url( '/auto-insurance-quote' ) );
 
 // Timeline steps — verbatim from the design's PROCESS array.
 $hiw_steps = array(

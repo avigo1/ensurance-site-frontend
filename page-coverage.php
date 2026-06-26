@@ -27,7 +27,7 @@ $cov_paths = array(
         'short'   => 'Auto',
         'body'    => 'Start a guided auto request for your vehicles and drivers — structured before licensed review.',
         'points'  => array( 'Vehicles and drivers on your policy', 'Liability, collision, and comprehensive', 'Multi-car, teen drivers, and bundling' ),
-        'href'    => '/auto-insurance',
+        'href'    => '/auto-insurance-quote',
         'anchor'  => 'Start auto request',
         'popular' => true,
     ),
