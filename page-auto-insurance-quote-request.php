@@ -67,9 +67,9 @@ $ensurance_svg_allowed = array(
 $aq_hiw_url      = esc_url( home_url( '/how-it-works' ) );
 $aq_coverage_url = esc_url( home_url( '/coverage' ) );
 $aq_trust_url    = esc_url( home_url( '/trust-center' ) );
-// "Start auto request" funnels into the guided intake wizard with auto preselected
-// (mirrors the standalone design's /start?coverage=auto). Swap if the intake URL changes.
-$aq_start_url    = esc_url( home_url( '/start' ) . '?coverage=auto' );
+// "Start auto request" routes to the existing auto insurance quote page.
+// Swap if the intake URL changes.
+$aq_start_url    = esc_url( home_url( '/auto-insurance-quote' ) );
 
 // §Hero — guided-request stage track (icon / number / title / subtitle).
 $aq_stages = array(
