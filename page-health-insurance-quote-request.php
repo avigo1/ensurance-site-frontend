@@ -69,9 +69,8 @@ $ensurance_svg_allowed = array(
 $hq_hiw_url      = esc_url( home_url( '/how-it-works' ) );
 $hq_coverage_url = esc_url( home_url( '/coverage' ) );
 $hq_trust_url    = esc_url( home_url( '/trust-center' ) );
-// "Start health request" funnels into the guided intake wizard with health
-// preselected (mirrors the standalone design's /start?coverage=health).
-$hq_start_url    = esc_url( home_url( '/start' ) . '?coverage=health' );
+// "Start health request" routes to the life insurance quote funnel.
+$hq_start_url    = esc_url( home_url( '/life-insurance-quote-3/' ) );
 
 // §Hero — trust cues (icon / label).
 $hq_cues = array(
