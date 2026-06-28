@@ -29,7 +29,7 @@
 <header class="site-header" aria-label="Primary navigation">
   <div class="container header-inner">
     <a class="brand" href="<?php echo esc_url( home_url( '/' ) ); ?>" aria-label="Ensurance.com homepage">
-      <img src="<?php echo esc_url( get_stylesheet_directory_uri() . '/assets/images/simple_navy_logo_with_registered_trademark.png' ); ?>" alt="Ensurance.com" class="brand-logo-image" />
+      <img src="<?php echo esc_url( get_stylesheet_directory_uri() . '/assets/images/logo-colored.png' ); ?>" alt="Ensurance.com" class="brand-logo-image" />
     </a>
     <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">
       <span class="sr-only">Open navigation</span>
