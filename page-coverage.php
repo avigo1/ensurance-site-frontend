@@ -82,7 +82,7 @@ $cov_paths = array(
         'short'   => 'Health',
         'body'    => 'Start a guided health request and create a clearer path to available options where supported.',
         'points'  => array( 'Individual and family options where supported', 'Guided through the plan basics', 'Reviewed by a licensed professional' ),
-        'href'    => '/health-insurance',
+        'href'    => '/health-insurance-quote-request/',
         'anchor'  => 'Start health request',
         'popular' => false,
     ),
