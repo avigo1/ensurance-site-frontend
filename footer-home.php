@@ -32,9 +32,7 @@
       </nav>
       <nav class="footer-col" aria-label="Trust">
         <p class="footer-col__title">Trust</p>
-        <a href="<?php echo esc_url( home_url( '/privacy' ) ); ?>">Privacy</a>
-        <a href="<?php echo esc_url( home_url( '/licensing' ) ); ?>">Licensing</a>
-        <a href="<?php echo esc_url( home_url( '/how-we-protect-you' ) ); ?>">How we protect you</a>
+        <a href="<?php echo esc_url( home_url( '/trust-center' ) ); ?>">Trust Center</a>
       </nav>
     </div>
   </div>
