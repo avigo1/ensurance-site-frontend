@@ -179,7 +179,7 @@ $start_url = esc_url( home_url( '/auto-insurance-quote' ) );
 
 // Coverage lines beyond the featured Auto tile: icon, title, body, request slug.
 $coverage_lines = array(
-    array( 'icon' => 'home',        'title' => 'Home',      'slug' => 'home-insurance-quote-request',      'track' => 'home',      'body' => 'Start a home insurance quote request and move toward quote options with more clarity.' ),
+    array( 'icon' => 'home',        'title' => 'Home',      'slug' => 'home-services',                       'track' => 'home',      'body' => 'Start a home insurance quote request and move toward quote options with more clarity.' ),
     array( 'icon' => 'key',         'title' => 'Renters',   'slug' => 'renters-insurance-quote-request',   'track' => 'renters',   'body' => 'Start a renters insurance quote request and move toward quote options with more clarity.' ),
     array( 'icon' => 'heart',       'title' => 'Life',      'slug' => 'life-insurance-quote-request',      'track' => 'life',      'body' => 'Start a life insurance quote request and move toward quote options with more clarity.' ),
     array( 'icon' => 'heart-pulse', 'title' => 'Health',    'slug' => 'health-insurance-quote-request',    'track' => 'health',    'body' => 'Start a health insurance quote request and move toward quote options with more clarity.' ),

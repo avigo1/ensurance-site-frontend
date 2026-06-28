@@ -38,7 +38,7 @@ $cov_paths = array(
         'short'   => 'Home',
         'body'    => 'Start a guided home request for the property you own — organized for licensed review of available carriers.',
         'points'  => array( 'The home you own and its structure', 'Belongings and personal liability', 'Dwelling, contents, and add-ons' ),
-        'href'    => '/home-insurance',
+        'href'    => '/home-services',
         'anchor'  => 'Start home request',
         'popular' => false,
     ),
