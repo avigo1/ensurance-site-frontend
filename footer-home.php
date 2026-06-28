@@ -28,7 +28,6 @@
       <nav class="footer-col" aria-label="For agents">
         <p class="footer-col__title">For agents</p>
         <a href="<?php echo esc_url( home_url( '/for-agents' ) ); ?>">Join the network</a>
-        <a href="<?php echo esc_url( home_url( '/agent-sign-in' ) ); ?>">Agent sign in</a>
       </nav>
       <nav class="footer-col" aria-label="Trust">
         <p class="footer-col__title">Trust</p>
