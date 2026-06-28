@@ -68,7 +68,7 @@ return array(
             array( 'title' => 'Home insurance',     'body' => 'Structure your home details for licensed review of available carrier options.',                'href' => '/home-insurance',       'label' => 'Start home request',     'event' => 'coverage_path_home_click' ),
             array( 'title' => 'Renters insurance',  'body' => 'Begin a renters request built to clarify your coverage needs before licensed review.',         'href' => '/renters-insurance',    'label' => 'Start renters request',  'event' => 'coverage_path_renters_click' ),
             array( 'title' => 'Life insurance',     'body' => 'Share life insurance goals through a guided request for licensed review where available.',     'href' => '/life-insurance',       'label' => 'Start life request',     'event' => 'coverage_path_life_click' ),
-            array( 'title' => 'Business insurance', 'body' => 'Organize your business details for licensed review of available carrier options.',              'href' => '/business-insurance',   'label' => 'Start business request', 'event' => 'coverage_path_business_click' ),
+            array( 'title' => 'Business insurance', 'body' => 'Organize your business details for licensed review of available carrier options.',              'href' => '/commercial-insurance-quote',   'label' => 'Start business request', 'event' => 'coverage_path_business_click' ),
             array( 'title' => 'Health insurance',   'body' => 'Begin a guided health request for available options through licensed review where applicable.', 'href' => '/health-insurance',     'label' => 'Start health request',   'event' => 'coverage_path_health_click' ),
         ),
     ),

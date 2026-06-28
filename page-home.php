@@ -183,7 +183,7 @@ $coverage_lines = array(
     array( 'icon' => 'key',         'title' => 'Renters',   'slug' => 'renters-insurance-quote-2',         'track' => 'renters',   'body' => 'Start a renters insurance quote request and move toward quote options with more clarity.' ),
     array( 'icon' => 'heart',       'title' => 'Life',      'slug' => 'life-insurance-quote-request',      'track' => 'life',      'body' => 'Start a life insurance quote request and move toward quote options with more clarity.' ),
     array( 'icon' => 'heart-pulse', 'title' => 'Health',    'slug' => 'health-insurance-quote-request',    'track' => 'health',    'body' => 'Start a health insurance quote request and move toward quote options with more clarity.' ),
-    array( 'icon' => 'briefcase',   'title' => 'Business',  'slug' => 'business-insurance-quote-request',  'track' => 'business',  'body' => 'Start a business insurance quote request and move toward quote options where supported.' ),
+    array( 'icon' => 'briefcase',   'title' => 'Business',  'slug' => 'commercial-insurance-quote',  'track' => 'business',  'body' => 'Start a business insurance quote request and move toward quote options where supported.' ),
     array( 'icon' => 'umbrella',    'title' => 'Umbrella',  'slug' => 'umbrella-insurance-quote-request',  'track' => 'umbrella',  'body' => 'Start an umbrella insurance quote request and move toward quote options with more clarity.' ),
     array( 'icon' => 'sparkles',    'title' => 'Specialty', 'slug' => 'specialty-insurance-quote-request', 'track' => 'specialty', 'body' => 'Start a specialty insurance quote request and move toward quote options with more clarity.' ),
 );
