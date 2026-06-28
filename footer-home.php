@@ -14,7 +14,7 @@
   <div class="container footer-grid">
     <div class="footer-brand">
       <a class="brand" href="<?php echo esc_url( home_url( '/' ) ); ?>" aria-label="Ensurance.com homepage">
-        <img src="<?php echo esc_url( get_stylesheet_directory_uri() . '/assets/images/simple_navy_logo_with_registered_trademark.png' ); ?>" alt="Ensurance.com" class="brand-logo-image" />
+        <img src="<?php echo esc_url( get_stylesheet_directory_uri() . '/assets/images/logo-white.png' ); ?>" alt="Ensurance.com" class="brand-logo-image" />
       </a>
       <p>Online first. Human when it matters.</p>
     </div>
