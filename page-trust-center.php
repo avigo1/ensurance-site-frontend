@@ -133,11 +133,11 @@ $ensurance_svg_allowed = array(
 );
 
 // Resolved destinations.
-$start_url    = esc_url( home_url( '/auto-insurance-quote' ) );
 $privacy_url  = esc_url( home_url( '/privacy' ) );
 $terms_url    = esc_url( home_url( '/terms' ) );
 $hiw_url      = esc_url( home_url( '/how-it-works' ) );
 $coverage_url = esc_url( home_url( '/coverage' ) );
+$coverage_paths_url = esc_url( home_url( '/coverage/' ) ) . '#paths'; // Second section (coverage request paths) of the coverage page.
 
 // Table of contents — order mirrors the sections below.
 $tc_toc = array(
@@ -243,7 +243,7 @@ get_header( 'home' );
           <?php endforeach; ?>
         </div>
         <div class="hero-actions tc-hero__actions">
-          <a class="btn btn-primary btn--lg" href="<?php echo $start_url; ?>" data-track="cta_click_start_auto_quote_request" data-cta-text="Start your request" data-page-type="trust_center">Start your request <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 18 ), $ensurance_svg_allowed ); ?></a>
+          <a class="btn btn-primary btn--lg" href="<?php echo $coverage_paths_url; ?>" data-track="cta_click_start_auto_quote_request" data-cta-text="Start your request" data-page-type="trust_center">Start your request <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 18 ), $ensurance_svg_allowed ); ?></a>
           <a class="btn btn-ghost btn--lg" href="<?php echo $hiw_url; ?>">How Ensurance works</a>
         </div>
         <p class="tc-hero__fine">Prefer the formal details first? <a href="<?php echo $privacy_url; ?>" data-track="privacy_policy_click" data-cta-text="Read the Privacy Policy" data-page-type="trust_center">Read the Privacy Policy</a>.</p>
@@ -386,7 +386,7 @@ get_header( 'home' );
       <h2>Begin your insurance request through a controlled flow.</h2>
       <p>One guided request. A structured path. Licensed review of available carrier options — with quote options where available.</p>
       <div class="hero-actions">
-        <a class="btn btn-reversed btn--lg" href="<?php echo $start_url; ?>" data-track="cta_click_start_auto_quote_request" data-cta-text="Start your request" data-page-type="trust_center">Start your request <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 18 ), $ensurance_svg_allowed ); ?></a>
+        <a class="btn btn-reversed btn--lg" href="<?php echo $coverage_paths_url; ?>" data-track="cta_click_start_auto_quote_request" data-cta-text="Start your request" data-page-type="trust_center">Start your request <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 18 ), $ensurance_svg_allowed ); ?></a>
       </div>
       <p class="tc-final__fine"><a href="<?php echo $privacy_url; ?>" data-track="privacy_policy_click" data-cta-text="Read the Privacy Policy" data-page-type="trust_center">Read the Privacy Policy</a></p>
     </div>
