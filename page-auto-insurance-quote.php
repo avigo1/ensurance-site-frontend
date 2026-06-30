@@ -112,7 +112,23 @@ get_header( 'home' );
         <?php
         while ( have_posts() ) :
             the_post();
-            the_content();
+
+            /* Render the page's editor content (the self-contained quote form
+               Custom HTML block). The editor also carries trailing blocks after
+               the form — a "Built for trust" line, an "A more trusted system…"
+               heading and a paragraph — that we don't want inside the card. Trim
+               everything after the form's own quote-form.js <script> so only the
+               form (and its script) renders. Defensive: if the marker isn't
+               found, the full content renders unchanged. */
+            $aq_content = apply_filters( 'the_content', get_the_content() );
+            $aq_marker  = strpos( $aq_content, 'quote-form.js' );
+            if ( false !== $aq_marker ) {
+                $aq_end = strpos( $aq_content, '</script>', $aq_marker );
+                if ( false !== $aq_end ) {
+                    $aq_content = substr( $aq_content, 0, $aq_end + strlen( '</script>' ) );
+                }
+            }
+            echo $aq_content; // Trusted, admin-authored page content (same as the_content()).
         endwhile;
         ?>
       </div>
