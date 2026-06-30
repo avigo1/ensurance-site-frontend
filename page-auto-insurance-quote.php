@@ -118,10 +118,13 @@ get_header( 'home' );
                the form — a "Built for trust" line, an "A more trusted system…"
                heading and a paragraph — that we don't want inside the card. Trim
                everything after the form's own quote-form.js <script> so only the
-               form (and its script) renders. Defensive: if the marker isn't
-               found, the full content renders unchanged. */
+               form (and its script) renders. We anchor on the LAST 'quote-form.js'
+               (the real script tag, which sits after the form) — the form's
+               leading documentation comment also mentions the filename, so a
+               first-match search would cut the form off. Defensive: if the marker
+               isn't found, the full content renders unchanged. */
             $aq_content = apply_filters( 'the_content', get_the_content() );
-            $aq_marker  = strpos( $aq_content, 'quote-form.js' );
+            $aq_marker  = strrpos( $aq_content, 'quote-form.js' );
             if ( false !== $aq_marker ) {
                 $aq_end = strpos( $aq_content, '</script>', $aq_marker );
                 if ( false !== $aq_end ) {
