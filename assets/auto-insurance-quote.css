@@ -327,3 +327,90 @@ html body.page-template-page-auto-insurance-quote-php {
     padding: var(--space-6) var(--space-4);
   }
 }
+
+/* ── Embedded form — brand recolor ──────────────────────────────────
+   The 10-step quote form (a Custom HTML block rendered via the_content()
+   inside .sq-formslot) hardcodes a legacy blue (#0073E6 / #005fce) and
+   orange (#F5A524 / #d98e18) palette. We don't edit the form source —
+   instead we remap only its brand-identity colors to the Calm Intelligence
+   tokens here (blue → accent green, orange CTA → accent green, accent dots
+   → navy). Neutrals, the success green and the error red are left as-is.
+   Scoped to .sq-formslot for extra specificity, with !important to beat the
+   form's own late inline <style> (some of its rules are !important too).
+   If the form's class names change, update the selectors below.            */
+
+/* Progress meter — fill, glow head, floating % label, ticks */
+.sq-formslot .ens-meter-fill {
+  background: linear-gradient(90deg, var(--accent) 0%, #4FB89E 100%) !important;
+  box-shadow: 0 2px 8px rgba(43, 134, 115, 0.3) !important;
+}
+.sq-formslot .ens-meter-fill::after {
+  background: var(--accent) !important;
+  box-shadow: 0 0 0 4px rgba(43, 134, 115, 0.15), 0 2px 6px rgba(43, 134, 115, 0.4) !important;
+}
+.sq-formslot .ens-meter-track {
+  background: var(--navy-50) !important;
+}
+.sq-formslot .ens-meter-pct {
+  color: var(--accent) !important;
+}
+.sq-formslot .ens-meter-pct::after {
+  background: var(--accent) !important;
+}
+.sq-formslot .ens-meter-tick[data-state="completed"] .ens-meter-tick-dot,
+.sq-formslot .ens-meter-tick[data-state="active"] .ens-meter-tick-dot {
+  background: var(--accent) !important;
+}
+.sq-formslot .ens-meter-tick[data-state="completed"] .ens-meter-tick-label {
+  color: var(--accent) !important;
+}
+.sq-formslot .ens-meter-tick[data-state="completed"]:hover .ens-meter-tick-label {
+  color: var(--accent-hover) !important;
+}
+
+/* Question highlight + section labels (text → green, dot → navy) */
+.sq-formslot .ens-question span,
+.sq-formslot .ens-section-label,
+.sq-formslot .ens-review-section-title {
+  color: var(--accent) !important;
+}
+.sq-formslot .ens-section-label::before,
+.sq-formslot .ens-review-section-title::before {
+  background: var(--primary) !important;
+}
+
+/* Text / select inputs — focus ring */
+.sq-formslot .ens-input:focus,
+.sq-formslot .ens-select:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(43, 134, 115, 0.1) !important;
+}
+
+/* Option pills — hover + selected */
+.sq-formslot .ens-pill:hover:not(.ens-pill--selected),
+.sq-formslot .ens-pill--selected {
+  border-color: var(--accent) !important;
+  background: var(--accent-50) !important;
+  color: var(--accent) !important;
+}
+
+/* Primary "Continue" button — the brand CTA color */
+.sq-formslot .ens-btn-next {
+  background: var(--accent) !important;
+}
+.sq-formslot .ens-btn-next:hover {
+  background: var(--accent-hover) !important;
+  box-shadow: 0 4px 12px rgba(43, 134, 115, 0.35) !important;
+}
+
+/* Loading spinner + "try again" link */
+.sq-formslot .ens-spinner {
+  border-color: var(--accent-50) !important;
+  border-top-color: var(--accent) !important;
+}
+.sq-formslot .ens-try-again {
+  color: var(--accent) !important;
+}
+.sq-formslot .ens-try-again:hover {
+  color: var(--accent-hover) !important;
+}
