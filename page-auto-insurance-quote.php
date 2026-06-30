@@ -99,19 +99,22 @@ get_header( 'home' );
       </div>
 
       <!-- ── FORM SLOT ────────────────────────────────────────────────
-           The framed surface for the guided request form. To wire the
-           form in, replace the .sq-formslot__placeholder block below with
-           the form, e.g.:
-               echo do_shortcode( '[lead_page]' );
-           or include the /start guided wizard component. Leave the
-           outer .sq-formslot wrapper in place — it owns the card chrome. -->
+           The 10-step "Auto Insurance Quote Request" form lives in this
+           page's editor content as a self-contained Custom HTML block (it
+           ships its own inline CSS/JS and posts to make.com). We render the
+           page content here so the form stays the single source of truth in
+           the WordPress editor — this template only frames it. The editor
+           page should contain ONLY that form block: the intro copy and the
+           "Secure Auto Insurance Quote Request" heading it used to carry are
+           now provided by the hero above, so remove them in the editor to
+           avoid duplication. -->
       <div class="sq-formslot">
-        <div class="sq-formslot__placeholder">
-          <span class="sq-formslot__icon"><?php echo wp_kses( ensurance_home_icon( 'file-text', 26 ), $ensurance_svg_allowed ); ?></span>
-          <p class="sq-formslot__title">Your guided request form</p>
-          <p class="sq-formslot__body">The guided request form drops into this card. It carries its own progress bar and Continue button — this slot is just the framed surface around it, so nothing is duplicated.</p>
-          <span class="sq-formslot__badge">&lt;form&nbsp;/&gt; · 10 steps</span>
-        </div>
+        <?php
+        while ( have_posts() ) :
+            the_post();
+            the_content();
+        endwhile;
+        ?>
       </div>
 
       <div class="sq-cues">

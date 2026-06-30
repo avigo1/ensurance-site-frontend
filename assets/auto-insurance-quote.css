@@ -124,69 +124,23 @@ html body.page-template-page-auto-insurance-quote-php {
 }
 
 /* ── Form slot ──────────────────────────────────────────────────────
-   The framed surface the guided request form lives in. The dashed border
-   + placeholder render until the form is wired in; once a real <form> is
-   dropped inside .sq-formslot, swap the border to solid by removing
-   .sq-formslot__placeholder (or add a modifier) — see the template note. */
+   The framed white card that holds the guided request form. The form
+   itself is rendered from this page's editor content (a self-contained
+   Custom HTML block with its own inline CSS/JS) via the_content() in the
+   template — this card is just the surface around it. The form is centered
+   and width-capped so a full-width form block sits comfortably in the card. */
 .sq-formslot {
   position: relative;
   background: var(--surface-card);
-  border: 1.5px dashed var(--border-input);
+  border: 1px solid var(--border-input);
   border-radius: var(--radius-card-lg);
   box-shadow: var(--shadow-raised);
-  min-height: 680px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-8) var(--space-6);
+  padding: var(--space-7) var(--space-6);
 }
 
-.sq-formslot__placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-4);
-  text-align: center;
-  max-width: 460px;
-}
-
-.sq-formslot__icon {
-  width: 60px;
-  height: 60px;
-  border-radius: var(--radius-icon);
-  background: var(--gray-100);
-  border: 1px solid var(--border-input);
-  color: var(--secondary);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.sq-formslot__title {
-  font-family: var(--font-sans);
-  font-weight: var(--weight-medium);
-  font-size: var(--text-lg);
-  color: var(--primary);
-}
-
-.sq-formslot__body {
-  font-size: var(--text-sm);
-  font-weight: var(--weight-light);
-  color: var(--text-muted);
-  line-height: var(--leading-body);
-}
-
-.sq-formslot__badge {
-  margin-top: var(--space-1);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-  background: var(--gray-100);
-  border: 1px solid var(--border-input);
-  border-radius: var(--radius-pill);
-  padding: 6px 14px;
+/* Keep the embedded form within the card and let it use the full width. */
+.sq-formslot > * {
+  max-width: 100%;
 }
 
 /* ── Trust-cue row beneath the form ─────────────────────────────────
@@ -370,7 +324,6 @@ html body.page-template-page-auto-insurance-quote-php {
   }
 
   .sq-formslot {
-    min-height: 0;
-    padding: var(--space-7) var(--space-5);
+    padding: var(--space-6) var(--space-4);
   }
 }
