@@ -49,7 +49,7 @@ $cov_paths = array(
         'short'   => 'Renters',
         'body'    => "Start a guided renters request to help protect what's inside your rented home.",
         'points'  => array( 'Belongings in your rented home', 'Personal liability coverage', 'Affordable, renter-focused options' ),
-        'href'    => '/renters-insurance-quote-2',
+        'href'    => '/renters-insurance-quote',
         'anchor'  => 'Start renters request',
         'popular' => false,
     ),
