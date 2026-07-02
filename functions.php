@@ -807,6 +807,64 @@ function ensurance_life_insurance_quote_assets() {
 }
 add_action('wp_enqueue_scripts', 'ensurance_life_insurance_quote_assets', 20);
 
+// ----------------------------------------------------------------------------
+// /commercial-insurance-quote — page-commercial-insurance-quote.php assets.
+// ----------------------------------------------------------------------------
+// Same deal as the homeowners/renters/life pages above: an exact visual reuse
+// of the auto "Start Your Request" design, loading the SAME asset stack (home
+// base layer + auto-insurance-quote.css/.js page layer). Only the form in the
+// slot differs (Ninja Forms "Commercial Insurance Quote Request", embedded via
+// the page's editor content). New function — existing functions untouched.
+
+function ensurance_commercial_insurance_quote_assets() {
+    if ( ! is_page_template('page-commercial-insurance-quote.php')
+        && ! is_page('commercial-insurance-quote') ) {
+        return;
+    }
+
+    // Drop the shared marketing bundle so it cannot fight this design.
+    wp_dequeue_style('ensurance-marketing');
+    wp_dequeue_script('ensurance-marketing');
+    wp_dequeue_style('ensurance-marketing-fonts');
+
+    // Shared Calm Intelligence type system + base (same as the homepage).
+    wp_enqueue_style(
+        'ensurance-home-fonts',
+        'https://fonts.googleapis.com/css2?family=Albert+Sans:wght@700;800;900&family=Rubik:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap',
+        array(),
+        null
+    );
+    wp_enqueue_style(
+        'ensurance-home',
+        get_stylesheet_directory_uri() . '/assets/home.css',
+        array(),
+        filemtime(get_stylesheet_directory() . '/assets/home.css')
+    );
+    wp_enqueue_script(
+        'ensurance-home',
+        get_stylesheet_directory_uri() . '/assets/home.js',
+        array(),
+        filemtime(get_stylesheet_directory() . '/assets/home.js'),
+        true
+    );
+
+    // Shared "Start Your Request" page layer (same files as the auto page).
+    wp_enqueue_style(
+        'ensurance-auto-insurance-quote',
+        get_stylesheet_directory_uri() . '/assets/auto-insurance-quote.css',
+        array('ensurance-home'),
+        filemtime(get_stylesheet_directory() . '/assets/auto-insurance-quote.css')
+    );
+    wp_enqueue_script(
+        'ensurance-auto-insurance-quote',
+        get_stylesheet_directory_uri() . '/assets/auto-insurance-quote.js',
+        array('ensurance-home'),
+        filemtime(get_stylesheet_directory() . '/assets/auto-insurance-quote.js'),
+        true
+    );
+}
+add_action('wp_enqueue_scripts', 'ensurance_commercial_insurance_quote_assets', 20);
+
 // ============================================================================
 // 2c. GOOGLE TAG MANAGER (GTM-5GRHH8LL) — SITE-WIDE
 // ============================================================================
