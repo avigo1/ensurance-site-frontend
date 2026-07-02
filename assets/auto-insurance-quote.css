@@ -28,7 +28,8 @@
    body class, so non-design pages are never touched. */
 html body.page-template-page-auto-insurance-quote-php,
 html body.page-template-page-homeowners-insurance-quote-php,
-html body.page-template-page-renters-insurance-quote-php {
+html body.page-template-page-renters-insurance-quote-php,
+html body.page-template-page-life-insurance-quote-php {
   background: var(--bg-page) !important;
 }
 

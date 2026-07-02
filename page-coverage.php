@@ -60,7 +60,7 @@ $cov_paths = array(
         'short'   => 'Life',
         'body'    => 'Start a guided life request and move toward options a licensed professional can review with you.',
         'points'  => array( 'Term and permanent life options', 'Coverage for the people who depend on you', 'Reviewed with a licensed professional' ),
-        'href'    => '/life-insurance-quote-3',
+        'href'    => '/life-insurance-quote',
         'anchor'  => 'Start life request',
         'popular' => false,
     ),
