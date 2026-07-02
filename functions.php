@@ -924,6 +924,63 @@ function ensurance_health_insurance_quote_assets() {
 }
 add_action('wp_enqueue_scripts', 'ensurance_health_insurance_quote_assets', 20);
 
+/**
+ * Contact page (/contact) — Calm Intelligence redesign.
+ *
+ * Same isolation pattern as the quote-request pages: drop the shared
+ * marketing bundle, load the homepage foundation (fonts + home.css/js),
+ * then the page-specific layer (assets/contact.css / contact.js) on top.
+ * Scoped to this template / slug only, so no other page is affected.
+ */
+function ensurance_contact_assets() {
+    if ( ! is_page_template('page-contact.php')
+        && ! is_page('contact') ) {
+        return;
+    }
+
+    // Drop the shared marketing bundle so it cannot fight this design.
+    wp_dequeue_style('ensurance-marketing');
+    wp_dequeue_script('ensurance-marketing');
+    wp_dequeue_style('ensurance-marketing-fonts');
+
+    // Shared Calm Intelligence type system + base (same as the homepage).
+    wp_enqueue_style(
+        'ensurance-home-fonts',
+        'https://fonts.googleapis.com/css2?family=Albert+Sans:wght@700;800;900&family=Rubik:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap',
+        array(),
+        null
+    );
+    wp_enqueue_style(
+        'ensurance-home',
+        get_stylesheet_directory_uri() . '/assets/home.css',
+        array(),
+        filemtime(get_stylesheet_directory() . '/assets/home.css')
+    );
+    wp_enqueue_script(
+        'ensurance-home',
+        get_stylesheet_directory_uri() . '/assets/home.js',
+        array(),
+        filemtime(get_stylesheet_directory() . '/assets/home.js'),
+        true
+    );
+
+    // Page-specific layer — loaded AFTER home.css/home.js via dependency.
+    wp_enqueue_style(
+        'ensurance-contact',
+        get_stylesheet_directory_uri() . '/assets/contact.css',
+        array('ensurance-home'),
+        filemtime(get_stylesheet_directory() . '/assets/contact.css')
+    );
+    wp_enqueue_script(
+        'ensurance-contact',
+        get_stylesheet_directory_uri() . '/assets/contact.js',
+        array('ensurance-home'),
+        filemtime(get_stylesheet_directory() . '/assets/contact.js'),
+        true
+    );
+}
+add_action('wp_enqueue_scripts', 'ensurance_contact_assets', 20);
+
 // ============================================================================
 // 2c. GOOGLE TAG MANAGER (GTM-5GRHH8LL) — SITE-WIDE
 // ============================================================================
