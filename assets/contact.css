@@ -279,6 +279,102 @@ html body.page-template-page-contact-php {
   flex-shrink: 0;
 }
 
+/* ── Form states: honeypot, errors, sending, success ─────────────── */
+
+/* Error color — home.css has no --error token; scope one to this page. */
+.page-contact {
+  --error: #b42318;
+}
+
+/* Honeypot: moved offscreen, not display:none (bots skip hidden fields). */
+.ct-hp {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.ct-error {
+  font-size: 13px;
+  font-weight: var(--weight-regular);
+  color: var(--error);
+  line-height: var(--leading-body);
+  margin: 0;
+}
+
+.ct-field--error .ct-input,
+.ct-field--error .ct-textarea {
+  border-color: var(--error);
+}
+
+.ct-field--error .ct-input:focus,
+.ct-field--error .ct-textarea:focus {
+  border-color: var(--error);
+  box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.15);
+}
+
+.ct-form__fail {
+  font-size: var(--text-sm);
+  color: var(--error);
+  line-height: var(--leading-body);
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  background: rgba(180, 35, 24, 0.06);
+  border: 1px solid rgba(180, 35, 24, 0.25);
+  border-radius: var(--radius-input);
+}
+
+.ct-form button[disabled] {
+  opacity: 0.65;
+  cursor: default;
+  pointer-events: none;
+}
+
+/* Success card (design parity with the standalone confirmation state). */
+.ct-success {
+  background: var(--surface-card);
+  border: 1px solid var(--accent-100);
+  border-radius: var(--radius-card);
+  padding: var(--space-8);
+  box-shadow: var(--shadow-card);
+  text-align: center;
+}
+
+.ct-success__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--accent-50);
+  color: var(--accent);
+}
+
+.ct-success__title {
+  font-size: var(--text-2xl);
+  line-height: var(--leading-snug);
+  margin: var(--space-4) 0 0;
+}
+
+.ct-success__body {
+  color: var(--text-muted);
+  font-weight: var(--weight-light);
+  line-height: var(--leading-body);
+  max-width: 420px;
+  margin: var(--space-3) auto 0;
+}
+
+.ct-success__body strong {
+  color: var(--text-heading);
+  font-weight: var(--weight-medium);
+}
+
+.ct-success__actions {
+  margin-top: var(--space-6);
+}
+
 /* ── "No phone tree" callout ─────────────────────────────────────── */
 
 .ct-callout {
@@ -349,13 +445,16 @@ html body.page-template-page-contact-php {
   line-height: var(--leading-hero) !important;
 }
 
-.ct-form__title {
+.ct-form__title,
+.ct-success__title {
   line-height: var(--leading-snug) !important;
 }
 
 .ct-intro__sub,
 .ct-form__sub,
 .ct-help,
+.ct-error,
+.ct-success__body,
 .ct-callout__body {
   line-height: var(--leading-body) !important;
 }
@@ -366,7 +465,8 @@ html body.page-template-page-contact-php {
    invisible. Pin every light-background heading to navy. Scoped to this
    page's classes only. */
 .ct-intro__title,
-.ct-form__title {
+.ct-form__title,
+.ct-success__title {
   color: var(--text-heading) !important;
 }
 

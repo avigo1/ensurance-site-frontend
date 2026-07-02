@@ -17,10 +17,14 @@
  * shared marketing bundle in functions.php (ensurance_contact_assets),
  * scoped to this template only, so no other page is affected.
  *
- * NOTE — form UI only for now. The form below is intentionally NOT wired
- * to a backend: it has no action and submission is inert. The handler
- * (admin-post.php action + wp_mail + success/error states) ships in a
- * follow-up commit. Field name attributes are already in place for it.
+ * The message form submits via fetch() (assets/contact.js) to the REST
+ * endpoint POST /wp-json/ensurance/v1/contact (ensurance_contact_handle in
+ * functions.php), which stores every message as a private Contact Message
+ * post and emails support@ensurance.com through WP Mail SMTP. On success the
+ * card swaps to the design's inline confirmation state. Spam is handled by
+ * the visually-hidden honeypot below plus a time trap and per-IP rate limit
+ * in the handler — no nonce, because SG Optimizer full-page caching would
+ * serve stale nonces to logged-out visitors.
  *
  * SEO: title / meta description / canonical / robots are owned by Yoast and
  * emitted through wp_head(); this template outputs none of them. The
@@ -43,6 +47,7 @@ if ( ! function_exists( 'ensurance_home_icon' ) ) {
             'clock'       => '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
             'lock'        => '<rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
             'arrow-right' => '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+            'check'       => '<path d="M20 6 9 17l-5-5"/>',
         );
         $inner = isset( $icons[ $name ] ) ? $icons[ $name ] : '';
         $s     = (int) $size;
@@ -148,22 +153,24 @@ get_header( 'home' );
     </div>
   </section>
 
-  <!-- ── Message form (UI only — backend handler ships separately) ── -->
+  <!-- ── Message form (fetch() → /wp-json/ensurance/v1/contact) ───── -->
   <section class="ct-main reveal" aria-label="Send us a message">
-    <form class="ct-form" method="post" novalidate>
+    <form class="ct-form" method="post" novalidate data-endpoint="<?php echo esc_url( rest_url( 'ensurance/v1/contact' ) ); ?>">
       <h2 class="ct-form__title">Send us a message</h2>
       <p class="ct-form__sub">Tell us a little about what you need. The more context, the better we can point you to the right person.</p>
       <div class="ct-fields">
-        <div class="ct-field">
+        <div class="ct-field" data-field="ct_name">
           <label class="ct-label" for="ct-name">Your name</label>
-          <input class="ct-input" type="text" id="ct-name" name="ct_name" placeholder="e.g. Jordan Ellis" autocomplete="name">
+          <input class="ct-input" type="text" id="ct-name" name="ct_name" placeholder="e.g. Jordan Ellis" autocomplete="name" aria-describedby="ct-name-error">
+          <p class="ct-error" id="ct-name-error" hidden>Mind adding your name so we know who we're replying to?</p>
         </div>
-        <div class="ct-field">
+        <div class="ct-field" data-field="ct_email">
           <label class="ct-label" for="ct-email">Email</label>
-          <input class="ct-input" type="email" inputmode="email" id="ct-email" name="ct_email" placeholder="e.g. you@email.com" autocomplete="email" aria-describedby="ct-email-help">
+          <input class="ct-input" type="email" inputmode="email" id="ct-email" name="ct_email" placeholder="e.g. you@email.com" autocomplete="email" aria-describedby="ct-email-help ct-email-error">
           <p class="ct-help" id="ct-email-help">So we can write back. We won't add you to any list.</p>
+          <p class="ct-error" id="ct-email-error" hidden>That email doesn't look quite right — mind checking it?</p>
         </div>
-        <div class="ct-field">
+        <div class="ct-field" data-field="ct_topic">
           <label class="ct-label" for="ct-topic">What's this about?</label>
           <div class="ct-select-wrap">
             <select class="ct-select" id="ct-topic" name="ct_topic" aria-describedby="ct-topic-help">
@@ -174,16 +181,35 @@ get_header( 'home' );
           </div>
           <p class="ct-help" id="ct-topic-help">Helps your message reach the right person faster.</p>
         </div>
-        <div class="ct-field">
+        <div class="ct-field" data-field="ct_message">
           <label class="ct-label" for="ct-message">Your message</label>
-          <textarea class="ct-textarea" id="ct-message" name="ct_message" placeholder="What can we help you with?"></textarea>
+          <textarea class="ct-textarea" id="ct-message" name="ct_message" placeholder="What can we help you with?" aria-describedby="ct-message-error"></textarea>
+          <p class="ct-error" id="ct-message-error" hidden>Add a little more so we can actually help.</p>
         </div>
+        <!-- Honeypot: hidden from people (and screen readers), filled by bots. -->
+        <div class="ct-hp" aria-hidden="true">
+          <label for="ct-company">Company</label>
+          <input type="text" id="ct-company" name="ct_company" tabindex="-1" autocomplete="off">
+        </div>
+        <input type="hidden" name="ct_elapsed" value="">
+        <p class="ct-form__fail" role="alert" hidden></p>
         <div class="ct-actions">
-          <button class="btn btn-primary btn--lg" type="submit" data-track="contact_submit_click" data-cta-text="Send message" data-page-type="contact">Send message <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 18 ), $ensurance_svg_allowed ); ?></button>
+          <button class="btn btn-primary btn--lg" type="submit" data-track="contact_submit_click" data-cta-text="Send message" data-page-type="contact"><span data-ct-label>Send message</span> <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 18 ), $ensurance_svg_allowed ); ?></button>
           <span class="ct-privacy"><?php echo wp_kses( ensurance_home_icon( 'lock', 14 ), $ensurance_svg_allowed ); ?> Your details stay with Ensurance.</span>
         </div>
       </div>
     </form>
+
+    <!-- Success state (design parity) — contact.js reveals this and fills in
+         the first name + email after a successful submission. -->
+    <div class="ct-success" hidden>
+      <span class="ct-success__badge"><?php echo wp_kses( ensurance_home_icon( 'check', 26 ), $ensurance_svg_allowed ); ?></span>
+      <h2 class="ct-success__title">Thanks, <span data-ct-first>there</span> — your message is in.</h2>
+      <p class="ct-success__body">A real person will read it and reply to <strong data-ct-email>your email</strong> within one to two business days. No sales list, no follow-up calls.</p>
+      <div class="ct-success__actions">
+        <button class="btn btn-ghost" type="button" data-ct-reset>Send another message</button>
+      </div>
+    </div>
 
     <div class="ct-callout" role="note">
       <span class="ct-callout__icon"><?php echo wp_kses( ensurance_home_icon( 'user', 18 ), $ensurance_svg_allowed ); ?></span>
