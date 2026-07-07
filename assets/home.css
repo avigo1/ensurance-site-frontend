@@ -622,20 +622,16 @@ a {
   padding-bottom: var(--space-9);
 }
 
-/* ── What is Ensurance (split) ──────────────────────────────────── */
+/* ── What is Ensurance (full-width single column) ───────────────── */
 
 .whatis {
-  display: grid;
-  grid-template-columns: 0.95fr 1.05fr;
-  gap: var(--space-8);
-  align-items: center;
+  display: block;
 }
 
 .whatis h2 {
   font-size: var(--text-4xl);
   line-height: 1.3;
   margin-top: var(--space-4);
-  max-width: 480px;
 }
 
 .whatis__intro {
@@ -643,7 +639,6 @@ a {
   font-weight: var(--weight-light);
   margin-top: var(--space-4);
   line-height: var(--leading-body);
-  max-width: 520px;
 }
 
 .whatis__rows {
@@ -679,32 +674,6 @@ a {
   font-size: var(--text-sm);
   font-weight: var(--weight-light);
   line-height: var(--leading-body);
-}
-
-/* Media placeholder panel (stands in for brand photography) */
-.media-panel {
-  position: relative;
-  border-radius: var(--radius-card-lg);
-  background: linear-gradient(155deg, var(--navy-50), #ffffff);
-  border: 1px solid var(--border-soft);
-  aspect-ratio: 13 / 11;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  box-shadow: var(--shadow-card);
-}
-
-.media-panel__icon {
-  width: 64px;
-  height: 64px;
-  border-radius: var(--radius-icon);
-  background: #fff;
-  border: 1px solid var(--border-input);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--secondary);
 }
 
 /* ── Cards (shared base) ────────────────────────────────────────── */
@@ -1177,15 +1146,6 @@ a.card:hover .coverage-tile__arrow {
     --text-5xl: 44px;
     --text-4xl: 36px;
     --text-3xl: 30px;
-  }
-
-  .whatis {
-    grid-template-columns: 1fr;
-    gap: var(--space-6);
-  }
-
-  .whatis .media-panel {
-    order: -1;
   }
 
   .steps-grid,

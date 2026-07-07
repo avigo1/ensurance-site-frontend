@@ -197,9 +197,6 @@ get_header( 'home' );
   <!-- ── What is Ensurance ───────────────────────────────────────── -->
   <section class="section section--lg" aria-label="What is Ensurance">
     <div class="whatis">
-      <div class="media-panel" aria-hidden="true">
-        <span class="media-panel__icon"><?php echo wp_kses( ensurance_home_icon( 'car', 28 ), $ensurance_svg_allowed ); ?></span>
-      </div>
       <div>
         <p class="eyebrow">What is Ensurance?</p>
         <h2>Start an auto insurance quote request and move toward options.</h2>
