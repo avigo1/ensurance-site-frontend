@@ -66,27 +66,27 @@ $ensurance_svg_allowed = array(
 
 // §Intro — trust cues (icon / label).
 $ct_cues = array(
-    array( 'user',  'Read by a person' ),
-    array( 'clock', '1–2 business day reply' ),
-    array( 'lock',  'Never added to a sales list' ),
+    array( 'user',  'Reviewed by our team' ),
+    array( 'clock', '1 to 2 business day reply' ),
+    array( 'lock',  'Not added to a marketing list from this form' ),
 );
 
 // §Form — "What's this about?" topics (value / label).
 $ct_topics = array(
     array( '',        'A general question' ),
     array( 'request', 'About a request I started' ),
-    array( 'agent',   'I\'m an agent or agency' ),
+    array( 'agent',   'I am an agent or agency' ),
     array( 'press',   'Press or media' ),
     array( 'privacy', 'A privacy request' ),
 );
 
 // §FAQ — also feeds the FAQPage JSON-LD below.
 $ct_faq = array(
-    array( 'How fast will I hear back?', 'A real person reads every message and usually replies within one to two business days. Messages sent over a weekend are answered the next business day.' ),
-    array( 'Can I ask about a request I already started?', 'Yes. Choose “About a request I started,” and tell us what you\'re looking for. We can help you pick up where you left off or explain what happens next.' ),
-    array( 'I\'m an agent — is this the right place?', 'It\'s a good start. Select “I\'m an agent or agency” and we\'ll route your message to the partnerships team, or you can read more on the Ensurance for agents page first.' ),
-    array( 'Will contacting you sign me up for anything?', 'No. We only use your email to reply to your message. You won\'t be added to a marketing list and you won\'t get sales calls because you reached out.' ),
-    array( 'How do I make a privacy request?', 'Choose “A privacy request” and tell us what you\'d like to access or delete. You can also review the full details in our privacy policy.' ),
+    array( 'How fast will I hear back?', 'Our team reviews messages and usually replies within one to two business days. Messages sent over a weekend are typically answered the next business day.' ),
+    array( 'Can I ask about a request I already started?', 'Yes. Choose “About a request I started” and tell us what you need. We can help you understand the next step or pick up where you left off.' ),
+    array( 'I am an agent or agency. Is this the right place?', 'Yes. Select “I am an agent or agency” and we can route your message to the right team. You can also review the For Agents page first.' ),
+    array( 'Will contacting Ensurance sign me up for anything?', 'No. This form is used to respond to your message. It does not add you to a marketing list or start a quote request.' ),
+    array( 'How do I make a privacy request?', 'Choose “A privacy request” and tell us what you would like to access, update, or delete. You can also review the full details in the Privacy Policy.' ),
 );
 
 // --- Per-page schema: ContactPage + BreadcrumbList, and FAQPage built from
@@ -102,8 +102,8 @@ add_action( 'wp_head', function () use ( $ct_faq ) {
                 '@type'       => 'ContactPage',
                 '@id'         => $url,
                 'url'         => $url,
-                'name'        => 'Contact Us | Ensurance',
-                'description' => 'Send Ensurance a message about a guided insurance request, agent partnership, press, or privacy. A real person reads every message.',
+                'name'        => 'Contact Ensurance | Insurance Quote Request Help',
+                'description' => 'Send Ensurance a message about a guided insurance request, agent access, press, or privacy. Our team reviews every message. Contacting Ensurance does not start a quote request.',
             ),
             array(
                 '@type'           => 'BreadcrumbList',
@@ -143,8 +143,8 @@ get_header( 'home' );
     <span class="ct-intro__glow ct-intro__glow--b" aria-hidden="true"></span>
     <div class="ct-intro__inner">
       <span class="eyebrow">Contact</span>
-      <h1 class="ct-intro__title">Talk to a <span class="ct-accent">real person</span> at Ensurance.</h1>
-      <p class="ct-intro__sub">Questions about a guided request, working with us as an agent, press, or your privacy — send a message and a real person will read it. We usually reply within one to two business days.</p>
+      <h1 class="ct-intro__title">Contact <span class="ct-accent">Ensurance</span>.</h1>
+      <p class="ct-intro__sub">Questions about a guided request, agent access, press, or privacy? Send a message and our team will review it. We usually reply within one to two business days.</p>
       <div class="ct-cues">
         <?php foreach ( $ct_cues as $cue ) : ?>
         <span class="trust-cue"><?php echo wp_kses( ensurance_home_icon( $cue[0], 16 ), $ensurance_svg_allowed ); ?><?php echo esc_html( $cue[1] ); ?></span>
@@ -157,21 +157,21 @@ get_header( 'home' );
   <section class="ct-main reveal" aria-label="Send us a message">
     <form class="ct-form" method="post" novalidate data-endpoint="<?php echo esc_url( rest_url( 'ensurance/v1/contact' ) ); ?>">
       <h2 class="ct-form__title">Send us a message</h2>
-      <p class="ct-form__sub">Tell us a little about what you need. The more context, the better we can point you to the right person.</p>
+      <p class="ct-form__sub">Tell us what you need so we can route your message to the right team.</p>
       <div class="ct-fields">
         <div class="ct-field" data-field="ct_name">
           <label class="ct-label" for="ct-name">Your name</label>
           <input class="ct-input" type="text" id="ct-name" name="ct_name" placeholder="e.g. Jordan Ellis" autocomplete="name" aria-describedby="ct-name-error">
-          <p class="ct-error" id="ct-name-error" hidden>Mind adding your name so we know who we're replying to?</p>
+          <p class="ct-error" id="ct-name-error" hidden>Add your name so we know who we are replying to.</p>
         </div>
         <div class="ct-field" data-field="ct_email">
           <label class="ct-label" for="ct-email">Email</label>
           <input class="ct-input" type="email" inputmode="email" id="ct-email" name="ct_email" placeholder="e.g. you@email.com" autocomplete="email" aria-describedby="ct-email-help ct-email-error">
-          <p class="ct-help" id="ct-email-help">So we can write back. We won't add you to any list.</p>
-          <p class="ct-error" id="ct-email-error" hidden>That email doesn't look quite right — mind checking it?</p>
+          <p class="ct-help" id="ct-email-help">We use this to reply to your message. This form does not add you to a marketing list.</p>
+          <p class="ct-error" id="ct-email-error" hidden>That email does not look right. Please check it and try again.</p>
         </div>
         <div class="ct-field" data-field="ct_topic">
-          <label class="ct-label" for="ct-topic">What's this about?</label>
+          <label class="ct-label" for="ct-topic">What is this about?</label>
           <div class="ct-select-wrap">
             <select class="ct-select" id="ct-topic" name="ct_topic" aria-describedby="ct-topic-help">
               <?php foreach ( $ct_topics as $topic ) : ?>
@@ -179,12 +179,12 @@ get_header( 'home' );
               <?php endforeach; ?>
             </select>
           </div>
-          <p class="ct-help" id="ct-topic-help">Helps your message reach the right person faster.</p>
+          <p class="ct-help" id="ct-topic-help">Helps us route your message to the right team.</p>
         </div>
         <div class="ct-field" data-field="ct_message">
           <label class="ct-label" for="ct-message">Your message</label>
           <textarea class="ct-textarea" id="ct-message" name="ct_message" placeholder="What can we help you with?" aria-describedby="ct-message-error"></textarea>
-          <p class="ct-error" id="ct-message-error" hidden>Add a little more so we can actually help.</p>
+          <p class="ct-error" id="ct-message-error" hidden>Add enough detail so we can understand your question and respond clearly.</p>
         </div>
         <!-- Honeypot: hidden from people (and screen readers), filled by bots. -->
         <div class="ct-hp" aria-hidden="true">
@@ -195,7 +195,7 @@ get_header( 'home' );
         <p class="ct-form__fail" role="alert" hidden></p>
         <div class="ct-actions">
           <button class="btn btn-primary btn--lg" type="submit" data-track="contact_submit_click" data-cta-text="Send message" data-page-type="contact"><span data-ct-label>Send message</span> <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 18 ), $ensurance_svg_allowed ); ?></button>
-          <span class="ct-privacy"><?php echo wp_kses( ensurance_home_icon( 'lock', 14 ), $ensurance_svg_allowed ); ?> Your details stay with Ensurance.</span>
+          <span class="ct-privacy"><?php echo wp_kses( ensurance_home_icon( 'lock', 14 ), $ensurance_svg_allowed ); ?> Your message is used to respond to your request.</span>
         </div>
       </div>
     </form>
@@ -204,8 +204,8 @@ get_header( 'home' );
          the first name + email after a successful submission. -->
     <div class="ct-success" hidden>
       <span class="ct-success__badge"><?php echo wp_kses( ensurance_home_icon( 'check', 26 ), $ensurance_svg_allowed ); ?></span>
-      <h2 class="ct-success__title">Thanks, <span data-ct-first>there</span> — your message is in.</h2>
-      <p class="ct-success__body">A real person will read it and reply to <strong data-ct-email>your email</strong> within one to two business days. No sales list, no follow-up calls.</p>
+      <h2 class="ct-success__title">Thank you. Your message has been received.</h2>
+      <p class="ct-success__body">Our team will review your message and reply by email, usually within one to two business days. This form does not add you to a marketing list.</p>
       <div class="ct-success__actions">
         <button class="btn btn-ghost" type="button" data-ct-reset>Send another message</button>
       </div>
@@ -214,8 +214,8 @@ get_header( 'home' );
     <div class="ct-callout" role="note">
       <span class="ct-callout__icon"><?php echo wp_kses( ensurance_home_icon( 'user', 18 ), $ensurance_svg_allowed ); ?></span>
       <div>
-        <p class="ct-callout__title">No phone tree, no sales calls.</p>
-        <p class="ct-callout__body">Ensurance is online first. When something needs a person, a real one steps in — but we'll never cold-call you because you reached out.</p>
+        <p class="ct-callout__title">Online first, with human support when needed.</p>
+        <p class="ct-callout__body">Ensurance is online first. When something needs support, our team can step in and respond through the contact details you provide.</p>
       </div>
     </div>
   </section>

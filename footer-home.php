@@ -16,7 +16,7 @@
       <a class="brand" href="<?php echo esc_url( home_url( '/' ) ); ?>" aria-label="Ensurance.com homepage">
         <img src="<?php echo esc_url( get_stylesheet_directory_uri() . '/assets/images/logo-white.png' ); ?>" alt="Ensurance.com" class="brand-logo-image" />
       </a>
-      <p>Online first. Human when it matters.</p>
+      <p>Insurance quote help without the quote chaos.</p>
     </div>
     <div class="footer-cols">
       <nav class="footer-col" aria-label="Ensurance">
@@ -32,16 +32,17 @@
       <nav class="footer-col" aria-label="Trust">
         <p class="footer-col__title">Trust</p>
         <a href="<?php echo esc_url( home_url( '/trust-center' ) ); ?>">Trust Center</a>
+        <a href="<?php echo esc_url( home_url( '/contact' ) ); ?>">Contact Us</a>
       </nav>
     </div>
   </div>
   <div class="footer-bottom">
-    <p>&copy; <?php echo esc_html( date( 'Y' ) ); ?> Ensurance. Insurance products are offered through licensed independent agents.</p>
+    <p>&copy; <?php echo esc_html( date( 'Y' ) ); ?> Ensurance. Insurance products are offered through licensed agents, agencies, or approved partners where available.</p>
   </div>
 </footer>
 
 <div aria-label="Mobile quote request action" class="mobile-sticky-cta">
-  <span>Quote help, less chaos.</span>
+  <span>Insurance quote help without the quote chaos.</span>
   <a class="btn btn-primary" data-cta-text="Start My Auto Quote Request" data-page-type="homepage" data-track="mobile_sticky_cta_click" href="<?php echo esc_url( home_url( '/auto-insurance-quote' ) ); ?>">Start My Auto Quote Request</a>
 </div>
 

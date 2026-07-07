@@ -27,15 +27,15 @@ $fa_schema = json_decode( <<<'JSON'
   "@type": "FAQPage",
   "@id": "https://www.ensurance.com/for-agents#faq",
   "mainEntity": [
-    { "@type": "Question", "name": "What is Ensurance for agents?", "acceptedAnswer": { "@type": "Answer", "text": "Ensurance helps licensed agents and agencies review structured shopper insurance requests. Consumer insurance intent is organized through a controlled request flow and prepared for licensed review of available carrier options." } },
-    { "@type": "Question", "name": "How is Ensurance different from buying bulk insurance leads?", "acceptedAnswer": { "@type": "Answer", "text": "Ensurance is a structured request system, not a bulk lead seller. Shopper requests arrive with context, organized for licensed review, rather than as raw volume to be auctioned to a long list of buyers." } },
-    { "@type": "Question", "name": "Does Ensurance guarantee request volume?", "acceptedAnswer": { "@type": "Answer", "text": "No. Ensurance does not promise or guarantee request volume. The focus is request quality and context, and availability can vary." } },
-    { "@type": "Question", "name": "Does Ensurance guarantee close rates or sales?", "acceptedAnswer": { "@type": "Answer", "text": "No. Ensurance does not guarantee close rates, sales, appointments, or exclusivity. Outcomes depend on your review, shopper fit, carrier appetite, and eligibility." } },
-    { "@type": "Question", "name": "What kind of information may be included in a shopper request?", "acceptedAnswer": { "@type": "Answer", "text": "A structured shopper request may include the coverage type a shopper is exploring and the context they shared through guided questions, organized so you can review it before the first conversation." } },
-    { "@type": "Question", "name": "Who can request agent access?", "acceptedAnswer": { "@type": "Answer", "text": "Licensed insurance agents and independent insurance agencies can request access. Participation is reviewed against professional standards and is not guaranteed." } },
-    { "@type": "Question", "name": "Can agents review multiple coverage types?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Structured shopper requests span common coverage types, including auto, home, renters, life, business, and health, where available." } },
-    { "@type": "Question", "name": "How does Ensurance protect shopper trust?", "acceptedAnswer": { "@type": "Answer", "text": "Shopper requests are organized for licensed review where appropriate, not blasted to a long list of companies. A trust-first request flow is the foundation of the agent experience." } },
-    { "@type": "Question", "name": "Does Ensurance provide quotes directly?", "acceptedAnswer": { "@type": "Answer", "text": "No. Ensurance does not provide quotes directly. It structures shopper requests so licensed agents, agencies, or approved insurance partners can review available carrier options." } },
+    { "@type": "Question", "name": "What is Ensurance for agents?", "acceptedAnswer": { "@type": "Answer", "text": "Ensurance helps licensed agents and agencies review organized shopper insurance requests with better context. Shopper intent is gathered through a guided request flow and prepared for licensed review where available." } },
+    { "@type": "Question", "name": "How is Ensurance different from buying bulk insurance leads?", "acceptedAnswer": { "@type": "Answer", "text": "Ensurance is not a bulk lead seller. Shopper requests are organized with context before review, instead of arriving as low-context contact records circulated broadly." } },
+    { "@type": "Question", "name": "Does Ensurance guarantee request volume?", "acceptedAnswer": { "@type": "Answer", "text": "No. Ensurance does not guarantee request volume. The focus is shopper context and request quality, and availability can vary." } },
+    { "@type": "Question", "name": "Does Ensurance guarantee close rates or sales?", "acceptedAnswer": { "@type": "Answer", "text": "No. Ensurance does not guarantee appointments, exclusivity, close rates, sales, or outcomes. Results depend on fit, carrier appetite, eligibility, and agent follow-up." } },
+    { "@type": "Question", "name": "What kind of information may be included in a shopper request?", "acceptedAnswer": { "@type": "Answer", "text": "An organized shopper request may include the coverage type a shopper is exploring and the context they shared through guided questions, so you can review it before the first conversation." } },
+    { "@type": "Question", "name": "Who can request agent access?", "acceptedAnswer": { "@type": "Answer", "text": "Licensed insurance agents and agencies can request access. Participation is reviewed against professional standards and is not guaranteed." } },
+    { "@type": "Question", "name": "Can agents review multiple coverage types?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Organized shopper requests can span common coverage types, including auto, home, renters, life, business, and health, where available." } },
+    { "@type": "Question", "name": "How does Ensurance protect shopper trust?", "acceptedAnswer": { "@type": "Answer", "text": "Shopper requests move through a controlled process designed to reduce broad sharing, preserve context, and support a better first conversation." } },
+    { "@type": "Question", "name": "How does Ensurance support the shopper quote request journey?", "acceptedAnswer": { "@type": "Answer", "text": "Ensurance helps shoppers start guided quote requests, organize their details, and move toward quote options where available through licensed agents, agencies, or approved partners." } },
     { "@type": "Question", "name": "How do I get started?", "acceptedAnswer": { "@type": "Answer", "text": "Request agent access using the form on this page. Provide your professional details for review against participation standards." } }
   ]
 }
@@ -113,31 +113,31 @@ $fa_request_rows = array(
 
 // §Context — bulk-leads vs. structured-request compare.
 $fa_compare_bad = array(
-    'Raw contact details with little context behind them.',
-    'The same record sold across a long list of buyers.',
+    'Contact details with limited shopper context.',
+    'The same shopper record circulated broadly.',
     'Pressure to chase volume instead of fit.',
-    'Shopper trust spent before the first conversation.',
+    'Shopper trust weakened before the first conversation.',
 );
 $fa_compare_good = array(
-    'Shopper intent organized into a structured request.',
-    'Context gathered through a guided, trust-first flow.',
-    'Prepared for licensed review against available carriers.',
+    'Shopper intent organized into one clearer request.',
+    'Context gathered through a guided, trust-first request flow.',
+    'Prepared for licensed review where available.',
     'Better context before the first conversation.',
 );
 
 // §Controlled flow — glass cards (icon / title / body).
 $fa_controlled = array(
-    array( 'file-text',    'One structured request',      'Shopper details are organized into a single, structured request — context in one place, not scattered across forms.' ),
-    array( 'shield-check', 'Prepared for licensed review', 'Each request is prepared for review by licensed agents, agencies, or approved insurance partners against available carriers.' ),
-    array( 'lock',         'Shared where appropriate',     'Requests are routed for licensed review where appropriate — not blasted to a long list of companies.' ),
+    array( 'file-text',    'One organized request',        'Shopper details are organized into one request, with context in one place instead of scattered across forms.' ),
+    array( 'shield-check', 'Prepared for licensed review', 'Each request is prepared so licensed agents, agencies, or approved partners can review shopper context where available.' ),
+    array( 'lock',         'Controlled request access',    'Requests move through a controlled process designed to reduce broad sharing and preserve shopper trust.' ),
 );
 
 // §Flow — connected stepper (icon / title / body).
 $fa_flow = array(
-    array( 'user',         'Shopper starts a request',     "A consumer answers a few guided questions about the coverage they're exploring, one step at a time." ),
-    array( 'file-text',    'Ensurance structures it',      'Their intent is organized into one structured request — context gathered before anyone reaches out.' ),
-    array( 'shield-check', 'Licensed review',              'Licensed agents, agencies, or approved partners review the request against the carriers available to them.' ),
-    array( 'message',      'A better first conversation',  'You begin with context already in hand, where requests are available — not a cold call from a list.' ),
+    array( 'user',         'Shopper starts a request',     'A shopper answers guided questions about the coverage they are exploring, one step at a time.' ),
+    array( 'file-text',    'Ensurance organizes it',       'Their details are organized into one clearer request before follow-up begins.' ),
+    array( 'shield-check', 'Licensed review',              'Licensed agents, agencies, or approved partners may review the request with clearer shopper context where available.' ),
+    array( 'message',      'A better first conversation',  'You begin with context already in hand, where requests are available, instead of starting from a low-context contact record.' ),
 );
 
 // §Coverage lines — chips (icon / label).
@@ -152,30 +152,30 @@ $fa_lines = array(
 
 // §Standards — participation tiles (icon / title / body).
 $fa_standards = array(
-    array( 'user',         'Licensed agents and agencies', 'Access is for licensed insurance agents and independent agencies. Professional details are reviewed before access.' ),
-    array( 'shield-check', 'Trust-first by design',        'Shopper trust comes first. Requests are reviewed where appropriate — never auctioned to a long list of companies.' ),
-    array( 'file-text',    'Request quality over volume',  'The focus is request context and quality, not raw lead counts. There is no volume guarantee.' ),
-    array( 'ban',          'No guarantee claims',          'Ensurance does not guarantee close rates, sales, appointments, or exclusivity. Outcomes depend on fit, carrier appetite, and eligibility.' ),
+    array( 'user',         'Licensed agents and agencies', 'Access is for licensed insurance agents and agencies. Professional details are reviewed before access.' ),
+    array( 'shield-check', 'Trust-first by design',        'Shopper trust comes first. Requests move through a controlled process designed to reduce broad sharing and preserve context.' ),
+    array( 'file-text',    'Request quality over volume',  'The focus is shopper context and request quality, not raw lead volume.' ),
+    array( 'ban',          'No outcome guarantees',        'Ensurance does not guarantee appointments, exclusivity, close rates, sales, or outcomes. Results depend on fit, carrier appetite, eligibility, and agent follow-up.' ),
 );
 
 // §Agent access — supporting cue rows (icon / label).
 $fa_access_cues = array(
     array( 'shield-check', 'Prepared for licensed review' ),
-    array( 'file-text',    'Context in one structured request' ),
-    array( 'lock',         'Trust-first, never bulk-blasted' ),
+    array( 'file-text',    'Context in one organized request' ),
+    array( 'lock',         'Trust-first request process' ),
 );
 
 // §FAQ — mirrors the FAQPage schema above.
 $fa_faq = array(
-    array( 'What is Ensurance for agents?', 'Ensurance helps licensed agents and agencies review structured shopper insurance requests. Consumer insurance intent is organized through a controlled request flow and prepared for licensed review of available carrier options.' ),
-    array( 'How is Ensurance different from buying bulk insurance leads?', 'Ensurance is a structured request system, not a bulk lead seller. Shopper requests arrive with context, organized for licensed review, rather than as raw volume to be auctioned to a long list of buyers.' ),
-    array( 'Does Ensurance guarantee request volume?', 'No. Ensurance does not promise or guarantee request volume. The focus is request quality and context, and availability can vary.' ),
-    array( 'Does Ensurance guarantee close rates or sales?', 'No. Ensurance does not guarantee close rates, sales, appointments, or exclusivity. Outcomes depend on your review, shopper fit, carrier appetite, and eligibility.' ),
-    array( 'What kind of information may be included in a shopper request?', 'A structured shopper request may include the coverage type a shopper is exploring and the context they shared through guided questions, organized so you can review it before the first conversation.' ),
-    array( 'Who can request agent access?', 'Licensed insurance agents and independent insurance agencies can request access. Participation is reviewed against professional standards and is not guaranteed.' ),
-    array( 'Can agents review multiple coverage types?', 'Yes. Structured shopper requests span common coverage types, including auto, home, renters, life, business, and health, where available.' ),
-    array( 'How does Ensurance protect shopper trust?', 'Shopper requests are organized for licensed review where appropriate, not blasted to a long list of companies. A trust-first request flow is the foundation of the agent experience.' ),
-    array( 'Does Ensurance provide quotes directly?', 'No. Ensurance does not provide quotes directly. It structures shopper requests so licensed agents, agencies, or approved insurance partners can review available carrier options.' ),
+    array( 'What is Ensurance for agents?', 'Ensurance helps licensed agents and agencies review organized shopper insurance requests with better context. Shopper intent is gathered through a guided request flow and prepared for licensed review where available.' ),
+    array( 'How is Ensurance different from buying bulk insurance leads?', 'Ensurance is not a bulk lead seller. Shopper requests are organized with context before review, instead of arriving as low-context contact records circulated broadly.' ),
+    array( 'Does Ensurance guarantee request volume?', 'No. Ensurance does not guarantee request volume. The focus is shopper context and request quality, and availability can vary.' ),
+    array( 'Does Ensurance guarantee close rates or sales?', 'No. Ensurance does not guarantee appointments, exclusivity, close rates, sales, or outcomes. Results depend on fit, carrier appetite, eligibility, and agent follow-up.' ),
+    array( 'What kind of information may be included in a shopper request?', 'An organized shopper request may include the coverage type a shopper is exploring and the context they shared through guided questions, so you can review it before the first conversation.' ),
+    array( 'Who can request agent access?', 'Licensed insurance agents and agencies can request access. Participation is reviewed against professional standards and is not guaranteed.' ),
+    array( 'Can agents review multiple coverage types?', 'Yes. Organized shopper requests can span common coverage types, including auto, home, renters, life, business, and health, where available.' ),
+    array( 'How does Ensurance protect shopper trust?', 'Shopper requests move through a controlled process designed to reduce broad sharing, preserve context, and support a better first conversation.' ),
+    array( 'How does Ensurance support the shopper quote request journey?', 'Ensurance helps shoppers start guided quote requests, organize their details, and move toward quote options where available through licensed agents, agencies, or approved partners.' ),
     array( 'How do I get started?', 'Request agent access using the form on this page. Provide your professional details for review against participation standards.' ),
 );
 
@@ -197,13 +197,13 @@ get_header( 'home' );
       <div class="fa-hero__grid">
         <div class="fa-hero__col">
           <span class="fa-kicker fa-kicker--dot"><span class="fa-kicker__dot" aria-hidden="true"></span> For agents</span>
-          <h1 class="fa-hero__title">Structured shopper requests, prepared for licensed review.</h1>
-          <p class="fa-hero__sub">Ensurance helps organize consumer insurance intent into structured requests that licensed agents, agencies, or approved insurance partners can review against available carrier options.</p>
+          <h1 class="fa-hero__title">Better-context shopper requests, prepared for licensed review.</h1>
+          <p class="fa-hero__sub">Ensurance helps organize shopper insurance intent into clearer requests that licensed agents, agencies, or approved partners can review with more context before engaging.</p>
           <div class="fa-hero__actions">
             <a class="btn btn-primary btn--lg" href="<?php echo $fa_access_id; ?>" data-track="cta_click_agent_access" data-cta-text="Request agent access" data-page-type="for_agents">Request agent access <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 18 ), $ensurance_svg_allowed ); ?></a>
             <a class="fa-hero__ghost" href="<?php echo $fa_hiw_url; ?>">See how shopper requests work</a>
           </div>
-          <p class="fa-hero__fine">No volume, close-rate, appointment, exclusivity, or sales guarantees. Request availability and outcomes can vary.</p>
+          <p class="fa-hero__fine">Request availability and outcomes can vary. Ensurance does not guarantee volume, appointments, exclusivity, close rates, or sales.</p>
         </div>
         <div class="fa-hero__preview">
           <!-- Structured-request preview card -->
@@ -229,7 +229,7 @@ get_header( 'home' );
             </div>
             <div class="fa-request__foot">
               <?php echo wp_kses( ensurance_home_icon( 'shield-check', 15 ), $ensurance_svg_allowed ); ?>
-              <span>Reviewed by licensed agents — never bulk-blasted</span>
+              <span>Organized for licensed review</span>
             </div>
           </div>
         </div>
@@ -241,13 +241,13 @@ get_header( 'home' );
   <section class="fa-section fa-section--lead reveal" aria-label="Why context matters">
     <div class="fa-head">
       <span class="eyebrow">Why context matters</span>
-      <h2>Insurance opportunities should not arrive without context.</h2>
-      <p>A better agent experience starts with a better shopper experience — requests organized for review, not raw volume to chase.</p>
+      <h2>Insurance opportunities should come with better context.</h2>
+      <p>A better agent experience starts with clearer shopper intent, organized details, and requests prepared for review before follow-up.</p>
     </div>
     <div class="fa-compare">
       <div class="fa-compare__col fa-compare__col--bad">
-        <span class="fa-compare__label"><?php echo wp_kses( ensurance_home_icon( 'ban', 14 ), $ensurance_svg_allowed ); ?> Bulk leads</span>
-        <h3 class="fa-compare__title">Demand without context</h3>
+        <span class="fa-compare__label"><?php echo wp_kses( ensurance_home_icon( 'ban', 14 ), $ensurance_svg_allowed ); ?> Bulk lead buying</span>
+        <h3 class="fa-compare__title">Low-context demand</h3>
         <div class="fa-compare__items">
           <?php foreach ( $fa_compare_bad as $item ) : ?>
           <div class="fa-compare__item">
@@ -259,7 +259,7 @@ get_header( 'home' );
       </div>
       <div class="fa-compare__col fa-compare__col--good">
         <span class="fa-compare__label"><?php echo wp_kses( ensurance_home_icon( 'shield-check', 14 ), $ensurance_svg_allowed ); ?> Ensurance</span>
-        <h3 class="fa-compare__title">A structured request system</h3>
+        <h3 class="fa-compare__title">A better-context request system</h3>
         <div class="fa-compare__items">
           <?php foreach ( $fa_compare_good as $item ) : ?>
           <div class="fa-compare__item">
@@ -279,8 +279,8 @@ get_header( 'home' );
       <span class="fa-panel__glow" aria-hidden="true"></span>
       <div class="fa-panel__head">
         <span class="fa-kicker">Controlled by design</span>
-        <h2 class="fa-panel__title">A controlled request flow built for better review.</h2>
-        <p class="fa-panel__sub">A more controlled layer for insurance demand — structured, reviewed, and trust-first.</p>
+        <h2 class="fa-panel__title">A controlled request process built for better review.</h2>
+        <p class="fa-panel__sub">A more controlled way to review shopper insurance requests with clearer context and stronger trust.</p>
       </div>
       <div class="fa-panel__cards">
         <?php foreach ( $fa_controlled as $card ) : ?>
@@ -303,7 +303,7 @@ get_header( 'home' );
     <div class="fa-head">
       <span class="eyebrow">From request to review</span>
       <h2>From shopper request to licensed review.</h2>
-      <p>A controlled path, the same every time — so you always know what a request is and where it came from.</p>
+      <p>A clearer path from shopper intent to review, so agents understand what the request is and where it came from.</p>
     </div>
     <div class="fa-steps">
       <?php foreach ( $fa_flow as $i => $step ) : ?>
@@ -323,7 +323,7 @@ get_header( 'home' );
       <span class="fa-callout__icon"><?php echo wp_kses( ensurance_home_icon( 'clock', 18 ), $ensurance_svg_allowed ); ?></span>
       <div>
         <p class="fa-callout__title">Availability varies</p>
-        <p class="fa-callout__body">Request availability and outcomes can vary. Ensurance does not guarantee request volume, close rates, appointments, exclusivity, or sales.</p>
+        <p class="fa-callout__body">Request availability and outcomes can vary. Ensurance does not guarantee volume, appointments, exclusivity, close rates, or sales.</p>
       </div>
     </div>
   </section>
@@ -333,7 +333,7 @@ get_header( 'home' );
     <div class="fa-head">
       <span class="eyebrow">Coverage types</span>
       <h2>Review shopper requests across common coverage types.</h2>
-      <p>Structured requests span the lines shoppers ask about most — reviewed where available.</p>
+      <p>Organized requests can span the coverage types shoppers ask about most, where available.</p>
     </div>
     <div class="fa-lines">
       <?php foreach ( $fa_lines as $line ) : ?>
@@ -353,7 +353,7 @@ get_header( 'home' );
     <div class="fa-head">
       <span class="eyebrow">Participation standards</span>
       <h2>Built for licensed professionals who value trust.</h2>
-      <p>Not a bulk-volume promise — a structured request system. Participation is reviewed against professional standards, and access is not guaranteed.</p>
+      <p>Ensurance is not a bulk-volume promise. Participation is reviewed against professional standards, and access is not guaranteed.</p>
     </div>
     <div class="fa-why">
       <?php foreach ( $fa_standards as $tile ) : ?>
@@ -373,8 +373,8 @@ get_header( 'home' );
     <div class="fa-access__grid">
       <div class="fa-access__intro">
         <span class="eyebrow">Request access</span>
-        <h2>Bring structured shopper requests into your agency workflow.</h2>
-        <p class="fa-access__lead">Requests for access are reviewed against participation standards. Requesting access is not a guarantee of access, request volume, or outcomes.</p>
+        <h2>Bring better-context shopper requests into your agency workflow.</h2>
+        <p class="fa-access__lead">Access requests are reviewed against participation standards. Requesting access does not guarantee approval, request volume, or outcomes.</p>
         <div class="fa-access__cues">
           <?php foreach ( $fa_access_cues as $cue ) : ?>
           <div class="fa-access__cue">
@@ -391,9 +391,9 @@ get_header( 'home' );
         <div class="fa-access__cardbody">
           <span class="fa-access__cardicon"><?php echo wp_kses( ensurance_home_icon( 'shield-check', 24 ), $ensurance_svg_allowed ); ?></span>
           <h3>Request agent access</h3>
-          <p>Share your professional details on our access form and our team will review your request against participation standards.</p>
+          <p>Share your professional details and our team will review your access request against participation standards.</p>
           <a class="btn btn-primary btn--lg fa-access__submit" href="<?php echo esc_url( $fa_access_form_url ); ?>" data-track="agent_access_submit_click" data-cta-text="Request agent access" data-page-type="for_agents">Request agent access <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 18 ), $ensurance_svg_allowed ); ?></a>
-          <p class="fa-access__fine"><?php echo wp_kses( ensurance_home_icon( 'lock', 12 ), $ensurance_svg_allowed ); ?> No volume, close-rate, appointment, exclusivity, or sales guarantees.</p>
+          <p class="fa-access__fine"><?php echo wp_kses( ensurance_home_icon( 'lock', 12 ), $ensurance_svg_allowed ); ?> No volume, appointment, exclusivity, close-rate, or sales guarantees.</p>
         </div>
       </div>
     </div>
@@ -418,8 +418,8 @@ get_header( 'home' );
   <!-- ── Final CTA ────────────────────────────────────────────────── -->
   <section class="final-cta fa-final reveal" aria-label="Request agent access">
     <div class="final-card">
-      <h2>Review structured shopper requests, prepared for licensed review.</h2>
-      <p>A more controlled layer for insurance demand. Request availability and outcomes can vary — there are no volume, close-rate, appointment, exclusivity, or sales guarantees.</p>
+      <h2>Review better-context shopper requests, prepared for licensed review.</h2>
+      <p>A more controlled way to review shopper insurance requests with clearer context. Request availability and outcomes can vary. Ensurance does not guarantee volume, appointments, exclusivity, close rates, or sales.</p>
       <div class="hero-actions">
         <a class="btn btn-reversed btn--lg" href="<?php echo $fa_access_id; ?>" data-track="cta_click_agent_access" data-cta-text="Request agent access" data-page-type="for_agents">Request agent access <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 18 ), $ensurance_svg_allowed ); ?></a>
         <a class="fa-final__link" href="<?php echo $fa_contact_url; ?>" data-track="agent_contact_click" data-cta-text="Contact Ensurance" data-page-type="for_agents">Contact Ensurance <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 16 ), $ensurance_svg_allowed ); ?></a>

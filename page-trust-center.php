@@ -30,7 +30,7 @@ $tc_schema = json_decode( <<<'JSON'
       "name": "What happens to my information when I start a request?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Your details are organized into one structured request. From there, licensed agents, agencies, or approved insurance partners can review available carriers and follow up with quote options where available. The full Privacy Policy describes how your information is handled."
+        "text": "Your details are organized into one request so licensed review can happen with clearer context where available. The Privacy Policy explains the formal details of how your information is handled."
       }
     },
     {
@@ -38,7 +38,7 @@ $tc_schema = json_decode( <<<'JSON'
       "name": "Who may review my request?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Licensed agents, agencies, or approved insurance partners may review your structured request. A licensed professional, not an automated list, considers which available carrier options may fit."
+        "text": "Where available, licensed agents, agencies, or approved partners may review your organized request and help identify quote options or a clearer next step."
       }
     },
     {
@@ -46,23 +46,23 @@ $tc_schema = json_decode( <<<'JSON'
       "name": "Will my information be sent everywhere?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "No. Your structured request is shared for licensed review where appropriate, not blasted out to a long list of companies. The Privacy Policy describes how information may be shared."
+        "text": "No. Your request is handled through a more controlled process designed to reduce unnecessary exposure, broad sharing, and unwanted contact."
       }
     },
     {
       "@type": "Question",
-      "name": "Does Ensurance provide quotes directly?",
+      "name": "How does Ensurance help me move toward quote options?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "No. Ensurance structures your request and supports licensed review. Quote options, where available, come through licensed agents, agencies, or approved insurance partners."
+        "text": "Ensurance helps you start one guided quote request, organize your details, and move toward quote options where available. Quote options may come through licensed agents, agencies, or approved partners."
       }
     },
     {
       "@type": "Question",
-      "name": "Can one request help me access multiple carrier options?",
+      "name": "Can one request help me move toward multiple carrier options?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Often, yes. A licensed professional can review multiple available carriers from your single structured request, so you do not have to repeat the same details across separate forms."
+        "text": "Yes, where available. Your organized request can give licensed professionals clearer context to review available carrier options without making you repeat the same details across separate forms."
       }
     },
     {
@@ -70,7 +70,7 @@ $tc_schema = json_decode( <<<'JSON'
       "name": "Is starting a request a commitment to buy insurance?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "No. Starting a request is not a commitment to buy. You begin a guided request, see what comes back, and decide at your own pace."
+        "text": "No. Starting a request is free and does not require you to buy coverage. You can review available options or next steps at your own pace."
       }
     },
     {
@@ -78,7 +78,7 @@ $tc_schema = json_decode( <<<'JSON'
       "name": "Why does Ensurance ask for personal information?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "The details you share are used to structure your request so a licensed professional can review available carriers accurately. The Privacy Policy explains how that information is used."
+        "text": "The details you share help organize your request so licensed review can happen with better context where available. The Privacy Policy explains how that information is used."
       }
     },
     {
@@ -86,7 +86,7 @@ $tc_schema = json_decode( <<<'JSON'
       "name": "Where can I read the full Privacy Policy?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "The full Privacy Policy is available at any time. This page explains the trust experience; the Privacy Policy explains the formal details of how information is handled."
+        "text": "The full Privacy Policy is available at any time. This Trust Center explains the experience in plain English. The Privacy Policy explains the formal details of how information is handled."
       }
     }
   ]
@@ -140,71 +140,71 @@ $coverage_paths_url = esc_url( home_url( '/coverage/' ) ) . '#paths'; // Second 
 
 // Table of contents — order mirrors the sections below.
 $tc_toc = array(
-    array( 'n' => '1', 'id' => 'clarity',         'label' => 'Clarity, control &amp; review' ),
+    array( 'n' => '1', 'id' => 'clarity',         'label' => 'Clarity, control, and review' ),
     array( 'n' => '2', 'id' => 'information',      'label' => 'How information is used' ),
     array( 'n' => '3', 'id' => 'licensed-review',  'label' => 'Licensed review' ),
     array( 'n' => '4', 'id' => 'less-exposure',    'label' => 'Reducing exposure' ),
     array( 'n' => '5', 'id' => 'guided',           'label' => 'A guided experience' ),
-    array( 'n' => '6', 'id' => 'trust-vs-policy',  'label' => 'Trust page vs. Privacy Policy' ),
+    array( 'n' => '6', 'id' => 'trust-vs-policy',  'label' => 'Trust Center vs. Privacy Policy' ),
     array( 'n' => '7', 'id' => 'faq',              'label' => 'Questions about trust' ),
 );
 
 // Hero feature cues.
-$tc_cues = array( 'A controlled request flow', 'Licensed review', 'Quote options where available' );
+$tc_cues = array( 'Controlled request process', 'Licensed review where available', 'Move toward quote options' );
 
 // §1 — Clarity, control & licensed review.
 $tc_clarity_lead = array(
-    array( 'Clarity',         "You start with clear, plain-English steps and realistic expectations — not a wall of forms or a noisy quote marketplace." ),
-    array( 'Control',         'Your details move through a controlled request flow, designed to reduce unnecessary exposure and repeated forms.' ),
-    array( 'Licensed review', 'Your structured request may be reviewed by licensed agents, agencies, or approved insurance partners — a person, not an automated list.' ),
+    array( 'Clarity',         'You start with clear, plain-English steps and realistic expectations, not a wall of forms or a noisy quote marketplace.' ),
+    array( 'Control',         'Your details move through a controlled request process designed to reduce unnecessary exposure, repeated entry, and confusion.' ),
+    array( 'Licensed review', 'Your organized request may be reviewed by licensed agents, agencies, or approved partners where available.' ),
 );
 
 // §2 — How information is used.
 $tc_info_lead = array(
-    array( 'Used to structure one request', 'Your answers are organized into a single structured request, so the same details are not re-entered across separate forms.' ),
-    array( 'Prepared for licensed review',  'Information is structured so licensed agents, agencies, or approved insurance partners can review available carriers.' ),
-    array( 'Shared where appropriate',      'Your request is shared for licensed review where appropriate — not blasted out to a long list of companies. The Privacy Policy describes how information may be shared.' ),
+    array( 'Used to organize one request',           'Your answers are kept together in one organized request, helping reduce repeated entry across separate forms.' ),
+    array( 'Prepared for licensed review',           'Information is organized so licensed agents, agencies, or approved partners can review your request where available.' ),
+    array( 'Handled through a controlled process',   'Your request is handled through a controlled process designed to reduce unnecessary exposure and unwanted contact. The Privacy Policy describes how information may be shared.' ),
 );
 
 // §3 — Licensed review.
 $tc_review_lead = array(
-    array( 'A person reviews your request', 'Licensed agents, agencies, or approved insurance partners may review your structured request — not an automated price list.' ),
-    array( 'One request, multiple carriers', 'A licensed professional can review several available carriers from your single structured request.' ),
-    array( 'Grounded in eligibility',       'Review considers what you may qualify for, so the options you see are grounded in available carriers.' ),
-    array( 'Not auctioned',                 'Your request is reviewed where appropriate — not sent everywhere or auctioned to a long list of companies.' ),
+    array( 'A licensed professional may review your request', 'Licensed agents, agencies, or approved partners may review your organized request where available.' ),
+    array( 'One request, clearer context',                    'Your organized request gives licensed professionals clearer context before the next step.' ),
+    array( 'Grounded in eligibility',                         'Review may consider location, coverage type, eligibility, carrier participation, and other relevant details.' ),
+    array( 'Not broadly shared',                              'Your request is handled through a more controlled process, not broadly posted or sent everywhere without context.' ),
 );
 
 // §4 — Reducing exposure (compare).
 $tc_compare_bad  = array(
     'Re-entering the same details across separate forms.',
-    'Personal information requested before anything is explained.',
-    'Details sent to a long list of companies at once.',
-    'Pressure to decide before you understand your options.',
+    'Personal information requested before the process is clear.',
+    'Details sent broadly without clear context.',
+    'Pressure to decide before you understand your next step.',
 );
 $tc_compare_good = array(
-    'Answer guided questions once, in one structured request.',
-    'Clear, plain-English steps before any details move forward.',
-    'Reviewed where appropriate by licensed professionals.',
-    'Quote options where available — at your own pace.',
+    'Answer guided questions once, in one organized request.',
+    'Clear, plain-English steps before your request moves forward.',
+    'Reviewed by licensed professionals where available.',
+    'Move toward quote options where available, at your own pace.',
 );
 
 // §5 — A guided experience.
 $tc_guided_lead = array(
-    array( 'Controlled by design', 'Your structured request is reviewed where appropriate — not sent everywhere or auctioned.' ),
-    array( 'One organized request', 'Everything you share stays together as a single request, designed to reduce repeated forms.' ),
-    array( 'At your own pace',      'Starting a request is not a commitment to buy. Review what comes back when you are ready.' ),
+    array( 'Controlled by design',  'Your organized request is handled through a more controlled process designed to reduce broad sharing and unwanted contact.' ),
+    array( 'One organized request', 'Everything you share stays together in one request, helping reduce repeated entry and confusion.' ),
+    array( 'At your own pace',      'Starting a request is not a commitment to buy. Review available options or next steps when you are ready.' ),
 );
 
 // §7 — FAQ (mirrors the FAQPage schema above).
 $tc_faq = array(
-    array( 'What happens to my information when I start a request?', "Your details are organized into one structured request. From there, licensed agents, agencies, or approved insurance partners can review available carriers and follow up with quote options where available. The full Privacy Policy describes how your information is handled." ),
-    array( 'Who may review my request?', 'Licensed agents, agencies, or approved insurance partners may review your structured request. A licensed professional — not an automated list — considers which available carrier options may fit.' ),
-    array( 'Will my information be sent everywhere?', 'No. Your structured request is shared for licensed review where appropriate, not blasted out to a long list of companies. The Privacy Policy describes how information may be shared.' ),
-    array( 'Does Ensurance provide quotes directly?', 'No. Ensurance structures your request and supports licensed review. Quote options, where available, come through licensed agents, agencies, or approved insurance partners.' ),
-    array( 'Can one request help me access multiple carrier options?', "Often, yes. A licensed professional can review multiple available carriers from your single structured request, so you don't have to repeat the same details across separate forms." ),
-    array( 'Is starting a request a commitment to buy insurance?', 'No. Starting a request is not a commitment to buy. You begin a guided request, see what comes back, and decide at your own pace.' ),
-    array( 'Why does Ensurance ask for personal information?', 'The details you share are used to structure your request so a licensed professional can review available carriers accurately. The Privacy Policy explains how that information is used.' ),
-    array( 'Where can I read the full Privacy Policy?', 'The full Privacy Policy is available at any time. This page explains the trust experience; the Privacy Policy explains the formal details of how information is handled.' ),
+    array( 'What happens to my information when I start a request?', 'Your details are organized into one request so licensed review can happen with clearer context where available. The Privacy Policy explains the formal details of how your information is handled.' ),
+    array( 'Who may review my request?', 'Where available, licensed agents, agencies, or approved partners may review your organized request and help identify quote options or a clearer next step.' ),
+    array( 'Will my information be sent everywhere?', 'No. Your request is handled through a more controlled process designed to reduce unnecessary exposure, broad sharing, and unwanted contact.' ),
+    array( 'How does Ensurance help me move toward quote options?', 'Ensurance helps you start one guided quote request, organize your details, and move toward quote options where available. Quote options may come through licensed agents, agencies, or approved partners.' ),
+    array( 'Can one request help me move toward multiple carrier options?', 'Yes, where available. Your organized request can give licensed professionals clearer context to review available carrier options without making you repeat the same details across separate forms.' ),
+    array( 'Is starting a request a commitment to buy insurance?', 'No. Starting a request is free and does not require you to buy coverage. You can review available options or next steps at your own pace.' ),
+    array( 'Why does Ensurance ask for personal information?', 'The details you share help organize your request so licensed review can happen with better context where available. The Privacy Policy explains how that information is used.' ),
+    array( 'Where can I read the full Privacy Policy?', 'The full Privacy Policy is available at any time. This Trust Center explains the experience in plain English. The Privacy Policy explains the formal details of how information is handled.' ),
 );
 
 // Reusable renderer for a "lead" list (left-bordered title + body rows).
@@ -230,12 +230,12 @@ get_header( 'home' );
       <nav class="tc-breadcrumb" aria-label="Breadcrumb">
         <a href="<?php echo esc_url( home_url( '/' ) ); ?>">Home</a>
         <span aria-hidden="true">/</span>
-        <span class="tc-breadcrumb__current">Trust and privacy</span>
+        <span class="tc-breadcrumb__current">Trust Center</span>
       </nav>
       <div class="tc-hero__body">
-        <span class="tc-hero__badge"><?php echo wp_kses( ensurance_home_icon( 'lock', 13 ), $ensurance_svg_allowed ); ?> Trust &amp; privacy</span>
-        <h1 class="tc-hero__title">A more controlled way to start your insurance request.</h1>
-        <p class="tc-hero__sub">Ensurance helps organize information into a structured request so licensed agents, agencies, or approved insurance partners can review available carriers and provide quote options where available.</p>
+        <span class="tc-hero__badge"><?php echo wp_kses( ensurance_home_icon( 'lock', 13 ), $ensurance_svg_allowed ); ?> Trust Center</span>
+        <h1 class="tc-hero__title">A clearer, more controlled way to start your insurance request.</h1>
+        <p class="tc-hero__sub">Ensurance helps organize your insurance request so licensed agents, agencies, or approved partners can review it and help you move toward quote options where available.</p>
         <div class="tc-hero__cues">
           <?php foreach ( $tc_cues as $cue ) : ?>
           <span class="tc-cue"><?php echo wp_kses( ensurance_home_icon( 'check', 12 ), $ensurance_svg_allowed ); ?> <?php echo esc_html( $cue ); ?></span>
@@ -245,7 +245,7 @@ get_header( 'home' );
           <a class="btn btn-primary btn--lg" href="<?php echo $coverage_paths_url; ?>" data-track="cta_click_start_auto_quote_request" data-cta-text="Start your request" data-page-type="trust_center">Start your request <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 18 ), $ensurance_svg_allowed ); ?></a>
           <a class="btn btn-ghost btn--lg" href="<?php echo $hiw_url; ?>">How Ensurance works</a>
         </div>
-        <p class="tc-hero__fine">Prefer the formal details first? <a href="<?php echo $privacy_url; ?>" data-track="privacy_policy_click" data-cta-text="Read the Privacy Policy" data-page-type="trust_center">Read the Privacy Policy</a>.</p>
+        <p class="tc-hero__fine">Want the formal details? <a href="<?php echo $privacy_url; ?>" data-track="privacy_policy_click" data-cta-text="Read the Privacy Policy" data-page-type="trust_center">Read the Privacy Policy</a>.</p>
       </div>
     </div>
   </section>
@@ -274,7 +274,7 @@ get_header( 'home' );
           <span class="tc-section__n">1</span>
           <h2>Built around clarity, control, and licensed review.</h2>
         </div>
-        <p class="tc-p">Starting an insurance request should feel calm and understandable. Ensurance is built so you know what is happening and what happens next.</p>
+        <p class="tc-p">Starting an insurance request should feel calm, clear, and understandable. Ensurance is built to help you know what you are sharing, why it matters, and what happens next.</p>
         <?php $tc_render_lead( $tc_clarity_lead ); ?>
       </section>
 
@@ -282,9 +282,9 @@ get_header( 'home' );
       <section class="tc-section" id="information">
         <div class="tc-section__head">
           <span class="tc-section__n">2</span>
-          <h2>Your information is used to structure your request.</h2>
+          <h2>Your information is used to organize your request.</h2>
         </div>
-        <p class="tc-p">The details you share are used to organize one clear request, so a licensed professional can review available carriers accurately. The full details are described in the Privacy Policy.</p>
+        <p class="tc-p">The details you share are used to organize one clear request, so licensed review can happen with better context where available. The full details are described in the Privacy Policy.</p>
         <?php $tc_render_lead( $tc_info_lead ); ?>
         <div class="tc-links">
           <a class="tc-arrowlink" href="<?php echo $privacy_url; ?>" data-track="privacy_policy_click" data-cta-text="Read the Privacy Policy" data-page-type="trust_center">Read the Privacy Policy <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 16 ), $ensurance_svg_allowed ); ?></a>
@@ -297,7 +297,7 @@ get_header( 'home' );
           <span class="tc-section__n">3</span>
           <h2>Your request may be reviewed by licensed insurance professionals.</h2>
         </div>
-        <p class="tc-p">Real coverage decisions deserve a real, licensed professional — not an instant automated guess.</p>
+        <p class="tc-p">Insurance decisions deserve context. Where available, a licensed professional may review your request and help identify available next steps.</p>
         <?php $tc_render_lead( $tc_review_lead ); ?>
       </section>
 
@@ -305,9 +305,9 @@ get_header( 'home' );
       <section class="tc-section" id="less-exposure">
         <div class="tc-section__head">
           <span class="tc-section__n">4</span>
-          <h2>Designed to reduce unnecessary exposure and repeated forms.</h2>
+          <h2>Designed to reduce unnecessary exposure and repeated entry.</h2>
         </div>
-        <p class="tc-p">A controlled request flow is meant to keep your details organized and your steps clear — not scattered across the internet.</p>
+        <p class="tc-p">A controlled request process helps keep your details organized and your next steps clear, instead of scattering your information across repeated forms.</p>
         <div class="tc-compare">
           <div class="tc-compare__col tc-compare__col--bad">
             <span class="tc-compare__label"><?php echo wp_kses( ensurance_home_icon( 'ban', 14 ), $ensurance_svg_allowed ); ?> The noisy way</span>
@@ -321,7 +321,7 @@ get_header( 'home' );
             </div>
           </div>
           <div class="tc-compare__col tc-compare__col--good">
-            <span class="tc-compare__label"><?php echo wp_kses( ensurance_home_icon( 'shield-check', 14 ), $ensurance_svg_allowed ); ?> A controlled flow</span>
+            <span class="tc-compare__label"><?php echo wp_kses( ensurance_home_icon( 'shield-check', 14 ), $ensurance_svg_allowed ); ?> A controlled request process</span>
             <div class="tc-compare__items">
               <?php foreach ( $tc_compare_good as $item ) : ?>
               <div class="tc-compare__item">
@@ -340,7 +340,7 @@ get_header( 'home' );
           <span class="tc-section__n">5</span>
           <h2>A guided request experience, not a noisy quote marketplace.</h2>
         </div>
-        <p class="tc-p">Start with clarity before moving forward. Your details move through a controlled flow built around licensed review — never an instant comparison engine.</p>
+        <p class="tc-p">Start with clarity before moving forward. Your details move through a controlled request process built around organization, licensed review where available, and clearer next steps.</p>
         <?php $tc_render_lead( $tc_guided_lead ); ?>
         <div class="tc-links">
           <a class="tc-arrowlink" href="<?php echo $hiw_url; ?>">How Ensurance works <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 16 ), $ensurance_svg_allowed ); ?></a>
@@ -352,11 +352,11 @@ get_header( 'home' );
       <section class="tc-section" id="trust-vs-policy">
         <div class="tc-section__head">
           <span class="tc-section__n">6</span>
-          <h2>This page explains the trust experience. The Privacy Policy explains the details.</h2>
+          <h2>This page explains the trust experience. The Privacy Policy explains the formal details.</h2>
         </div>
         <div class="tc-note" role="note">
           <span class="tc-note__icon"><?php echo wp_kses( ensurance_home_icon( 'file-text', 18 ), $ensurance_svg_allowed ); ?></span>
-          <p class="tc-note__text">This Trust Center page describes how Ensurance approaches your insurance request. It is not the formal Privacy Policy. For the complete details of how your information is handled, <a href="<?php echo $privacy_url; ?>" data-track="privacy_policy_click" data-cta-text="Read the Privacy Policy" data-page-type="trust_center">read the Privacy Policy</a>.</p>
+          <p class="tc-note__text">This Trust Center explains how Ensurance approaches your insurance request in plain English. It is not the formal Privacy Policy. For complete details about how information is handled, <a href="<?php echo $privacy_url; ?>" data-track="privacy_policy_click" data-cta-text="Read the Privacy Policy" data-page-type="trust_center">read the Privacy Policy</a>.</p>
         </div>
       </section>
 
@@ -382,8 +382,8 @@ get_header( 'home' );
   <!-- ── Final CTA ────────────────────────────────────────────────── -->
   <section class="final-cta tc-final" id="start" aria-label="Start your request">
     <div class="final-card">
-      <h2>Begin your insurance request through a controlled flow.</h2>
-      <p>One guided request. A structured path. Licensed review of available carrier options — with quote options where available.</p>
+      <h2>Begin your insurance request through a clearer, more controlled process.</h2>
+      <p>Start one guided request. Ensurance helps organize your details so you can move toward quote options or a clearer next step where available.</p>
       <div class="hero-actions">
         <a class="btn btn-reversed btn--lg" href="<?php echo $coverage_paths_url; ?>" data-track="cta_click_start_auto_quote_request" data-cta-text="Start your request" data-page-type="trust_center">Start your request <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 18 ), $ensurance_svg_allowed ); ?></a>
       </div>

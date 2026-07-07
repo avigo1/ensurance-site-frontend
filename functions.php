@@ -1939,3 +1939,22 @@ function ensurance_sq_render_form( $default_form_id ) {
     }
     echo do_shortcode( "[ninja_form id='" . absint( $default_form_id ) . "']" );
 }
+
+// ─────────────────────────────────────────────────────────────────────
+// 2b-xiv. REMOVE GEODIRECTORY LOCATION-SWITCHER MODAL ON DESIGN PAGES
+// GeoDirectory Location Manager prints a hidden "Change Location / Find
+// awesome listings near you!" Bootstrap modal into wp_footer on every
+// page. On the code-driven marketing pages that old directory language
+// contradicts the trust-first experience (flagged in the 2026-07 copy
+// review), so unhook it there. GeoDirectory listing pages are untouched.
+// ─────────────────────────────────────────────────────────────────────
+function ensurance_remove_gd_location_switcher() {
+    if ( ! is_page() && ! is_front_page() ) {
+        return;
+    }
+    $template = get_page_template_slug();
+    if ( is_front_page() || ( is_string( $template ) && 0 === strpos( $template, 'page-' ) ) ) {
+        remove_action( 'wp_footer', 'geodir_location_autocomplete_script' );
+    }
+}
+add_action( 'template_redirect', 'ensurance_remove_gd_location_switcher' );

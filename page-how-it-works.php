@@ -121,17 +121,17 @@ $start_url = esc_url( home_url( '/coverage' ) ) . '#paths';
 
 // Timeline steps — verbatim from the design's PROCESS array.
 $hiw_steps = array(
-    array( 'icon' => 'user',         'title' => 'Tell us what you need',                              'body' => "Answer a few short, guided questions about the coverage you're looking for. Minimal typing, one step at a time." ),
-    array( 'icon' => 'file-text',    'title' => 'Ensurance structures your request',                 'body' => 'Your details are organized into one clear, structured request — so nothing is repeated and nothing important is missing.' ),
-    array( 'icon' => 'shield-check', 'title' => 'Licensed agents or agencies review available carriers', 'body' => 'Licensed agents, agencies, or approved insurance partners review your request against the carriers available to them.' ),
-    array( 'icon' => 'sparkles',     'title' => 'You receive quote options where available',         'body' => 'Where coverage and eligibility allow, you receive quote options and a clearer next step — no pressure to decide.' ),
+    array( 'icon' => 'user',         'title' => 'Tell us what you need',                    'body' => 'Answer a few short, guided questions about your coverage needs. Minimal typing, one step at a time.' ),
+    array( 'icon' => 'file-text',    'title' => 'Ensurance organizes your request',         'body' => 'Your details are kept together in one organized request, helping reduce repeated entry and confusion before review.' ),
+    array( 'icon' => 'shield-check', 'title' => 'Licensed review happens where available',  'body' => 'Licensed agents, agencies, or approved partners may review your request with the context needed to help identify available next steps.' ),
+    array( 'icon' => 'sparkles',     'title' => 'You move toward quote options',            'body' => 'Where available, you can receive quote options or a clearer next step — without pressure to decide before you are ready.' ),
 );
 
 // "After you start" spotlight rows.
 $hiw_after = array(
-    array( 'icon' => 'file-text',    'title' => 'Your details stay organized',     'body' => "Everything you shared is kept together as one structured request, so you don't re-enter the same information." ),
-    array( 'icon' => 'shield-check', 'title' => 'A licensed professional reviews it', 'body' => 'Licensed agents, agencies, or approved partners review available carriers — a person, not a price-list robot.' ),
-    array( 'icon' => 'message',      'title' => 'You get a clearer next step',     'body' => "Where options are available, you'll see quote options and what to do next — at your own pace." ),
+    array( 'icon' => 'file-text',    'title' => 'Your details stay organized',          'body' => 'Everything you share is kept together in one organized request, helping reduce repeated entry and confusion.' ),
+    array( 'icon' => 'shield-check', 'title' => 'A licensed professional may review it', 'body' => 'Where available, a licensed agent, agency, or approved partner may review your request and help identify a clearer next step.' ),
+    array( 'icon' => 'message',      'title' => 'You get a clearer next step',           'body' => 'Where options are available, you can review quote options or next steps at your own pace.' ),
 );
 
 // "Why licensed review matters" tiles.
@@ -165,7 +165,7 @@ get_header( 'home' );
       <div class="hiw-hero__center">
         <p class="eyebrow">How it works</p>
         <h1 class="hiw-hero__title">How Ensurance Works.</h1>
-        <p class="hiw-hero__sub">Start one guided request. Ensurance organizes your details so licensed agents, agencies, or approved insurance partners can review available carriers and provide quote options where available.</p>
+        <p class="hiw-hero__sub">Start one guided quote request. Ensurance organizes your details so licensed agents, agencies, or approved partners can review your request and help you move toward quote options where available.</p>
         <div class="hero-actions">
           <a class="btn btn-primary btn--lg" href="<?php echo $start_url; ?>" data-track="cta_click_start_auto_quote_request" data-cta-text="Start your request" data-page-type="how_it_works">Start your request <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 18 ), $ensurance_svg_allowed ); ?></a>
           <a class="btn btn-ghost btn--lg" href="#process">See the process</a>
@@ -178,8 +178,8 @@ get_header( 'home' );
   <section class="section" id="process" aria-label="Start with one guided request">
     <div class="section-head section-head--left">
       <p class="eyebrow">Start here</p>
-      <h2>Start with one guided request.</h2>
-      <p>A controlled process from start to review — four clear steps, so you always know where you are and what happens next.</p>
+      <h2>Start with one guided quote request.</h2>
+      <p>A calmer process from start to review — four clear steps, so you know what you are sharing and what happens next.</p>
     </div>
     <div class="timeline">
       <?php foreach ( $hiw_steps as $i => $step ) : $right = ( $i % 2 === 0 ); ?>
@@ -210,7 +210,7 @@ get_header( 'home' );
       <span class="callout__icon"><?php echo wp_kses( ensurance_home_icon( 'clock', 20 ), $ensurance_svg_allowed ); ?></span>
       <div>
         <p class="callout__title">Availability varies</p>
-        <p class="callout__body">Availability, eligibility, carrier participation, and licensed professional review determine which quote options may be available.</p>
+        <p class="callout__body">Quote options depend on location, coverage type, eligibility, carrier participation, and licensed review.</p>
       </div>
     </div>
   </section>
@@ -222,7 +222,7 @@ get_header( 'home' );
         <div class="section-head section-head--left" style="max-width:420px;">
           <p class="eyebrow">After you start</p>
           <h2>What happens after you start.</h2>
-          <p>Once your request is structured, it moves into licensed review — not into an automated list.</p>
+          <p>Once your request is organized, it can move toward licensed review — not a noisy quote list.</p>
         </div>
         <a class="hiw-textlink" href="<?php echo esc_url( home_url( '/trust-center' ) ); ?>" data-track="trust_privacy_click" data-cta-text="Trust and privacy" data-page-type="how_it_works">Trust and privacy <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 16 ), $ensurance_svg_allowed ); ?></a>
       </div>
