@@ -1,0 +1,686 @@
+/*
+ * start.css — Ensurance /start guided intake.
+ *
+ * Loaded only on page-start.php. Uses the design tokens declared in
+ * marketing.css (which is also enqueued on this page), so all colors,
+ * spacing, and typography stay consistent with the rest of the site.
+ *
+ * STRUCTURE:
+ *   1. Page-level layout
+ *   2. Welcome (start-intro)
+ *   3. Wizard shell + progress
+ *   4. Steps + fields
+ *   5. Radio groups
+ *   6. Review summary
+ *   7. Confirmation
+ *   8. Responsive
+ */
+
+/* ============================================================================
+   1. PAGE-LEVEL LAYOUT
+   ============================================================================ */
+
+.page-start {
+    /* Re-declare the homepage palette tokens here so the shared section
+       partials (.next-module, etc.) that reference --home-* resolve on
+       /start the same way they do on /. Without this the numbered pills in
+       the "What happens next" module fall back to transparent. */
+    --home-brand:           #1F3A5F;
+    --home-secondary:       #5B7C99;
+    --home-accent:          #2B8673;
+    --home-accent-hover:    #236D5E;
+    --home-surface:         #FFFFFF;
+    --home-surface-soft:    #F7F9FC;
+    --home-text:            #1B2430;
+    --home-text-muted:      #667085;
+    --home-text-strong:     #344054;
+    --home-border:          #D9E2EC;
+    --home-border-soft:     #EAECF0;
+    --home-shadow-card:     0 14px 36px rgba(31, 58, 95, 0.08);
+    --home-shadow-soft:     0 22px 70px rgba(31, 58, 95, 0.12);
+
+    background:
+        radial-gradient(circle at 12% 12%, rgba(91, 124, 153, 0.08), transparent 38%),
+        var(--color-background);
+    min-height: 70vh;
+}
+
+.page-start *,
+.page-start *::before,
+.page-start *::after {
+    box-sizing: border-box;
+}
+
+/* CTA palette — base .btn--primary defaults to the yellow accent. /start is a
+   shopper-trust surface, so primary actions should ride the green nav-cta
+   palette (same green as the header CTA and the homepage). Scoped to
+   .page-start so no other template is affected. */
+.page-start .btn {
+    min-height: 52px;
+    padding: 13px 24px;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 0.98rem;
+    letter-spacing: -0.01em;
+    border-width: 1px;
+}
+
+.page-start .btn--primary {
+    background: var(--color-nav-cta-bg);
+    border-color: var(--color-nav-cta-bg);
+    color: var(--color-nav-cta-text);
+    box-shadow: 0 12px 28px rgba(43, 134, 115, 0.22);
+}
+
+.page-start .btn--primary:hover,
+.page-start .btn--primary:focus {
+    background: var(--color-nav-cta-bg-hover);
+    border-color: var(--color-nav-cta-bg-hover);
+    color: var(--color-nav-cta-text);
+}
+
+.page-start .btn--secondary {
+    background: #fff;
+    border-color: var(--color-border);
+    color: var(--color-nav-brand);
+}
+
+.page-start .btn--secondary:hover,
+.page-start .btn--secondary:focus {
+    background: #fff;
+    border-color: var(--color-nav-brand-soft);
+    color: var(--color-nav-brand);
+}
+
+/* ============================================================================
+   2. WELCOME (start-intro)
+   ============================================================================ */
+
+.start-intro {
+    padding: var(--space-20) 0 var(--space-12);
+}
+
+.start-intro__inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.9fr);
+    gap: var(--space-12);
+    align-items: start;
+}
+
+.start-intro__headline {
+    margin: var(--space-3) 0 0;
+    color: var(--color-nav-brand);
+    font-family: var(--font-display);
+    font-size: clamp(2.25rem, 5vw, 3.75rem);
+    line-height: 1.05;
+    letter-spacing: -0.035em;
+}
+
+.start-intro__subtitle {
+    max-width: 680px;
+    margin-top: var(--space-6);
+    color: var(--color-text);
+    font-size: clamp(1.05rem, 1.5vw, 1.25rem);
+    line-height: 1.55;
+}
+
+.start-intro__support {
+    max-width: 640px;
+    margin-top: var(--space-4);
+    color: var(--color-text-muted);
+    font-size: 1.02rem;
+    line-height: 1.6;
+}
+
+.start-intro__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-8);
+}
+
+.start-intro__trust-line {
+    margin-top: var(--space-6);
+    color: var(--color-text-muted);
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.start-intro__panel {
+    position: sticky;
+    top: 96px;
+    padding: var(--space-6);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: #fff;
+    box-shadow: var(--shadow-md);
+}
+
+.start-intro__panel-label {
+    margin: 0 0 var(--space-4);
+    color: var(--color-nav-brand);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.start-intro__panel-list {
+    display: grid;
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.start-intro__panel-list li {
+    display: grid;
+    grid-template-columns: 14px 1fr;
+    gap: var(--space-3);
+    align-items: start;
+    color: var(--color-text);
+    font-size: 0.96rem;
+    line-height: 1.5;
+}
+
+.start-intro__panel-dot {
+    width: 10px;
+    height: 10px;
+    margin-top: 8px;
+    border-radius: 999px;
+    background: var(--color-nav-cta-bg);
+    box-shadow: 0 0 0 6px rgba(43, 134, 115, 0.12);
+}
+
+/* ============================================================================
+   3. WIZARD SHELL + PROGRESS
+   ============================================================================ */
+
+.start-wizard {
+    padding: var(--space-12) 0 var(--space-24);
+    scroll-margin-top: 96px;
+    /* Soft slate band differentiates the action area from the cream welcome
+       screen above and helps the white form-card read as a focused surface. */
+    background: #eef2f7;
+    border-top: 1px solid var(--color-border);
+}
+
+.start-wizard__shell {
+    position: relative;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: clamp(24px, 4vw, 40px);
+    background: #fff;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+}
+
+.start-wizard__progress {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+}
+
+.start-wizard__progress-track {
+    position: relative;
+    flex: 1;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--color-background-alt);
+    overflow: hidden;
+}
+
+.start-wizard__progress-fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--color-nav-cta-bg), var(--color-primary));
+    transition: width 0.25s ease;
+}
+
+.start-wizard__progress-label {
+    flex: 0 0 auto;
+    margin: 0;
+    color: var(--color-text-muted);
+    font-weight: 700;
+    font-size: 0.92rem;
+}
+
+.start-wizard__notice {
+    margin: 0 0 var(--space-6);
+    padding: var(--space-4) var(--space-4);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-background-alt);
+    color: var(--color-text);
+    font-size: 0.94rem;
+    line-height: 1.55;
+}
+
+.start-wizard__form {
+    margin: 0;
+}
+
+/* ============================================================================
+   4. STEPS + FIELDS
+   ============================================================================ */
+
+.start-step {
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.start-step[hidden] {
+    display: none;
+}
+
+.start-step__eyebrow {
+    margin: 0 0 var(--space-2);
+    color: var(--color-nav-cta-bg);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.start-step__title {
+    margin: 0 0 var(--space-3);
+    color: var(--color-nav-brand);
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 2.6vw, 1.9rem);
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+}
+
+.start-step__description {
+    margin: 0 0 var(--space-6);
+    color: var(--color-text-muted);
+    font-size: 1rem;
+    line-height: 1.55;
+}
+
+.start-step__fields {
+    display: grid;
+    gap: var(--space-5, 1.25rem);
+}
+
+.start-step__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-8);
+    justify-content: flex-end;
+}
+
+.start-step__actions .btn--secondary {
+    margin-right: auto;
+}
+
+.start-step__error {
+    margin: var(--space-4) 0 0;
+    color: var(--color-error);
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.start-field {
+    display: grid;
+    gap: var(--space-2);
+}
+
+.start-field__label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--color-text);
+    font-weight: 800;
+    font-size: 0.96rem;
+}
+
+.start-field__optional {
+    color: var(--color-text-muted);
+    font-weight: 600;
+    font-size: 0.84rem;
+}
+
+.start-field__help {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: 0.88rem;
+}
+
+/* Inputs are prefixed with .page-start so we beat Kadence's form field rules
+   on specificity (was getting overridden to white-on-white). Colors are set
+   explicitly rather than via the `background` shorthand so a parent rule
+   setting background-image cannot leak through. */
+.page-start .start-field input,
+.page-start .start-field select,
+.page-start .start-field textarea {
+    width: 100%;
+    min-height: 50px;
+    padding: 12px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: #fff;
+    background-image: none;
+    color: var(--color-text);
+    -webkit-text-fill-color: var(--color-text);
+    font: inherit;
+    transition: border-color var(--transition), box-shadow var(--transition);
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.page-start .start-field select {
+    /* Keep the native dropdown caret on Safari/iOS now that appearance is none. */
+    background-image:
+        linear-gradient(45deg, transparent 50%, var(--color-text) 50%),
+        linear-gradient(135deg, var(--color-text) 50%, transparent 50%);
+    background-position:
+        calc(100% - 18px) calc(50% - 2px),
+        calc(100% - 13px) calc(50% - 2px);
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+    padding-right: 38px;
+}
+
+.page-start .start-field textarea {
+    min-height: 150px;
+    resize: vertical;
+    line-height: 1.55;
+}
+
+.page-start .start-field input::placeholder,
+.page-start .start-field textarea::placeholder {
+    color: var(--color-text-muted);
+    opacity: 1;
+}
+
+.page-start .start-field input:focus,
+.page-start .start-field select:focus,
+.page-start .start-field textarea:focus {
+    outline: none;
+    border-color: var(--color-nav-cta-bg);
+    box-shadow: 0 0 0 4px rgba(43, 134, 115, 0.18);
+}
+
+.page-start .start-field input[aria-invalid="true"],
+.page-start .start-field select[aria-invalid="true"],
+.page-start .start-field textarea[aria-invalid="true"] {
+    border-color: var(--color-error);
+    box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.12);
+}
+
+/* Chrome autofill repaints the background yellow and the text white-ish; pin
+   both back to the page's palette. */
+.page-start .start-field input:-webkit-autofill,
+.page-start .start-field input:-webkit-autofill:focus,
+.page-start .start-field textarea:-webkit-autofill {
+    -webkit-text-fill-color: var(--color-text);
+    -webkit-box-shadow: 0 0 0 1000px #fff inset;
+    caret-color: var(--color-text);
+}
+
+/* ============================================================================
+   5. RADIO GROUPS
+   ============================================================================ */
+
+.start-radio-group {
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.start-radio-group .start-field__label {
+    margin-bottom: var(--space-3);
+}
+
+.start-radio-group__options {
+    display: grid;
+    gap: var(--space-2);
+}
+
+.start-radio {
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    gap: var(--space-3);
+    align-items: center;
+    padding: var(--space-4);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: #fff;
+    cursor: pointer;
+    transition: border-color var(--transition), background var(--transition);
+}
+
+.start-radio:hover {
+    border-color: var(--color-nav-brand-soft);
+    background: var(--color-background-alt);
+}
+
+.start-radio input[type="radio"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.start-radio__dot {
+    position: relative;
+    width: 22px;
+    height: 22px;
+    border: 2px solid var(--color-border);
+    border-radius: 999px;
+    background: #fff;
+}
+
+.start-radio__dot::after {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    border-radius: inherit;
+    background: var(--color-nav-cta-bg);
+    transform: scale(0);
+    transition: transform var(--transition);
+}
+
+.start-radio input[type="radio"]:checked + .start-radio__dot {
+    border-color: var(--color-nav-cta-bg);
+}
+
+.start-radio input[type="radio"]:checked + .start-radio__dot::after {
+    transform: scale(1);
+}
+
+.start-radio input[type="radio"]:focus-visible + .start-radio__dot {
+    box-shadow: 0 0 0 4px rgba(43, 134, 115, 0.18);
+}
+
+.start-radio__label {
+    color: var(--color-text);
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+/* ============================================================================
+   6. REVIEW SUMMARY
+   ============================================================================ */
+
+.start-review {
+    display: grid;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-background-alt);
+}
+
+.start-review__empty {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-style: italic;
+}
+
+.start-review__row {
+    display: grid;
+    grid-template-columns: 200px 1fr auto;
+    gap: var(--space-4);
+    align-items: start;
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.start-review__row:last-child {
+    border-bottom: 0;
+}
+
+.start-review__label {
+    color: var(--color-nav-brand);
+    font-weight: 800;
+    font-size: 0.92rem;
+}
+
+.start-review__value {
+    color: var(--color-text);
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.start-review__edit {
+    padding: 6px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    background: #fff;
+    color: var(--color-nav-brand);
+    font: inherit;
+    font-weight: 700;
+    font-size: 0.84rem;
+    cursor: pointer;
+    transition: border-color var(--transition), background var(--transition);
+}
+
+.start-review__edit:hover {
+    border-color: var(--color-nav-cta-bg);
+    background: var(--color-background-alt);
+}
+
+/* ============================================================================
+   7. CONFIRMATION
+   ============================================================================ */
+
+.start-confirmation {
+    display: grid;
+    place-items: start;
+    gap: var(--space-4);
+    padding: var(--space-8);
+    text-align: left;
+}
+
+.start-confirmation__title {
+    margin: 0;
+    color: var(--color-nav-brand);
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 2.6vw, 2rem);
+    letter-spacing: -0.025em;
+}
+
+.start-confirmation__body {
+    margin: 0;
+    color: var(--color-text-muted);
+    line-height: 1.55;
+}
+
+.start-confirmation__reference {
+    display: grid;
+    gap: 4px;
+    padding: var(--space-4) var(--space-4);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-background-alt);
+    color: var(--color-text);
+    font-size: 0.95rem;
+}
+
+.start-confirmation__reference-label {
+    color: var(--color-text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.78rem;
+}
+
+.start-confirmation__reference-value {
+    color: var(--color-nav-brand);
+    font-family: 'SFMono-Regular', Menlo, monospace;
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+/* ============================================================================
+   8. RESPONSIVE
+   ============================================================================ */
+
+@media (max-width: 900px) {
+    .start-intro__inner {
+        grid-template-columns: 1fr;
+    }
+    .start-intro__panel {
+        position: static;
+    }
+}
+
+@media (max-width: 700px) {
+    .start-intro {
+        padding: var(--space-12) 0 var(--space-8);
+    }
+    .start-wizard {
+        padding-bottom: var(--space-16);
+    }
+    .start-step__actions {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+    .start-step__actions .btn--secondary {
+        margin-right: 0;
+    }
+    .start-step__actions .btn {
+        width: 100%;
+    }
+    .start-review__row {
+        grid-template-columns: 1fr;
+        gap: var(--space-2);
+    }
+    .start-review__edit {
+        justify-self: start;
+    }
+}
+
+/* No-JS fallback — show every step stacked, hide progress + step actions
+   that would only confuse a non-JS flow. */
+.no-js .start-step[hidden] {
+    display: block !important;
+}
+.no-js .start-step + .start-step {
+    margin-top: var(--space-12);
+    padding-top: var(--space-8);
+    border-top: 1px solid var(--color-border);
+}
+.no-js [data-step-next],
+.no-js [data-step-back] {
+    display: none;
+}
+.no-js .start-wizard__progress {
+    display: none;
+}
+.no-js .start-review {
+    display: none;
+}

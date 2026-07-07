@@ -3,7 +3,7 @@
 **Project**: ensurance-site-frontend  
 **Repository**: https://github.com/avigo1/ensurance-site-frontend  
 **Deployment**: SiteGround via Git (staging-first workflow)  
-**Staging**: staging14.ensurance.com  
+**Staging**: staging18.ensurance.com  
 **Production**: ensurance.com  
 
 ---
@@ -42,7 +42,7 @@ ssh -i ~/.ssh/siteground -p 18765 u2514-jukueftqhhlm@ssh.ensurance.com
 | Environment | Path |
 |-------------|------|
 | Production | `/home/u2514-jukueftqhhlm/www/ensurance.com/public_html/wp-content/themes/kadence-child/` |
-| Staging | `/home/u2514-jukueftqhhlm/www/staging14.ensurance.com/public_html/wp-content/themes/kadence-child/` |
+| Staging | `/home/u2514-jukueftqhhlm/www/staging18.ensurance.com/public_html/wp-content/themes/kadence-child/` |
 
 ### Clone This Repo
 
@@ -58,7 +58,7 @@ git checkout staging
 **Always deploy to staging first, verify, then promote to production.**
 
 ```bash
-# Deploy to staging14.ensurance.com
+# Deploy to staging18.ensurance.com
 deploy-staging
 
 # Deploy to ensurance.com (production)
@@ -66,6 +66,51 @@ deploy-prod
 ```
 
 These aliases are configured in `~/.zshrc`. They push to GitHub and pull to SiteGround in one command.
+
+---
+
+## Figma Workflow
+
+Design-to-code for marketing pages is streamlined via Figma MCP (Model Context Protocol) integration. Claude can read Figma designs directly and build templates.
+
+### How It Works
+
+1. **Share a Figma link** — paste the design file URL
+2. **Specify what to build** — "build the hero section from Frame X" or "build the homepage from this file"
+3. **Claude extracts design data** — reads layout, colors, fonts, spacing, components directly from Figma
+4. **Build happens automatically** — outputs `page-*.php`, `/components/*.php`, and CSS all mapped to your design tokens
+
+### Example
+
+```
+You: "Here's the homepage design: https://www.figma.com/design/abc123/... — build it"
+
+Claude: [reads Figma file] [extracts colors, spacing, typography] [generates page-home.php and components]
+```
+
+### What Claude Pulls from Figma
+
+- Exact colors, fonts, font sizes, line heights, letter spacing
+- Spacing and padding (maps to `--space-*` variables)
+- Component structure and variants
+- Text content (headings, body copy)
+- Layout and responsive breakpoints
+
+### Constraints
+
+- All CSS must use `var(--color-*)` and `var(--space-*)` design tokens (no hardcoded values)
+- All templates must use `get_header('marketing')` and `get_footer('marketing')`
+- Components go in `/components/` as PHP partials
+- Pages go in `page-*.php` templates
+- Styling is `assets/marketing.css` only
+
+### Figma MCP Configuration
+
+- **Server**: `figma-developer-mcp` (installed on demand via npx)
+- **API Key**: Stored in `.claude/settings.local.json` (gitignored)
+- **Config**: `.mcp.json` (approved in `.claude/settings.json`)
+
+No additional setup needed — just paste a Figma link.
 
 ---
 
@@ -290,7 +335,7 @@ wp_enqueue_script('marketing', get_stylesheet_directory_uri() . '/assets/marketi
 
 | Branch | Deploys to |
 |--------|-----------|
-| `staging` | staging14.ensurance.com |
+| `staging` | staging18.ensurance.com |
 | `main` | ensurance.com (production) |
 
 Always work on `staging`. Merge to `main` only when verified on staging.
@@ -305,7 +350,7 @@ git checkout staging
 git add .
 git commit -m "Add hero section to homepage"
 
-# 3. Deploy to staging and verify on staging14.ensurance.com
+# 3. Deploy to staging and verify on staging18.ensurance.com
 deploy-staging
 
 # 4. When satisfied, promote to production
@@ -358,7 +403,7 @@ ssh ensurance
 cd /home/u2514-jukueftqhhlm/www/ensurance.com/public_html/wp-content/themes/kadence-child/
 
 # Staging
-cd /home/u2514-jukueftqhhlm/www/staging14.ensurance.com/public_html/wp-content/themes/kadence-child/
+cd /home/u2514-jukueftqhhlm/www/staging18.ensurance.com/public_html/wp-content/themes/kadence-child/
 ```
 
 ### Deploy Aliases (`~/.zshrc`)
@@ -383,7 +428,7 @@ alias deploy-prod="git push origin main && ssh ensurance /home/u2514-jukueftqhhl
 2. Hard-refresh browser: `Cmd+Shift+R`
 3. Check what's on SiteGround:
    ```bash
-   ssh ensurance "git -C /home/u2514-jukueftqhhlm/www/staging14.ensurance.com/public_html/wp-content/themes/kadence-child log --oneline -5"
+   ssh ensurance "git -C /home/u2514-jukueftqhhlm/www/staging18.ensurance.com/public_html/wp-content/themes/kadence-child log --oneline -5"
    ```
 
 ### CSS not applying
@@ -412,7 +457,7 @@ This creates a new commit that undoes the previous one, keeping history intact.
 - [ ] Add Contact page template
 - [ ] Implement WordPress nav menus (currently hardcoded in header)
 - [ ] Add blog/news section (integrate with existing blog)
-- [x] Set up staging environment on SiteGround (staging14.ensurance.com — complete)
+- [x] Set up staging environment on SiteGround (staging18.ensurance.com — complete)
 - [ ] Add automated tests
 
 ---

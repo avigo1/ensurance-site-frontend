@@ -1,36 +1,53 @@
 /**
  * marketing.js — Ensurance Site Frontend
- *
- * Loaded only on marketing pages. Vanilla JS only — no jQuery dependency.
- *
- * SECTIONS:
- *   1. Mobile nav toggle
- *   2. Smooth scroll
- *   3. Component scripts (add per-component as built)
+ * Loaded only on marketing pages. Vanilla JS, no jQuery.
  */
 
 document.addEventListener('DOMContentLoaded', function () {
 
     // =========================================================================
     // 1. MOBILE NAV TOGGLE
+    // Hamburger button collapses/expands the primary nav on small screens.
     // =========================================================================
 
-    const toggle = document.querySelector('.site-header__mobile-toggle');
-    const nav    = document.querySelector('.site-header__nav');
-    const cta    = document.querySelector('.site-header__cta');
+    const mobileToggle = document.querySelector('.site-header__mobile-toggle');
+    const primaryNav   = document.getElementById('primary-nav');
 
-    if (toggle && nav) {
-        toggle.addEventListener('click', function () {
-            const isOpen = toggle.getAttribute('aria-expanded') === 'true';
-            toggle.setAttribute('aria-expanded', String(!isOpen));
-            nav.classList.toggle('is-open');
-            if (cta) cta.classList.toggle('is-open');
+    if (mobileToggle && primaryNav) {
+        const closeNav = function () {
+            mobileToggle.setAttribute('aria-expanded', 'false');
+            mobileToggle.setAttribute('aria-label', 'Open navigation');
+            mobileToggle.classList.remove('is-open');
+            primaryNav.classList.remove('is-open');
+        };
+
+        const openNav = function () {
+            mobileToggle.setAttribute('aria-expanded', 'true');
+            mobileToggle.setAttribute('aria-label', 'Close navigation');
+            mobileToggle.classList.add('is-open');
+            primaryNav.classList.add('is-open');
+        };
+
+        mobileToggle.addEventListener('click', function () {
+            const isOpen = this.getAttribute('aria-expanded') === 'true';
+            if (isOpen) { closeNav(); } else { openNav(); }
+        });
+
+        // Tapping a link inside the open panel closes it.
+        primaryNav.addEventListener('click', function (e) {
+            if (e.target.closest('a')) closeNav();
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && primaryNav.classList.contains('is-open')) {
+                closeNav();
+                mobileToggle.focus();
+            }
         });
     }
 
     // =========================================================================
     // 2. SMOOTH SCROLL
-    // Handles anchor links like <a href="#section"> scrolling smoothly
     // =========================================================================
 
     document.querySelectorAll('a[href^="#"]').forEach(function (anchor) {
@@ -44,8 +61,31 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // =========================================================================
-    // 3. COMPONENT SCRIPTS
-    // Add component-specific JS here as components are built.
+    // 3. HOMEPAGE TRACKING — data-event clicks + FAQ expand
+    // Pushes to window.dataLayer when present. Safe no-op otherwise.
+    // FAQ tracks by `data-faq` key (never the question text — keeps PII out
+    // of the analytics layer).
     // =========================================================================
+
+    document.querySelectorAll('[data-event]').forEach(function (el) {
+        el.addEventListener('click', function () {
+            const eventName = el.getAttribute('data-event');
+            if (eventName && window.dataLayer && Array.isArray(window.dataLayer)) {
+                window.dataLayer.push({ event: eventName, page: 'home' });
+            }
+        });
+    });
+
+    document.querySelectorAll('.faq-list details').forEach(function (item) {
+        item.addEventListener('toggle', function () {
+            if (item.open && window.dataLayer && Array.isArray(window.dataLayer)) {
+                window.dataLayer.push({
+                    event: 'faq_expand',
+                    page: 'home',
+                    faq_key: item.getAttribute('data-faq') || 'faq_item'
+                });
+            }
+        });
+    });
 
 });

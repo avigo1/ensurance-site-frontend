@@ -1,0 +1,499 @@
+/* ===================================================================
+   Ensurance — "Privacy Policy" page (formal legal document)
+   Calm Intelligence design (same document pattern as /trust-center).
+
+   Loads ON TOP OF assets/home.css, which provides the design tokens,
+   chrome (header/footer) and buttons. This file adds only the sections
+   unique to /privacy-policy:
+     - light document hero with breadcrumb, badge and date pills
+     - the sticky table-of-contents + numbered policy sections
+     - the legal prose styles (paragraphs, lists, subheads)
+     - the neutral "formal policy vs. Trust Center" note
+     - the closing contact card
+   The TOC scroll-spy lives in assets/privacy-policy.js.
+
+   Everything is prefixed `.pp-` (or reuses shared base classes) and the
+   parent-theme defenses at the bottom are scoped to this template's body
+   class, so no other page is affected.
+   =================================================================== */
+
+/* ── Page background over parent-theme / plugin globals ──────────────
+   Same issue handled on the homepage and /trust-center: AyeCode UI /
+   Bootstrap (GeoDirectory, the `aui_bs5` body class) ships
+   `body { background-color: initial !important }`, which beats home.css's
+   plain `body { background: var(--bg-page) }` and lets the dark Kadence base
+   show through the transparent sections. Re-assert with higher specificity +
+   !important, scoped to this template's body class. */
+html body.page-template-page-privacy-policy-php {
+  background: var(--bg-page) !important;
+}
+
+.page-privacy-policy {
+  background: var(--bg-page);
+}
+
+/* Sticky-header offset for in-page anchor jumps. */
+.pp-section {
+  scroll-margin-top: 96px;
+}
+
+/* ── Hero (light document head) ──────────────────────────────────── */
+
+.pp-hero {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-card);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.pp-hero__glow {
+  position: absolute;
+  top: -160px;
+  right: -90px;
+  width: 480px;
+  height: 480px;
+  border-radius: 50%;
+  background: rgba(43, 134, 115, 0.08);
+  filter: blur(90px);
+  pointer-events: none;
+}
+
+.pp-hero__inner {
+  position: relative;
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: var(--space-7) var(--container-pad) var(--space-8);
+}
+
+.pp-breadcrumb {
+  display: flex;
+  gap: 8px;
+  margin-bottom: var(--space-6);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+}
+
+.pp-breadcrumb a {
+  color: var(--text-muted);
+}
+
+.pp-breadcrumb a:hover {
+  color: var(--text-heading);
+}
+
+.pp-breadcrumb span[aria-hidden] {
+  color: var(--text-faint);
+}
+
+.pp-breadcrumb__current {
+  color: var(--text-heading);
+}
+
+.pp-hero__body {
+  max-width: 760px;
+}
+
+.pp-hero__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  background: var(--accent-50);
+  border: 1px solid var(--accent-100);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  font-weight: var(--weight-medium);
+  color: var(--accent);
+}
+
+.pp-hero__badge svg {
+  color: var(--accent);
+}
+
+.pp-hero__title {
+  font-size: var(--text-5xl);
+  line-height: var(--leading-hero);
+  letter-spacing: var(--tracking-display);
+  margin: var(--space-4) 0 0;
+  max-width: 680px;
+}
+
+.pp-hero__sub {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-light);
+  color: var(--text-body);
+  margin: var(--space-5) 0 0;
+  line-height: var(--leading-body);
+  max-width: 680px;
+}
+
+.pp-hero__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: var(--space-5);
+}
+
+.pp-meta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--navy-50);
+  border: 1px solid var(--navy-100);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--navy-700);
+}
+
+.pp-hero__fine {
+  margin-top: var(--space-5);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.pp-hero__fine a {
+  color: var(--accent);
+  font-weight: var(--weight-medium);
+}
+
+/* ── Document grid (sticky TOC + content column) ─────────────────── */
+
+.pp-doc {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: var(--space-6) var(--container-pad) var(--space-9);
+  display: grid;
+  grid-template-columns: 268px 1fr;
+  gap: var(--space-8);
+  align-items: start;
+}
+
+.pp-toc {
+  position: sticky;
+  top: 92px;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pp-toc__label {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin: 0 0 var(--space-3);
+  padding-left: 14px;
+}
+
+.pp-toc__link {
+  display: flex;
+  gap: 10px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: var(--text-sm);
+  line-height: 1.35;
+  color: var(--text-muted);
+  background: transparent;
+  border-left: 2px solid transparent;
+  font-weight: var(--weight-light);
+  transition: color var(--duration-fast) var(--ease-out),
+    background var(--duration-fast) var(--ease-out);
+}
+
+.pp-toc__link:hover {
+  color: var(--text-heading);
+}
+
+.pp-toc__link.is-active {
+  color: var(--text-heading);
+  background: var(--accent-50);
+  border-left: 2px solid var(--accent);
+  font-weight: 600;
+}
+
+.pp-toc__n {
+  font-family: var(--font-mono);
+  color: var(--text-faint);
+  font-size: var(--text-xs);
+  flex-shrink: 0;
+  width: 18px;
+}
+
+.pp-toc__link.is-active .pp-toc__n {
+  color: var(--accent);
+}
+
+.pp-doc__main {
+  min-width: 0;
+  max-width: 760px;
+}
+
+/* ── Intro block ─────────────────────────────────────────────────── */
+
+.pp-intro .pp-p:first-child {
+  margin-top: var(--space-2);
+}
+
+/* ── Numbered section ────────────────────────────────────────────── */
+
+.pp-section {
+  padding-top: var(--space-7);
+  border-top: 1px solid var(--border-soft);
+  margin-top: var(--space-7);
+}
+
+.pp-section__head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: var(--space-4);
+}
+
+.pp-section__n {
+  font-family: var(--font-mono);
+  font-size: var(--text-md);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.pp-section h2 {
+  font-size: var(--text-3xl);
+  line-height: var(--leading-tight);
+  margin: 0;
+}
+
+/* ── Legal prose ─────────────────────────────────────────────────── */
+
+.pp-p {
+  font-size: var(--text-md);
+  color: var(--text-body);
+  line-height: var(--leading-body);
+  font-weight: var(--weight-light);
+  margin: 0 0 var(--space-4);
+}
+
+.pp-p strong {
+  color: var(--text-heading);
+  font-weight: 600;
+}
+
+.pp-p a,
+.pp-list a,
+.pp-note__text a {
+  color: var(--accent);
+  font-weight: var(--weight-medium);
+}
+
+.pp-sub {
+  font-family: inherit;
+  font-size: var(--text-lg);
+  color: var(--text-heading);
+  font-weight: 600;
+  margin: var(--space-5) 0 var(--space-3);
+}
+
+.pp-list {
+  list-style: none;
+  margin: 0 0 var(--space-4);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pp-list li {
+  position: relative;
+  padding-left: 22px;
+  font-size: var(--text-md);
+  color: var(--text-body);
+  font-weight: var(--weight-light);
+  line-height: var(--leading-body);
+}
+
+.pp-list li::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 0.6em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0.55;
+}
+
+.pp-list li strong {
+  color: var(--text-heading);
+  font-weight: 600;
+}
+
+/* Section 3's "titled" items — the bold lead reads as a heading line. */
+.pp-list--titled {
+  gap: var(--space-4);
+}
+
+.pp-list--titled li strong {
+  display: block;
+  margin-bottom: 2px;
+}
+
+/* ── Neutral note (formal policy vs Trust Center) ────────────────── */
+
+.pp-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: var(--surface-brand);
+  border: 1px solid var(--navy-100);
+  border-radius: var(--radius-icon);
+  padding: 18px 20px;
+  margin: var(--space-2) 0 var(--space-4);
+}
+
+.pp-note__icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid var(--navy-100);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--secondary);
+}
+
+.pp-note__text {
+  margin: 0;
+  font-size: var(--text-md);
+  font-weight: var(--weight-light);
+  color: var(--text-strong);
+  line-height: var(--leading-body);
+}
+
+/* ── Closing contact card ────────────────────────────────────────── */
+
+.pp-contact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  background: var(--surface-card);
+  border: 1px solid var(--accent-100);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-5);
+  margin-top: var(--space-5);
+}
+
+.pp-contact__body {
+  flex: 1 1 320px;
+}
+
+.pp-contact__title {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text-heading);
+}
+
+.pp-contact__text {
+  margin: 6px 0 0;
+  font-size: var(--text-sm);
+  color: var(--text-body);
+  font-weight: var(--weight-light);
+  line-height: var(--leading-body);
+}
+
+.pp-contact__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+/* ── Responsive ──────────────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .pp-doc {
+    grid-template-columns: 1fr;
+  }
+  .pp-toc {
+    position: static;
+    top: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .pp-toc__label {
+    width: 100%;
+    padding-left: 0;
+  }
+  .pp-toc__link {
+    border-left: none;
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-pill);
+    padding: 6px 12px;
+  }
+  .pp-toc__link.is-active {
+    border: 1px solid var(--accent);
+  }
+}
+
+@media (max-width: 640px) {
+  .pp-hero__title {
+    font-size: var(--text-4xl);
+  }
+  .pp-contact__actions {
+    width: 100%;
+  }
+}
+
+/* ── Re-assert intended leading over the global Customizer !important
+   rules (h2 36px / h3 30px / p 24px), scoped to privacy-policy classes
+   only. See the matching block in home.css for the rationale. ─────── */
+
+.pp-hero__title {
+  line-height: var(--leading-hero) !important;
+}
+
+.pp-section h2 {
+  line-height: var(--leading-tight) !important;
+}
+
+.pp-sub,
+.pp-contact__title {
+  line-height: var(--leading-snug) !important;
+}
+
+.pp-hero__sub,
+.pp-p,
+.pp-list li,
+.pp-note__text,
+.pp-hero__fine,
+.pp-contact__text {
+  line-height: var(--leading-body) !important;
+}
+
+/* ── Heading colors over Kadence global typography ────────────────
+   Kadence's inline global CSS colors bare h1/h2/h3 from --global-palette3,
+   which is #ffffff on this site, so on these light sections the headings
+   render invisible. Pin every light-background heading to navy. ───── */
+.pp-hero__title,
+.pp-section h2,
+.pp-sub {
+  color: var(--text-heading) !important;
+}

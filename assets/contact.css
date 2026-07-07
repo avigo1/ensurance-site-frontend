@@ -1,0 +1,475 @@
+/* ===================================================================
+   Ensurance — "Contact" page (/contact)
+   Calm Intelligence redesign (standalone design parity).
+
+   Loads ON TOP OF assets/home.css, which provides the design tokens,
+   chrome (header/footer), buttons, the eyebrow, trust cues, the FAQ
+   accordion. This file adds only the sections unique to the contact
+   page:
+     - centered intro with soft glows and a trust-cue row
+     - the message-form card (inputs, select, textarea, submit row)
+     - the "no phone tree" neutral callout
+   The scroll-reveal motion lives in assets/contact.js.
+
+   Everything is prefixed `.ct-` (or reuses shared base classes from
+   home.css) and the parent-theme defenses at the bottom are scoped to
+   this template's body class, so no other page is affected. The `.ct-`
+   prefix is distinct from the other page layers (`.aq-`, `.hq-`), so
+   the page-specific stylesheets could never collide even if co-loaded.
+   =================================================================== */
+
+/* ── Page background over parent-theme / plugin globals ──────────────
+   Same issue handled on the homepage / coverage / quote pages: AyeCode UI /
+   Bootstrap (GeoDirectory, the `aui_bs5` body class) ships
+   `body { background-color: initial !important }`, which beats home.css's
+   plain `body { background: var(--bg-page) }` and lets the dark Kadence base
+   show through the transparent sections. Re-assert with higher specificity +
+   !important (Kadence emits `page-template-page-contact-php` via
+   body_class()) and paint the wrapper too. Scoped to this template's body
+   class, so non-design pages are never touched. */
+html body.page-template-page-contact-php {
+  background: var(--bg-page) !important;
+}
+
+.page-contact {
+  background: var(--bg-page);
+}
+
+/* Sticky-header offset for in-page anchor jumps. */
+#faq {
+  scroll-margin-top: 92px;
+}
+
+/* Scroll-reveal base (owned here; home.css has none). JS adds .is-in. */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
+}
+
+.reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+/* If scripting is unavailable, never hide content behind the reveal. */
+@media (scripting: none) {
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* ── Intro (centered, soft glows, trust cues) ────────────────────── */
+
+.ct-accent {
+  color: var(--accent);
+}
+
+.ct-intro {
+  position: relative;
+  overflow: hidden;
+}
+
+.ct-intro__glow {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.ct-intro__glow--a {
+  top: -150px;
+  right: -90px;
+  width: 480px;
+  height: 480px;
+  background: rgba(43, 134, 115, 0.1);
+  filter: blur(90px);
+}
+
+.ct-intro__glow--b {
+  bottom: -200px;
+  left: -120px;
+  width: 420px;
+  height: 420px;
+  background: rgba(91, 124, 153, 0.1);
+  filter: blur(90px);
+}
+
+.ct-intro__inner {
+  position: relative;
+  max-width: 680px;
+  margin: 0 auto;
+  padding: var(--space-9) var(--container-pad) var(--space-7);
+  text-align: center;
+}
+
+.ct-intro__title {
+  font-size: clamp(40px, 5.5vw, 64px);
+  line-height: var(--leading-hero);
+  letter-spacing: var(--tracking-display);
+  margin: var(--space-4) 0 0;
+  text-wrap: balance;
+}
+
+.ct-intro__sub {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-light);
+  color: var(--text-body);
+  line-height: var(--leading-body);
+  max-width: 540px;
+  margin: var(--space-5) auto 0;
+  text-wrap: pretty;
+}
+
+.ct-cues {
+  display: flex;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: var(--space-6);
+}
+
+/* ── Message form card ───────────────────────────────────────────── */
+
+.ct-main {
+  max-width: calc(640px + 2 * var(--container-pad));
+  margin: 0 auto;
+  padding: var(--space-8) var(--container-pad);
+}
+
+.ct-form {
+  background: var(--surface-card);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-card);
+  padding: var(--space-7);
+  box-shadow: var(--shadow-card);
+}
+
+.ct-form__title {
+  font-size: var(--text-2xl);
+  line-height: var(--leading-snug);
+  margin: 0;
+}
+
+.ct-form__sub {
+  color: var(--text-muted);
+  font-weight: var(--weight-light);
+  line-height: var(--leading-body);
+  margin: var(--space-2) 0 var(--space-6);
+}
+
+.ct-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.ct-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ct-label {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text-heading);
+  line-height: 1.4;
+}
+
+.ct-help {
+  font-size: 13px;
+  font-weight: var(--weight-light);
+  color: var(--text-muted);
+  line-height: var(--leading-body);
+  margin: 0;
+}
+
+.ct-input,
+.ct-select,
+.ct-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 13px 16px;
+  font-family: var(--font-sans);
+  font-size: var(--text-md);
+  font-weight: var(--weight-regular);
+  color: var(--primary);
+  background: var(--surface-card);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  outline: none;
+  box-shadow: none;
+  transition: border-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.ct-input::placeholder,
+.ct-textarea::placeholder {
+  color: var(--text-faint);
+  opacity: 1;
+}
+
+.ct-input:focus,
+.ct-select:focus,
+.ct-textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(43, 134, 115, 0.2);
+}
+
+.ct-select-wrap {
+  position: relative;
+}
+
+.ct-select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 44px;
+  cursor: pointer;
+}
+
+/* Chevron for the custom select. */
+.ct-select-wrap::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 17px;
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid var(--text-muted);
+  border-bottom: 2px solid var(--text-muted);
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
+}
+
+.ct-textarea {
+  min-height: 140px;
+  resize: vertical;
+  line-height: var(--leading-body);
+}
+
+.ct-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.ct-privacy {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-light);
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.ct-privacy svg {
+  color: var(--secondary);
+  flex-shrink: 0;
+}
+
+/* ── Form states: honeypot, errors, sending, success ─────────────── */
+
+/* Error color — home.css has no --error token; scope one to this page. */
+.page-contact {
+  --error: #b42318;
+}
+
+/* Honeypot: moved offscreen, not display:none (bots skip hidden fields). */
+.ct-hp {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.ct-error {
+  font-size: 13px;
+  font-weight: var(--weight-regular);
+  color: var(--error);
+  line-height: var(--leading-body);
+  margin: 0;
+}
+
+.ct-field--error .ct-input,
+.ct-field--error .ct-textarea {
+  border-color: var(--error);
+}
+
+.ct-field--error .ct-input:focus,
+.ct-field--error .ct-textarea:focus {
+  border-color: var(--error);
+  box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.15);
+}
+
+.ct-form__fail {
+  font-size: var(--text-sm);
+  color: var(--error);
+  line-height: var(--leading-body);
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  background: rgba(180, 35, 24, 0.06);
+  border: 1px solid rgba(180, 35, 24, 0.25);
+  border-radius: var(--radius-input);
+}
+
+.ct-form button[disabled] {
+  opacity: 0.65;
+  cursor: default;
+  pointer-events: none;
+}
+
+/* Success card (design parity with the standalone confirmation state). */
+.ct-success {
+  background: var(--surface-card);
+  border: 1px solid var(--accent-100);
+  border-radius: var(--radius-card);
+  padding: var(--space-8);
+  box-shadow: var(--shadow-card);
+  text-align: center;
+}
+
+.ct-success__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--accent-50);
+  color: var(--accent);
+}
+
+.ct-success__title {
+  font-size: var(--text-2xl);
+  line-height: var(--leading-snug);
+  margin: var(--space-4) 0 0;
+}
+
+.ct-success__body {
+  color: var(--text-muted);
+  font-weight: var(--weight-light);
+  line-height: var(--leading-body);
+  max-width: 420px;
+  margin: var(--space-3) auto 0;
+}
+
+.ct-success__body strong {
+  color: var(--text-heading);
+  font-weight: var(--weight-medium);
+}
+
+.ct-success__actions {
+  margin-top: var(--space-6);
+}
+
+/* ── "No phone tree" callout ─────────────────────────────────────── */
+
+.ct-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  margin-top: var(--space-5);
+  padding: var(--space-5);
+  background: var(--navy-50);
+  border: 1px solid var(--navy-100);
+  border-radius: var(--radius-input);
+}
+
+.ct-callout__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--surface-card);
+  border: 1px solid var(--navy-100);
+  color: var(--navy-600);
+}
+
+.ct-callout__title {
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
+  color: var(--text-heading);
+  line-height: var(--leading-snug);
+  margin: 0;
+}
+
+.ct-callout__body {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-light);
+  color: var(--text-body);
+  line-height: var(--leading-body);
+  margin: 6px 0 0;
+}
+
+/* ── FAQ width (reuses .faq / .faq-list from home.css) ───────────── */
+
+.ct-faq {
+  max-width: calc(760px + 2 * var(--container-pad));
+  margin: 0 auto;
+}
+
+/* ── Small screens ───────────────────────────────────────────────── */
+
+@media (max-width: 560px) {
+  .ct-form {
+    padding: var(--space-5);
+  }
+
+  .ct-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ── Re-assert intended leading over the global Customizer !important
+   rules (h2 36px / h3 30px / p 24px), scoped to this page's classes only.
+   See the matching block in home.css / the quote pages for the rationale. */
+
+.ct-intro__title {
+  line-height: var(--leading-hero) !important;
+}
+
+.ct-form__title,
+.ct-success__title {
+  line-height: var(--leading-snug) !important;
+}
+
+.ct-intro__sub,
+.ct-form__sub,
+.ct-help,
+.ct-error,
+.ct-success__body,
+.ct-callout__body {
+  line-height: var(--leading-body) !important;
+}
+
+/* ── Heading colors over Kadence global typography ────────────────
+   Kadence's inline global CSS colors bare h1/h2 from --global-palette3,
+   which is #ffffff on this site, so on light sections the headings render
+   invisible. Pin every light-background heading to navy. Scoped to this
+   page's classes only. */
+.ct-intro__title,
+.ct-form__title,
+.ct-success__title {
+  color: var(--text-heading) !important;
+}
+
+.ct-intro__title .ct-accent {
+  color: var(--accent) !important;
+}

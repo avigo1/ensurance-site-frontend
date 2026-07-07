@@ -1,0 +1,824 @@
+/* ===================================================================
+   Ensurance — "Auto Insurance" page (/auto-insurance-quote-request)
+   Calm Intelligence redesign (standalone design parity).
+
+   Loads ON TOP OF assets/home.css, which provides the design tokens,
+   chrome (header/footer), buttons, the eyebrow, icon boxes, the FAQ
+   accordion and the final CTA. This file adds only the sections unique
+   to the auto landing page:
+     - light hero with the guided-request stage track
+     - scattered-vs-structured compare
+     - the four request-area cards + neutral callout
+     - the four-step process + availability (warn) callout
+     - the dark "licensed review" panel with glass cards
+   The scroll-reveal motion lives in assets/auto-insurance-quote-request.js.
+
+   Everything is prefixed `.aq-` (or reuses shared base classes) and the
+   parent-theme defenses at the bottom are scoped to this template's body
+   class, so no other page is affected.
+   =================================================================== */
+
+/* ── Page background over parent-theme / plugin globals ──────────────
+   Same issue handled on the homepage / coverage / for-agents: AyeCode UI /
+   Bootstrap (GeoDirectory, the `aui_bs5` body class) ships
+   `body { background-color: initial !important }`, which beats home.css's
+   plain `body { background: var(--bg-page) }` and lets the dark Kadence base
+   show through the transparent sections. Re-assert with higher specificity +
+   !important (Kadence emits `page-template-page-auto-insurance-quote-request-php`
+   via body_class()) and paint the wrapper too. Scoped to this template's body
+   class, so non-design pages are never touched. */
+html body.page-template-page-auto-insurance-quote-request-php {
+  background: var(--bg-page) !important;
+}
+
+.page-auto-insurance {
+  background: var(--bg-page);
+}
+
+/* Sticky-header offset for in-page anchor jumps. */
+#process,
+#faq {
+  scroll-margin-top: 92px;
+}
+
+/* Scroll-reveal base (owned here; home.css has none). JS adds .is-in. */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
+}
+
+.reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+/* If scripting is unavailable, never hide content behind the reveal. */
+@media (scripting: none) {
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* ── Shared bits ─────────────────────────────────────────────────── */
+
+.aq-accent {
+  color: var(--accent);
+}
+
+.aq-kicker {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  font-weight: var(--weight-medium);
+  color: var(--accent);
+  line-height: 1.4;
+}
+
+.aq-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+}
+
+.aq-link svg {
+  flex-shrink: 0;
+}
+
+.aq-link--light {
+  color: #fff;
+}
+
+.aq-link--accent {
+  color: var(--accent);
+}
+
+.aq-link--muted {
+  color: var(--gray-300);
+}
+
+.aq-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* Dark ghost button (final CTA, on the inverse card). Reuses .btn geometry. */
+.aq-ghost-dark {
+  background: transparent;
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.aq-ghost-dark:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+}
+
+/* ── Hero (light, guided-request stage track) ────────────────────── */
+
+.aq-hero {
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border-soft);
+  background: var(--bg-page);
+  min-height: calc(100vh - 68px);
+  display: flex;
+  align-items: center;
+}
+
+.aq-hero__glow {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.aq-hero__glow--a {
+  top: -180px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 820px;
+  height: 540px;
+  background: rgba(43, 134, 115, 0.1);
+  filter: blur(120px);
+}
+
+.aq-hero__glow--b {
+  bottom: -200px;
+  right: -120px;
+  width: 460px;
+  height: 460px;
+  background: rgba(91, 124, 153, 0.1);
+  filter: blur(90px);
+}
+
+.aq-hero__inner {
+  position: relative;
+  width: 100%;
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: var(--space-8) var(--container-pad);
+  text-align: left;
+}
+
+.aq-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--accent-100);
+  background: var(--accent-50);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  font-weight: var(--weight-medium);
+  color: var(--accent);
+  line-height: 1.4;
+}
+
+.aq-pill svg {
+  flex-shrink: 0;
+}
+
+.aq-hero__title {
+  font-size: clamp(40px, 5.5vw, 72px);
+  line-height: var(--leading-hero);
+  letter-spacing: var(--tracking-display);
+  margin: var(--space-5) 0 0;
+  max-width: 720px;
+}
+
+.aq-hero__sub {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-light);
+  color: var(--text-body);
+  max-width: 600px;
+  margin: var(--space-5) 0 0;
+  line-height: var(--leading-body);
+}
+
+.aq-hero__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+  flex-wrap: wrap;
+}
+
+.aq-track {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  margin-top: var(--space-9);
+}
+
+.aq-track__line {
+  position: absolute;
+  top: 28px;
+  left: 12.5%;
+  right: 12.5%;
+  height: 2px;
+  background: var(--border-soft);
+  z-index: 0;
+}
+
+.aq-track__item {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0 var(--space-3);
+}
+
+.aq-track__node {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--surface-card);
+  border: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-card);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+}
+
+.aq-track__node--last {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.aq-track__num {
+  margin-top: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-mono);
+  color: var(--text-faint);
+}
+
+.aq-track__title {
+  margin: 6px 0 0;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text-heading);
+}
+
+.aq-track__sub {
+  margin: 2px 0 0;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-light);
+  color: var(--text-muted);
+}
+
+/* ── Section + left-aligned section head ─────────────────────────── */
+
+.aq-section {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: var(--space-8) var(--container-pad);
+}
+
+.aq-section--lead {
+  padding-top: var(--space-9);
+}
+
+.aq-head {
+  max-width: 640px;
+}
+
+.aq-head h2 {
+  font-size: var(--text-4xl);
+  line-height: var(--leading-tight);
+  margin-top: var(--space-4);
+}
+
+.aq-head p {
+  color: var(--text-muted);
+  font-weight: var(--weight-light);
+  margin-top: var(--space-3);
+  line-height: var(--leading-body);
+  max-width: 620px;
+}
+
+/* ── Compare (scattered vs structured) ───────────────────────────── */
+
+.aq-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-5);
+  margin-top: var(--space-7);
+}
+
+.aq-compare__col {
+  border-radius: var(--radius-card);
+  padding: var(--space-6);
+}
+
+.aq-compare__col--bad {
+  background: var(--gray-50);
+  border: 1px solid var(--border-soft);
+}
+
+.aq-compare__col--good {
+  background: var(--surface-card);
+  border: 1px solid var(--accent-100);
+  box-shadow: var(--shadow-card);
+}
+
+.aq-compare__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  font-weight: var(--weight-medium);
+}
+
+.aq-compare__col--bad .aq-compare__label {
+  color: var(--gray-500);
+}
+
+.aq-compare__col--good .aq-compare__label {
+  color: var(--accent);
+}
+
+.aq-compare__title {
+  font-size: var(--text-2xl);
+  line-height: var(--leading-snug);
+  margin: var(--space-3) 0 var(--space-4);
+}
+
+.aq-compare__col--bad .aq-compare__title {
+  color: var(--text-muted);
+}
+
+.aq-compare__col--good .aq-compare__title {
+  color: var(--text-heading);
+}
+
+.aq-compare__items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.aq-compare__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-light);
+  line-height: var(--leading-body);
+}
+
+.aq-compare__col--bad .aq-compare__item {
+  color: var(--text-muted);
+}
+
+.aq-compare__col--good .aq-compare__item {
+  color: var(--text-body);
+}
+
+.aq-compare__mark {
+  flex-shrink: 0;
+  margin-top: 1px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--border-soft);
+  color: var(--gray-500);
+}
+
+.aq-compare__mark--good {
+  background: var(--accent-50);
+  border: none;
+  color: var(--accent);
+}
+
+/* ── What your auto request may include (cards) ──────────────────── */
+
+.aq-include {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-5);
+  margin-top: var(--space-7);
+}
+
+.aq-include__card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  border-color: var(--border-soft);
+  height: 100%;
+}
+
+.aq-include__card:hover {
+  border-color: var(--accent-100);
+  box-shadow: var(--shadow-raised);
+  transform: translateY(-4px);
+}
+
+.aq-include__card .icon-box {
+  width: 48px;
+  height: 48px;
+}
+
+.aq-include__text h3 {
+  font-size: var(--text-xl);
+  line-height: var(--leading-snug);
+  color: var(--text-heading);
+}
+
+.aq-include__text p {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-light);
+  color: var(--text-muted);
+  line-height: var(--leading-body);
+  margin-top: var(--space-2);
+}
+
+.aq-include__points {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.aq-include__point {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-light);
+  color: var(--text-body);
+  line-height: var(--leading-snug);
+}
+
+.aq-include__check {
+  flex-shrink: 0;
+  margin-top: 1px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent-50);
+  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Callouts (neutral + availability/warn) ──────────────────────── */
+
+.aq-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  max-width: 760px;
+  margin: var(--space-6) auto 0;
+  border-radius: var(--radius-icon);
+  padding: 18px 20px;
+}
+
+.aq-callout__icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.aq-callout__title {
+  margin: 0;
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
+}
+
+.aq-callout__body {
+  margin: 4px 0 0;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-light);
+  line-height: var(--leading-body);
+}
+
+.aq-callout--neutral {
+  background: var(--navy-50);
+  border: 1px solid var(--navy-100);
+}
+
+.aq-callout--neutral .aq-callout__icon {
+  background: #fff;
+  border: 1px solid var(--navy-100);
+  color: var(--navy-700);
+}
+
+.aq-callout--neutral .aq-callout__title {
+  color: var(--text-heading);
+}
+
+.aq-callout--neutral .aq-callout__body {
+  color: var(--text-body);
+}
+
+.aq-callout--warn {
+  background: #fef4e2;
+  border: 1px solid #f6dcae;
+}
+
+.aq-callout--warn .aq-callout__icon {
+  background: #fff;
+  border: 1px solid #f6dcae;
+  color: #b45309;
+}
+
+.aq-callout--warn .aq-callout__title {
+  color: #92400e;
+}
+
+.aq-callout--warn .aq-callout__body {
+  color: #92400e;
+}
+
+/* ── Process steps ───────────────────────────────────────────────── */
+
+.aq-steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-5);
+  margin-top: var(--space-7);
+}
+
+.aq-step {
+  display: flex;
+  flex-direction: column;
+  border-color: var(--border-soft);
+  height: 100%;
+}
+
+.aq-step__top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.aq-step__num {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-mono);
+  color: var(--secondary);
+}
+
+.aq-step h3 {
+  font-size: var(--text-xl);
+  line-height: var(--leading-snug);
+  color: var(--text-heading);
+  margin-top: var(--space-4);
+}
+
+.aq-step p {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-light);
+  color: var(--text-muted);
+  line-height: var(--leading-body);
+  margin-top: var(--space-2);
+}
+
+/* ── Why licensed review matters (dark panel) ────────────────────── */
+
+.aq-review {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: var(--space-8) var(--container-pad);
+}
+
+.aq-panel {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(150deg, var(--primary), var(--bg-inverse));
+  border-radius: var(--radius-card-xl);
+  padding: var(--space-8);
+}
+
+.aq-panel__bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--accent), var(--secondary));
+}
+
+.aq-panel__glow {
+  position: absolute;
+  top: -120px;
+  right: -80px;
+  width: 360px;
+  height: 360px;
+  border-radius: 50%;
+  background: rgba(43, 134, 115, 0.2);
+  filter: blur(70px);
+  pointer-events: none;
+}
+
+.aq-panel__head {
+  position: relative;
+  max-width: 640px;
+}
+
+.aq-panel__title {
+  color: #fff;
+  font-size: var(--text-4xl);
+  line-height: var(--leading-tight);
+  margin: var(--space-4) 0 0;
+  max-width: 560px;
+}
+
+.aq-panel__sub {
+  color: var(--gray-300);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-light);
+  line-height: var(--leading-snug);
+  margin: var(--space-4) 0 0;
+  max-width: 560px;
+}
+
+.aq-panel__cards {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+  margin-top: var(--space-7);
+}
+
+.aq-glass {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius-icon);
+  padding: 20px 22px;
+}
+
+.aq-glass__icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: rgba(43, 134, 115, 0.22);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+}
+
+.aq-glass__title {
+  margin: 14px 0 0;
+  color: #fff;
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
+}
+
+.aq-glass__body {
+  margin: 4px 0 0;
+  color: var(--gray-400);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-light);
+  line-height: var(--leading-body);
+}
+
+.aq-panel__links {
+  position: relative;
+  display: flex;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+  margin-top: var(--space-7);
+}
+
+/* ── Final CTA (reuses .final-cta / .final-card from home.css) ────── */
+
+.aq-final {
+  margin-top: var(--space-9);
+}
+
+/* ── Responsive ──────────────────────────────────────────────────── */
+
+@media (max-width: 980px) {
+  .aq-include,
+  .aq-steps {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 860px) {
+  .aq-compare,
+  .aq-panel__cards {
+    grid-template-columns: 1fr;
+  }
+
+  .aq-panel {
+    border-radius: var(--radius-card-lg);
+    padding: var(--space-7);
+  }
+}
+
+@media (max-width: 720px) {
+  .aq-track {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-6) 0;
+  }
+
+  .aq-track__line {
+    display: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .aq-include,
+  .aq-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .aq-panel {
+    padding: var(--space-6);
+  }
+}
+
+/* ── Re-assert intended leading over the global Customizer !important
+   rules (h2 36px / h3 30px / p 24px), scoped to this page's classes only.
+   See the matching block in home.css for the rationale. ───────────── */
+
+.aq-hero__title {
+  line-height: var(--leading-hero) !important;
+}
+
+.aq-head h2,
+.aq-panel__title {
+  line-height: var(--leading-tight) !important;
+}
+
+.aq-compare__title,
+.aq-include__text h3,
+.aq-step h3 {
+  line-height: var(--leading-snug) !important;
+}
+
+.aq-panel__sub {
+  line-height: var(--leading-snug) !important;
+}
+
+.aq-hero__sub,
+.aq-head p,
+.aq-glass__body,
+.aq-compare__item,
+.aq-include__text p,
+.aq-include__point,
+.aq-step p,
+.aq-callout__body {
+  line-height: var(--leading-body) !important;
+}
+
+/* ── Heading colors over Kadence global typography ────────────────
+   Kadence's inline global CSS colors bare h1/h2/h3 from --global-palette3,
+   which is #ffffff on this site, so on light sections the headings render
+   invisible. Pin every light-background heading to navy (the bad-compare
+   title stays intentionally muted); dark-context headings are pinned white.
+   Scoped to this page's classes only. ───────────────────────────────── */
+.aq-hero__title,
+.aq-head h2,
+.aq-compare__col--good .aq-compare__title,
+.aq-include__text h3,
+.aq-step h3 {
+  color: var(--text-heading) !important;
+}
+
+.aq-compare__col--bad .aq-compare__title {
+  color: var(--text-muted) !important;
+}
+
+.aq-panel__title {
+  color: #fff !important;
+}

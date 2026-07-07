@@ -1,0 +1,421 @@
+/* ===================================================================
+   Ensurance — "Auto Insurance Quote" page (/auto-insurance-quote)
+   Calm Intelligence redesign — "Start your request" standalone parity.
+
+   Loads ON TOP OF assets/home.css, which provides the design tokens,
+   chrome (header/footer), buttons, the eyebrow, icon boxes and trust
+   cues. This file adds only the sections unique to this request page:
+     - centered intro + the framed guided-request form slot
+     - the trust-cue row beneath the form
+     - the "you're in control" brand callout
+     - the three-step "what happens next" row
+     - the closing trust band
+   The scroll-reveal motion lives in assets/auto-insurance-quote.js.
+
+   Everything is prefixed `.sq-` (or reuses shared base classes) and the
+   parent-theme defenses below are scoped to this template's body class,
+   so no other page is affected.
+   =================================================================== */
+
+/* ── Page background over parent-theme / plugin globals ──────────────
+   Same issue handled on the homepage / auto / health pages: AyeCode UI /
+   Bootstrap (GeoDirectory, the `aui_bs5` body class) ships
+   `body { background-color: initial !important }`, which beats home.css's
+   plain `body { background: var(--bg-page) }` and lets the dark Kadence base
+   show through transparent sections. Re-assert with higher specificity +
+   !important (Kadence emits `page-template-page-auto-insurance-quote-php`
+   via body_class()) and paint the wrapper too. Scoped to this template's
+   body class, so non-design pages are never touched. */
+html body.page-template-page-auto-insurance-quote-php,
+html body.page-template-page-homeowners-insurance-quote-php,
+html body.page-template-page-renters-insurance-quote-php,
+html body.page-template-page-life-insurance-quote-php,
+html body.page-template-page-commercial-insurance-quote-php,
+html body.page-template-page-health-insurance-quote-php {
+  background: var(--bg-page) !important;
+}
+
+.page-auto-quote {
+  background: var(--bg-page);
+}
+
+/* Scroll-reveal base (owned here; home.css has none). JS adds .is-in. */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
+}
+
+.reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+/* If scripting is unavailable, never hide content behind the reveal. */
+@media (scripting: none) {
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* ── Request (centered intro + form slot) ───────────────────────────
+   The form is the focus, so the section is narrow and quiet, with two
+   soft brand glows behind it. */
+.sq-request {
+  position: relative;
+  overflow: hidden;
+}
+
+.sq-request__glow {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.sq-request__glow--a {
+  top: -180px;
+  right: -120px;
+  width: 520px;
+  height: 520px;
+  background: rgba(43, 134, 115, 0.10);
+  filter: blur(100px);
+}
+
+.sq-request__glow--b {
+  top: 80px;
+  left: -160px;
+  width: 500px;
+  height: 500px;
+  background: rgba(91, 124, 153, 0.10);
+  filter: blur(110px);
+}
+
+.sq-request__inner {
+  position: relative;
+  max-width: 820px;
+  margin: 0 auto;
+  padding: var(--space-7) var(--container-pad);
+}
+
+.sq-request__intro {
+  text-align: center;
+  max-width: 640px;
+  margin: 0 auto var(--space-6);
+}
+
+.sq-request__title {
+  font-size: var(--text-4xl);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-display);
+  margin-top: var(--space-3);
+}
+
+.sq-request__sub {
+  max-width: 520px;
+  margin: var(--space-3) auto 0;
+  font-size: var(--text-md);
+  font-weight: var(--weight-light);
+  color: var(--text-muted);
+  line-height: var(--leading-body);
+}
+
+/* ── Form slot ──────────────────────────────────────────────────────
+   The framed white card that holds the guided request form. The form
+   itself is rendered from this page's editor content (a self-contained
+   Custom HTML block with its own inline CSS/JS) via the_content() in the
+   template — this card is just the surface around it. The form is centered
+   and width-capped so a full-width form block sits comfortably in the card. */
+.sq-formslot {
+  position: relative;
+  background: var(--surface-card);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-card-lg);
+  box-shadow: var(--shadow-raised);
+  padding: var(--space-7) var(--space-6);
+}
+
+/* Keep the embedded form within the card and let it use the full width. */
+.sq-formslot > * {
+  max-width: 100%;
+}
+
+/* ── Trust-cue row beneath the form ─────────────────────────────────
+   Reuses the shared .trust-cue base; this only lays them out. */
+.sq-cues {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-4) var(--space-6);
+  margin-top: var(--space-5);
+}
+
+.sq-cues .trust-cue svg {
+  color: var(--secondary);
+}
+
+/* ── You're in control (brand callout) ──────────────────────────── */
+.sq-control {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 0 var(--container-pad);
+}
+
+.sq-callout {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-start;
+  background: var(--navy-50);
+  border: 1px solid var(--navy-100);
+  border-radius: var(--radius-card);
+  padding: var(--space-5) var(--space-6);
+}
+
+.sq-callout__icon {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-icon);
+  background: var(--accent-50);
+  border: 1px solid var(--accent-100);
+  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sq-callout__title {
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
+  color: var(--text-heading);
+}
+
+.sq-callout__body {
+  margin-top: 4px;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-light);
+  color: var(--text-muted);
+  line-height: var(--leading-body);
+}
+
+/* ── What happens next (three steps) ────────────────────────────── */
+.sq-next {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--container-pad) var(--space-6);
+}
+
+.sq-next__head {
+  text-align: center;
+  margin-bottom: var(--space-6);
+}
+
+.sq-next__head h2 {
+  font-size: var(--text-2xl);
+  line-height: var(--leading-snug);
+  margin-top: var(--space-3);
+}
+
+.sq-next__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-6);
+}
+
+.sq-next__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.sq-next__badge {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-icon);
+  background: var(--navy-50);
+  border: 1px solid var(--navy-100);
+  color: var(--navy-700);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sq-next__num {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: var(--weight-medium);
+  color: #fff;
+  background: var(--accent);
+  border-radius: var(--radius-pill);
+  padding: 2px 6px;
+}
+
+.sq-next__title {
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
+  color: var(--text-heading);
+}
+
+.sq-next__body {
+  margin-top: 4px;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-light);
+  color: var(--text-muted);
+  line-height: var(--leading-body);
+}
+
+/* ── Trust band ─────────────────────────────────────────────────── */
+.sq-trust {
+  background: var(--surface-card);
+  border-top: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.sq-trust__inner {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: var(--space-8) var(--container-pad);
+}
+
+.sq-trust__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-6);
+}
+
+.sq-trust__item {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-start;
+}
+
+.sq-trust__title {
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
+  color: var(--text-heading);
+}
+
+.sq-trust__body {
+  margin-top: 4px;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-light);
+  color: var(--text-muted);
+  line-height: var(--leading-body);
+}
+
+/* ── Responsive — collapse the 3-col grids (design breakpoint: 760px) ── */
+@media (max-width: 760px) {
+  .sq-next__grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-5);
+    max-width: 360px;
+    margin: 0 auto;
+  }
+
+  .sq-trust__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sq-formslot {
+    padding: var(--space-6) var(--space-4);
+  }
+}
+
+/* ── Embedded form — brand recolor ──────────────────────────────────
+   The 10-step quote form (a Custom HTML block rendered via the_content()
+   inside .sq-formslot) hardcodes a legacy blue (#0073E6 / #005fce) and
+   orange (#F5A524 / #d98e18) palette. We don't edit the form source —
+   instead we remap only its brand-identity colors to the Calm Intelligence
+   tokens here (blue → accent green, orange CTA → accent green, accent dots
+   → navy). Neutrals, the success green and the error red are left as-is.
+   Scoped to .sq-formslot for extra specificity, with !important to beat the
+   form's own late inline <style> (some of its rules are !important too).
+   If the form's class names change, update the selectors below.            */
+
+/* Progress meter — fill, glow head, floating % label, ticks */
+.sq-formslot .ens-meter-fill {
+  background: linear-gradient(90deg, var(--accent) 0%, #4FB89E 100%) !important;
+  box-shadow: 0 2px 8px rgba(43, 134, 115, 0.3) !important;
+}
+.sq-formslot .ens-meter-fill::after {
+  background: var(--accent) !important;
+  box-shadow: 0 0 0 4px rgba(43, 134, 115, 0.15), 0 2px 6px rgba(43, 134, 115, 0.4) !important;
+}
+.sq-formslot .ens-meter-track {
+  background: var(--navy-50) !important;
+}
+.sq-formslot .ens-meter-pct {
+  color: var(--accent) !important;
+}
+.sq-formslot .ens-meter-pct::after {
+  background: var(--accent) !important;
+}
+.sq-formslot .ens-meter-tick[data-state="completed"] .ens-meter-tick-dot,
+.sq-formslot .ens-meter-tick[data-state="active"] .ens-meter-tick-dot {
+  background: var(--accent) !important;
+}
+.sq-formslot .ens-meter-tick[data-state="completed"] .ens-meter-tick-label {
+  color: var(--accent) !important;
+}
+.sq-formslot .ens-meter-tick[data-state="completed"]:hover .ens-meter-tick-label {
+  color: var(--accent-hover) !important;
+}
+
+/* Question highlight + section labels (text → green, dot → navy) */
+.sq-formslot .ens-question span,
+.sq-formslot .ens-section-label,
+.sq-formslot .ens-review-section-title {
+  color: var(--accent) !important;
+}
+.sq-formslot .ens-section-label::before,
+.sq-formslot .ens-review-section-title::before {
+  background: var(--primary) !important;
+}
+
+/* Text / select inputs — focus ring */
+.sq-formslot .ens-input:focus,
+.sq-formslot .ens-select:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(43, 134, 115, 0.1) !important;
+}
+
+/* Option pills — hover + selected */
+.sq-formslot .ens-pill:hover:not(.ens-pill--selected),
+.sq-formslot .ens-pill--selected {
+  border-color: var(--accent) !important;
+  background: var(--accent-50) !important;
+  color: var(--accent) !important;
+}
+
+/* Primary "Continue" button — the brand CTA color */
+.sq-formslot .ens-btn-next {
+  background: var(--accent) !important;
+}
+.sq-formslot .ens-btn-next:hover {
+  background: var(--accent-hover) !important;
+  box-shadow: 0 4px 12px rgba(43, 134, 115, 0.35) !important;
+}
+
+/* Loading spinner + "try again" link */
+.sq-formslot .ens-spinner {
+  border-color: var(--accent-50) !important;
+  border-top-color: var(--accent) !important;
+}
+.sq-formslot .ens-try-again {
+  color: var(--accent) !important;
+}
+.sq-formslot .ens-try-again:hover {
+  color: var(--accent-hover) !important;
+}
