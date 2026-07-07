@@ -70,6 +70,7 @@
   --text-3xl: 36px;
   --text-4xl: 48px;
   --text-5xl: 60px;
+  --text-6xl: 72px;
 
   --leading-hero: 1.05;
   --leading-tight: 1.1;
@@ -463,92 +464,70 @@ a {
   background: var(--primary);
 }
 
-/* ── Hero (video layout) ────────────────────────────────────────── */
+/* ── Hero (spotlight layout — Calm Intelligence v2) ─────────────────
+   Full-viewport centered column on the light page background with a soft
+   teal glow behind the headline. Sits under the 68px sticky header, so
+   the viewport math subtracts it. */
 
 .hero {
   position: relative;
   overflow: hidden;
-  min-height: clamp(560px, 82vh, 780px);
+  min-height: calc(100vh - 68px);
+  min-height: calc(100svh - 68px);
   display: flex;
   flex-direction: column;
+  justify-content: center;
 }
 
-.hero__media {
+.hero__glow {
   position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--bg-inverse) 70%);
-}
-
-.hero__media video {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.hero__blob {
-  position: absolute;
+  top: -120px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 760px;
+  height: 520px;
   border-radius: 50%;
+  background: rgba(43, 134, 115, 0.1);
+  filter: blur(110px);
   pointer-events: none;
-}
-
-.hero__blob--a {
-  top: -20%;
-  left: -10%;
-  width: 60%;
-  height: 80%;
-  background: rgba(43, 134, 115, 0.28);
-  filter: blur(90px);
-}
-
-.hero__blob--b {
-  bottom: -25%;
-  right: -5%;
-  width: 55%;
-  height: 80%;
-  background: rgba(91, 124, 153, 0.3);
-  filter: blur(100px);
-}
-
-.hero__scrim {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(15, 30, 52, 0.4) 0%, rgba(15, 30, 52, 0.62) 100%);
 }
 
 .hero__content {
   position: relative;
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  max-width: 820px;
+  margin: 0 auto;
+  width: 100%;
+  padding: var(--space-8) var(--container-pad);
   text-align: center;
-  padding: var(--space-9) var(--container-pad) var(--space-6);
-}
-
-.hero__inner {
-  max-width: 760px;
 }
 
 .hero__eyebrow {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
-  color: #fff;
-  opacity: 0.92;
+  color: var(--secondary);
   font-weight: var(--weight-medium);
 }
 
+.hero__eyebrow-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: inline-block;
+  flex-shrink: 0;
+}
+
 .hero h1 {
-  color: #fff;
-  font-size: var(--text-5xl);
+  font-size: clamp(40px, 6vw, var(--text-6xl));
   line-height: var(--leading-hero);
   letter-spacing: var(--tracking-display);
-  margin: var(--space-4) auto 0;
-  max-width: 680px;
+  margin: var(--space-5) auto 0;
+  max-width: 760px;
 }
 
 .hero h1 .accent {
@@ -556,7 +535,7 @@ a {
 }
 
 .hero__subtitle {
-  color: rgba(255, 255, 255, 0.86);
+  color: var(--text-body);
   font-weight: var(--weight-light);
   font-size: var(--text-lg);
   max-width: 560px;
@@ -577,7 +556,7 @@ a {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: #fff;
+  color: var(--primary);
   font-size: var(--text-md);
   font-weight: var(--weight-medium);
 }
@@ -588,23 +567,46 @@ a {
 }
 
 .hero__finetext {
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-faint);
   font-size: var(--text-sm);
   margin-top: var(--space-4);
 }
 
 .hero__trust {
-  position: relative;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: var(--space-5);
-  padding: 0 var(--container-pad) var(--space-7);
+  gap: var(--space-4) var(--space-6);
+  margin-top: var(--space-7);
 }
 
 .hero__trust .trust-cue {
-  color: rgba(255, 255, 255, 0.88);
   font-weight: var(--weight-medium);
+}
+
+/* Staggered rise-in reveal for hero children. The base state is the
+   visible end-state, so no-JS, print, and reduced-motion all render the
+   hero fully; per-element delays are inline in components/hero-home.php. */
+@keyframes ens-rise {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.ens-rv {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ens-rv {
+    opacity: 0;
+    animation: ens-rise 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
 }
 
 /* ── Generic section ────────────────────────────────────────────── */
@@ -1310,14 +1312,16 @@ a.card:hover .coverage-tile__arrow {
    2) Heading color — Kadence's inline global typography colors bare h1/h2/h3
       from --global-palette3, which is #ffffff on this site, so default
       headings render white (invisible once the background is light). Pin the
-      light-background headings to navy; dark-context headings (.hero h1,
-      .final-card h2) keep their own white color and are excluded. */
+      light-background headings (including the spotlight hero h1) to navy;
+      the one dark-context heading (.final-card h2) keeps its own white
+      color and is excluded. */
 html body.home,
 html body.page-template-page-home-php,
 html body.page-template-page-how-it-works-php {
   background: var(--bg-page) !important;
 }
 
+.hero h1,
 .section-head h2,
 .whatis h2,
 .step-card h3,
@@ -1326,4 +1330,9 @@ html body.page-template-page-how-it-works-php {
 .why-tile h3,
 .faq__head h2 {
   color: var(--text-heading) !important;
+}
+
+/* Keep the hero headline's accented phrase teal despite the h1 pin above. */
+.hero h1 .accent {
+  color: var(--accent) !important;
 }

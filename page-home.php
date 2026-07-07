@@ -154,6 +154,7 @@ if ( ! function_exists( 'ensurance_home_icon' ) ) {
             'home'         => '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>',
             'car'          => '<path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/>',
             'key'          => '<path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".5"/>',
+            'lock'         => '<rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
             'heart'        => '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>',
             'heart-pulse'  => '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"/>',
             'briefcase'    => '<path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><rect x="2" y="6" width="20" height="14" rx="2"/>',
@@ -190,38 +191,8 @@ get_header( 'home' );
 ?>
 <main id="main">
 
-  <!-- ── Hero (video layout) ─────────────────────────────────────── -->
-  <section class="hero" aria-label="Auto insurance quote help">
-    <div class="hero__media" aria-hidden="true">
-      <?php /* Drop in brand footage here:
-        <video autoplay muted loop playsinline poster="/path/to/poster.jpg">
-          <source src="/path/to/hero.mp4" type="video/mp4">
-        </video> */ ?>
-      <span class="hero__blob hero__blob--a"></span>
-      <span class="hero__blob hero__blob--b"></span>
-    </div>
-    <div class="hero__scrim" aria-hidden="true"></div>
-
-    <div class="hero__content">
-      <div class="hero__inner">
-        <span class="hero__eyebrow">Guided auto insurance quote request</span>
-        <h1>Auto insurance quote help <span class="accent">without the quote chaos.</span></h1>
-        <p class="hero__subtitle">Start an auto insurance quote request online, organize your details, and move toward quote options with more clarity and control.</p>
-        <div class="hero-actions" aria-label="Homepage actions">
-          <a class="btn btn-reversed btn--lg" data-cta-text="Start My Auto Quote Request" data-page-type="homepage" data-track="cta_click_start_auto_quote_request" href="<?php echo $start_url; ?>">Start My Auto Quote Request <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 18 ), $ensurance_svg_allowed ); ?></a>
-          <a class="hero__textlink" data-cta-text="See How Ensurance Works" data-page-type="homepage" data-track="cta_click_see_how_ensurance_works" href="#how-it-works">See How Ensurance Works <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 16 ), $ensurance_svg_allowed ); ?></a>
-        </div>
-        <p class="hero__finetext">Free to start. No spam calls. One organized request — not a list.</p>
-      </div>
-    </div>
-
-    <div class="hero__trust">
-      <span class="trust-cue"><?php echo wp_kses( ensurance_home_icon( 'clock', 16 ), $ensurance_svg_allowed ); ?> Online first</span>
-      <span class="trust-cue"><?php echo wp_kses( ensurance_home_icon( 'shield-check', 16 ), $ensurance_svg_allowed ); ?> Licensed support where appropriate</span>
-      <span class="trust-cue"><?php echo wp_kses( ensurance_home_icon( 'user', 16 ), $ensurance_svg_allowed ); ?> Organized requests</span>
-      <span class="trust-cue"><?php echo wp_kses( ensurance_home_icon( 'ban', 16 ), $ensurance_svg_allowed ); ?> No quote chaos</span>
-    </div>
-  </section>
+  <!-- ── Hero (spotlight layout — see components/hero-home.php) ───── -->
+  <?php include __DIR__ . '/components/hero-home.php'; ?>
 
   <!-- ── What is Ensurance ───────────────────────────────────────── -->
   <section class="section section--lg" aria-label="What is Ensurance">
