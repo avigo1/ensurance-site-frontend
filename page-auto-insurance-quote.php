@@ -104,26 +104,36 @@ get_header( 'home' );
            ships its own inline CSS/JS and posts to make.com). We render the
            page content here so the form stays the single source of truth in
            the WordPress editor — this template only frames it. The editor
-           page should contain ONLY that form block: the intro copy and the
-           "Secure Auto Insurance Quote Request" heading it used to carry are
-           now provided by the hero above, so remove them in the editor to
-           avoid duplication. -->
+           page still carries legacy Gutenberg blocks around the form (intro
+           copy and a "Secure Auto Insurance Quote Request" heading before it,
+           trust copy after it); the PHP below trims both sides so only the
+           form block renders. -->
       <div class="sq-formslot">
         <?php
         while ( have_posts() ) :
             the_post();
 
             /* Render the page's editor content (the self-contained quote form
-               Custom HTML block). The editor also carries trailing blocks after
-               the form — a "Built for trust" line, an "A more trusted system…"
-               heading and a paragraph — that we don't want inside the card. Trim
-               everything after the form's own quote-form.js <script> so only the
-               form (and its script) renders. We anchor on the LAST 'quote-form.js'
-               (the real script tag, which sits after the form) — the form's
-               leading documentation comment also mentions the filename, so a
-               first-match search would cut the form off. Defensive: if the marker
-               isn't found, the full content renders unchanged. */
-            $aq_content = apply_filters( 'the_content', get_the_content() );
+               Custom HTML block). The editor also carries leading blocks before
+               the form — empty paragraphs, an intro paragraph and a "Secure Auto
+               Insurance Quote Request" heading now covered by the hero above —
+               and trailing blocks after it — a "Built for trust" line, an
+               "A more trusted system…" heading and a paragraph — that we don't
+               want inside the card. Cut the raw block markup down to the wp:html
+               form block before filters run (the block-comment markers are gone
+               afterwards), then trim everything after the form's own
+               quote-form.js <script> so only the form (and its script) renders.
+               We anchor on the LAST 'quote-form.js' (the real script tag, which
+               sits after the form) — the form's leading documentation comment
+               also mentions the filename, so a first-match search would cut the
+               form off. Defensive: if either marker isn't found, that trim is
+               skipped and the content renders unchanged. */
+            $aq_raw   = get_the_content();
+            $aq_start = strpos( $aq_raw, '<!-- wp:html' );
+            if ( false !== $aq_start ) {
+                $aq_raw = substr( $aq_raw, $aq_start );
+            }
+            $aq_content = apply_filters( 'the_content', $aq_raw );
             $aq_marker  = strrpos( $aq_content, 'quote-form.js' );
             if ( false !== $aq_marker ) {
                 $aq_end = strpos( $aq_content, '</script>', $aq_marker );
