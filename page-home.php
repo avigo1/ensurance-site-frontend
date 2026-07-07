@@ -197,16 +197,6 @@ get_header( 'home' );
   <!-- ── What is Ensurance ───────────────────────────────────────── -->
   <section class="section section--lg" aria-label="What is Ensurance">
     <div class="whatis">
-      <div class="media-panel">
-        <?php $whatis_img = 'uploads/2025/01/happy-couple-in-front-of-car'; // WP media library file, present on staging + production ?>
-        <img class="media-panel__img"
-             src="<?php echo esc_url( content_url( $whatis_img . '-scaled.jpg' ) ); ?>"
-             srcset="<?php echo esc_url( content_url( $whatis_img . '-768x512.jpg' ) ); ?> 768w, <?php echo esc_url( content_url( $whatis_img . '-1024x683.jpg' ) ); ?> 1024w, <?php echo esc_url( content_url( $whatis_img . '-1536x1024.jpg' ) ); ?> 1536w, <?php echo esc_url( content_url( $whatis_img . '-scaled.jpg' ) ); ?> 2560w"
-             sizes="(max-width: 1023px) 92vw, 560px"
-             width="2560" height="1707"
-             alt="Happy couple standing in front of their car"
-             loading="lazy" decoding="async">
-      </div>
       <div>
         <p class="eyebrow">What is Ensurance?</p>
         <h2>Start an auto insurance quote request and move toward options.</h2>
