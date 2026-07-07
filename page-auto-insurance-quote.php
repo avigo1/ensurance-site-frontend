@@ -64,22 +64,22 @@ $ensurance_svg_allowed = array(
 // §Trust-cue row beneath the form.
 $sq_cues = array(
     array( 'clock', 'About 3 minutes' ),
-    array( 'lock',  'Never sold or blasted to a list' ),
-    array( 'user',  'One agent, not a hundred calls' ),
+    array( 'lock',  'Not blasted to a list' ),
+    array( 'user',  'Controlled follow-up' ),
 );
 
 // §What happens next — three steps (icon / title / body).
 $sq_next = array(
-    array( 'sparkles', 'A few guided questions', 'Short steps, one at a time — mostly taps, minimal typing.' ),
-    array( 'user',     'One independent agent',  'We pair you with a single licensed agent who shops multiple carriers for you.' ),
-    array( 'message',  'They reach out your way', 'By email, text, or call — only the channel you choose, usually within a business day.' ),
+    array( 'sparkles', 'A few guided questions', 'Answer short questions about your location, vehicle, coverage needs, and contact preferences.' ),
+    array( 'user',     'Your request is organized', 'Ensurance organizes your details so your auto quote request is clearer before review.' ),
+    array( 'message',  'Move toward quote options', 'Where available, a licensed agent, agency, or approved partner may follow up based on your request and contact preference.' ),
 );
 
 // §Trust band — three protections (icon / title / body).
 $sq_trust = array(
-    array( 'shield-check', 'Reviewed by a licensed agent', 'Your request goes to one independent agent — never auctioned to a long list of buyers.' ),
-    array( 'lock',         'Your details stay private',    "We don't sell your information or blast it out. You choose how and when you're contacted." ),
-    array( 'file-text',    'No commitment to start',       'Starting a request is free and never binds you to anything. You review options and decide.' ),
+    array( 'shield-check', 'Prepared for licensed review', 'Your request is organized so it can be reviewed by a licensed agent, agency, or approved partner where available.' ),
+    array( 'lock',         'Your details are handled carefully', 'Your request is handled through a more controlled process designed to reduce unnecessary exposure and unwanted contact.' ),
+    array( 'file-text',    'No commitment to start',       'Starting a request is free and does not require you to buy coverage. You review your next step and decide.' ),
 );
 
 get_header( 'home' );
@@ -93,9 +93,9 @@ get_header( 'home' );
     <div class="sq-request__inner">
 
       <div class="sq-request__intro">
-        <span class="eyebrow">Start your request</span>
-        <h1 class="sq-request__title">Tell us what you need. We'll handle the rest.</h1>
-        <p class="sq-request__sub">A few guided questions, then we pair you with one independent agent who shops multiple carriers for you. About three minutes.</p>
+        <span class="eyebrow">Start your auto quote request</span>
+        <h1 class="sq-request__title">Start your auto quote request with more clarity.</h1>
+        <p class="sq-request__sub">Answer a few guided questions, organize your details, and move toward quote options with less confusion and less unwanted contact. About three minutes.</p>
       </div>
 
       <!-- ── FORM SLOT ────────────────────────────────────────────────
@@ -150,8 +150,8 @@ get_header( 'home' );
     <div class="sq-callout" role="note">
       <span class="sq-callout__icon"><?php echo wp_kses( ensurance_home_icon( 'shield-check', 20 ), $ensurance_svg_allowed ); ?></span>
       <div>
-        <p class="sq-callout__title">You're always in control</p>
-        <p class="sq-callout__body">We only share your request with the one agent you approve. Nothing gets blasted to a list, and nothing binds until you say so.</p>
+        <p class="sq-callout__title">You stay in control</p>
+        <p class="sq-callout__body">Starting a request does not commit you to buy. Your details are handled through a controlled request process designed to reduce broad sharing, pressure, and unwanted contact.</p>
       </div>
     </div>
   </section>
@@ -160,7 +160,7 @@ get_header( 'home' );
   <section class="sq-next reveal" aria-label="What happens next">
     <div class="sq-next__head">
       <span class="eyebrow">What happens next</span>
-      <h2>Three quiet steps. No spam, no auction.</h2>
+      <h2>Three simple steps. Less quote chaos.</h2>
     </div>
     <div class="sq-next__grid">
       <?php foreach ( $sq_next as $i => $step ) : ?>
