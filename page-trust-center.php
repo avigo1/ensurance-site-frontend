@@ -134,7 +134,6 @@ $ensurance_svg_allowed = array(
 
 // Resolved destinations.
 $privacy_url  = esc_url( home_url( '/privacy' ) );
-$terms_url    = esc_url( home_url( '/terms' ) );
 $hiw_url      = esc_url( home_url( '/how-it-works' ) );
 $coverage_url = esc_url( home_url( '/coverage' ) );
 $coverage_paths_url = esc_url( home_url( '/coverage/' ) ) . '#paths'; // Second section (coverage request paths) of the coverage page.
@@ -357,7 +356,7 @@ get_header( 'home' );
         </div>
         <div class="tc-note" role="note">
           <span class="tc-note__icon"><?php echo wp_kses( ensurance_home_icon( 'file-text', 18 ), $ensurance_svg_allowed ); ?></span>
-          <p class="tc-note__text">This Trust Center page describes how Ensurance approaches your insurance request. It is not the formal Privacy Policy. For the complete details of how your information is handled, <a href="<?php echo $privacy_url; ?>" data-track="privacy_policy_click" data-cta-text="Read the Privacy Policy" data-page-type="trust_center">read the Privacy Policy</a> or review the <a href="<?php echo $terms_url; ?>">Terms</a>.</p>
+          <p class="tc-note__text">This Trust Center page describes how Ensurance approaches your insurance request. It is not the formal Privacy Policy. For the complete details of how your information is handled, <a href="<?php echo $privacy_url; ?>" data-track="privacy_policy_click" data-cta-text="Read the Privacy Policy" data-page-type="trust_center">read the Privacy Policy</a>.</p>
         </div>
       </section>
 
