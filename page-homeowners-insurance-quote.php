@@ -100,17 +100,15 @@ get_header( 'home' );
       </div>
 
       <!-- ── FORM SLOT ────────────────────────────────────────────────
-           Renders this page's editor content, which should contain ONLY
-           the Ninja Forms embed for the Homeowners Insurance Quote
-           Request form ([ninja_form id='9'] or the Ninja Forms block).
-           Unlike the auto template there is no content trimming — keep
-           the editor page clean so nothing but the form lands in the
-           card. -->
+           Renders ONLY the Homeowners Insurance Quote Request Ninja Form:
+           the [ninja_form] shortcode is extracted from this page's
+           editor content (falling back to form 9), so the page's
+           retired Gutenberg layout can never leak into the card. -->
       <div class="sq-formslot">
         <?php
         while ( have_posts() ) :
             the_post();
-            the_content();
+            ensurance_sq_render_form( 9 );
         endwhile;
         ?>
       </div>

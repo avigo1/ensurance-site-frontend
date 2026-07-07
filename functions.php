@@ -1918,3 +1918,24 @@ function lead_page_shortcode() {
     return ob_get_clean();
 }
 add_shortcode('lead_page', 'lead_page_shortcode');
+
+// ─────────────────────────────────────────────────────────────────────
+// 2b-xiii. "START YOUR REQUEST" FORM SLOT — RENDER ONLY THE NINJA FORM
+// The coverage quote templates (health / homeowners / renters / life /
+// commercial) render their Ninja Form inside the .sq-formslot card. The
+// original pattern rendered the page's editor content and relied on that
+// content being ONLY the [ninja_form] shortcode — but these WordPress
+// pages still hold their retired Gutenberg layouts (and staging refreshes
+// from production restore them), so the old banners leaked into the card
+// above the form. This renders just the form: the first [ninja_form]
+// shortcode found in the page content, or the template's default form
+// when none is present (form IDs are identical on staging + production).
+// ─────────────────────────────────────────────────────────────────────
+function ensurance_sq_render_form( $default_form_id ) {
+    $content = get_post_field( 'post_content', get_the_ID() );
+    if ( is_string( $content ) && preg_match( '/\[ninja_form\b[^\]]*\]/', $content, $m ) ) {
+        echo do_shortcode( $m[0] );
+        return;
+    }
+    echo do_shortcode( "[ninja_form id='" . absint( $default_form_id ) . "']" );
+}
