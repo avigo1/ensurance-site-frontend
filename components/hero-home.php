@@ -26,8 +26,6 @@ if ( ! isset( $start_url, $ensurance_svg_allowed ) ) {
   <div class="hero__glow" aria-hidden="true"></div>
 
   <div class="hero__content">
-    <span class="hero__eyebrow ens-rv" style="animation-delay: 0.05s;"><span class="hero__eyebrow-dot" aria-hidden="true"></span> Independent agents &middot; Auto insurance</span>
-
     <h1 class="ens-rv" style="animation-delay: 0.13s;">Auto insurance quote help <span class="accent">without the quote chaos.</span></h1>
 
     <p class="hero__subtitle ens-rv" style="animation-delay: 0.21s;">Start an auto insurance quote request online, organize your details, and move toward quote options with more clarity and control.</p>
