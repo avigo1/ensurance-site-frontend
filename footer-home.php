@@ -23,7 +23,6 @@
         <p class="footer-col__title">Ensurance</p>
         <a href="<?php echo esc_url( home_url( '/how-it-works' ) ); ?>">How it works</a>
         <a href="<?php echo esc_url( home_url( '/coverage' ) ); ?>">Coverage types</a>
-        <a href="<?php echo esc_url( home_url( '/trust-center' ) ); ?>">Trust Center</a>
       </nav>
       <nav class="footer-col" aria-label="For agents">
         <p class="footer-col__title">For agents</p>
