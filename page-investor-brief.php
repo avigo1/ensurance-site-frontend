@@ -293,6 +293,7 @@ get_header( 'investor' );
                         <button type="submit" class="ib-btn ib-btn--primary ib-btn--full" id="investorSubmit" disabled data-event="investor_request_submit">
                             <?php echo esc_html( $form['submit_label'] ); ?>
                         </button>
+                        <p class="ib-form__message" id="investorFormMessage" role="status" aria-live="polite" hidden></p>
                     </form>
                 </div>
 

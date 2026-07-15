@@ -801,6 +801,17 @@ body.page-template-page-investor-brief .ib-field input:-webkit-autofill:focus {
     outline-offset: 2px;
 }
 
+/* Submit error message */
+
+.investor-brief .ib-form__message {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.45;
+    color: #B42318;
+}
+
+.ib-form__message[hidden] { display: none; }
+
 /* Success state */
 
 .ib-request__success {
