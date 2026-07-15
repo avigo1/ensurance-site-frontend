@@ -1958,3 +1958,30 @@ function ensurance_remove_gd_location_switcher() {
     }
 }
 add_action( 'template_redirect', 'ensurance_remove_gd_location_switcher' );
+
+// ─────────────────────────────────────────────────────────────────────
+// 2b-xv. INVESTOR BRIEF (CALM INTELLIGENCE REDESIGN) — FONT SWAP
+// The investor brief was rebuilt on the Calm Intelligence design system
+// (Albert Sans display, Rubik body, JetBrains Mono labels). The original
+// enqueue in ensurance_marketing_fonts() still loads Inter for this
+// template; per the "never modify existing functions" rule we dequeue it
+// here at priority 20 and load the correct families instead. The page's
+// CSS/JS enqueues in ensurance_marketing_assets() are unchanged — the
+// same investor.css / investor.js files now carry the new design.
+// ─────────────────────────────────────────────────────────────────────
+function ensurance_investor_brief_fonts() {
+    if ( ! is_page_template( 'page-investor-brief.php' ) ) {
+        return;
+    }
+
+    // Inter belonged to the previous investor-brief design.
+    wp_dequeue_style( 'ensurance-investor-fonts' );
+
+    wp_enqueue_style(
+        'ensurance-investor-brief-fonts',
+        'https://fonts.googleapis.com/css2?family=Albert+Sans:wght@700;800;900&family=Rubik:wght@300;400;500&family=JetBrains+Mono:wght@400;500;600&display=swap',
+        array(),
+        null
+    );
+}
+add_action( 'wp_enqueue_scripts', 'ensurance_investor_brief_fonts', 20 );
