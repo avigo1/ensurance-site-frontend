@@ -1,3 +1,16 @@
+<?php
+/**
+ * Header — private investor brief.
+ *
+ * Minimal chrome: wordmark + "Private investor brief" badge + request CTA.
+ * No site nav on purpose; the page is private, noindex/nofollow.
+ */
+
+$ib_header = array(
+    'badge' => 'Private investor brief',
+    'cta'   => 'Request materials',
+);
+?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
 <head>
@@ -12,11 +25,16 @@
 
 <a class="skip-link" href="#main">Skip to content</a>
 
-<header class="investor-header" role="banner">
-    <div class="investor-header__inner">
-        <div class="investor-header__shell">
-            <div class="investor-header__brand" aria-label="Ensurance">ENSURANCE</div>
-            <div class="investor-header__label">Private Investor Brief</div>
+<header class="ib-header" role="banner">
+    <div class="ib-shell ib-header__inner">
+        <div class="ib-header__brand">
+            <a class="ib-logo" href="/" aria-label="Ensurance home">
+                <img src="<?php echo esc_url( get_stylesheet_directory_uri() . '/assets/images/logo-colored.png' ); ?>" alt="Ensurance.com">
+            </a>
+            <span class="ib-badge ib-badge--status"><span class="ib-badge__dot" aria-hidden="true"></span><?php echo esc_html( $ib_header['badge'] ); ?></span>
         </div>
+        <button type="button" class="ib-btn ib-btn--primary ib-btn--sm" data-scroll-to="request-materials" data-event="header_request_materials_click">
+            <?php echo esc_html( $ib_header['cta'] ); ?>
+        </button>
     </div>
 </header>
