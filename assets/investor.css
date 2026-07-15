@@ -158,7 +158,7 @@ body.page-template-page-investor-brief-php {
     max-width: 720px;
 }
 
-.ib-section__intro {
+.investor-brief .ib-section__intro {
     margin: 12px 0 0;
     font-size: 16px;
     font-weight: 300;
@@ -167,7 +167,7 @@ body.page-template-page-investor-brief-php {
     max-width: 680px;
 }
 
-.ib-eyebrow {
+.investor-brief .ib-eyebrow {
     display: inline-block;
     margin: 0 0 8px;
     font-family: var(--ib-font-sans);
@@ -179,7 +179,7 @@ body.page-template-page-investor-brief-php {
     line-height: 1.4;
 }
 
-.ib-eyebrow--inverse { color: var(--ib-dark-text-secondary); }
+.investor-brief .ib-eyebrow--inverse { color: var(--ib-dark-text-secondary); }
 
 .ib-kicker {
     margin: 0;
@@ -366,7 +366,7 @@ body.page-template-page-investor-brief-php {
     line-height: 1.25;
 }
 
-.ib-hero__body {
+.investor-brief .ib-hero__body {
     margin: 24px 0 0;
     font-size: 18px;
     font-weight: 300;
@@ -383,7 +383,7 @@ body.page-template-page-investor-brief-php {
     margin-top: 24px;
 }
 
-.ib-hero__support {
+.investor-brief .ib-hero__support {
     margin: 12px 0 0;
     font-size: 14px;
     color: var(--ib-gray-500);
@@ -508,7 +508,7 @@ body.page-template-page-investor-brief-php {
     color: #FFFFFF;
 }
 
-.ib-cate__body {
+.investor-brief .ib-cate__body {
     margin: 12px 0 0;
     font-size: 16px;
     font-weight: 300;
