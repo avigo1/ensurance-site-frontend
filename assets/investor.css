@@ -239,6 +239,41 @@ body.page-template-page-investor-brief-php {
 
 .ib-btn--full { display: flex; width: 100%; }
 
+/*
+ * Kadence parent-theme sets `button:hover/:focus/:active` (0-1-1) to its old
+ * global palette — orange text, palette background, white border, black drop
+ * shadow — which outranks the single-class resting rules above the moment a
+ * button is hovered. Pin every state at body-class specificity so the Calm
+ * Intelligence colors hold.
+ */
+body.page-template-page-investor-brief .ib-btn--primary,
+body.page-template-page-investor-brief .ib-btn--primary:hover,
+body.page-template-page-investor-brief .ib-btn--primary:focus,
+body.page-template-page-investor-brief .ib-btn--primary:active {
+    background: var(--ib-accent);
+    color: #FFFFFF;
+    border-color: transparent;
+    box-shadow: var(--ib-shadow-cta);
+}
+
+body.page-template-page-investor-brief .ib-btn--primary:hover:not(:disabled) {
+    background: var(--ib-accent-hover);
+}
+
+body.page-template-page-investor-brief .ib-btn--secondary,
+body.page-template-page-investor-brief .ib-btn--secondary:hover,
+body.page-template-page-investor-brief .ib-btn--secondary:focus,
+body.page-template-page-investor-brief .ib-btn--secondary:active {
+    background: #FFFFFF;
+    color: var(--ib-primary);
+    border-color: var(--ib-border-input);
+    box-shadow: none;
+}
+
+body.page-template-page-investor-brief .ib-btn--secondary:hover:not(:disabled) {
+    border-color: var(--ib-secondary);
+}
+
 /* ---------- badges ---------- */
 
 .ib-badge {
