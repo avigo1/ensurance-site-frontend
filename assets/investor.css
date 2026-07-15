@@ -487,12 +487,6 @@ body.page-template-page-investor-brief-php {
     white-space: nowrap;
 }
 
-.ib-flow__step.is-highlight {
-    background: var(--ib-accent-50);
-    border-color: var(--ib-accent-100);
-    color: var(--ib-accent);
-}
-
 .ib-flow__arrow { color: var(--ib-gray-400); flex-shrink: 0; }
 
 /* ---------- CATE panel ---------- */

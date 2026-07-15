@@ -67,9 +67,7 @@ return array(
         'eyebrow'  => 'Category shift',
         'headline' => 'Insurance distribution is moving from traffic acquisition to trust-first demand infrastructure.',
         'body'     => 'Shoppers want digital control. Agents need better-context opportunities. Insurance distribution needs infrastructure that can capture, structure, protect, and convert consumer intent without breaking trust.',
-        // Index of the step pill highlighted in the design ("Controlled handoff").
-        'steps'     => array( 'Consumer intent', 'Protected request', 'Controlled handoff', 'Accepted engagement', 'Quote execution support' ),
-        'highlight' => 2,
+        'steps' => array( 'Consumer intent', 'Protected request', 'Controlled handoff', 'Accepted engagement', 'Quote execution support' ),
     ),
 
     'building' => array(

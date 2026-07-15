@@ -118,7 +118,7 @@ get_header( 'investor' );
         <div class="ib-card ib-card--lg ib-flow">
             <div class="ib-flow__track" aria-label="Ensurance workflow">
                 <?php foreach ( $shift['steps'] as $i => $step ) : ?>
-                    <span class="ib-flow__step <?php echo (int) $shift['highlight'] === $i ? 'is-highlight' : ''; ?>"><?php echo esc_html( $step ); ?></span>
+                    <span class="ib-flow__step"><?php echo esc_html( $step ); ?></span>
                     <?php if ( $i < count( $shift['steps'] ) - 1 ) : ?>
                         <?php echo wp_kses( ensurance_investor_icon( 'arrow-right', 16, 'ib-flow__arrow' ), $ib_svg_allowed ); ?>
                     <?php endif; ?>
