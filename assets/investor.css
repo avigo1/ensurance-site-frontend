@@ -712,6 +712,39 @@ body.page-template-page-investor-brief-php {
     box-shadow: 0 0 0 3px rgba(43, 134, 115, 0.2);
 }
 
+/*
+ * Kadence parent-theme sets `input[type=…]:focus { color / background-color }`
+ * from its global palette at the same specificity as the rules above, so
+ * whichever stylesheet loads last wins and focused fields can go
+ * white-on-white while typing. Pin text/background at body-class specificity
+ * for both resting and focused states (same defense as the June 2026 fix).
+ */
+body.page-template-page-investor-brief .ib-field input,
+body.page-template-page-investor-brief .ib-field input:focus,
+body.page-template-page-investor-brief .ib-select select,
+body.page-template-page-investor-brief .ib-select select:focus {
+    color: var(--ib-primary);
+    -webkit-text-fill-color: var(--ib-primary);
+    background-color: #FFFFFF;
+    caret-color: var(--ib-accent);
+}
+
+body.page-template-page-investor-brief .ib-field textarea,
+body.page-template-page-investor-brief .ib-field textarea:focus {
+    color: var(--ib-gray-700);
+    -webkit-text-fill-color: var(--ib-gray-700);
+    background-color: #FFFFFF;
+    caret-color: var(--ib-accent);
+}
+
+/* Browser autofill keeps dark text on a white field. */
+body.page-template-page-investor-brief .ib-field input:-webkit-autofill,
+body.page-template-page-investor-brief .ib-field input:-webkit-autofill:hover,
+body.page-template-page-investor-brief .ib-field input:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--ib-primary);
+    box-shadow: 0 0 0 100px #FFFFFF inset;
+}
+
 .ib-field__help {
     margin: 0;
     font-size: 14px;
