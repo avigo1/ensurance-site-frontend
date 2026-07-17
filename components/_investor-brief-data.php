@@ -37,7 +37,7 @@ return array(
         'badges'   => array(
             'Guided request workflow',
             'Controlled access',
-            'Patent pending, if confirmed',
+            'Patent pending',
             'Investor materials by review',
         ),
         'thesis' => array(
