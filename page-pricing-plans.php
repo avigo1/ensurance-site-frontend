@@ -99,6 +99,28 @@ add_action( 'wp_head', function () use ( $fa_faq_schema ) {
 	echo '<script type="application/ld+json">' . wp_json_encode( $fa_faq_schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) . '</script>' . "\n";
 }, 20 );
 
+/**
+ * Keep /pricing-plans/ out of search engines. Yoast owns the robots meta on
+ * this site (see SEO note above), so force its output to noindex,nofollow
+ * rather than emitting a second competing tag. Fallback meta covers the case
+ * where Yoast is inactive, so the directive is present either way.
+ */
+add_filter( 'wpseo_robots', function () {
+	return 'noindex, nofollow';
+}, 999 );
+// Newer Yoast builds a robots array before stringifying it — cover that too.
+add_filter( 'wpseo_robots_array', function ( $robots ) {
+	$robots['index']  = 'noindex';
+	$robots['follow'] = 'nofollow';
+	return $robots;
+}, 999 );
+// Fallback for when Yoast is not emitting a robots tag on this request.
+add_action( 'wp_head', function () {
+	if ( ! defined( 'WPSEO_VERSION' ) ) {
+		echo '<meta name="robots" content="noindex, nofollow">' . "\n";
+	}
+}, 1 );
+
 $fa_disclaimer = 'Availability of shopper requests may vary by state, coverage type, shopper activity, and agent eligibility. Founding Agent Access does not guarantee request volume.';
 
 get_header( 'home' );
