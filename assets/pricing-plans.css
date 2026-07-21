@@ -18,6 +18,22 @@
   overflow-x: clip;
 }
 
+/* ── Page background over parent-theme / plugin globals ──────────────
+   Same fix the other standalone pages carry: AyeCode UI / Bootstrap
+   (GeoDirectory, the `aui_bs5` body class) ships
+   `body { background-color: initial !important }`, which beats home.css's
+   plain `body { background: var(--bg-page) }` and lets the dark Kadence base
+   show through — most visibly as a gray band in the footer's top-margin gap.
+   Unlike the sibling pages, /pricing-plans is served via the
+   page-pricing-plans.php template hierarchy, so body_class() emits
+   `page-template-default` rather than a `page-template-page-…-php` class.
+   Hook the reliable `.fa-page` wrapper instead (and keep the conventional
+   template selector in case the WP template is later assigned). */
+html body:has(main.fa-page),
+html body.page-template-page-pricing-plans-php {
+  background: var(--bg-page) !important;
+}
+
 /* ── Shared primitives ─────────────────────────────────────────── */
 .fa-container {
   max-width: var(--container-max);
