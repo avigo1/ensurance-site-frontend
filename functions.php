@@ -432,6 +432,73 @@ function ensurance_for_agents_assets() {
 add_action('wp_enqueue_scripts', 'ensurance_for_agents_assets', 20);
 
 // ============================================================================
+// 2b-v-b. FOUNDING AGENT ACCESS (/pricing-plans) — SELF-CONTAINED ASSETS
+// ============================================================================
+// /pricing-plans is repositioned as "Founding Agent Access" and ships the same
+// standalone Calm Intelligence design system as the homepage. It reuses
+// assets/home.css + assets/home.js for tokens, chrome and base, and layers
+// assets/pricing-plans.css + assets/pricing-plans.js on top for the page-
+// specific sections (dark hero + plan-summary card, two access cards wired to
+// the existing GeoDirectory packages, bulk-leads compare, request stepper,
+// dark why/who band, subscription-terms cards, FAQ accordion). As with the
+// homepage, we DEQUEUE the shared marketing bundle so its generic selectors
+// cannot fight this design. Runs at priority 20 so the dequeue lands after the
+// priority-10 enqueues. New function — existing functions untouched.
+//
+// Guard note: this template applies to /pricing-plans/ via the page-{slug}.php
+// hierarchy (not an assigned "Template Name"), so is_page_template() is not
+// reliable here — is_page('pricing-plans') is. See the is_page_template DB-meta
+// gotcha in prior work.
+
+function ensurance_pricing_plans_assets() {
+    if ( ! is_page('pricing-plans') ) {
+        return;
+    }
+
+    // Drop the shared marketing bundle so it cannot fight this design.
+    wp_dequeue_style('ensurance-marketing');
+    wp_dequeue_script('ensurance-marketing');
+    wp_dequeue_style('ensurance-marketing-fonts');
+
+    // Shared Calm Intelligence type system + base (same as the homepage).
+    wp_enqueue_style(
+        'ensurance-home-fonts',
+        'https://fonts.googleapis.com/css2?family=Albert+Sans:wght@700;800;900&family=Rubik:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap',
+        array(),
+        null
+    );
+    wp_enqueue_style(
+        'ensurance-home',
+        get_stylesheet_directory_uri() . '/assets/home.css',
+        array(),
+        filemtime(get_stylesheet_directory() . '/assets/home.css')
+    );
+    wp_enqueue_script(
+        'ensurance-home',
+        get_stylesheet_directory_uri() . '/assets/home.js',
+        array(),
+        filemtime(get_stylesheet_directory() . '/assets/home.js'),
+        true
+    );
+
+    // Page-specific layer — loaded AFTER home.css/home.js via dependency.
+    wp_enqueue_style(
+        'ensurance-pricing-plans',
+        get_stylesheet_directory_uri() . '/assets/pricing-plans.css',
+        array('ensurance-home'),
+        filemtime(get_stylesheet_directory() . '/assets/pricing-plans.css')
+    );
+    wp_enqueue_script(
+        'ensurance-pricing-plans',
+        get_stylesheet_directory_uri() . '/assets/pricing-plans.js',
+        array('ensurance-home'),
+        filemtime(get_stylesheet_directory() . '/assets/pricing-plans.js'),
+        true
+    );
+}
+add_action('wp_enqueue_scripts', 'ensurance_pricing_plans_assets', 20);
+
+// ============================================================================
 // 2b-vi. AUTO INSURANCE (CALM INTELLIGENCE REDESIGN) — SELF-CONTAINED ASSETS
 // ============================================================================
 // /auto-insurance-quote-request ships the same standalone design system as the
