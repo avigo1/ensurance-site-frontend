@@ -97,6 +97,7 @@ $fa_hiw_url      = esc_url( home_url( '/how-it-works' ) );
 $fa_coverage_url = esc_url( home_url( '/coverage' ) );
 $fa_trust_url    = esc_url( home_url( '/trust-center' ) );
 $fa_contact_url  = esc_url( home_url( '/contact' ) );
+$fa_pricing_url  = esc_url( home_url( '/pricing-plans/' ) );
 $fa_access_id    = '#agent-access';
 // Agent access submit destination. No standalone form exists yet, so route to
 // the contact channel referenced throughout the page; swap for the real agent
@@ -201,6 +202,7 @@ get_header( 'home' );
           <p class="fa-hero__sub">Ensurance helps organize shopper insurance intent into clearer requests that licensed agents, agencies, or approved partners can review with more context before engaging.</p>
           <div class="fa-hero__actions">
             <a class="btn btn-primary btn--lg" href="<?php echo $fa_access_id; ?>" data-track="cta_click_agent_access" data-cta-text="Request agent access" data-page-type="for_agents">Request agent access <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 18 ), $ensurance_svg_allowed ); ?></a>
+            <a class="fa-hero__ghost" href="<?php echo $fa_pricing_url; ?>" data-track="cta_click_pricing_plans" data-cta-text="Pricing plans" data-page-type="for_agents">Pricing plans <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 16 ), $ensurance_svg_allowed ); ?></a>
             <a class="fa-hero__ghost" href="<?php echo $fa_hiw_url; ?>">See how shopper requests work</a>
           </div>
           <p class="fa-hero__fine">Request availability and outcomes can vary. Ensurance does not guarantee volume, appointments, exclusivity, close rates, or sales.</p>
