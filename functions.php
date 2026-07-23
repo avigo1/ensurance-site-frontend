@@ -545,6 +545,30 @@ function ensurance_publish_your_agency_assets() {
 }
 add_action('wp_enqueue_scripts', 'ensurance_publish_your_agency_assets', 20);
 
+// Let page-publish-your-agency.php actually win on this route.
+//
+// /publish-your-agency is a GeoDirectory page (body class `geodir-page-add`), and
+// GeoDir_Template_Loader::template_loader filters `template_include` on every GD
+// page. Its search list ends with 'geodirectory.php' then 'page.php', and
+// locate_template() finds Kadence's page.php — so WordPress's own
+// page-{slug}.php hierarchy match is thrown away and the template never renders.
+// That is why this needs a filter at all, unlike the other code-driven pages.
+//
+// Rather than fight template_include after the fact, hook GeoDirectory's own
+// extension point and put our template at the front of the list it searches.
+// locate_template() then resolves it from the child theme first. If the file is
+// ever deleted, locate_template() simply skips it and GD falls through to
+// page.php as before, restoring the previous page — no fatal, no white screen.
+// New function — existing functions untouched.
+
+function ensurance_publish_your_agency_gd_template( $search_files, $default_file ) {
+    if ( is_page('publish-your-agency') ) {
+        array_unshift( $search_files, 'page-publish-your-agency.php' );
+    }
+    return $search_files;
+}
+add_filter('geodir_template_loader_files', 'ensurance_publish_your_agency_gd_template', 10, 2);
+
 // ============================================================================
 // 2b-vi. AUTO INSURANCE (CALM INTELLIGENCE REDESIGN) — SELF-CONTAINED ASSETS
 // ============================================================================
