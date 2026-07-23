@@ -98,11 +98,9 @@ $fa_coverage_url = esc_url( home_url( '/coverage' ) );
 $fa_trust_url    = esc_url( home_url( '/trust-center' ) );
 $fa_contact_url  = esc_url( home_url( '/contact' ) );
 $fa_pricing_url  = esc_url( home_url( '/pricing-plans/' ) );
-$fa_access_id    = '#agent-access';
-// Agent access submit destination. No standalone form exists yet, so route to
-// the contact channel referenced throughout the page; swap for the real agent
-// access form URL when it is live.
-$fa_access_form_url = $fa_contact_url;
+// Primary "Get started" destination for every agent CTA on this page — agents
+// pick a plan on /pricing-plans/ rather than routing through the contact form.
+$fa_access_form_url = $fa_pricing_url;
 
 // Hero request-preview rows (label / value).
 $fa_request_rows = array(
@@ -201,8 +199,7 @@ get_header( 'home' );
           <h1 class="fa-hero__title">Better-context shopper requests, prepared for licensed review.</h1>
           <p class="fa-hero__sub">Ensurance helps organize shopper insurance intent into clearer requests that licensed agents, agencies, or approved partners can review with more context before engaging.</p>
           <div class="fa-hero__actions">
-            <a class="btn btn-primary btn--lg" href="<?php echo $fa_access_id; ?>" data-track="cta_click_agent_access" data-cta-text="Request agent access" data-page-type="for_agents">Request agent access <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 18 ), $ensurance_svg_allowed ); ?></a>
-            <a class="fa-hero__ghost" href="<?php echo $fa_pricing_url; ?>" data-track="cta_click_pricing_plans" data-cta-text="Pricing plans" data-page-type="for_agents">Pricing plans <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 16 ), $ensurance_svg_allowed ); ?></a>
+            <a class="btn btn-primary btn--lg" href="<?php echo $fa_pricing_url; ?>" data-track="cta_click_get_started" data-cta-text="Get started" data-page-type="for_agents">Get started <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 18 ), $ensurance_svg_allowed ); ?></a>
             <a class="fa-hero__ghost" href="<?php echo $fa_hiw_url; ?>">See how shopper requests work</a>
           </div>
           <p class="fa-hero__fine">Request availability and outcomes can vary. Ensurance does not guarantee volume, appointments, exclusivity, close rates, or sales.</p>
@@ -394,7 +391,7 @@ get_header( 'home' );
           <span class="fa-access__cardicon"><?php echo wp_kses( ensurance_home_icon( 'shield-check', 24 ), $ensurance_svg_allowed ); ?></span>
           <h3>Request agent access</h3>
           <p>Share your professional details and our team will review your access request against participation standards.</p>
-          <a class="btn btn-primary btn--lg fa-access__submit" href="<?php echo esc_url( $fa_access_form_url ); ?>" data-track="agent_access_submit_click" data-cta-text="Request agent access" data-page-type="for_agents">Request agent access <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 18 ), $ensurance_svg_allowed ); ?></a>
+          <a class="btn btn-primary btn--lg fa-access__submit" href="<?php echo esc_url( $fa_access_form_url ); ?>" data-track="agent_access_submit_click" data-cta-text="Get started" data-page-type="for_agents">Get started <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 18 ), $ensurance_svg_allowed ); ?></a>
           <p class="fa-access__fine"><?php echo wp_kses( ensurance_home_icon( 'lock', 12 ), $ensurance_svg_allowed ); ?> No volume, appointment, exclusivity, close-rate, or sales guarantees.</p>
         </div>
       </div>
@@ -423,7 +420,7 @@ get_header( 'home' );
       <h2>Review better-context shopper requests, prepared for licensed review.</h2>
       <p>A more controlled way to review shopper insurance requests with clearer context. Request availability and outcomes can vary. Ensurance does not guarantee volume, appointments, exclusivity, close rates, or sales.</p>
       <div class="hero-actions">
-        <a class="btn btn-reversed btn--lg" href="<?php echo $fa_access_id; ?>" data-track="cta_click_agent_access" data-cta-text="Request agent access" data-page-type="for_agents">Request agent access <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 18 ), $ensurance_svg_allowed ); ?></a>
+        <a class="btn btn-reversed btn--lg" href="<?php echo $fa_pricing_url; ?>" data-track="cta_click_get_started" data-cta-text="Get started" data-page-type="for_agents">Get started <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 18 ), $ensurance_svg_allowed ); ?></a>
         <a class="fa-final__link" href="<?php echo $fa_contact_url; ?>" data-track="agent_contact_click" data-cta-text="Contact Ensurance" data-page-type="for_agents">Contact Ensurance <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 16 ), $ensurance_svg_allowed ); ?></a>
       </div>
     </div>
