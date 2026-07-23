@@ -682,6 +682,25 @@ html body.page-template-page-pricing-plans-php {
   .fa-h2 { font-size: var(--text-3xl); }
 }
 
+/* ── Heading colors over Kadence global typography ────────────────
+   Kadence prints its global typography as INLINE CSS in wp_head, after the
+   theme stylesheets: `h1 { color:#ffffff }` and `h2, h3 { color:
+   var(--global-palette3) }` — and --global-palette3 is #ffffff on this site.
+   Those are element selectors, so they tie with home.css's base
+   `h1, h2, h3 { color: var(--text-heading) }` and win on document order.
+   Any heading here that does not set its own color therefore renders white
+   and disappears on the light sections. Pin them; the dark-context headings
+   (.fa-h2--inverse, .fa-hero__title, .fa-compare__col--bad .fa-compare__title)
+   set their own color already and are left alone. Same block home.css /
+   contact.css / the quote pages carry — see the note in each. */
+.fa-h2:not(.fa-h2--inverse),
+.fa-plan__title,
+.fa-getcard__title,
+.fa-compare__col--good .fa-compare__title,
+.fa-step__title {
+  color: var(--text-heading) !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .fa-reveal, .fa-step { opacity: 1 !important; transform: none !important; transition: none !important; }
   .fa-btn, .fa-btn svg, .fa-linkarrow svg, .fa-plan, .fa-getcard, .fa-acc__chevron { transition: none !important; }
