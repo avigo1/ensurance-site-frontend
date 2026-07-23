@@ -499,6 +499,53 @@ function ensurance_pricing_plans_assets() {
 add_action('wp_enqueue_scripts', 'ensurance_pricing_plans_assets', 20);
 
 // ============================================================================
+// 2b-v-c. PUBLISH YOUR AGENCY (/publish-your-agency) — SELF-CONTAINED ASSETS
+// ============================================================================
+// /publish-your-agency is the GeoDirectory add-listing route the two
+// /pricing-plans CTAs point at (?package_id=14 and 16). page-publish-your-agency.php
+// wraps the EXISTING GeoDirectory form in the approved Calm Intelligence shell.
+//
+// Deliberately different from the sibling pages: this one KEEPS the legacy
+// Kadence header/footer (it is a logged-in agent flow and that header carries
+// the account/Login menu), so we must NOT enqueue assets/home.css here — its
+// `.site-header` rules would fight the Kadence chrome. assets/publish-your-agency.css
+// is self-contained instead, and scopes its tokens to .pya-page so nothing bleeds
+// into the Kadence chrome or the Bootstrap/AyeCode form. No JS: the page has no
+// interactive behaviour of its own, and the form ships its own scripts.
+//
+// Nothing is dequeued: the shared marketing bundle does not load on this page
+// (see ensurance_marketing_assets above), and GeoDirectory's own add-listing
+// assets must be left alone.
+//
+// Guard note: this template applies via the page-{slug}.php hierarchy, so
+// is_page_template() is not reliable here — is_page('publish-your-agency') is.
+// See the is_page_template DB-meta gotcha noted on /pricing-plans above. The
+// slug check also covers the /publish-your-agency/insurance-agencies/ sub-route
+// GeoDirectory rewrites onto this same page. New function — existing functions
+// untouched.
+
+function ensurance_publish_your_agency_assets() {
+    if ( ! is_page('publish-your-agency') ) {
+        return;
+    }
+
+    // Shared Calm Intelligence type system (same families as the homepage).
+    wp_enqueue_style(
+        'ensurance-pya-fonts',
+        'https://fonts.googleapis.com/css2?family=Albert+Sans:wght@700;800;900&family=Rubik:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap',
+        array(),
+        null
+    );
+    wp_enqueue_style(
+        'ensurance-publish-your-agency',
+        get_stylesheet_directory_uri() . '/assets/publish-your-agency.css',
+        array(),
+        filemtime(get_stylesheet_directory() . '/assets/publish-your-agency.css')
+    );
+}
+add_action('wp_enqueue_scripts', 'ensurance_publish_your_agency_assets', 20);
+
+// ============================================================================
 // 2b-vi. AUTO INSURANCE (CALM INTELLIGENCE REDESIGN) — SELF-CONTAINED ASSETS
 // ============================================================================
 // /auto-insurance-quote-request ships the same standalone design system as the

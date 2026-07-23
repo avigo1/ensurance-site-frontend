@@ -1,0 +1,262 @@
+/* ===================================================================
+   Publish Your Agency (/publish-your-agency) — "Calm Intelligence"
+   form shell. Built from the approved Claude design (Ensurance Publish
+   Your Agency (form shell), standalone).
+
+   SELF-CONTAINED BY DESIGN. Unlike the sibling standalone pages, this
+   one keeps the legacy Kadence header/footer, so it does NOT load
+   assets/home.css — that file styles `.site-header` and would fight the
+   Kadence chrome. Everything needed is defined here instead.
+
+   TWO RULES THIS FILE MUST NOT BREAK
+   ---------------------------------
+   1. The GeoDirectory form inside #pya-form-slot stays visually
+      unchanged. There is deliberately NOT a single selector below that
+      descends into #pya-form-slot. Do not add one.
+   2. Design tokens are prefixed --pya-* and scoped to .pya-page rather
+      than :root. The form (Bootstrap / AyeCode UI `aui_bs5`) and the
+      Kadence chrome sit in the same document; generic token names like
+      --primary or --accent declared on an ancestor would inherit
+      straight into the form and could repaint it. The prefix makes
+      collisions impossible.
+
+   For the same reason, .pya-page itself sets no font-family and no
+   color — only the .pya-* elements do — so the form keeps inheriting
+   the exact typography it inherited before.
+   =================================================================== */
+
+.pya-page {
+  /* Brand */
+  --pya-primary:      #1F3A5F;  /* headline navy, dark anchors */
+  --pya-secondary:    #5B7C99;  /* supporting accents, card label */
+  --pya-accent:       #2B8673;  /* the only CTA/active color */
+  --pya-inverse:      #1B2430;  /* dark surface, gradient end */
+
+  /* Ramps */
+  --pya-navy-50:      #F0F4F9;
+  --pya-gray-200:     #EAECF0;
+  --pya-gray-300:     #CBD5E1;
+  --pya-gray-400:     #98A2B3;
+  --pya-gray-500:     #667085;
+
+  /* Semantic */
+  --pya-bg-page:      #F7F9FC;
+  --pya-surface-card: #FFFFFF;
+  --pya-border-soft:  var(--pya-gray-200);
+  --pya-text-muted:   var(--pya-gray-500);
+
+  /* Type */
+  --pya-font-display: "Albert Sans", sans-serif;
+  --pya-font-sans:    "Rubik", sans-serif;
+  --pya-font-mono:    "JetBrains Mono", monospace;
+
+  /* Spacing (4px grid) */
+  --pya-space-2:  8px;
+  --pya-space-4:  16px;
+  --pya-space-5:  24px;
+  --pya-space-6:  32px;
+  --pya-space-7:  48px;
+  --pya-space-8:  64px;
+
+  /* Radii + shadow — navy-tinted, never pure black */
+  --pya-radius-card: 48px;
+  --pya-shadow-card: 0 4px 32px -4px rgba(31, 58, 95, 0.06);
+
+  --pya-container-max: 1200px;
+  --pya-container-pad: 24px;
+  --pya-card-max:      860px;
+
+  background: var(--pya-bg-page);
+  overflow-x: clip;
+}
+
+/* ── Page background over parent-theme / plugin globals ──────────────
+   AyeCode UI (GeoDirectory, the `aui_bs5` body class) ships
+   `body { background-color: initial !important }`, which lets the dark
+   Kadence base show through wherever this template does not paint. That
+   matters more here than on the sibling pages because this template
+   replaces Kadence's `.content-area` / `.content-bg` wrappers, which are
+   what used to supply the page background on this route.
+
+   This page is served via the page-publish-your-agency.php template
+   HIERARCHY (matched by slug), not an assigned Template, so body_class()
+   emits `page-template-default` and the conventional
+   `page-template-page-…-php` selector never matches. Hook the reliable
+   .pya-page wrapper instead, and keep the template selector in case the
+   Template is ever assigned in wp-admin. Same fix as pricing-plans.css. */
+html body:has(.pya-page),
+html body.page-template-page-publish-your-agency-php {
+  background: var(--pya-bg-page) !important;
+}
+
+/* ── Page head ─────────────────────────────────────────────────── */
+.pya-head {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(150deg, var(--pya-primary), var(--pya-inverse));
+}
+
+.pya-head__rule {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--pya-accent), var(--pya-secondary));
+}
+
+.pya-head__inner {
+  position: relative;
+  max-width: var(--pya-container-max);
+  margin: 0 auto;
+  padding: var(--pya-space-8) var(--pya-container-pad) var(--pya-space-7);
+}
+
+/* Breadcrumb */
+.pya-crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--pya-space-2);
+  margin-bottom: var(--pya-space-5);
+  font-family: var(--pya-font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+.pya-crumbs a {
+  color: var(--pya-gray-400);
+  text-decoration: none;
+  text-underline-offset: 4px;
+  transition: color 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+.pya-crumbs a:hover,
+.pya-crumbs a:focus-visible {
+  color: #fff;
+  text-decoration: underline;
+}
+.pya-crumbs__sep { color: rgba(255, 255, 255, 0.3); }
+.pya-crumbs__current { color: #fff; }
+
+/* Eyebrow — reflects the plan the agent arrived with (package_id) */
+.pya-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--pya-space-2);
+  font-family: var(--pya-font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--pya-accent);
+}
+.pya-eyebrow__dot {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--pya-accent);
+}
+
+.pya-title {
+  margin: var(--pya-space-4) 0 0;
+  max-width: 640px;
+  font-family: var(--pya-font-display);
+  font-size: clamp(38px, 6.4vw, 60px);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  color: #fff;
+  text-wrap: balance;
+}
+
+.pya-lede {
+  margin: var(--pya-space-4) 0 0;
+  max-width: 560px;
+  font-family: var(--pya-font-sans);
+  font-size: 18px;
+  font-weight: 300;
+  line-height: 1.65;
+  color: var(--pya-gray-300);
+  text-wrap: pretty;
+}
+
+/* ── Form shell ────────────────────────────────────────────────── */
+.pya-form-section {
+  max-width: var(--pya-card-max);
+  margin: 0 auto;
+  padding: var(--pya-space-8) var(--pya-container-pad);
+}
+
+.pya-card {
+  background: var(--pya-surface-card);
+  border: 1px solid var(--pya-border-soft);
+  border-radius: var(--pya-radius-card);
+  box-shadow: var(--pya-shadow-card);
+  overflow: hidden;
+}
+
+.pya-card__bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: var(--pya-space-4) var(--pya-space-5);
+  border-bottom: 1px solid var(--pya-border-soft);
+  background: var(--pya-navy-50);
+  color: var(--pya-accent);
+}
+
+.pya-card__label {
+  font-family: var(--pya-font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--pya-secondary);
+}
+
+/* The GeoDirectory form's own container. Padding only — nothing here
+   reaches inside it. See the header note. */
+.pya-card__body {
+  padding: var(--pya-space-7) var(--pya-space-6);
+}
+
+.pya-assurance {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--pya-space-2);
+  margin: var(--pya-space-5) 0 0;
+  font-family: var(--pya-font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.65;
+  color: var(--pya-text-muted);
+  text-align: center;
+}
+.pya-assurance .pya-icon {
+  flex: none;
+  color: var(--pya-accent);
+}
+
+.pya-icon { display: block; }
+
+/* ── Responsive ────────────────────────────────────────────────── */
+@media (max-width: 782px) {
+  .pya-head__inner { padding: var(--pya-space-7) var(--pya-container-pad) var(--pya-space-6); }
+  .pya-form-section { padding: var(--pya-space-7) var(--pya-container-pad); }
+  .pya-lede { font-size: 17px; }
+}
+
+@media (max-width: 640px) {
+  .pya-page { --pya-radius-card: 24px; }
+  .pya-card__body { padding: var(--pya-space-6) var(--pya-space-4); }
+  .pya-card__bar { padding: 14px var(--pya-space-4); }
+  .pya-assurance { align-items: flex-start; text-align: left; }
+  .pya-assurance .pya-icon { margin-top: 4px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pya-crumbs a { transition-duration: 0.01ms; }
+}
