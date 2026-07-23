@@ -15,13 +15,19 @@
  * Register gate for logged-out agents. This template only supplies the framing
  * around it. Do not add CSS that targets elements inside #pya-form-slot.
  *
- * CHROME: unlike the other code-driven pages, this one keeps the legacy Kadence
- * header and footer (get_header() / get_footer(), no variant) rather than the
- * marketing chrome. Chosen deliberately — this is a logged-in agent flow and the
- * legacy header carries the account/Login menu. Because of that, assets/home.css
- * is NOT loaded here; assets/publish-your-agency.css is self-contained and scopes
- * its design tokens to .pya-page so nothing leaks into the Kadence header, the
- * legacy footer, or the GeoDirectory/Bootstrap form.
+ * CHROME: this is the first page on the AGENT side of the site, which now has
+ * its own header. get_header('agent') renders header-agent.php (logo only, no
+ * nav, no buttons) — see that file for the shopper/agent split. The footer is
+ * the global one, get_footer('home') / footer-home.php, shared with the homepage
+ * and /pricing-plans. Both are styled by assets/home.css, which this page loads;
+ * assets/publish-your-agency.css layers the page-specific sections on top, the
+ * same arrangement /pricing-plans uses.
+ *
+ * Because home.css is loaded, its base element styles (body font, headings,
+ * links) now cascade into the GeoDirectory form, so the form picks up the site
+ * typography instead of the old Kadence font. That is intentional and approved —
+ * the form's markup, fields and behaviour are still untouched, and no selector
+ * here targets anything inside it.
  *
  * CONTENT REMOVED: the previous page rendered synced block 20325 below the form
  * (~1,500 words of Active Shopper / Pay-Per-Lead terms + a 9-question Yoast FAQ
@@ -90,10 +96,10 @@ $pya_svg_allowed = array(
 	'rect' => array( 'width' => true, 'height' => true, 'x' => true, 'y' => true, 'rx' => true, 'ry' => true ),
 );
 
-get_header();
+get_header( 'agent' );
 ?>
 
-<div class="pya-page">
+<main id="main" class="pya-page">
 
 	<!-- ── Page head ─────────────────────────────────────────────── -->
 	<section class="pya-head">
@@ -152,6 +158,6 @@ get_header();
 		</p>
 	</section>
 
-</div>
+</main>
 
-<?php get_footer(); ?>
+<?php get_footer( 'home' ); ?>

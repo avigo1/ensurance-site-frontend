@@ -505,13 +505,16 @@ add_action('wp_enqueue_scripts', 'ensurance_pricing_plans_assets', 20);
 // /pricing-plans CTAs point at (?package_id=14 and 16). page-publish-your-agency.php
 // wraps the EXISTING GeoDirectory form in the approved Calm Intelligence shell.
 //
-// Deliberately different from the sibling pages: this one KEEPS the legacy
-// Kadence header/footer (it is a logged-in agent flow and that header carries
-// the account/Login menu), so we must NOT enqueue assets/home.css here — its
-// `.site-header` rules would fight the Kadence chrome. assets/publish-your-agency.css
-// is self-contained instead, and scopes its tokens to .pya-page so nothing bleeds
-// into the Kadence chrome or the Bootstrap/AyeCode form. No JS: the page has no
-// interactive behaviour of its own, and the form ships its own scripts.
+// This is the first page on the AGENT side of the site: header-agent.php (logo
+// only) plus the global footer-home.php. Both are styled by assets/home.css, so
+// this page loads the same shared base as the homepage and /pricing-plans and
+// layers assets/publish-your-agency.css on top. assets/home.js comes along
+// because footer-home.php ships the mobile sticky CTA it drives; it is
+// null-guarded around the nav toggle, so the nav-less agent header is fine.
+//
+// Note this means home.css's base element styles cascade into the GeoDirectory
+// form, which now inherits the site typography rather than Kadence's. That is
+// intentional and approved — see page-publish-your-agency.php.
 //
 // Nothing is dequeued: the shared marketing bundle does not load on this page
 // (see ensurance_marketing_assets above), and GeoDirectory's own add-listing
@@ -529,17 +532,32 @@ function ensurance_publish_your_agency_assets() {
         return;
     }
 
-    // Shared Calm Intelligence type system (same families as the homepage).
+    // Shared Calm Intelligence type system + base (same as the homepage).
     wp_enqueue_style(
-        'ensurance-pya-fonts',
+        'ensurance-home-fonts',
         'https://fonts.googleapis.com/css2?family=Albert+Sans:wght@700;800;900&family=Rubik:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap',
         array(),
         null
     );
     wp_enqueue_style(
+        'ensurance-home',
+        get_stylesheet_directory_uri() . '/assets/home.css',
+        array(),
+        filemtime(get_stylesheet_directory() . '/assets/home.css')
+    );
+    wp_enqueue_script(
+        'ensurance-home',
+        get_stylesheet_directory_uri() . '/assets/home.js',
+        array(),
+        filemtime(get_stylesheet_directory() . '/assets/home.js'),
+        true
+    );
+
+    // Page-specific layer — loaded AFTER home.css via dependency.
+    wp_enqueue_style(
         'ensurance-publish-your-agency',
         get_stylesheet_directory_uri() . '/assets/publish-your-agency.css',
-        array(),
+        array('ensurance-home'),
         filemtime(get_stylesheet_directory() . '/assets/publish-your-agency.css')
     );
 }
