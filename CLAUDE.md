@@ -126,6 +126,9 @@ This repository is the **WordPress theme** for Ensurance.com. It controls all fr
 ├── functions.php                ← PHP hooks & enqueue functions
 ├── header-marketing.php         ← Shared header for marketing pages
 ├── footer-marketing.php         ← Shared footer for marketing pages
+├── header-home.php              ← SHOPPER header (Calm Intelligence)
+├── header-agent.php             ← AGENT header (Calm Intelligence)
+├── footer-home.php              ← Global footer (both sides)
 ├── page-home.php                ← Homepage template
 ├── page-about.php               ← About page template (future)
 ├── /components/                 ← Reusable page sections
@@ -137,6 +140,34 @@ This repository is the **WordPress theme** for Ensurance.com. It controls all fr
 │   ├── marketing.js             ← Marketing pages JavaScript
 │   └── /images/                 ← Image assets
 └── CLAUDE.md                    ← This file
+
+### Site Chrome — Two Headers, One Footer
+
+The redesigned ("Calm Intelligence") pages split the site in two by audience.
+**Pick the header by which side of the site the page belongs to**, not by how it
+looks:
+
+| | Header | Used for |
+|---|---|---|
+| **Shopper side** | `get_header('home')` → `header-home.php` | Homepage, coverage pages, quote/insurance forms. Has shopper nav + "Start My Auto Quote Request" CTA. |
+| **Agent side** | `get_header('agent')` → `header-agent.php` | Agency sign-up, login, dashboard, account management. Logo only — no nav, no buttons. |
+
+**Both sides share one footer**: `get_footer('home')` → `footer-home.php`.
+
+Rules that are easy to get wrong:
+
+- `footer-home.php` closes `</body></html>` itself, so **the header and footer
+  must be swapped together**. Mixing `get_header()` (Kadence) with
+  `get_footer('home')` leaves Kadence's `#wrapper` / `#inner-wrap` unclosed.
+- Both headers are styled by `assets/home.css` via the shared `.site-header` /
+  `.container` / `.header-inner` / `.brand` classes, so any page using them must
+  enqueue `home.css` (and `home.js`, which the footer's sticky CTA depends on).
+- `footer-home.php` ships the shopper mobile sticky CTA. On agent pages, hide it
+  in the page's own CSS rather than editing the shared footer — see
+  `assets/publish-your-agency.css`.
+- Pages still on the **legacy Kadence chrome** (`get_header()` / `get_footer()`)
+  include /login, /register and the rest of the un-migrated site. Migrating one
+  means switching both header and footer at once.
 
 ### Parent Theme
 
