@@ -682,6 +682,33 @@ html body.page-template-page-pricing-plans-php {
   .fa-h2 { font-size: var(--text-3xl); }
 }
 
+/* ── Re-assert intended leading over the global Customizer !important rules
+   ─────────────────────────────────────────────────────────────────
+   Appearance → Customize → Additional CSS (emitted as <style id="wp-custom-css">,
+   dead last in wp_head) still carries legacy Gutenberg-era rules from the old
+   site — bare element selectors with !important, so nothing in this file can
+   outrank them without !important of its own:
+
+     h2 { font-size: 24px; line-height: 36px !important; }
+     h3 {                  line-height: 30px !important; }
+     p  {                  line-height: 24px !important; }
+
+   They pin a FIXED px leading regardless of font-size, so the bigger the type
+   the worse it reads: this page's 48px .fa-h2 was running at 36px — a 0.75
+   ratio, with the lines overlapping — while the 16px .fa-step__title got a
+   loose 1.88. Every h2/h3/p on the page was affected; li/dt/dd/span are not.
+
+   Re-assert at the .fa-page wrapper (specificity 0,1,1 + !important) rather
+   than listing every class, so headings and copy added here later are correct
+   by default instead of silently inheriting the bug. Same fix home.css /
+   coverage.css / contact.css and the quote pages carry. */
+.fa-page h2 { line-height: var(--leading-tight) !important; }
+.fa-page h3 { line-height: var(--leading-snug) !important; }
+.fa-page p  { line-height: var(--leading-body) !important; }
+
+/* The one paragraph that is intentionally tighter than body copy. */
+.fa-page .fa-hero__fine { line-height: var(--leading-snug) !important; }
+
 /* ── Heading colors over Kadence global typography ────────────────
    Kadence prints its global typography as INLINE CSS in wp_head, after the
    theme stylesheets: `h1 { color:#ffffff }` and `h2, h3 { color:
