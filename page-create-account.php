@@ -2,15 +2,15 @@
 /**
  * /create-account — Create Your Account (Calm Intelligence redesign).
  *
- * A STANDALONE, self-contained auth screen: a single centered card on a
- * full-viewport page, with its own logo — deliberately no site header, no
- * footer, nothing competing with finishing the form (matches the approved
- * design). Because it renders no site chrome, this template opens AND closes
- * the whole HTML document itself (own <!DOCTYPE>, wp_head(), wp_footer()); it
- * does NOT call get_header()/get_footer(). It therefore never includes
- * Kadence's #wrapper / .entry-content-wrap, which is what keeps it clear of the
- * global customizer heading/line-height overrides that the chrome-wrapped pages
- * have to fight.
+ * A single centered auth card, framed by the shared shopper chrome
+ * (get_header('home') / get_footer('home')) — the same chrome as the sibling
+ * /login page (page-login.php), which this page's "Sign in" link points to and
+ * whose copy is likewise shopper-facing ("manage your quote requests"). Header
+ * and footer are the bespoke "home" chrome (NOT Kadence's), so they pair
+ * correctly and never emit Kadence's #wrapper / .entry-content-wrap — which
+ * keeps the card clear of the global customizer heading/line-height overrides.
+ * The header already shows the Ensurance logo, so the card carries none (no
+ * duplicate).
  *
  * Renders via the page-{slug}.php hierarchy for the "create-account" page, so a
  * WordPress page with slug "create-account" picks it up automatically — no
@@ -49,34 +49,20 @@ $ca_home_url    = esc_url( home_url( '/' ) );
 $ca_login_url   = esc_url( home_url( '/login' ) );
 $ca_terms_url   = esc_url( home_url( '/terms-of-use' ) );
 $ca_privacy_url = esc_url( home_url( '/privacy-policy' ) );
-$ca_logo        = esc_url( get_stylesheet_directory_uri() . '/assets/images/logo-colored.png' );
 
 // UsersWP register contract values (mirror class-templates.php exactly).
 $ca_form_id     = 1;
 $ca_action      = esc_url( get_permalink() ); // post to self — process_register() runs on template_redirect
 $ca_hash        = substr( hash( 'SHA256', AUTH_KEY . site_url() ), 0, 25 );
 $ca_redirect_to = function_exists( 'uwp_get_account_page_url' ) ? esc_url( uwp_get_account_page_url() ) : $ca_home_url;
+
+get_header( 'home' );
 ?>
-<!DOCTYPE html>
-<html <?php language_attributes(); ?>>
-<head>
-<meta charset="<?php bloginfo( 'charset' ); ?>">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<?php wp_head(); ?>
-</head>
-<body <?php body_class(); ?>>
-<?php wp_body_open(); ?>
-<a class="skip-link" href="#main">Skip to main content</a>
 
 <main class="ca-page" id="main">
   <div class="ca-card">
 
     <div class="ca-card__head">
-      <a class="ca-brand" href="<?php echo $ca_home_url; ?>" aria-label="Ensurance home">
-        <img src="<?php echo $ca_logo; ?>" alt="Ensurance" class="ca-brand__logo" />
-      </a>
       <h1 class="ca-card__title">Create your account</h1>
       <p class="ca-card__sub">Sign up to start and manage your quote requests</p>
     </div>
@@ -144,6 +130,4 @@ $ca_redirect_to = function_exists( 'uwp_get_account_page_url' ) ? esc_url( uwp_g
   </div>
 </main>
 
-<?php wp_footer(); ?>
-</body>
-</html>
+<?php get_footer( 'home' ); ?>

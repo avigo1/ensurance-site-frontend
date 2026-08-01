@@ -13,17 +13,16 @@
 body { background: var(--bg-page) !important; }
 
 /* --------------------------------------------------------------------------
-   Page shell — full viewport, card centered on both axes.
+   Page shell — padded section between the shared header and footer, card
+   centered horizontally.
    -------------------------------------------------------------------------- */
 .ca-page {
-  min-height: 100vh;
-  min-height: 100dvh;
   box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--bg-page);
-  padding: var(--space-7) var(--container-pad);
+  padding: var(--space-9) var(--container-pad);
 }
 
 /* Links inside the card follow the accent (matches the design's inline style). */
@@ -49,9 +48,6 @@ body { background: var(--bg-page) !important; }
    -------------------------------------------------------------------------- */
 .ca-card__head { text-align: center; }
 
-.ca-brand { display: inline-flex; }
-.ca-brand__logo { height: 24px; width: auto; max-width: 100%; }
-
 /* Re-pin heading color/leading — Kadence global typography paints bare h1/h2/h3
    white; scope wins by specificity (see CLAUDE.md kadence-white-heading note). */
 .ca-page .ca-card__title {
@@ -61,7 +57,7 @@ body { background: var(--bg-page) !important; }
   font-size: var(--text-2xl);
   line-height: var(--leading-snug);
   letter-spacing: var(--tracking-tight);
-  margin: var(--space-5) 0 0;
+  margin: 0;
 }
 .ca-card__sub {
   margin: var(--space-2) 0 0;
