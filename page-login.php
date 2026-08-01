@@ -81,25 +81,6 @@ get_header( 'home' );
 
 <main class="al-page" id="main">
 
-  <!-- ── Hero ───────────────────────────────────────────────────────── -->
-  <section class="al-hero reveal" aria-label="Agent login">
-    <span class="al-hero__bar" aria-hidden="true"></span>
-    <div class="al-container al-hero__inner">
-      <nav class="al-breadcrumb" aria-label="Breadcrumb">
-        <a href="<?php echo $al_home_url; ?>">Home</a>
-        <span aria-hidden="true">/</span>
-        <span aria-current="page">Agent login</span>
-      </nav>
-      <span class="al-eyebrow al-eyebrow--accent"><span class="al-dot" aria-hidden="true"></span> Ensurance Agent Dashboard</span>
-      <h1 class="al-hero__title">Log In to Your Agent Dashboard</h1>
-      <p class="al-hero__lead">Manage your agency profile, access status, and eligible shopper request details in one place.</p>
-      <div class="al-hero__note">
-        <?php echo wp_kses( ensurance_home_icon( 'shield-check', 16 ), $ensurance_svg_allowed ); ?>
-        <span>Ensurance gives licensed agents a more organized way to review shopper opportunities without bulk lead buying.</span>
-      </div>
-    </div>
-  </section>
-
   <!-- ── Login + New agent ──────────────────────────────────────────── -->
   <section class="al-container al-login reveal" id="login" aria-label="Agent sign in">
     <div class="al-login__grid">
