@@ -469,6 +469,41 @@ alias deploy-prod="git push origin main && ssh ensurance /home/u2514-jukueftqhhl
 - Use DevTools → Network tab to confirm the file loads
 - Check for CSS specificity conflicts (use `!important` as last resort)
 
+### Input text invisible while typing (Kadence `:focus` override)
+
+On any code-driven page with a text/email/password field, the parent theme
+(Kadence) ships global form rules that SiteGround merges into the same combined
+CSS bundle: a resting `input[type="…"] { color: var(--global-palette5) }`
+(specificity 0,0,1) and, critically, a focused
+`input[type="…"]:focus, textarea:focus { color: var(--global-palette3) }`
+(**specificity 0,2,1**). A page's own `.field input { color: … }` is only
+(0,1,1) — it wins at rest but **loses on `:focus`**, so typed text repaints from
+the global palette and can go invisible-on-white *while the field is focused*,
+reappearing on blur. On Safari/iOS `-webkit-text-fill-color` follows `color`, and
+autofill paints its own colors.
+
+**Always add this to every code-driven form page's CSS** (swap `.page-wrap` /
+`.field` / tokens for the page's own):
+
+```css
+.page-wrap .field input,
+.page-wrap .field input:focus {          /* :focus selector = (0,3,1), beats Kadence */
+  color: var(--text-body);
+  -webkit-text-fill-color: var(--text-body);   /* Safari/iOS */
+  background-color: #fff;
+  caret-color: var(--accent);
+}
+.page-wrap .field input:-webkit-autofill,
+.page-wrap .field input:-webkit-autofill:hover,
+.page-wrap .field input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text-body);
+  box-shadow: 0 0 0 100px #fff inset;          /* keep the field white through autofill */
+}
+```
+
+Do not drop the `:focus` selector — that is the state that breaks. Prior fixes:
+commits `07123a0` (/start), `d5e3526` (investor brief), `0ecb321` (/login).
+
 ### Broke the homepage
 
 Rollback the last commit:
