@@ -417,8 +417,8 @@ body { background: var(--bg-page) !important; }
   color: var(--text-on-inverse);
   font-size: var(--text-4xl);
   /* !important beats the customizer's global `h2 { line-height: 36px !important }`
-     (see CLAUDE.md / customizer-global-important-css). Looser leading here. */
-  line-height: 1.35 !important;
+     (see CLAUDE.md / customizer-global-important-css). */
+  line-height: 38px !important;
   margin: var(--space-4) auto 0;
   /* Padding, not margin — the global CSS resets <p> margin-top to 0, so the lead
      below would otherwise sit flush against the title. */
@@ -429,9 +429,13 @@ body { background: var(--bg-page) !important; }
   color: var(--gray-400);
   font-weight: var(--weight-light);
   max-width: 580px;
-  margin: var(--space-4) auto 0;
   line-height: var(--leading-body);
   text-align: center;
+  /* The global `p { margin: 0 !important }` kills the auto side-margins, so the
+     max-width block would jam left instead of centering. Re-assert auto side
+     margins with !important (vertical stays 0 — the title's padding-bottom owns
+     the gap above). */
+  margin: 0 auto !important;
 }
 .al-cta__actions {
   margin-top: var(--space-6);
