@@ -172,6 +172,27 @@ body { background: var(--bg-page) !important; }
   border-color: var(--focus-ring);
   box-shadow: 0 0 0 3px rgba(43, 134, 115, 0.15);
 }
+
+/* Kadence's parent-theme input[type=…]:focus rules (specificity 0,2,1) outrank a
+   bare .al-field input (0,1,1) and repaint focused fields from the global
+   palette — invisible text WHILE TYPING, readable again on blur. Pin color +
+   -webkit-text-fill-color (Safari/iOS follows text-fill, not color) + background
+   at .al-page specificity for BOTH resting and :focus, with an autofill
+   safeguard. Same defense as commits 07123a0 (/start) and d5e3526 (investor
+   brief). Do not drop the :focus selector — that is the state that breaks. */
+.al-page .al-field input,
+.al-page .al-field input:focus {
+  color: var(--text-body);
+  -webkit-text-fill-color: var(--text-body);
+  background-color: #fff;
+  caret-color: var(--accent);
+}
+.al-page .al-field input:-webkit-autofill,
+.al-page .al-field input:-webkit-autofill:hover,
+.al-page .al-field input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text-body);
+  box-shadow: 0 0 0 100px #fff inset;
+}
 .al-field__pw { position: relative; }
 .al-field__pw input { padding-right: 76px; }
 .al-pw-toggle {
