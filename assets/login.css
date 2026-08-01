@@ -416,8 +416,13 @@ body { background: var(--bg-page) !important; }
 .al-page .al-cta__title {
   color: var(--text-on-inverse);
   font-size: var(--text-4xl);
-  line-height: var(--leading-tight);
+  /* !important beats the customizer's global `h2 { line-height: 36px !important }`
+     (see CLAUDE.md / customizer-global-important-css). Looser leading here. */
+  line-height: 1.35 !important;
   margin: var(--space-4) auto 0;
+  /* Padding, not margin — the global CSS resets <p> margin-top to 0, so the lead
+     below would otherwise sit flush against the title. */
+  padding-bottom: var(--space-5);
   max-width: 640px;
 }
 .al-cta__lead {
@@ -426,6 +431,7 @@ body { background: var(--bg-page) !important; }
   max-width: 580px;
   margin: var(--space-4) auto 0;
   line-height: var(--leading-body);
+  text-align: center;
 }
 .al-cta__actions {
   margin-top: var(--space-6);
