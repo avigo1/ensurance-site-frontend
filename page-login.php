@@ -159,17 +159,6 @@ get_header( 'home' );
     </div>
   </section>
 
-  <!-- ── Trust note ─────────────────────────────────────────────────── -->
-  <section class="al-container al-trust reveal" aria-label="Trust">
-    <div class="al-callout">
-      <span class="al-callout__icon" aria-hidden="true"><?php echo wp_kses( ensurance_home_icon( 'shield-check', 20 ), $ensurance_svg_allowed ); ?></span>
-      <div>
-        <p class="al-callout__title">Not bulk lead buying</p>
-        <p class="al-callout__body">Ensurance is not a bulk lead seller or quote comparison site. We are building a more structured way for insurance shoppers and agents to connect around organized quote requests.</p>
-      </div>
-    </div>
-  </section>
-
   <!-- ── Support ────────────────────────────────────────────────────── -->
   <section class="al-container al-support reveal" aria-label="Agent support">
     <div class="al-support__card">
@@ -196,6 +185,17 @@ get_header( 'home' );
         <a href="<?php echo $al_agents_url; ?>" class="al-btn al-btn--ghost" data-event="footer_learn_more_click">Learn how it works</a>
       </div>
       <p class="al-fineprint al-fineprint--center">Availability of shopper requests may vary by state, coverage type, shopper activity, and agent eligibility. Founding Agent Access does not guarantee request volume.</p>
+    </div>
+  </section>
+
+  <!-- ── Trust note (final section) ─────────────────────────────────── -->
+  <section class="al-container al-trust reveal" aria-label="Trust">
+    <div class="al-callout">
+      <span class="al-callout__icon" aria-hidden="true"><?php echo wp_kses( ensurance_home_icon( 'shield-check', 20 ), $ensurance_svg_allowed ); ?></span>
+      <div>
+        <p class="al-callout__title">Not bulk lead buying</p>
+        <p class="al-callout__body">Ensurance is not a bulk lead seller or quote comparison site. We are building a more structured way for insurance shoppers and agents to connect around organized quote requests.</p>
+      </div>
     </div>
   </section>
 

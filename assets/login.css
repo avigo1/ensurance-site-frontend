@@ -327,7 +327,7 @@ body { background: var(--bg-page) !important; }
 /* --------------------------------------------------------------------------
    Trust callout
    -------------------------------------------------------------------------- */
-.al-trust { max-width: 940px; }
+.al-trust { max-width: 940px; padding-bottom: var(--space-8); }
 .al-callout {
   display: flex;
   align-items: flex-start;
