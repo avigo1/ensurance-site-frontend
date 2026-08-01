@@ -144,7 +144,7 @@ body { background: var(--bg-page) !important; }
 .al-breadcrumb span[aria-hidden] { color: rgba(255, 255, 255, 0.3); }
 .al-breadcrumb span[aria-current] { color: #fff; }
 
-.al-hero__title {
+.al-page .al-hero__title {
   color: #fff;
   font-size: var(--text-5xl);
   line-height: var(--leading-hero);
@@ -474,7 +474,7 @@ body { background: var(--bg-page) !important; }
   height: 4px;
   background: linear-gradient(90deg, var(--primary), var(--secondary));
 }
-.al-cta__title {
+.al-page .al-cta__title {
   color: var(--text-on-inverse);
   font-size: var(--text-4xl);
   line-height: var(--leading-tight);
@@ -513,8 +513,8 @@ body { background: var(--bg-page) !important; }
 @media (max-width: 860px) {
   .al-login__grid { grid-template-columns: 1fr; }
   .al-support__card { grid-template-columns: 1fr; gap: var(--space-5); }
-  .al-hero__title { font-size: var(--text-4xl); }
-  .al-cta__title { font-size: var(--text-3xl); }
+  .al-page .al-hero__title { font-size: var(--text-4xl); }
+  .al-page .al-cta__title { font-size: var(--text-3xl); }
   .al-card { padding: var(--space-6); }
 }
 
