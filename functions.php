@@ -493,6 +493,64 @@ function ensurance_login_assets() {
 add_action('wp_enqueue_scripts', 'ensurance_login_assets', 20);
 
 // ============================================================================
+// 2b-v-a3. CREATE ACCOUNT (/create-account) — SELF-CONTAINED ASSETS
+// ============================================================================
+// /create-account is a standalone, code-driven sign-up screen
+// (page-create-account.php) that re-skins the UsersWP registration form. Like
+// /login it reuses assets/home.css + assets/home.js for the Calm Intelligence
+// tokens, fonts and base, and layers assets/create-account.css +
+// assets/create-account.js (password show/hide) on top. The shared marketing
+// bundle is dequeued so its selectors cannot fight this design.
+// is_page('create-account') is the reliable gate.
+function ensurance_create_account_assets() {
+    if ( ! is_page( 'create-account' ) ) {
+        return;
+    }
+
+    // Drop the shared marketing bundle so it cannot fight this design.
+    wp_dequeue_style('ensurance-marketing');
+    wp_dequeue_script('ensurance-marketing');
+    wp_dequeue_style('ensurance-marketing-fonts');
+
+    // Shared Calm Intelligence type system + base (same as the homepage).
+    wp_enqueue_style(
+        'ensurance-home-fonts',
+        'https://fonts.googleapis.com/css2?family=Albert+Sans:wght@700;800;900&family=Rubik:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap',
+        array(),
+        null
+    );
+    wp_enqueue_style(
+        'ensurance-home',
+        get_stylesheet_directory_uri() . '/assets/home.css',
+        array(),
+        filemtime(get_stylesheet_directory() . '/assets/home.css')
+    );
+    wp_enqueue_script(
+        'ensurance-home',
+        get_stylesheet_directory_uri() . '/assets/home.js',
+        array(),
+        filemtime(get_stylesheet_directory() . '/assets/home.js'),
+        true
+    );
+
+    // Page-specific layer — loaded AFTER home.css/home.js via dependency.
+    wp_enqueue_style(
+        'ensurance-create-account',
+        get_stylesheet_directory_uri() . '/assets/create-account.css',
+        array('ensurance-home'),
+        filemtime(get_stylesheet_directory() . '/assets/create-account.css')
+    );
+    wp_enqueue_script(
+        'ensurance-create-account',
+        get_stylesheet_directory_uri() . '/assets/create-account.js',
+        array('ensurance-home'),
+        filemtime(get_stylesheet_directory() . '/assets/create-account.js'),
+        true
+    );
+}
+add_action('wp_enqueue_scripts', 'ensurance_create_account_assets', 20);
+
+// ============================================================================
 // 2b-v-b. FOUNDING AGENT ACCESS (/pricing-plans) — SELF-CONTAINED ASSETS
 // ============================================================================
 // /pricing-plans is repositioned as "Founding Agent Access" and ships the same

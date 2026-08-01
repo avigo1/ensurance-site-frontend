@@ -1,0 +1,235 @@
+/* ==========================================================================
+   /create-account — Create Your Account (Calm Intelligence)
+   Standalone, centered auth screen. Page-specific layer on top of
+   assets/home.css (tokens, base, fonts). Scoped to .ca-page so nothing leaks
+   into the shared marketing bundle.
+   ========================================================================== */
+
+/* Token home.css does not define yet. */
+.ca-page { --weight-semibold: 600; }
+
+/* Standalone-page background fix (see CLAUDE.md): give <body> a real background
+   so Kadence's dark base never shows through around the centered card. */
+body { background: var(--bg-page) !important; }
+
+/* --------------------------------------------------------------------------
+   Page shell — full viewport, card centered on both axes.
+   -------------------------------------------------------------------------- */
+.ca-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-page);
+  padding: var(--space-7) var(--container-pad);
+}
+
+/* Links inside the card follow the accent (matches the design's inline style). */
+.ca-page a { color: var(--accent); text-decoration: none; }
+.ca-page a:hover { color: var(--accent-hover); text-decoration: underline; }
+
+/* --------------------------------------------------------------------------
+   Card
+   -------------------------------------------------------------------------- */
+.ca-card {
+  width: 100%;
+  max-width: 440px;
+  box-sizing: border-box;
+  background: var(--surface-card);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-card-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-8) var(--space-7);
+}
+
+/* --------------------------------------------------------------------------
+   Head — logo, title, subhead (centered)
+   -------------------------------------------------------------------------- */
+.ca-card__head { text-align: center; }
+
+.ca-brand { display: inline-flex; }
+.ca-brand__logo { height: 24px; width: auto; max-width: 100%; }
+
+/* Re-pin heading color/leading — Kadence global typography paints bare h1/h2/h3
+   white; scope wins by specificity (see CLAUDE.md kadence-white-heading note). */
+.ca-page .ca-card__title {
+  color: var(--text-heading);
+  font-family: var(--font-display);
+  font-weight: var(--weight-extrabold);
+  font-size: var(--text-2xl);
+  line-height: var(--leading-snug);
+  letter-spacing: var(--tracking-tight);
+  margin: var(--space-5) 0 0;
+}
+.ca-card__sub {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  font-weight: var(--weight-light);
+  line-height: var(--leading-body);
+}
+
+/* --------------------------------------------------------------------------
+   Form
+   -------------------------------------------------------------------------- */
+.ca-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+}
+.ca-form__names {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.ca-field { display: flex; flex-direction: column; gap: 8px; }
+.ca-field label {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text-strong);
+}
+.ca-field input {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: var(--font-sans);
+  font-size: var(--text-md);
+  color: var(--text-body);
+  background: #fff;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  padding: 13px 16px;
+  transition: border-color var(--duration-fast) var(--ease-out),
+              box-shadow var(--duration-fast) var(--ease-out);
+}
+.ca-field input::placeholder { color: var(--text-faint); }
+.ca-field input:focus {
+  outline: none;
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 3px rgba(43, 134, 115, 0.15);
+}
+
+/* Kadence's parent-theme input[type=…]:focus rules (specificity 0,2,1) outrank a
+   bare .ca-field input (0,1,1) and repaint focused fields from the global
+   palette — invisible text WHILE TYPING, readable again on blur. Pin color +
+   -webkit-text-fill-color (Safari/iOS follows text-fill, not color) + background
+   at .ca-page specificity for BOTH resting and :focus, with an autofill
+   safeguard. See CLAUDE.md "Input text invisible while typing". Do not drop the
+   :focus selector — that is the state that breaks. */
+.ca-page .ca-field input,
+.ca-page .ca-field input:focus {
+  color: var(--text-body);
+  -webkit-text-fill-color: var(--text-body);
+  background-color: #fff;
+  caret-color: var(--accent);
+}
+.ca-page .ca-field input:-webkit-autofill,
+.ca-page .ca-field input:-webkit-autofill:hover,
+.ca-page .ca-field input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text-body);
+  box-shadow: 0 0 0 100px #fff inset;
+}
+
+/* Password field + show/hide toggle */
+.ca-field__pw { position: relative; }
+.ca-field__pw input { padding-right: 76px; }
+.ca-pw-toggle {
+  position: absolute;
+  top: 50%; right: 12px;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  color: var(--secondary);
+  padding: 4px 6px;
+}
+.ca-pw-toggle:hover { color: var(--accent); }
+
+/* --------------------------------------------------------------------------
+   Submit button (accent pill, full width — matches the site's CTA buttons)
+   -------------------------------------------------------------------------- */
+.ca-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  text-decoration: none;
+  font-family: var(--font-sans);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-md);
+  line-height: 1.2;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  padding: 15px 26px;
+  cursor: pointer;
+  color: #fff;
+  background: var(--accent);
+  box-shadow: var(--shadow-cta);
+  transition: transform var(--duration-fast) var(--ease-out),
+              background var(--duration-fast) var(--ease-out);
+}
+.ca-btn:hover { transform: translateY(-2px); background: var(--accent-hover); color: #fff; text-decoration: none; }
+.ca-submit { width: 100%; margin-top: var(--space-2); }
+
+/* --------------------------------------------------------------------------
+   Footer lines — "Already have an account?" + legal fine print
+   -------------------------------------------------------------------------- */
+.ca-alt {
+  margin: var(--space-6) 0 0;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  text-align: center;
+}
+.ca-alt a { color: var(--accent); font-weight: var(--weight-semibold); }
+
+.ca-legal {
+  margin: var(--space-4) 0 0;
+  font-size: var(--text-xs);
+  color: var(--text-faint);
+  text-align: center;
+  line-height: var(--leading-body);
+}
+.ca-legal a { color: var(--text-muted); font-weight: var(--weight-medium); }
+.ca-legal a:hover { color: var(--accent); }
+
+/* --------------------------------------------------------------------------
+   UsersWP notice / alert markup, if it renders on failed submit
+   -------------------------------------------------------------------------- */
+.ca-card .uwp-notifications,
+.ca-card .alert {
+  border-radius: var(--radius-input);
+  padding: 12px 16px;
+  margin-top: var(--space-5);
+  font-size: var(--text-sm);
+  border: 1px solid var(--border-soft);
+}
+.ca-card .alert-danger,
+.ca-card .alert-error {
+  background: #fdecec;
+  border-color: #f5c2c0;
+  color: #b42318;
+}
+.ca-card .alert-success {
+  background: var(--accent-50);
+  border-color: var(--accent-100);
+  color: var(--accent-hover);
+}
+
+/* --------------------------------------------------------------------------
+   Responsive
+   -------------------------------------------------------------------------- */
+@media (max-width: 420px) {
+  .ca-card { padding: var(--space-7) var(--space-5); }
+  .ca-form__names { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ca-btn { transition: none !important; }
+  .ca-btn:hover { transform: none !important; }
+}
