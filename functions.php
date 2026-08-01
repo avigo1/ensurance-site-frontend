@@ -432,6 +432,67 @@ function ensurance_for_agents_assets() {
 add_action('wp_enqueue_scripts', 'ensurance_for_agents_assets', 20);
 
 // ============================================================================
+// 2b-v-a2. AGENT LOGIN (/login) — SELF-CONTAINED ASSETS
+// ============================================================================
+// /login is rebuilt from the old UsersWP-shortcode page into a code-driven
+// template (page-login.php) on the homepage chrome. It reuses assets/home.css +
+// assets/home.js for tokens, chrome and base, and layers assets/login.css +
+// assets/login.js on top for the page-specific sections (hero, login grid,
+// new-agent card, trust callout, support, footer CTA). The login form is
+// re-skinned only — UsersWP still processes authentication. As with the other
+// standalone pages we DEQUEUE the shared marketing bundle so its generic
+// selectors cannot fight this design. is_page('login') is the reliable gate
+// (is_page_template can miss on DB-meta pages). New function — existing
+// functions untouched.
+function ensurance_login_assets() {
+    if ( ! is_page( 'login' ) ) {
+        return;
+    }
+
+    // Drop the shared marketing bundle so it cannot fight this design.
+    wp_dequeue_style('ensurance-marketing');
+    wp_dequeue_script('ensurance-marketing');
+    wp_dequeue_style('ensurance-marketing-fonts');
+
+    // Shared Calm Intelligence type system + base (same as the homepage).
+    wp_enqueue_style(
+        'ensurance-home-fonts',
+        'https://fonts.googleapis.com/css2?family=Albert+Sans:wght@700;800;900&family=Rubik:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap',
+        array(),
+        null
+    );
+    wp_enqueue_style(
+        'ensurance-home',
+        get_stylesheet_directory_uri() . '/assets/home.css',
+        array(),
+        filemtime(get_stylesheet_directory() . '/assets/home.css')
+    );
+    wp_enqueue_script(
+        'ensurance-home',
+        get_stylesheet_directory_uri() . '/assets/home.js',
+        array(),
+        filemtime(get_stylesheet_directory() . '/assets/home.js'),
+        true
+    );
+
+    // Page-specific layer — loaded AFTER home.css/home.js via dependency.
+    wp_enqueue_style(
+        'ensurance-login',
+        get_stylesheet_directory_uri() . '/assets/login.css',
+        array('ensurance-home'),
+        filemtime(get_stylesheet_directory() . '/assets/login.css')
+    );
+    wp_enqueue_script(
+        'ensurance-login',
+        get_stylesheet_directory_uri() . '/assets/login.js',
+        array('ensurance-home'),
+        filemtime(get_stylesheet_directory() . '/assets/login.js'),
+        true
+    );
+}
+add_action('wp_enqueue_scripts', 'ensurance_login_assets', 20);
+
+// ============================================================================
 // 2b-v-b. FOUNDING AGENT ACCESS (/pricing-plans) — SELF-CONTAINED ASSETS
 // ============================================================================
 // /pricing-plans is repositioned as "Founding Agent Access" and ships the same
