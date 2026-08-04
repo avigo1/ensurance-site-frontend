@@ -9,11 +9,15 @@
  * layering assets/pricing-plans.css + assets/pricing-plans.js on top. Loaded
  * and isolated from the shared marketing bundle in functions.php.
  *
- * GeoDirectory coupling — the ONLY backend dependency:
- *   The two plan CTAs point at the EXISTING GeoDirectory Pricing Manager
- *   packages via ?package_id=. Do NOT rebuild checkout; do NOT change these ids.
- *     - 60 Day Founding Agent Access  → package_id=14  (currently free tier)
- *     - Founding Agent Access $29/mo  → package_id=16
+ * Sign-up funnel + GeoDirectory coupling:
+ *   The two plan-selection CTAs now route through /create-account first (carrying
+ *   ?plan=<slug>); the new agent continues to that plan's checkout AFTER the
+ *   account is created. The interim destination is still the EXISTING
+ *   GeoDirectory Pricing Manager package (?package_id=), swapped for Stripe in a
+ *   future iteration. Registry + funnel: functions.php (ensurance_founding_plans
+ *   / ensurance_create_account_url). Do NOT rebuild checkout; do NOT change ids.
+ *     - 60-day  plan → package_id=14  (currently free tier)
+ *     - monthly plan → package_id=16
  *   NOTE (unresolved, see handoff doc §14): package 14 is a perpetual-free
  *   GeoDirectory package today, not a 60-day-trial-to-$29. The visible copy
  *   promises "$0 for 60 days, then $29/mo". Confirm the GeoDirectory package
@@ -27,9 +31,13 @@
  * page, so it auto-overrides the previous Kadence block content with no DB edit.
  */
 
-// GeoDirectory Pricing Manager checkout entry points (existing packages).
-$fa_geo_60day   = home_url( '/publish-your-agency/insurance-agencies/?package_id=14' );
-$fa_geo_monthly = home_url( '/publish-your-agency/insurance-agencies/?package_id=16' );
+// Plan-selection CTAs now route through /create-account (sign-up first), carrying
+// the plan as ?plan=<slug>; the agent continues to that plan's checkout/Stripe
+// page after the account is created. Registry + funnel live in functions.php
+// (ensurance_create_account_url / ensurance_founding_plans). The hero buttons
+// (#plans) remain in-page jump links to the plan comparison below.
+$fa_cta_60day   = ensurance_create_account_url( '60-day' );  // Start 60 day access
+$fa_cta_monthly = ensurance_create_account_url( 'monthly' ); // Join as a Founding Agent
 
 /**
  * Inline Lucide glyphs (stroke 2, round caps) used on this page.
@@ -214,7 +222,7 @@ get_header( 'home' );
 							<li><span class="fa-tick"><?php echo wp_kses( ensurance_fa_icon( 'check', 13 ), $fa_svg_allowed ); ?></span><?php echo esc_html( $b ); ?></li>
 						<?php endforeach; ?>
 					</ul>
-					<a class="fa-btn fa-btn--solid fa-btn--block" href="<?php echo esc_url( $fa_geo_60day ); ?>" data-event="plan_60_day_checkout_click">Start 60 day access <?php echo wp_kses( ensurance_fa_icon( 'arrow-right', 17 ), $fa_svg_allowed ); ?></a>
+					<a class="fa-btn fa-btn--solid fa-btn--block" href="<?php echo esc_url( $fa_cta_60day ); ?>" data-event="plan_60_day_checkout_click">Start 60 day access <?php echo wp_kses( ensurance_fa_icon( 'arrow-right', 17 ), $fa_svg_allowed ); ?></a>
 					<p class="fa-plan__note">After the 60 day access period, Founding Agent Access may continue at $29 per month unless canceled before the subscription begins.</p>
 					<div class="fa-consent">
 						<?php echo wp_kses( ensurance_fa_icon( 'lock', 13, 'fa-consent__icon' ), $fa_svg_allowed ); ?>
@@ -235,7 +243,7 @@ get_header( 'home' );
 							<li><span class="fa-tick"><?php echo wp_kses( ensurance_fa_icon( 'check', 13 ), $fa_svg_allowed ); ?></span><?php echo esc_html( $b ); ?></li>
 						<?php endforeach; ?>
 					</ul>
-					<a class="fa-btn fa-btn--outline fa-btn--block" href="<?php echo esc_url( $fa_geo_monthly ); ?>" data-event="plan_monthly_checkout_click">Join as a Founding Agent <?php echo wp_kses( ensurance_fa_icon( 'arrow-right', 17 ), $fa_svg_allowed ); ?></a>
+					<a class="fa-btn fa-btn--outline fa-btn--block" href="<?php echo esc_url( $fa_cta_monthly ); ?>" data-event="plan_monthly_checkout_click">Join as a Founding Agent <?php echo wp_kses( ensurance_fa_icon( 'arrow-right', 17 ), $fa_svg_allowed ); ?></a>
 					<p class="fa-plan__note">You stay in control of which opportunities you choose to pursue.</p>
 					<div class="fa-consent">
 						<?php echo wp_kses( ensurance_fa_icon( 'lock', 13, 'fa-consent__icon' ), $fa_svg_allowed ); ?>
@@ -427,8 +435,8 @@ get_header( 'home' );
 				<h2 id="fa-final-title" class="fa-h2 fa-h2--inverse">Join early in your state as a Founding Agent.</h2>
 				<p class="fa-final__body">Review organized shopper requests without bulk lead buying. <?php echo esc_html( $fa_disclaimer ); ?></p>
 				<div class="fa-final__actions">
-					<a class="fa-btn fa-btn--solid" href="<?php echo esc_url( $fa_geo_60day ); ?>" data-event="final_start_60_day_click">Start 60 day access <?php echo wp_kses( ensurance_fa_icon( 'arrow-right', 18 ), $fa_svg_allowed ); ?></a>
-					<a class="fa-btn fa-btn--ghost" href="<?php echo esc_url( $fa_geo_monthly ); ?>" data-event="final_join_founding_click">Join as a Founding Agent</a>
+					<a class="fa-btn fa-btn--solid" href="<?php echo esc_url( $fa_cta_60day ); ?>" data-event="final_start_60_day_click">Start 60 day access <?php echo wp_kses( ensurance_fa_icon( 'arrow-right', 18 ), $fa_svg_allowed ); ?></a>
+					<a class="fa-btn fa-btn--ghost" href="<?php echo esc_url( $fa_cta_monthly ); ?>" data-event="final_join_founding_click">Join as a Founding Agent</a>
 				</div>
 				<p class="fa-final__contact">Questions first? <a href="<?php echo esc_url( home_url( '/contact' ) ); ?>" data-event="agent_contact_click">Contact Ensurance</a>.</p>
 			</div>

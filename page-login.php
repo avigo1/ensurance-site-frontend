@@ -66,10 +66,12 @@ $al_trust_url    = esc_url( home_url( '/trust-center' ) );
 $al_agents_url   = esc_url( home_url( '/for-agents' ) );
 $al_contact_url  = esc_url( home_url( '/contact' ) );
 
-// GeoDirectory Pricing Manager checkout entry points — the EXISTING founding
-// agent packages (same ids used on /pricing-plans/; do NOT rebuild checkout).
-$al_geo_60day   = esc_url( home_url( '/publish-your-agency/insurance-agencies/?package_id=14' ) ); // 60 Day Founding Agent Access
-$al_geo_monthly = esc_url( home_url( '/publish-your-agency/insurance-agencies/?package_id=16' ) ); // Founding Agent Access $29/mo
+// Founding Agent CTAs now route through /create-account (sign-up first), carrying
+// the plan selection as ?plan=<slug>. After the account is created the agent is
+// sent on to that plan's checkout/Stripe page. Registry + funnel: functions.php
+// (ensurance_create_account_url / ensurance_founding_plans).
+$al_cta_60day   = esc_url( ensurance_create_account_url( '60-day' ) );  // Start 60 Day Access
+$al_cta_monthly = esc_url( ensurance_create_account_url( 'monthly' ) ); // Join as a Founding Agent
 
 // UsersWP-resolved auth destinations (fall back gracefully if helpers are gone).
 $al_forgot_url   = function_exists( 'uwp_get_forgot_page_url' )  ? esc_url( uwp_get_forgot_page_url() )  : esc_url( wp_lostpassword_url() );
@@ -149,8 +151,8 @@ get_header( 'home' );
         </ul>
 
         <div class="al-newagent__cta">
-          <a href="<?php echo $al_geo_60day; ?>" class="al-btn al-btn--solid" data-event="login_start_60_day_click">Start 60 Day Access <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 17 ), $ensurance_svg_allowed ); ?></a>
-          <a href="<?php echo $al_geo_monthly; ?>" class="al-btn al-btn--outline" data-event="login_join_founding_click">Join as a Founding Agent</a>
+          <a href="<?php echo $al_cta_60day; ?>" class="al-btn al-btn--solid" data-event="login_start_60_day_click">Start 60 Day Access <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 17 ), $ensurance_svg_allowed ); ?></a>
+          <a href="<?php echo $al_cta_monthly; ?>" class="al-btn al-btn--outline" data-event="login_join_founding_click">Join as a Founding Agent</a>
         </div>
 
         <p class="al-fineprint">Availability of shopper requests may vary by state, coverage type, shopper activity, and agent eligibility. Founding Agent Access does not guarantee request volume.</p>
@@ -181,7 +183,7 @@ get_header( 'home' );
       <h2 class="al-cta__title">See how Founding Agent Access works.</h2>
       <p class="al-cta__lead">Review organized shopper requests without bulk lead buying. Create your agency profile, preview eligible requests, and decide when an opportunity fits your agency.</p>
       <div class="al-cta__actions">
-        <a href="<?php echo $al_geo_60day; ?>" class="al-btn al-btn--solid" data-event="footer_start_60_day_click">Start 60 Day Access <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 18 ), $ensurance_svg_allowed ); ?></a>
+        <a href="<?php echo $al_cta_60day; ?>" class="al-btn al-btn--solid" data-event="footer_start_60_day_click">Start 60 Day Access <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 18 ), $ensurance_svg_allowed ); ?></a>
         <a href="<?php echo $al_agents_url; ?>" class="al-btn al-btn--ghost" data-event="footer_learn_more_click">Learn how it works</a>
       </div>
       <p class="al-fineprint al-fineprint--center">Availability of shopper requests may vary by state, coverage type, shopper activity, and agent eligibility. Founding Agent Access does not guarantee request volume.</p>

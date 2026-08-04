@@ -551,6 +551,116 @@ function ensurance_create_account_assets() {
 add_action('wp_enqueue_scripts', 'ensurance_create_account_assets', 20);
 
 // ============================================================================
+// 2b-v-a4. FOUNDING AGENT PLAN SELECTION — SIGN-UP FUNNEL MEMORY
+// ============================================================================
+// Single source of truth for the two Founding Agent plans an agent can pick.
+//
+// FUNNEL: the "Start 60 Day Access" / "Join as a Founding Agent" CTAs on /login
+// and /pricing-plans link to /create-account?plan=<slug> (see
+// ensurance_create_account_url). page-create-account.php reads the slug,
+// preserves it through a failed-submit re-render via a hidden `plan` field, and
+// sets the register form's redirect_to to that plan's destination. On a
+// successful registration the slug is ALSO saved to user meta
+// (ensurance_remember_founding_plan), so the choice is remembered on the user
+// record even when there is no immediate redirect.
+//
+// IMMEDIATE POST-SIGNUP REDIRECT: only fires when UsersWP's registration action
+// is 'auto_approve_login' (it auto-logs-in then honors redirect_to). The site is
+// currently 'auto_approve' (user created, NOT logged in, shown a "please log in"
+// notice), so today the redirect_to is set but not used — the durable user-meta
+// copy is what a later step should rely on.
+//
+// FUTURE ITERATION (Stripe): route each plan to its Stripe checkout by changing
+// ONLY the 'destination' values below, or by filtering
+// 'ensurance_founding_plan_destination'. Read the remembered plan on the Stripe
+// page with ensurance_get_remembered_founding_plan( $user_id ). Nothing else in
+// the funnel has to change.
+
+/** User-meta key holding a new agent's chosen Founding Agent plan slug. */
+if ( ! defined( 'ENSURANCE_FOUNDING_PLAN_META' ) ) {
+    define( 'ENSURANCE_FOUNDING_PLAN_META', '_ensurance_founding_plan' );
+}
+
+/**
+ * The Founding Agent plan registry. Keyed by URL slug.
+ * 'destination' is where a new agent lands AFTER the account is created —
+ * interim GeoDirectory checkout today, Stripe checkout in the future iteration.
+ *
+ * @return array<string,array>
+ */
+function ensurance_founding_plans() {
+    return array(
+        '60-day'  => array(
+            'label'       => 'Start 60 Day Access',
+            'package_id'  => 14,
+            'destination' => home_url( '/publish-your-agency/insurance-agencies/?package_id=14' ),
+        ),
+        'monthly' => array(
+            'label'       => 'Join as a Founding Agent',
+            'package_id'  => 16,
+            'destination' => home_url( '/publish-your-agency/insurance-agencies/?package_id=16' ),
+        ),
+    );
+}
+
+/**
+ * Normalize a plan slug to a known one, or '' if unknown/absent. Safe to call on
+ * raw request input — sanitizes and whitelists.
+ */
+function ensurance_founding_plan_valid( $slug ) {
+    $slug  = is_string( $slug ) ? sanitize_key( $slug ) : '';
+    $plans = ensurance_founding_plans();
+    return isset( $plans[ $slug ] ) ? $slug : '';
+}
+
+/** Build the /create-account URL carrying a plan selection (raw — esc_url at output). */
+function ensurance_create_account_url( $slug ) {
+    $slug = ensurance_founding_plan_valid( $slug );
+    $url  = home_url( '/create-account/' );
+    return $slug ? add_query_arg( 'plan', $slug, $url ) : $url;
+}
+
+/**
+ * Post-account-creation destination for a plan (interim checkout today, Stripe
+ * later). Filterable so the future Stripe URLs can be swapped in without editing
+ * the registry.
+ */
+function ensurance_founding_plan_destination( $slug ) {
+    $slug  = ensurance_founding_plan_valid( $slug );
+    $plans = ensurance_founding_plans();
+    $dest  = $slug ? $plans[ $slug ]['destination'] : home_url( '/' );
+    return apply_filters( 'ensurance_founding_plan_destination', $dest, $slug );
+}
+
+/** Read the plan a user chose at sign-up ('' if none). For the future Stripe step. */
+function ensurance_get_remembered_founding_plan( $user_id ) {
+    return ensurance_founding_plan_valid( get_user_meta( (int) $user_id, ENSURANCE_FOUNDING_PLAN_META, true ) );
+}
+
+/**
+ * Durably remember the chosen plan on the user at registration. Hooked on
+ * uwp_after_custom_fields_save, which fires after the user row is created and
+ * still has the raw submitted $data (before UsersWP clears $_POST) — and in
+ * EVERY registration action path, so the choice survives regardless of whether
+ * the immediate redirect fires.
+ *
+ * @param string $form_type 'register' | 'account' | ...
+ * @param array  $data      raw submitted fields (includes our `plan`)
+ * @param array  $result    validated fields
+ * @param int    $user_id   the new user's id
+ */
+function ensurance_remember_founding_plan( $form_type, $data, $result, $user_id ) {
+    if ( 'register' !== $form_type || empty( $user_id ) ) {
+        return;
+    }
+    $slug = ensurance_founding_plan_valid( isset( $data['plan'] ) ? $data['plan'] : '' );
+    if ( $slug ) {
+        update_user_meta( $user_id, ENSURANCE_FOUNDING_PLAN_META, $slug );
+    }
+}
+add_action( 'uwp_after_custom_fields_save', 'ensurance_remember_founding_plan', 10, 4 );
+
+// ============================================================================
 // 2b-v-b. FOUNDING AGENT ACCESS (/pricing-plans) — SELF-CONTAINED ASSETS
 // ============================================================================
 // /pricing-plans is repositioned as "Founding Agent Access" and ships the same

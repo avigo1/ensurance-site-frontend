@@ -54,7 +54,30 @@ $ca_privacy_url = esc_url( home_url( '/privacy-policy' ) );
 $ca_form_id     = 1;
 $ca_action      = esc_url( get_permalink() ); // post to self — process_register() runs on template_redirect
 $ca_hash        = substr( hash( 'SHA256', AUTH_KEY . site_url() ), 0, 25 );
-$ca_redirect_to = function_exists( 'uwp_get_account_page_url' ) ? esc_url( uwp_get_account_page_url() ) : $ca_home_url;
+
+// --- Founding Agent plan selection (sign-up funnel) ---------------------------
+// The "Start 60 Day Access" / "Join as a Founding Agent" CTAs on /login and
+// /pricing-plans arrive here as ?plan=<slug>. Read it on GET, and fall back to
+// the posted hidden field so the choice survives a failed-submit re-render
+// (the form posts to the bare permalink, dropping the query string). Validated
+// against the central registry — safe on raw request input. Registry + memory
+// live in functions.php (see ensurance_founding_plans / the funnel doc block).
+$ca_plan = '';
+if ( function_exists( 'ensurance_founding_plan_valid' ) ) {
+	$ca_plan_raw = isset( $_GET['plan'] ) ? wp_unslash( $_GET['plan'] )
+		: ( isset( $_POST['plan'] ) ? wp_unslash( $_POST['plan'] ) : '' );
+	$ca_plan     = ensurance_founding_plan_valid( $ca_plan_raw );
+}
+
+// Post-registration destination: the selected plan's checkout/Stripe page when a
+// plan was chosen; otherwise the account page. (Only actually used by UsersWP
+// when the registration action is 'auto_approve_login'; otherwise the choice is
+// still remembered on the user via ensurance_remember_founding_plan.)
+if ( $ca_plan && function_exists( 'ensurance_founding_plan_destination' ) ) {
+	$ca_redirect_to = esc_url( ensurance_founding_plan_destination( $ca_plan ) );
+} else {
+	$ca_redirect_to = function_exists( 'uwp_get_account_page_url' ) ? esc_url( uwp_get_account_page_url() ) : $ca_home_url;
+}
 
 get_header( 'home' );
 ?>
@@ -112,6 +135,11 @@ get_header( 'home' );
 
       <?php // --- UsersWP register contract: keep these exactly. --- ?>
       <input type="hidden" name="redirect_to" value="<?php echo $ca_redirect_to; ?>" />
+      <?php // Founding Agent plan selection — preserved across a failed-submit re-render
+            // and read at registration by ensurance_remember_founding_plan().
+            if ( $ca_plan ) : ?>
+      <input type="hidden" name="plan" value="<?php echo esc_attr( $ca_plan ); ?>" />
+      <?php endif; ?>
       <input type="hidden" name="uwp_register_hash" value="<?php echo esc_attr( $ca_hash ); ?>" style="display:none !important; visibility:hidden !important;" />
       <input type="hidden" name="uwp_register_hp" value="" style="display:none !important; visibility:hidden !important;" size="25" autocomplete="off" />
       <input type="hidden" name="uwp_register_nonce" value="<?php echo esc_attr( wp_create_nonce( 'uwp-register-nonce-' . $ca_form_id ) ); ?>" />
