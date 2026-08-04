@@ -173,6 +173,9 @@ body { background: var(--bg-page) !important; }
 .ca-btn:hover { transform: translateY(-2px); background: var(--accent-hover); color: #fff; text-decoration: none; }
 .ca-submit { width: 100%; margin-top: var(--space-2); }
 
+/* Cloudflare Turnstile bot-check widget (rendered above the submit button). */
+.ca-form .ayecode-turnstile-placeholder { display: flex; justify-content: center; }
+
 /* --------------------------------------------------------------------------
    Footer lines — "Already have an account?" + legal fine print
    -------------------------------------------------------------------------- */

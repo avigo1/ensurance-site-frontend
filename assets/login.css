@@ -236,6 +236,9 @@ body { background: var(--bg-page) !important; }
 
 .al-submit { width: 100%; margin-top: var(--space-2); }
 
+/* Cloudflare Turnstile bot-check widget (rendered above the submit button). */
+.al-form .ayecode-turnstile-placeholder { display: flex; justify-content: center; }
+
 .al-card__foot {
   margin-top: var(--space-5);
   font-size: var(--text-sm);

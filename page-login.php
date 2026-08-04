@@ -125,6 +125,18 @@ get_header( 'home' );
           <input type="hidden" name="redirect_to" value="<?php echo $al_redirect_to; ?>" />
           <input type="hidden" name="uwp_login_nonce" value="<?php echo esc_attr( wp_create_nonce( 'uwp-login-nonce' ) ); ?>" />
 
+          <?php
+          // Cloudflare Turnstile — the SAME bot check UsersWP's stock login form
+          // enforces (verify_uwp on uwp_validate_result, gated by the uwp_login
+          // protection which is ON). This hand-rolled form does NOT fire
+          // uwp_template_fields, so without this the login submit fails with
+          // "Security verification missing." Renders just the placeholder; the
+          // ayecode-connect site-wide script hydrates + validates it on submit.
+          if ( has_action( 'ayecode_verify_turnstile_form_fields' ) ) {
+              do_action( 'ayecode_verify_turnstile_form_fields' );
+          }
+          ?>
+
           <button type="submit" name="uwp_login_submit" class="al-btn al-btn--solid al-submit">
             Log In to Agent Dashboard <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 18 ), $ensurance_svg_allowed ); ?>
           </button>

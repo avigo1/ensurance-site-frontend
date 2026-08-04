@@ -145,6 +145,20 @@ get_header( 'home' );
       <input type="hidden" name="uwp_register_nonce" value="<?php echo esc_attr( wp_create_nonce( 'uwp-register-nonce-' . $ca_form_id ) ); ?>" />
       <input type="hidden" name="uwp_register_form_id" value="<?php echo (int) $ca_form_id; ?>" />
 
+      <?php
+      // Cloudflare Turnstile — the SAME bot check UsersWP's stock /register form
+      // enforces (verify_uwp on the uwp_validate_result filter, gated by the
+      // uwp_register protection which is ON). Because this form is hand-rolled it
+      // does NOT fire uwp_template_fields, so we must render the widget ourselves
+      // or every real submit fails with "Security verification missing." The
+      // ayecode-connect action renders just the placeholder div; the plugin's
+      // site-wide script hydrates it and the cf-turnstile-response token is
+      // validated on submit. has_action() guards against the plugin being off.
+      if ( has_action( 'ayecode_verify_turnstile_form_fields' ) ) {
+          do_action( 'ayecode_verify_turnstile_form_fields' );
+      }
+      ?>
+
       <button type="submit" name="uwp_register_submit" class="ca-btn ca-submit">Create account</button>
     </form>
 
