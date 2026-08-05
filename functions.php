@@ -714,6 +714,43 @@ function ensurance_remember_founding_plan( $form_type, $data, $result, $user_id 
 }
 add_action( 'uwp_after_custom_fields_save', 'ensurance_remember_founding_plan', 10, 4 );
 
+/**
+ * Route a Founding Agent to their plan's destination on login.
+ *
+ * WHY THIS EXISTS: the sign-up funnel sets the REGISTRATION form's redirect_to to
+ * the plan destination (/dashboard/), but UsersWP only honors that when the
+ * registration action is 'auto_approve_login' (immediate login). The default
+ * registration form (id 1) is 'require_email_activation', so registration and
+ * login are split across an email round-trip: the agent activates by email, is
+ * sent to /login, and logs in there — a step that has no knowledge of the plan
+ * and otherwise lands on the account page. Because the chosen plan is durably
+ * saved on the user at registration (ensurance_remember_founding_plan →
+ * _ensurance_founding_plan), we can re-derive the destination at login.
+ *
+ * Hooked on 'uwp_login_redirect', which runs LAST in UsersWP's
+ * get_login_redirect_url() — after page-login.php's hardcoded account-page
+ * redirect_to — so returning here overrides it, but only for users who actually
+ * carry a plan. Everyone else (shoppers, staff) keeps the default. The
+ * destination itself stays filterable via ensurance_founding_plan_destination().
+ *
+ * @param string  $redirect_to     the destination UsersWP resolved so far
+ * @param mixed   $redirect_page_id unused
+ * @param array   $data            submitted login fields
+ * @param WP_User $user            the user who just logged in
+ * @return string
+ */
+function ensurance_founding_plan_login_redirect( $redirect_to, $redirect_page_id, $data, $user ) {
+    if ( ! ( $user instanceof WP_User ) || empty( $user->ID ) ) {
+        return $redirect_to;
+    }
+    $slug = ensurance_get_remembered_founding_plan( $user->ID );
+    if ( $slug ) {
+        return ensurance_founding_plan_destination( $slug );
+    }
+    return $redirect_to;
+}
+add_filter( 'uwp_login_redirect', 'ensurance_founding_plan_login_redirect', 10, 4 );
+
 // ============================================================================
 // 2b-v-b. FOUNDING AGENT ACCESS (/pricing-plans) — SELF-CONTAINED ASSETS
 // ============================================================================
