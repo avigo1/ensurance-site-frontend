@@ -41,8 +41,10 @@
 // self-serve checkout). Registry + funnel live in functions.php
 // (ensurance_create_account_url / ensurance_founding_agent_contact_url). The hero
 // buttons (#plans) remain in-page jump links to the plan comparison below.
-$fa_cta_60day   = ensurance_create_account_url( '60-day' );      // Start 60 day access → self-serve signup
-$fa_cta_monthly = ensurance_founding_agent_contact_url();        // Join as a Founding Agent → manual, contact-first (not self-serve checkout)
+// Both CTAs are wrapped in ensurance_founding_cta_url() so an already-logged-in
+// agent is sent straight to /dashboard/ instead of sign-up or the contact form.
+$fa_cta_60day   = ensurance_founding_cta_url( ensurance_create_account_url( '60-day' ) ); // Start 60 day access → self-serve signup
+$fa_cta_monthly = ensurance_founding_cta_url( ensurance_founding_agent_contact_url() );   // Join as a Founding Agent → manual, contact-first (not self-serve checkout)
 
 /**
  * Inline Lucide glyphs (stroke 2, round caps) used on this page.

@@ -71,8 +71,10 @@ $al_contact_url  = esc_url( home_url( '/contact' ) );
 // "Join as a Founding Agent" ($29/mo) is a MANUAL, contact-first process — it
 // links to /contact/?topic=founding so the team can set the agent up by hand
 // (ensurance_founding_agent_contact_url). Registry + funnel: functions.php.
-$al_cta_60day   = esc_url( ensurance_create_account_url( '60-day' ) );   // Start 60 Day Access → self-serve signup
-$al_cta_monthly = esc_url( ensurance_founding_agent_contact_url() );     // Join as a Founding Agent → manual, contact-first
+// Logged-in agents skip sign-up/contact and go straight to the dashboard
+// (ensurance_founding_cta_url); logged-out visitors get the normal paths.
+$al_cta_60day   = esc_url( ensurance_founding_cta_url( ensurance_create_account_url( '60-day' ) ) ); // Start 60 Day Access → self-serve signup
+$al_cta_monthly = esc_url( ensurance_founding_cta_url( ensurance_founding_agent_contact_url() ) );   // Join as a Founding Agent → manual, contact-first
 
 // UsersWP-resolved auth destinations (fall back gracefully if helpers are gone).
 $al_forgot_url   = function_exists( 'uwp_get_forgot_page_url' )  ? esc_url( uwp_get_forgot_page_url() )  : esc_url( wp_lostpassword_url() );

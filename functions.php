@@ -691,6 +691,32 @@ function ensurance_founding_agent_contact_url() {
 }
 
 /**
+ * Founding Agent CTA destination with a logged-in short-circuit (raw — esc_url at output).
+ *
+ * Every "Start 60 Day Access" / "Join as a Founding Agent" button should send an
+ * already-authenticated agent straight to their dashboard rather than back
+ * through sign-up (ensurance_create_account_url) or the contact form
+ * (ensurance_founding_agent_contact_url) — they have already joined. For a
+ * logged-out visitor it defers to the normal per-CTA destination the caller
+ * built and passed in. Wrap each CTA's URL at the call site:
+ *
+ *   ensurance_founding_cta_url( ensurance_create_account_url( '60-day' ) )
+ *   ensurance_founding_cta_url( ensurance_founding_agent_contact_url() )
+ *
+ * Added rather than folded into the two builders above so those keep their
+ * single responsibility and the login-aware behavior is opt-in per CTA.
+ *
+ * @param string $logged_out_url Raw URL to use when the visitor is not logged in.
+ * @return string Raw URL.
+ */
+function ensurance_founding_cta_url( $logged_out_url ) {
+    if ( is_user_logged_in() ) {
+        return home_url( '/dashboard/' );
+    }
+    return $logged_out_url;
+}
+
+/**
  * Post-account-creation destination for a plan (interim checkout today, Stripe
  * later). Filterable so the future Stripe URLs can be swapped in without editing
  * the registry.
