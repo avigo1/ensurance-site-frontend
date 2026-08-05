@@ -63,11 +63,10 @@ get_header( 'agent' );
 			</svg>
 		</span>
 
-		<h1 class="dashboard-setup__title">Setting up your dashboard…</h1>
+		<h1 class="dashboard-setup__title">Your Dashboard Is Coming Soon</h1>
 
 		<p class="dashboard-setup__note">
-			Your Founding Agent account is ready. We're preparing your dashboard —
-			this page will fill in shortly.
+			Stay Tuned, great things are afoot.
 		</p>
 
 	</section>
