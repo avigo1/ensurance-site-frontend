@@ -1,0 +1,114 @@
+/* ===================================================================
+   Agent Dashboard (/dashboard) — PLACEHOLDER holding state.
+
+   AGENT-SIDE PAGE. Chrome is header-agent.php (logo only) + the global
+   footer-home.php. Depends on assets/home.css for the token system,
+   base element styles and both chrome bars; this file only adds the
+   placeholder's own layout. All colors/spacing reference the shared
+   design tokens — no hardcoded brand values.
+
+   This is Plan 1 of the Founding Agent onboarding: a blank state with a
+   slowly spinning gear while the real dashboard is built (Plan 3). Keep
+   the wrapper (.dashboard-page) and section (.dashboard-setup) hooks;
+   Plan 3 swaps the section body, not the page shell.
+   =================================================================== */
+
+.dashboard-page {
+  display: flex;
+  flex-direction: column;
+  /* Fill the viewport between the header and footer so the blank state
+     sits centered rather than crowding the top on tall screens. */
+  min-height: 60vh;
+  background: var(--bg-page);
+  overflow-x: clip;
+}
+
+/* ── Page background over parent-theme / plugin globals ──────────────
+   Same fix the other standalone pages carry: AyeCode UI (GeoDirectory,
+   the `aui_bs5` body class) ships
+   `body { background-color: initial !important }`, which beats home.css's
+   plain body background and lets the dark Kadence base show through —
+   most visibly as a gray band in the footer's top-margin gap.
+
+   Served via the page-dashboard.php template HIERARCHY (matched by slug),
+   not an assigned Template, so body_class() emits `page-template-default`
+   and the conventional `page-template-page-…-php` selector never matches.
+   Hook the reliable .dashboard-page wrapper instead, and keep the template
+   selector in case the Template is ever assigned in wp-admin. Same fix as
+   pricing-plans.css / publish-your-agency.css. */
+html body:has(.dashboard-page),
+html body.page-template-page-dashboard-php {
+  background: var(--bg-page) !important;
+}
+
+/* ── Shopper CTA suppressed on the agent side ───────────────────────
+   footer-home.php is shared chrome and ships the "Start My Auto Quote
+   Request" mobile sticky CTA — a shopper action that does not belong on
+   an agent's dashboard. Hidden here rather than by editing footer-home.php
+   so the shopper pages are untouched. assets/home.js is null-safe when the
+   element is present-but-hidden. */
+html body:has(.dashboard-page) .mobile-sticky-cta {
+  display: none;
+}
+
+/* ── Blank "setting up" state ───────────────────────────────────────── */
+.dashboard-setup {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-5);
+  max-width: 440px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--container-pad);
+  text-align: center;
+}
+
+.dashboard-setup__gear {
+  display: inline-flex;
+  color: var(--accent);
+  /* Slow, calm rotation — this is a reassuring holding state, not a
+     busy spinner. */
+  animation: dashboard-gear-spin 6s linear infinite;
+}
+.dashboard-setup__gear svg { display: block; }
+
+@keyframes dashboard-gear-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Respect reduced-motion: hold the gear still rather than spinning it. */
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-setup__gear { animation: none; }
+}
+
+/* Scoped heading pin — Kadence prints inline global typography after our
+   stylesheets that colors bare h1 white; on the light page that is
+   invisible. Re-assert the heading color at class specificity. See the
+   memory kadence-white-heading-override. */
+.dashboard-setup__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(24px, 4vw, 30px);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-snug);
+  letter-spacing: var(--tracking-tight);
+  color: var(--text-heading) !important;
+}
+
+.dashboard-setup__note {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-light);
+  line-height: var(--leading-body);
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+/* ── Responsive ────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .dashboard-setup { padding: var(--space-7) var(--container-pad); }
+  .dashboard-setup__note { font-size: 17px; }
+}

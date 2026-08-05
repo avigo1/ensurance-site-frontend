@@ -551,6 +551,55 @@ function ensurance_create_account_assets() {
 add_action('wp_enqueue_scripts', 'ensurance_create_account_assets', 20);
 
 // ============================================================================
+// 2b-v-a3. AGENT DASHBOARD (/dashboard) — SELF-CONTAINED ASSETS
+// ============================================================================
+// The placeholder dashboard is another agent-side Calm Intelligence page, so it
+// reuses assets/home.css + assets/home.js for the tokens, fonts, base and chrome
+// bars, and layers assets/dashboard.css on top. The shared marketing bundle is
+// dequeued so its selectors cannot fight this design. Mirrors
+// ensurance_create_account_assets(). is_page('dashboard') is the reliable gate.
+function ensurance_dashboard_assets() {
+    if ( ! is_page( 'dashboard' ) ) {
+        return;
+    }
+
+    // Drop the shared marketing bundle so it cannot fight this design.
+    wp_dequeue_style('ensurance-marketing');
+    wp_dequeue_script('ensurance-marketing');
+    wp_dequeue_style('ensurance-marketing-fonts');
+
+    // Shared Calm Intelligence type system + base (same as the homepage).
+    wp_enqueue_style(
+        'ensurance-home-fonts',
+        'https://fonts.googleapis.com/css2?family=Albert+Sans:wght@700;800;900&family=Rubik:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap',
+        array(),
+        null
+    );
+    wp_enqueue_style(
+        'ensurance-home',
+        get_stylesheet_directory_uri() . '/assets/home.css',
+        array(),
+        filemtime(get_stylesheet_directory() . '/assets/home.css')
+    );
+    wp_enqueue_script(
+        'ensurance-home',
+        get_stylesheet_directory_uri() . '/assets/home.js',
+        array(),
+        filemtime(get_stylesheet_directory() . '/assets/home.js'),
+        true
+    );
+
+    // Page-specific layer — loaded AFTER home.css via dependency.
+    wp_enqueue_style(
+        'ensurance-dashboard',
+        get_stylesheet_directory_uri() . '/assets/dashboard.css',
+        array('ensurance-home'),
+        filemtime(get_stylesheet_directory() . '/assets/dashboard.css')
+    );
+}
+add_action('wp_enqueue_scripts', 'ensurance_dashboard_assets', 20);
+
+// ============================================================================
 // 2b-v-a4. FOUNDING AGENT PLAN SELECTION — SIGN-UP FUNNEL MEMORY
 // ============================================================================
 // Single source of truth for the two Founding Agent plans an agent can pick.
@@ -593,7 +642,12 @@ function ensurance_founding_plans() {
         '60-day'  => array(
             'label'       => 'Start 60 Day Access',
             'package_id'  => 14,
-            'destination' => home_url( '/publish-your-agency/insurance-agencies/?package_id=14' ),
+            // Free path: no payment, no listing form. Straight to the agent
+            // dashboard (agents do not self-manage profiles — see
+            // plans/agent-onboarding-1-free-agent.md). The immediate redirect
+            // only fires under the 'auto_approve_login' registration action;
+            // until then the durable user-meta copy carries the plan.
+            'destination' => home_url( '/dashboard/' ),
         ),
         'monthly' => array(
             'label'       => 'Join as a Founding Agent',
