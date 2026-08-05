@@ -9,19 +9,22 @@
  * layering assets/pricing-plans.css + assets/pricing-plans.js on top. Loaded
  * and isolated from the shared marketing bundle in functions.php.
  *
- * Sign-up funnel + GeoDirectory coupling:
- *   The two plan-selection CTAs now route through /create-account first (carrying
- *   ?plan=<slug>); the new agent continues to that plan's checkout AFTER the
- *   account is created. The interim destination is still the EXISTING
- *   GeoDirectory Pricing Manager package (?package_id=), swapped for Stripe in a
- *   future iteration. Registry + funnel: functions.php (ensurance_founding_plans
- *   / ensurance_create_account_url). Do NOT rebuild checkout; do NOT change ids.
- *     - 60-day  plan → package_id=14  (currently free tier)
- *     - monthly plan → package_id=16
- *   NOTE (unresolved, see handoff doc §14): package 14 is a perpetual-free
- *   GeoDirectory package today, not a 60-day-trial-to-$29. The visible copy
- *   promises "$0 for 60 days, then $29/mo". Confirm the GeoDirectory package
- *   behavior matches this copy before promoting to production, or adjust one.
+ * Sign-up funnel — the two plans route DIFFERENTLY:
+ *   - 60-day (free): self-serve. CTA → /create-account?plan=60-day → account
+ *     created → /dashboard/ (Plan 1). Funnel: ensurance_create_account_url /
+ *     ensurance_founding_plans in functions.php.
+ *   - monthly ($29/mo): MANUAL, contact-first (Plan 2). CTA →
+ *     /contact/?topic=founding; the team sets up the profile + membership by hand.
+ *     There is NO self-serve checkout for this plan. URL:
+ *     ensurance_founding_agent_contact_url(). The $29 card + terms copy reflect
+ *     this (no recurring-charge authorization shown).
+ *   The `monthly` registry entry / package_id=16 / create-account?plan=monthly
+ *   plumbing is left DORMANT for a possible future self-serve revival — see
+ *   plans/agent-onboarding-2-founding-agent.md.
+ *   NOTE (unresolved): the 60-day card copy promises "$0 for 60 days, then $29/mo",
+ *   implying automatic conversion — but the free path collects no payment method,
+ *   so nothing auto-bills. Reconcile that copy (or make 60-day conversion manual
+ *   too) before promoting to production.
  *
  * SEO: title / meta description / canonical / robots are owned by Yoast and
  * emitted through wp_head(). This template outputs only FAQPage JSON-LD, which
@@ -398,7 +401,7 @@ get_header( 'home' );
 				</div>
 				<div class="fa-terms__card">
 					<span class="fa-terms__tag">Founding Agent Access · $29 per month</span>
-					<p class="fa-terms__text">By continuing, I agree to subscribe to Founding Agent Access for $29 per month and authorize Ensurance to charge the payment method provided on a recurring monthly basis until canceled.</p>
+					<p class="fa-terms__text">Founding Agent Access is $29 per month. There is no online sign-up — contact our team and we'll set up your membership and agency profile with you. Billing terms are agreed with you directly before anything begins.</p>
 				</div>
 			</div>
 			<p class="fa-terms__cancel"><?php echo wp_kses( ensurance_fa_icon( 'circle-check', 16, 'fa-terms__cancel-icon' ), $fa_svg_allowed ); ?> Cancel anytime. Access continues through the current billing period.</p>
