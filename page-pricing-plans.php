@@ -31,13 +31,15 @@
  * page, so it auto-overrides the previous Kadence block content with no DB edit.
  */
 
-// Plan-selection CTAs now route through /create-account (sign-up first), carrying
-// the plan as ?plan=<slug>; the agent continues to that plan's checkout/Stripe
-// page after the account is created. Registry + funnel live in functions.php
-// (ensurance_create_account_url / ensurance_founding_plans). The hero buttons
-// (#plans) remain in-page jump links to the plan comparison below.
-$fa_cta_60day   = ensurance_create_account_url( '60-day' );  // Start 60 day access
-$fa_cta_monthly = ensurance_create_account_url( 'monthly' ); // Join as a Founding Agent
+// The two plans route differently. The free "Start 60 day access" is self-serve:
+// → /create-account?plan=60-day (sign-up first), then the dashboard. The paid
+// "Join as a Founding Agent" ($29/mo) is a MANUAL, contact-first process — it
+// links to /contact/?topic=founding so the team sets the agent up by hand (no
+// self-serve checkout). Registry + funnel live in functions.php
+// (ensurance_create_account_url / ensurance_founding_agent_contact_url). The hero
+// buttons (#plans) remain in-page jump links to the plan comparison below.
+$fa_cta_60day   = ensurance_create_account_url( '60-day' );      // Start 60 day access → self-serve signup
+$fa_cta_monthly = ensurance_founding_agent_contact_url();        // Join as a Founding Agent → manual, contact-first (not self-serve checkout)
 
 /**
  * Inline Lucide glyphs (stroke 2, round caps) used on this page.
@@ -243,11 +245,11 @@ get_header( 'home' );
 							<li><span class="fa-tick"><?php echo wp_kses( ensurance_fa_icon( 'check', 13 ), $fa_svg_allowed ); ?></span><?php echo esc_html( $b ); ?></li>
 						<?php endforeach; ?>
 					</ul>
-					<a class="fa-btn fa-btn--outline fa-btn--block" href="<?php echo esc_url( $fa_cta_monthly ); ?>" data-event="plan_monthly_checkout_click">Join as a Founding Agent <?php echo wp_kses( ensurance_fa_icon( 'arrow-right', 17 ), $fa_svg_allowed ); ?></a>
+					<a class="fa-btn fa-btn--outline fa-btn--block" href="<?php echo esc_url( $fa_cta_monthly ); ?>" data-event="plan_monthly_contact_click">Join as a Founding Agent <?php echo wp_kses( ensurance_fa_icon( 'arrow-right', 17 ), $fa_svg_allowed ); ?></a>
 					<p class="fa-plan__note">You stay in control of which opportunities you choose to pursue.</p>
 					<div class="fa-consent">
 						<?php echo wp_kses( ensurance_fa_icon( 'lock', 13, 'fa-consent__icon' ), $fa_svg_allowed ); ?>
-						<span>By continuing, I agree to subscribe to Founding Agent Access for $29 per month and authorize Ensurance to charge the payment method provided on a recurring monthly basis until canceled.</span>
+						<span>Founding Agent Access is set up personally. Contact our team and we'll get your agency profile and $29/mo membership ready for you — no payment is taken online.</span>
 					</div>
 				</article>
 			</div>

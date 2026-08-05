@@ -675,6 +675,22 @@ function ensurance_create_account_url( $slug ) {
 }
 
 /**
+ * Contact URL for the paid "Join as a Founding Agent" path (raw — esc_url at output).
+ *
+ * The monthly ($29/mo) plan is intentionally a MANUAL process: rather than a
+ * self-serve create-account → Stripe checkout, prospective founding agents
+ * contact the team, who set up the agency profile, bio and membership by hand
+ * (see memory agents-cannot-manage-own-profiles). So the monthly CTAs point here,
+ * not at ensurance_create_account_url('monthly'). The `topic` param preselects the
+ * "Founding Agent membership" option on the contact form so these inquiries are
+ * tagged for routing (page-contact.php). The `monthly` funnel plumbing
+ * (registry entry, create-account handling) is left in place but dormant.
+ */
+function ensurance_founding_agent_contact_url() {
+    return add_query_arg( 'topic', 'founding', home_url( '/contact/' ) );
+}
+
+/**
  * Post-account-creation destination for a plan (interim checkout today, Stripe
  * later). Filterable so the future Stripe URLs can be swapped in without editing
  * the registry.
@@ -1560,11 +1576,12 @@ add_action('init', 'ensurance_contact_register_cpt');
 
 function ensurance_contact_topic_labels() {
     return array(
-        ''        => 'A general question',
-        'request' => 'About a request I started',
-        'agent'   => "I'm an agent or agency",
-        'press'   => 'Press or media',
-        'privacy' => 'A privacy request',
+        ''         => 'A general question',
+        'request'  => 'About a request I started',
+        'agent'    => "I'm an agent or agency",
+        'founding' => 'Founding Agent membership',
+        'press'    => 'Press or media',
+        'privacy'  => 'A privacy request',
     );
 }
 

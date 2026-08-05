@@ -73,12 +73,21 @@ $ct_cues = array(
 
 // §Form — "What's this about?" topics (value / label).
 $ct_topics = array(
-    array( '',        'A general question' ),
-    array( 'request', 'About a request I started' ),
-    array( 'agent',   'I am an agent or agency' ),
-    array( 'press',   'Press or media' ),
-    array( 'privacy', 'A privacy request' ),
+    array( '',         'A general question' ),
+    array( 'request',  'About a request I started' ),
+    array( 'agent',    'I am an agent or agency' ),
+    array( 'founding', 'Founding Agent membership' ),
+    array( 'press',    'Press or media' ),
+    array( 'privacy',  'A privacy request' ),
 );
+
+// Preselect a topic from ?topic= (the "Join as a Founding Agent" CTAs link to
+// /contact/?topic=founding). Sanitized and whitelisted against $ct_topics —
+// anything unknown falls back to the default first option.
+$ct_selected_topic = isset( $_GET['topic'] ) ? sanitize_key( wp_unslash( $_GET['topic'] ) ) : '';
+if ( ! in_array( $ct_selected_topic, wp_list_pluck( $ct_topics, 0 ), true ) ) {
+    $ct_selected_topic = '';
+}
 
 // §FAQ — also feeds the FAQPage JSON-LD below.
 $ct_faq = array(
@@ -175,7 +184,7 @@ get_header( 'home' );
           <div class="ct-select-wrap">
             <select class="ct-select" id="ct-topic" name="ct_topic" aria-describedby="ct-topic-help">
               <?php foreach ( $ct_topics as $topic ) : ?>
-              <option value="<?php echo esc_attr( $topic[0] ); ?>"><?php echo esc_html( $topic[1] ); ?></option>
+              <option value="<?php echo esc_attr( $topic[0] ); ?>" <?php selected( $ct_selected_topic, $topic[0] ); ?>><?php echo esc_html( $topic[1] ); ?></option>
               <?php endforeach; ?>
             </select>
           </div>
