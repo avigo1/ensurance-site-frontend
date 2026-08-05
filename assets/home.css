@@ -419,13 +419,35 @@ a {
   color: var(--text-heading);
 }
 
+/* Agent login — secondary (outline) button. margin-left:auto pushes it and the
+   primary CTA to the right as a pair (the CTA no longer needs its own auto). */
+.primary-nav .nav-login {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 18px;
+  margin-left: auto;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-strong);
+  background: #fff;
+  color: var(--primary);
+  font-weight: var(--weight-medium);
+  transition: all var(--duration-base) var(--ease-out);
+}
+
+.primary-nav .nav-login:hover {
+  border-color: var(--accent);
+  color: var(--primary);
+  transform: translateY(-2px);
+}
+
 .primary-nav .nav-cta {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   height: 40px;
   padding: 0 20px;
-  margin-left: auto;
   border-radius: var(--radius-pill);
   background: var(--accent);
   color: #fff;
@@ -1166,6 +1188,12 @@ a.card:hover .coverage-tile__arrow {
 
   .primary-nav.is-open {
     display: flex;
+  }
+
+  .primary-nav .nav-login {
+    margin-left: 0;
+    margin-top: 8px;
+    height: 48px;
   }
 
   .primary-nav .nav-cta {

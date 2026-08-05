@@ -1,0 +1,231 @@
+/* ===================================================================
+   Publish Your Agency (/publish-your-agency) — "Calm Intelligence"
+   form shell. Built from the approved Claude design (Ensurance Publish
+   Your Agency (form shell), standalone).
+
+   AGENT-SIDE PAGE. Chrome is header-agent.php (logo only) + the global
+   footer-home.php. Depends on assets/home.css for the token system,
+   base element styles and both chrome bars; this file only adds the
+   page-specific sections. All colors/spacing reference the shared
+   design tokens — no hardcoded brand values.
+
+   THE FORM
+   --------
+   There is deliberately NOT a single selector below that descends into
+   #pya-form-slot — the GeoDirectory form's own markup and styling are
+   left alone. Do not add one.
+
+   home.css's base element styles (body font, h1–h3, p, a) do cascade
+   into the form, so it inherits the site typography rather than the old
+   Kadence font. That is intentional and approved; it is inheritance, not
+   this file targeting the form.
+   =================================================================== */
+
+.pya-page {
+  /* Local: the card radius, so the mobile breakpoint can shrink it in
+     one place without touching the shared --radius-card-lg token. */
+  --pya-card-radius: var(--radius-card-lg);
+
+  --pya-card-max: 860px;
+
+  background: var(--bg-page);
+  overflow-x: clip;
+}
+
+/* ── Page background over parent-theme / plugin globals ──────────────
+   Same fix the other standalone pages carry: AyeCode UI (GeoDirectory,
+   the `aui_bs5` body class) ships
+   `body { background-color: initial !important }`, which beats home.css's
+   plain body background and lets the dark Kadence base show through —
+   most visibly as a gray band in the footer's top-margin gap.
+
+   This page is served via the page-publish-your-agency.php template
+   HIERARCHY (matched by slug), not an assigned Template, so body_class()
+   emits `page-template-default` and the conventional
+   `page-template-page-…-php` selector never matches. Hook the reliable
+   .pya-page wrapper instead, and keep the template selector in case the
+   Template is ever assigned in wp-admin. Same fix as pricing-plans.css. */
+html body:has(.pya-page),
+html body.page-template-page-publish-your-agency-php {
+  background: var(--bg-page) !important;
+}
+
+/* ── Shopper CTA suppressed on the agent side ───────────────────────
+   footer-home.php is shared chrome and ships the "Start My Auto Quote
+   Request" mobile sticky CTA. That is a shopper action: an agent midway
+   through publishing an agency should not be pushed at a consumer auto
+   quote, and on mobile the bar overlaps the form's submit area. Hidden
+   here rather than by editing footer-home.php, so the homepage and the
+   other shopper pages are untouched. assets/home.js is null-safe if the
+   element is present-but-hidden, so its scroll handler keeps working. */
+html body:has(.pya-page) .mobile-sticky-cta {
+  display: none;
+}
+
+/* ── Page head ─────────────────────────────────────────────────── */
+.pya-head {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(150deg, var(--primary), var(--bg-inverse));
+}
+
+.pya-head__rule {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--accent), var(--secondary));
+}
+
+.pya-head__inner {
+  position: relative;
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: var(--space-8) var(--container-pad) var(--space-7);
+}
+
+/* Breadcrumb */
+.pya-crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  line-height: 1.4;
+}
+.pya-crumbs a {
+  color: var(--gray-400);
+  text-decoration: none;
+  text-underline-offset: 4px;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+.pya-crumbs a:hover,
+.pya-crumbs a:focus-visible {
+  color: #fff;
+  text-decoration: underline;
+}
+.pya-crumbs__sep { color: rgba(255, 255, 255, 0.3); }
+.pya-crumbs__current { color: #fff; }
+
+/* Eyebrow — reflects the plan the agent arrived with (package_id) */
+.pya-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  line-height: 1.4;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.pya-eyebrow__dot {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.pya-title {
+  margin: var(--space-4) 0 0;
+  max-width: 640px;
+  font-family: var(--font-display);
+  font-size: clamp(38px, 6.4vw, 60px);
+  font-weight: var(--weight-extrabold);
+  line-height: var(--leading-hero);
+  letter-spacing: var(--tracking-display);
+  color: #fff;
+  text-wrap: balance;
+}
+
+.pya-lede {
+  margin: var(--space-4) 0 0;
+  max-width: 560px;
+  font-family: var(--font-sans);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-light);
+  line-height: var(--leading-body);
+  color: var(--gray-300);
+  text-wrap: pretty;
+}
+
+/* ── Form shell ────────────────────────────────────────────────── */
+.pya-form-section {
+  max-width: var(--pya-card-max);
+  margin: 0 auto;
+  padding: var(--space-8) var(--container-pad);
+}
+
+.pya-card {
+  background: var(--surface-card);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--pya-card-radius);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.pya-card__bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--border-soft);
+  background: var(--navy-50);
+  color: var(--accent);
+}
+
+.pya-card__label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: var(--weight-medium);
+  line-height: 1.4;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--secondary);
+}
+
+/* The GeoDirectory form's own container. Padding only — nothing here
+   reaches inside it. See the header note. */
+.pya-card__body {
+  padding: var(--space-7) var(--space-6);
+}
+
+.pya-assurance {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin: var(--space-5) 0 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-body);
+  color: var(--text-muted);
+  text-align: center;
+}
+.pya-assurance .pya-icon {
+  flex: none;
+  color: var(--accent);
+}
+
+.pya-icon { display: block; }
+
+/* ── Responsive ────────────────────────────────────────────────── */
+@media (max-width: 782px) {
+  .pya-head__inner { padding: var(--space-7) var(--container-pad) var(--space-6); }
+  .pya-form-section { padding: var(--space-7) var(--container-pad); }
+  .pya-lede { font-size: 17px; }
+}
+
+@media (max-width: 640px) {
+  .pya-page { --pya-card-radius: 24px; }
+  .pya-card__body { padding: var(--space-6) var(--space-4); }
+  .pya-card__bar { padding: 14px var(--space-4); }
+  .pya-assurance { align-items: flex-start; text-align: left; }
+  .pya-assurance .pya-icon { margin-top: 4px; }
+}

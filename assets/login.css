@@ -1,0 +1,478 @@
+/* ==========================================================================
+   /login — Agent Login (Calm Intelligence)
+   Page-specific layer on top of assets/home.css (tokens, chrome, fonts).
+   Scoped to .al-page so nothing leaks into the shared marketing bundle.
+   ========================================================================== */
+
+/* Tokens the design uses that home.css does not define yet. */
+.al-page {
+  --sky-50: #eaf6fa;
+  --surface-brand: var(--navy-50);
+  --text-on-inverse: #ffffff;
+  --weight-semibold: 600;
+}
+
+/* Standalone-page fixes (see CLAUDE.md memory):
+   1. give <body> a real background so Kadence's dark base never shows as a
+      gray band above the footer;
+   2. re-pin heading colors + leading — Kadence global typography paints bare
+      h1/h2/h3 white and clamps line-height site-wide. */
+body { background: var(--bg-page) !important; }
+
+.al-page h1,
+.al-page h2 {
+  color: var(--text-heading);
+  font-family: var(--font-display);
+  font-weight: var(--weight-extrabold);
+  margin: 0;
+}
+.al-page p { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   Layout primitives
+   -------------------------------------------------------------------------- */
+.al-container {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding-left: var(--container-pad);
+  padding-right: var(--container-pad);
+}
+
+.al-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+.al-eyebrow--accent    { color: var(--accent); }
+.al-eyebrow--secondary { color: var(--secondary); }
+.al-eyebrow svg { flex-shrink: 0; }
+
+/* --------------------------------------------------------------------------
+   Buttons
+   -------------------------------------------------------------------------- */
+.al-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-sizing: border-box;
+  text-decoration: none;
+  font-family: var(--font-sans);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-md);
+  line-height: 1.2;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  padding: 15px 26px;
+  cursor: pointer;
+  transition: transform var(--duration-fast) var(--ease-out),
+              box-shadow var(--duration-base) var(--ease-out),
+              background var(--duration-fast) var(--ease-out),
+              border-color var(--duration-fast) var(--ease-out);
+}
+.al-btn svg { transition: transform var(--duration-fast) var(--ease-out); }
+.al-btn:hover svg { transform: translateX(4px); }
+
+.al-btn--solid {
+  color: #fff;
+  background: var(--accent);
+  box-shadow: var(--shadow-cta);
+}
+.al-btn--solid:hover { transform: translateY(-2px); background: var(--accent-hover); }
+
+.al-btn--outline {
+  color: var(--primary);
+  background: var(--surface-card);
+  border-color: var(--border-strong);
+}
+.al-btn--outline:hover { transform: translateY(-2px); border-color: var(--accent); box-shadow: var(--shadow-card); }
+
+.al-btn--ghost {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.28);
+}
+.al-btn--ghost:hover { transform: translateY(-2px); border-color: rgba(255, 255, 255, 0.6); background: rgba(255, 255, 255, 0.06); }
+
+/* --------------------------------------------------------------------------
+   Login + New agent grid
+   -------------------------------------------------------------------------- */
+.al-login {
+  padding-top: var(--space-8);
+  padding-bottom: var(--space-8);
+  scroll-margin-top: 80px;
+}
+.al-login__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-5);
+  align-items: stretch;
+}
+
+.al-card {
+  border-radius: var(--radius-card-lg);
+  padding: var(--space-7);
+}
+.al-card__title {
+  font-size: var(--text-2xl);
+  line-height: var(--leading-snug);
+  margin-top: var(--space-3);
+}
+.al-card__lead {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  font-weight: var(--weight-light);
+  line-height: var(--leading-body);
+  margin-top: var(--space-2);
+}
+.al-card__bar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--accent), var(--secondary));
+}
+
+/* Returning-agent (login) card */
+.al-login__box {
+  background: var(--surface-card);
+  border: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-card);
+}
+.al-login__box .al-card__lead { margin-bottom: var(--space-5); }
+
+/* --------------------------------------------------------------------------
+   Login form (re-skinned UsersWP contract)
+   -------------------------------------------------------------------------- */
+.al-form { display: flex; flex-direction: column; gap: var(--space-4); }
+.al-field { display: flex; flex-direction: column; gap: 8px; }
+.al-field label {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text-strong);
+}
+.al-field input {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: var(--font-sans);
+  font-size: var(--text-md);
+  color: var(--text-body);
+  background: #fff;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  padding: 13px 16px;
+  transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+}
+.al-field input::placeholder { color: var(--text-faint); }
+.al-field input:focus {
+  outline: none;
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 3px rgba(43, 134, 115, 0.15);
+}
+
+/* Kadence's parent-theme input[type=…]:focus rules (specificity 0,2,1) outrank a
+   bare .al-field input (0,1,1) and repaint focused fields from the global
+   palette — invisible text WHILE TYPING, readable again on blur. Pin color +
+   -webkit-text-fill-color (Safari/iOS follows text-fill, not color) + background
+   at .al-page specificity for BOTH resting and :focus, with an autofill
+   safeguard. Same defense as commits 07123a0 (/start) and d5e3526 (investor
+   brief). Do not drop the :focus selector — that is the state that breaks. */
+.al-page .al-field input,
+.al-page .al-field input:focus {
+  color: var(--text-body);
+  -webkit-text-fill-color: var(--text-body);
+  background-color: #fff;
+  caret-color: var(--accent);
+}
+.al-page .al-field input:-webkit-autofill,
+.al-page .al-field input:-webkit-autofill:hover,
+.al-page .al-field input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text-body);
+  box-shadow: 0 0 0 100px #fff inset;
+}
+.al-field__pw { position: relative; }
+.al-field__pw input { padding-right: 76px; }
+.al-pw-toggle {
+  position: absolute;
+  top: 50%; right: 12px;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  color: var(--secondary);
+  padding: 4px 6px;
+}
+.al-pw-toggle:hover { color: var(--accent); }
+
+.al-form__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.al-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  font-size: var(--text-sm);
+  color: var(--text-body);
+}
+.al-check input { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+.al-link {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--accent);
+  text-decoration: none;
+}
+.al-link:hover { text-decoration: underline; }
+
+.al-submit { width: 100%; margin-top: var(--space-2); }
+
+/* Cloudflare Turnstile bot-check widget (rendered above the submit button). */
+.al-form .ayecode-turnstile-placeholder { display: flex; justify-content: center; }
+
+.al-card__foot {
+  margin-top: var(--space-5);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  text-align: center;
+}
+.al-card__foot a { color: var(--accent); font-weight: var(--weight-medium); text-decoration: none; }
+.al-card__foot a:hover { text-decoration: underline; }
+
+/* UsersWP notice / alert markup, if it renders on failed login */
+.al-login__box .uwp-notifications,
+.al-login__box .alert {
+  border-radius: var(--radius-input);
+  padding: 12px 16px;
+  margin-bottom: var(--space-4);
+  font-size: var(--text-sm);
+  border: 1px solid var(--border-soft);
+}
+.al-login__box .alert-danger,
+.al-login__box .alert-error {
+  background: #fdecec;
+  border-color: #f5c2c0;
+  color: #b42318;
+}
+.al-login__box .alert-success {
+  background: var(--accent-50);
+  border-color: var(--accent-100);
+  color: var(--accent-hover);
+}
+
+/* --------------------------------------------------------------------------
+   New-agent card
+   -------------------------------------------------------------------------- */
+.al-newagent {
+  position: relative;
+  overflow: hidden;
+  background: var(--sky-50);
+  border: 1px solid var(--navy-100);
+  display: flex;
+  flex-direction: column;
+}
+.al-newagent__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.al-badge {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--accent-hover);
+  background: var(--accent-50);
+  border: 1px solid var(--accent-100);
+  border-radius: var(--radius-pill);
+  padding: 4px 12px;
+  white-space: nowrap;
+}
+.al-newagent .al-card__lead { margin-bottom: var(--space-5); }
+
+.al-bullets {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  flex: 1;
+}
+.al-bullets li {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-light);
+  color: var(--text-body);
+  line-height: var(--leading-body);
+}
+.al-bullets__mark {
+  flex-shrink: 0;
+  margin-top: 1px;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--accent-50);
+  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.al-newagent__cta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+.al-newagent__cta .al-btn { width: 100%; }
+
+.al-fineprint {
+  margin-top: var(--space-4);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  line-height: var(--leading-snug);
+}
+/* !important on the side-margins so the global `p { margin: 0 !important }`
+   cannot strip the auto-centering and jam this max-width block to the left. */
+.al-fineprint--center { text-align: center; max-width: 620px; margin-left: auto !important; margin-right: auto !important; }
+
+/* --------------------------------------------------------------------------
+   Trust callout
+   -------------------------------------------------------------------------- */
+.al-trust { max-width: 940px; padding-bottom: var(--space-8); }
+.al-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: var(--accent-50);
+  border: 1px solid var(--accent-100);
+  border-radius: var(--radius-card);
+  padding: var(--space-5) var(--space-6);
+}
+.al-callout__icon {
+  flex-shrink: 0;
+  color: var(--accent);
+  display: inline-flex;
+  margin-top: 2px;
+}
+.al-callout__title {
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  color: var(--text-heading);
+}
+.al-callout__body {
+  margin-top: 4px;
+  font-size: var(--text-sm);
+  color: var(--text-body);
+  font-weight: var(--weight-light);
+  line-height: var(--leading-body);
+}
+
+/* --------------------------------------------------------------------------
+   Support
+   -------------------------------------------------------------------------- */
+.al-support { padding-top: var(--space-8); padding-bottom: var(--space-7); }
+.al-support__card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-6);
+  align-items: center;
+  background: var(--surface-brand);
+  border: 1px solid var(--navy-100);
+  border-radius: var(--radius-card-lg);
+  padding: var(--space-7);
+}
+.al-support__text .al-card__lead { max-width: 560px; font-size: var(--text-md); }
+.al-support__action { flex-shrink: 0; }
+.al-support__action .al-btn { white-space: nowrap; }
+
+/* --------------------------------------------------------------------------
+   Footer CTA
+   -------------------------------------------------------------------------- */
+.al-cta { padding-bottom: var(--space-8); }
+.al-cta__card {
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-inverse);
+  border-radius: var(--radius-card-lg);
+  padding: var(--space-9) var(--space-8);
+  text-align: center;
+}
+.al-cta__bar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+}
+.al-page .al-cta__title {
+  color: var(--text-on-inverse);
+  font-size: var(--text-4xl);
+  /* !important beats the customizer's global `h2 { line-height: 36px !important }`
+     (see CLAUDE.md / customizer-global-important-css). */
+  line-height: 38px !important;
+  margin: var(--space-4) auto 0;
+  /* Padding, not margin — the global CSS resets <p> margin-top to 0, so the lead
+     below would otherwise sit flush against the title. */
+  padding-bottom: var(--space-5);
+  max-width: 640px;
+}
+.al-cta__lead {
+  color: var(--gray-400);
+  font-weight: var(--weight-light);
+  max-width: 580px;
+  line-height: var(--leading-body);
+  text-align: center;
+  /* The global `p { margin: 0 !important }` kills the auto side-margins, so the
+     max-width block would jam left instead of centering. Re-assert auto side
+     margins with !important (vertical stays 0 — the title's padding-bottom owns
+     the gap above). */
+  margin: 0 auto !important;
+}
+.al-cta__actions {
+  margin-top: var(--space-6);
+  display: flex;
+  gap: var(--space-4);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.al-cta .al-fineprint--center { margin-top: var(--space-6); color: var(--gray-500); }
+
+/* --------------------------------------------------------------------------
+   Scroll reveal (driven by assets/login.js)
+   -------------------------------------------------------------------------- */
+.al-page .reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
+}
+.al-page .reveal.is-in { opacity: 1; transform: none; }
+
+/* --------------------------------------------------------------------------
+   Responsive
+   -------------------------------------------------------------------------- */
+@media (max-width: 860px) {
+  .al-login__grid { grid-template-columns: 1fr; }
+  .al-support__card { grid-template-columns: 1fr; gap: var(--space-5); }
+  .al-page .al-cta__title { font-size: var(--text-3xl); }
+  .al-card { padding: var(--space-6); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .al-page .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+  .al-btn, .al-btn svg { transition: none !important; }
+  .al-btn:hover, .al-btn:hover svg { transform: none !important; }
+}

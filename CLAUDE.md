@@ -126,6 +126,9 @@ This repository is the **WordPress theme** for Ensurance.com. It controls all fr
 ├── functions.php                ← PHP hooks & enqueue functions
 ├── header-marketing.php         ← Shared header for marketing pages
 ├── footer-marketing.php         ← Shared footer for marketing pages
+├── header-home.php              ← SHOPPER header (Calm Intelligence)
+├── header-agent.php             ← AGENT header (Calm Intelligence)
+├── footer-home.php              ← Global footer (both sides)
 ├── page-home.php                ← Homepage template
 ├── page-about.php               ← About page template (future)
 ├── /components/                 ← Reusable page sections
@@ -137,6 +140,34 @@ This repository is the **WordPress theme** for Ensurance.com. It controls all fr
 │   ├── marketing.js             ← Marketing pages JavaScript
 │   └── /images/                 ← Image assets
 └── CLAUDE.md                    ← This file
+
+### Site Chrome — Two Headers, One Footer
+
+The redesigned ("Calm Intelligence") pages split the site in two by audience.
+**Pick the header by which side of the site the page belongs to**, not by how it
+looks:
+
+| | Header | Used for |
+|---|---|---|
+| **Shopper side** | `get_header('home')` → `header-home.php` | Homepage, coverage pages, quote/insurance forms. Has shopper nav + "Start My Auto Quote Request" CTA. |
+| **Agent side** | `get_header('agent')` → `header-agent.php` | Agency sign-up, login, dashboard, account management. Logo only — no nav, no buttons. |
+
+**Both sides share one footer**: `get_footer('home')` → `footer-home.php`.
+
+Rules that are easy to get wrong:
+
+- `footer-home.php` closes `</body></html>` itself, so **the header and footer
+  must be swapped together**. Mixing `get_header()` (Kadence) with
+  `get_footer('home')` leaves Kadence's `#wrapper` / `#inner-wrap` unclosed.
+- Both headers are styled by `assets/home.css` via the shared `.site-header` /
+  `.container` / `.header-inner` / `.brand` classes, so any page using them must
+  enqueue `home.css` (and `home.js`, which the footer's sticky CTA depends on).
+- `footer-home.php` ships the shopper mobile sticky CTA. On agent pages, hide it
+  in the page's own CSS rather than editing the shared footer — see
+  `assets/publish-your-agency.css`.
+- Pages still on the **legacy Kadence chrome** (`get_header()` / `get_footer()`)
+  include /login, /register and the rest of the un-migrated site. Migrating one
+  means switching both header and footer at once.
 
 ### Parent Theme
 
@@ -437,6 +468,41 @@ alias deploy-prod="git push origin main && ssh ensurance /home/u2514-jukueftqhhl
 - Verify the conditional (e.g., `is_front_page()`) matches the page you're testing
 - Use DevTools → Network tab to confirm the file loads
 - Check for CSS specificity conflicts (use `!important` as last resort)
+
+### Input text invisible while typing (Kadence `:focus` override)
+
+On any code-driven page with a text/email/password field, the parent theme
+(Kadence) ships global form rules that SiteGround merges into the same combined
+CSS bundle: a resting `input[type="…"] { color: var(--global-palette5) }`
+(specificity 0,0,1) and, critically, a focused
+`input[type="…"]:focus, textarea:focus { color: var(--global-palette3) }`
+(**specificity 0,2,1**). A page's own `.field input { color: … }` is only
+(0,1,1) — it wins at rest but **loses on `:focus`**, so typed text repaints from
+the global palette and can go invisible-on-white *while the field is focused*,
+reappearing on blur. On Safari/iOS `-webkit-text-fill-color` follows `color`, and
+autofill paints its own colors.
+
+**Always add this to every code-driven form page's CSS** (swap `.page-wrap` /
+`.field` / tokens for the page's own):
+
+```css
+.page-wrap .field input,
+.page-wrap .field input:focus {          /* :focus selector = (0,3,1), beats Kadence */
+  color: var(--text-body);
+  -webkit-text-fill-color: var(--text-body);   /* Safari/iOS */
+  background-color: #fff;
+  caret-color: var(--accent);
+}
+.page-wrap .field input:-webkit-autofill,
+.page-wrap .field input:-webkit-autofill:hover,
+.page-wrap .field input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text-body);
+  box-shadow: 0 0 0 100px #fff inset;          /* keep the field white through autofill */
+}
+```
+
+Do not drop the `:focus` selector — that is the state that breaks. Prior fixes:
+commits `07123a0` (/start), `d5e3526` (investor brief), `0ecb321` (/login).
 
 ### Broke the homepage
 

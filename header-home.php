@@ -40,6 +40,11 @@
       <a href="<?php echo esc_url( home_url( '/coverage' ) ); ?>">Coverage types</a>
       <a href="<?php echo esc_url( home_url( '/trust-center' ) ); ?>">Trust Center</a>
       <a href="<?php echo esc_url( home_url( '/for-agents' ) ); ?>">For agents</a>
+      <?php if ( is_user_logged_in() ) : ?>
+        <a class="nav-login" href="<?php echo esc_url( home_url( '/dashboard' ) ); ?>" data-track="nav_agent_dashboard_click" data-cta-text="Agent dashboard">Agent dashboard</a>
+      <?php else : ?>
+        <a class="nav-login" href="<?php echo esc_url( home_url( '/login' ) ); ?>" data-track="nav_agent_login_click" data-cta-text="Agent login">Agent login</a>
+      <?php endif; ?>
       <a class="nav-cta" href="<?php echo esc_url( home_url( '/auto-insurance-quote' ) ); ?>" data-track="cta_click_start_auto_quote_request" data-cta-text="Start My Auto Quote Request" data-page-type="homepage">Start My Auto Quote Request</a>
     </nav>
   </div>

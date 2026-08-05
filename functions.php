@@ -432,6 +432,498 @@ function ensurance_for_agents_assets() {
 add_action('wp_enqueue_scripts', 'ensurance_for_agents_assets', 20);
 
 // ============================================================================
+// 2b-v-a2. AGENT LOGIN (/login) — SELF-CONTAINED ASSETS
+// ============================================================================
+// /login is rebuilt from the old UsersWP-shortcode page into a code-driven
+// template (page-login.php) on the homepage chrome. It reuses assets/home.css +
+// assets/home.js for tokens, chrome and base, and layers assets/login.css +
+// assets/login.js on top for the page-specific sections (hero, login grid,
+// new-agent card, trust callout, support, footer CTA). The login form is
+// re-skinned only — UsersWP still processes authentication. As with the other
+// standalone pages we DEQUEUE the shared marketing bundle so its generic
+// selectors cannot fight this design. is_page('login') is the reliable gate
+// (is_page_template can miss on DB-meta pages). New function — existing
+// functions untouched.
+function ensurance_login_assets() {
+    if ( ! is_page( 'login' ) ) {
+        return;
+    }
+
+    // Drop the shared marketing bundle so it cannot fight this design.
+    wp_dequeue_style('ensurance-marketing');
+    wp_dequeue_script('ensurance-marketing');
+    wp_dequeue_style('ensurance-marketing-fonts');
+
+    // Shared Calm Intelligence type system + base (same as the homepage).
+    wp_enqueue_style(
+        'ensurance-home-fonts',
+        'https://fonts.googleapis.com/css2?family=Albert+Sans:wght@700;800;900&family=Rubik:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap',
+        array(),
+        null
+    );
+    wp_enqueue_style(
+        'ensurance-home',
+        get_stylesheet_directory_uri() . '/assets/home.css',
+        array(),
+        filemtime(get_stylesheet_directory() . '/assets/home.css')
+    );
+    wp_enqueue_script(
+        'ensurance-home',
+        get_stylesheet_directory_uri() . '/assets/home.js',
+        array(),
+        filemtime(get_stylesheet_directory() . '/assets/home.js'),
+        true
+    );
+
+    // Page-specific layer — loaded AFTER home.css/home.js via dependency.
+    wp_enqueue_style(
+        'ensurance-login',
+        get_stylesheet_directory_uri() . '/assets/login.css',
+        array('ensurance-home'),
+        filemtime(get_stylesheet_directory() . '/assets/login.css')
+    );
+    wp_enqueue_script(
+        'ensurance-login',
+        get_stylesheet_directory_uri() . '/assets/login.js',
+        array('ensurance-home'),
+        filemtime(get_stylesheet_directory() . '/assets/login.js'),
+        true
+    );
+}
+add_action('wp_enqueue_scripts', 'ensurance_login_assets', 20);
+
+// ============================================================================
+// 2b-v-a3. CREATE ACCOUNT (/create-account) — SELF-CONTAINED ASSETS
+// ============================================================================
+// /create-account is a standalone, code-driven sign-up screen
+// (page-create-account.php) that re-skins the UsersWP registration form. Like
+// /login it reuses assets/home.css + assets/home.js for the Calm Intelligence
+// tokens, fonts and base, and layers assets/create-account.css +
+// assets/create-account.js (password show/hide) on top. The shared marketing
+// bundle is dequeued so its selectors cannot fight this design.
+// is_page('create-account') is the reliable gate.
+function ensurance_create_account_assets() {
+    if ( ! is_page( 'create-account' ) ) {
+        return;
+    }
+
+    // Drop the shared marketing bundle so it cannot fight this design.
+    wp_dequeue_style('ensurance-marketing');
+    wp_dequeue_script('ensurance-marketing');
+    wp_dequeue_style('ensurance-marketing-fonts');
+
+    // Shared Calm Intelligence type system + base (same as the homepage).
+    wp_enqueue_style(
+        'ensurance-home-fonts',
+        'https://fonts.googleapis.com/css2?family=Albert+Sans:wght@700;800;900&family=Rubik:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap',
+        array(),
+        null
+    );
+    wp_enqueue_style(
+        'ensurance-home',
+        get_stylesheet_directory_uri() . '/assets/home.css',
+        array(),
+        filemtime(get_stylesheet_directory() . '/assets/home.css')
+    );
+    wp_enqueue_script(
+        'ensurance-home',
+        get_stylesheet_directory_uri() . '/assets/home.js',
+        array(),
+        filemtime(get_stylesheet_directory() . '/assets/home.js'),
+        true
+    );
+
+    // Page-specific layer — loaded AFTER home.css/home.js via dependency.
+    wp_enqueue_style(
+        'ensurance-create-account',
+        get_stylesheet_directory_uri() . '/assets/create-account.css',
+        array('ensurance-home'),
+        filemtime(get_stylesheet_directory() . '/assets/create-account.css')
+    );
+    wp_enqueue_script(
+        'ensurance-create-account',
+        get_stylesheet_directory_uri() . '/assets/create-account.js',
+        array('ensurance-home'),
+        filemtime(get_stylesheet_directory() . '/assets/create-account.js'),
+        true
+    );
+}
+add_action('wp_enqueue_scripts', 'ensurance_create_account_assets', 20);
+
+// ============================================================================
+// 2b-v-a3. AGENT DASHBOARD (/dashboard) — SELF-CONTAINED ASSETS
+// ============================================================================
+// The placeholder dashboard is another agent-side Calm Intelligence page, so it
+// reuses assets/home.css + assets/home.js for the tokens, fonts, base and chrome
+// bars, and layers assets/dashboard.css on top. The shared marketing bundle is
+// dequeued so its selectors cannot fight this design. Mirrors
+// ensurance_create_account_assets(). is_page('dashboard') is the reliable gate.
+function ensurance_dashboard_assets() {
+    if ( ! is_page( 'dashboard' ) ) {
+        return;
+    }
+
+    // Drop the shared marketing bundle so it cannot fight this design.
+    wp_dequeue_style('ensurance-marketing');
+    wp_dequeue_script('ensurance-marketing');
+    wp_dequeue_style('ensurance-marketing-fonts');
+
+    // Shared Calm Intelligence type system + base (same as the homepage).
+    wp_enqueue_style(
+        'ensurance-home-fonts',
+        'https://fonts.googleapis.com/css2?family=Albert+Sans:wght@700;800;900&family=Rubik:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap',
+        array(),
+        null
+    );
+    wp_enqueue_style(
+        'ensurance-home',
+        get_stylesheet_directory_uri() . '/assets/home.css',
+        array(),
+        filemtime(get_stylesheet_directory() . '/assets/home.css')
+    );
+    wp_enqueue_script(
+        'ensurance-home',
+        get_stylesheet_directory_uri() . '/assets/home.js',
+        array(),
+        filemtime(get_stylesheet_directory() . '/assets/home.js'),
+        true
+    );
+
+    // Page-specific layer — loaded AFTER home.css via dependency.
+    wp_enqueue_style(
+        'ensurance-dashboard',
+        get_stylesheet_directory_uri() . '/assets/dashboard.css',
+        array('ensurance-home'),
+        filemtime(get_stylesheet_directory() . '/assets/dashboard.css')
+    );
+}
+add_action('wp_enqueue_scripts', 'ensurance_dashboard_assets', 20);
+
+// ============================================================================
+// 2b-v-a4. FOUNDING AGENT PLAN SELECTION — SIGN-UP FUNNEL MEMORY
+// ============================================================================
+// Single source of truth for the two Founding Agent plans an agent can pick.
+//
+// FUNNEL: the "Start 60 Day Access" / "Join as a Founding Agent" CTAs on /login
+// and /pricing-plans link to /create-account?plan=<slug> (see
+// ensurance_create_account_url). page-create-account.php reads the slug,
+// preserves it through a failed-submit re-render via a hidden `plan` field, and
+// sets the register form's redirect_to to that plan's destination. On a
+// successful registration the slug is ALSO saved to user meta
+// (ensurance_remember_founding_plan), so the choice is remembered on the user
+// record even when there is no immediate redirect.
+//
+// IMMEDIATE POST-SIGNUP REDIRECT: only fires when UsersWP's registration action
+// is 'auto_approve_login' (it auto-logs-in then honors redirect_to). The site is
+// currently 'auto_approve' (user created, NOT logged in, shown a "please log in"
+// notice), so today the redirect_to is set but not used — the durable user-meta
+// copy is what a later step should rely on.
+//
+// FUTURE ITERATION (Stripe): route each plan to its Stripe checkout by changing
+// ONLY the 'destination' values below, or by filtering
+// 'ensurance_founding_plan_destination'. Read the remembered plan on the Stripe
+// page with ensurance_get_remembered_founding_plan( $user_id ). Nothing else in
+// the funnel has to change.
+
+/** User-meta key holding a new agent's chosen Founding Agent plan slug. */
+if ( ! defined( 'ENSURANCE_FOUNDING_PLAN_META' ) ) {
+    define( 'ENSURANCE_FOUNDING_PLAN_META', '_ensurance_founding_plan' );
+}
+
+/**
+ * The Founding Agent plan registry. Keyed by URL slug.
+ * 'destination' is where a new agent lands AFTER the account is created —
+ * interim GeoDirectory checkout today, Stripe checkout in the future iteration.
+ *
+ * @return array<string,array>
+ */
+function ensurance_founding_plans() {
+    return array(
+        '60-day'  => array(
+            'label'       => 'Start 60 Day Access',
+            'package_id'  => 14,
+            // Free path: no payment, no listing form. Straight to the agent
+            // dashboard (agents do not self-manage profiles — see
+            // plans/agent-onboarding-1-free-agent.md). The immediate redirect
+            // only fires under the 'auto_approve_login' registration action;
+            // until then the durable user-meta copy carries the plan.
+            'destination' => home_url( '/dashboard/' ),
+        ),
+        'monthly' => array(
+            'label'       => 'Join as a Founding Agent',
+            'package_id'  => 16,
+            'destination' => home_url( '/publish-your-agency/insurance-agencies/?package_id=16' ),
+        ),
+    );
+}
+
+/**
+ * Normalize a plan slug to a known one, or '' if unknown/absent. Safe to call on
+ * raw request input — sanitizes and whitelists.
+ */
+function ensurance_founding_plan_valid( $slug ) {
+    $slug  = is_string( $slug ) ? sanitize_key( $slug ) : '';
+    $plans = ensurance_founding_plans();
+    return isset( $plans[ $slug ] ) ? $slug : '';
+}
+
+/** Build the /create-account URL carrying a plan selection (raw — esc_url at output). */
+function ensurance_create_account_url( $slug ) {
+    $slug = ensurance_founding_plan_valid( $slug );
+    $url  = home_url( '/create-account/' );
+    return $slug ? add_query_arg( 'plan', $slug, $url ) : $url;
+}
+
+/**
+ * Contact URL for the paid "Join as a Founding Agent" path (raw — esc_url at output).
+ *
+ * The monthly ($29/mo) plan is intentionally a MANUAL process: rather than a
+ * self-serve create-account → Stripe checkout, prospective founding agents
+ * contact the team, who set up the agency profile, bio and membership by hand
+ * (see memory agents-cannot-manage-own-profiles). So the monthly CTAs point here,
+ * not at ensurance_create_account_url('monthly'). The `topic` param preselects the
+ * "Founding Agent membership" option on the contact form so these inquiries are
+ * tagged for routing (page-contact.php). The `monthly` funnel plumbing
+ * (registry entry, create-account handling) is left in place but dormant.
+ */
+function ensurance_founding_agent_contact_url() {
+    return add_query_arg( 'topic', 'founding', home_url( '/contact/' ) );
+}
+
+/**
+ * Post-account-creation destination for a plan (interim checkout today, Stripe
+ * later). Filterable so the future Stripe URLs can be swapped in without editing
+ * the registry.
+ */
+function ensurance_founding_plan_destination( $slug ) {
+    $slug  = ensurance_founding_plan_valid( $slug );
+    $plans = ensurance_founding_plans();
+    $dest  = $slug ? $plans[ $slug ]['destination'] : home_url( '/' );
+    return apply_filters( 'ensurance_founding_plan_destination', $dest, $slug );
+}
+
+/** Read the plan a user chose at sign-up ('' if none). For the future Stripe step. */
+function ensurance_get_remembered_founding_plan( $user_id ) {
+    return ensurance_founding_plan_valid( get_user_meta( (int) $user_id, ENSURANCE_FOUNDING_PLAN_META, true ) );
+}
+
+/**
+ * Durably remember the chosen plan on the user at registration. Hooked on
+ * uwp_after_custom_fields_save, which fires after the user row is created and
+ * still has the raw submitted $data (before UsersWP clears $_POST) — and in
+ * EVERY registration action path, so the choice survives regardless of whether
+ * the immediate redirect fires.
+ *
+ * @param string $form_type 'register' | 'account' | ...
+ * @param array  $data      raw submitted fields (includes our `plan`)
+ * @param array  $result    validated fields
+ * @param int    $user_id   the new user's id
+ */
+function ensurance_remember_founding_plan( $form_type, $data, $result, $user_id ) {
+    if ( 'register' !== $form_type || empty( $user_id ) ) {
+        return;
+    }
+    $slug = ensurance_founding_plan_valid( isset( $data['plan'] ) ? $data['plan'] : '' );
+    if ( $slug ) {
+        update_user_meta( $user_id, ENSURANCE_FOUNDING_PLAN_META, $slug );
+    }
+}
+add_action( 'uwp_after_custom_fields_save', 'ensurance_remember_founding_plan', 10, 4 );
+
+/**
+ * Route a Founding Agent to their plan's destination on login.
+ *
+ * WHY THIS EXISTS: the sign-up funnel sets the REGISTRATION form's redirect_to to
+ * the plan destination (/dashboard/), but UsersWP only honors that when the
+ * registration action is 'auto_approve_login' (immediate login). The default
+ * registration form (id 1) is 'require_email_activation', so registration and
+ * login are split across an email round-trip: the agent activates by email, is
+ * sent to /login, and logs in there — a step that has no knowledge of the plan
+ * and otherwise lands on the account page. Because the chosen plan is durably
+ * saved on the user at registration (ensurance_remember_founding_plan →
+ * _ensurance_founding_plan), we can re-derive the destination at login.
+ *
+ * Hooked on 'uwp_login_redirect', which runs LAST in UsersWP's
+ * get_login_redirect_url() — after page-login.php's hardcoded account-page
+ * redirect_to — so returning here overrides it, but only for users who actually
+ * carry a plan. Everyone else (shoppers, staff) keeps the default. The
+ * destination itself stays filterable via ensurance_founding_plan_destination().
+ *
+ * @param string  $redirect_to     the destination UsersWP resolved so far
+ * @param mixed   $redirect_page_id unused
+ * @param array   $data            submitted login fields
+ * @param WP_User $user            the user who just logged in
+ * @return string
+ */
+function ensurance_founding_plan_login_redirect( $redirect_to, $redirect_page_id, $data, $user ) {
+    if ( ! ( $user instanceof WP_User ) || empty( $user->ID ) ) {
+        return $redirect_to;
+    }
+    $slug = ensurance_get_remembered_founding_plan( $user->ID );
+    if ( $slug ) {
+        return ensurance_founding_plan_destination( $slug );
+    }
+    return $redirect_to;
+}
+add_filter( 'uwp_login_redirect', 'ensurance_founding_plan_login_redirect', 10, 4 );
+
+// ============================================================================
+// 2b-v-b. FOUNDING AGENT ACCESS (/pricing-plans) — SELF-CONTAINED ASSETS
+// ============================================================================
+// /pricing-plans is repositioned as "Founding Agent Access" and ships the same
+// standalone Calm Intelligence design system as the homepage. It reuses
+// assets/home.css + assets/home.js for tokens, chrome and base, and layers
+// assets/pricing-plans.css + assets/pricing-plans.js on top for the page-
+// specific sections (dark hero + plan-summary card, two access cards wired to
+// the existing GeoDirectory packages, bulk-leads compare, request stepper,
+// dark why/who band, subscription-terms cards, FAQ accordion). As with the
+// homepage, we DEQUEUE the shared marketing bundle so its generic selectors
+// cannot fight this design. Runs at priority 20 so the dequeue lands after the
+// priority-10 enqueues. New function — existing functions untouched.
+//
+// Guard note: this template applies to /pricing-plans/ via the page-{slug}.php
+// hierarchy (not an assigned "Template Name"), so is_page_template() is not
+// reliable here — is_page('pricing-plans') is. See the is_page_template DB-meta
+// gotcha in prior work.
+
+function ensurance_pricing_plans_assets() {
+    if ( ! is_page('pricing-plans') ) {
+        return;
+    }
+
+    // Drop the shared marketing bundle so it cannot fight this design.
+    wp_dequeue_style('ensurance-marketing');
+    wp_dequeue_script('ensurance-marketing');
+    wp_dequeue_style('ensurance-marketing-fonts');
+
+    // Shared Calm Intelligence type system + base (same as the homepage).
+    wp_enqueue_style(
+        'ensurance-home-fonts',
+        'https://fonts.googleapis.com/css2?family=Albert+Sans:wght@700;800;900&family=Rubik:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap',
+        array(),
+        null
+    );
+    wp_enqueue_style(
+        'ensurance-home',
+        get_stylesheet_directory_uri() . '/assets/home.css',
+        array(),
+        filemtime(get_stylesheet_directory() . '/assets/home.css')
+    );
+    wp_enqueue_script(
+        'ensurance-home',
+        get_stylesheet_directory_uri() . '/assets/home.js',
+        array(),
+        filemtime(get_stylesheet_directory() . '/assets/home.js'),
+        true
+    );
+
+    // Page-specific layer — loaded AFTER home.css/home.js via dependency.
+    wp_enqueue_style(
+        'ensurance-pricing-plans',
+        get_stylesheet_directory_uri() . '/assets/pricing-plans.css',
+        array('ensurance-home'),
+        filemtime(get_stylesheet_directory() . '/assets/pricing-plans.css')
+    );
+    wp_enqueue_script(
+        'ensurance-pricing-plans',
+        get_stylesheet_directory_uri() . '/assets/pricing-plans.js',
+        array('ensurance-home'),
+        filemtime(get_stylesheet_directory() . '/assets/pricing-plans.js'),
+        true
+    );
+}
+add_action('wp_enqueue_scripts', 'ensurance_pricing_plans_assets', 20);
+
+// ============================================================================
+// 2b-v-c. PUBLISH YOUR AGENCY (/publish-your-agency) — SELF-CONTAINED ASSETS
+// ============================================================================
+// /publish-your-agency is the GeoDirectory add-listing route the two
+// /pricing-plans CTAs point at (?package_id=14 and 16). page-publish-your-agency.php
+// wraps the EXISTING GeoDirectory form in the approved Calm Intelligence shell.
+//
+// This is the first page on the AGENT side of the site: header-agent.php (logo
+// only) plus the global footer-home.php. Both are styled by assets/home.css, so
+// this page loads the same shared base as the homepage and /pricing-plans and
+// layers assets/publish-your-agency.css on top. assets/home.js comes along
+// because footer-home.php ships the mobile sticky CTA it drives; it is
+// null-guarded around the nav toggle, so the nav-less agent header is fine.
+//
+// Note this means home.css's base element styles cascade into the GeoDirectory
+// form, which now inherits the site typography rather than Kadence's. That is
+// intentional and approved — see page-publish-your-agency.php.
+//
+// Nothing is dequeued: the shared marketing bundle does not load on this page
+// (see ensurance_marketing_assets above), and GeoDirectory's own add-listing
+// assets must be left alone.
+//
+// Guard note: this template applies via the page-{slug}.php hierarchy, so
+// is_page_template() is not reliable here — is_page('publish-your-agency') is.
+// See the is_page_template DB-meta gotcha noted on /pricing-plans above. The
+// slug check also covers the /publish-your-agency/insurance-agencies/ sub-route
+// GeoDirectory rewrites onto this same page. New function — existing functions
+// untouched.
+
+function ensurance_publish_your_agency_assets() {
+    if ( ! is_page('publish-your-agency') ) {
+        return;
+    }
+
+    // Shared Calm Intelligence type system + base (same as the homepage).
+    wp_enqueue_style(
+        'ensurance-home-fonts',
+        'https://fonts.googleapis.com/css2?family=Albert+Sans:wght@700;800;900&family=Rubik:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap',
+        array(),
+        null
+    );
+    wp_enqueue_style(
+        'ensurance-home',
+        get_stylesheet_directory_uri() . '/assets/home.css',
+        array(),
+        filemtime(get_stylesheet_directory() . '/assets/home.css')
+    );
+    wp_enqueue_script(
+        'ensurance-home',
+        get_stylesheet_directory_uri() . '/assets/home.js',
+        array(),
+        filemtime(get_stylesheet_directory() . '/assets/home.js'),
+        true
+    );
+
+    // Page-specific layer — loaded AFTER home.css via dependency.
+    wp_enqueue_style(
+        'ensurance-publish-your-agency',
+        get_stylesheet_directory_uri() . '/assets/publish-your-agency.css',
+        array('ensurance-home'),
+        filemtime(get_stylesheet_directory() . '/assets/publish-your-agency.css')
+    );
+}
+add_action('wp_enqueue_scripts', 'ensurance_publish_your_agency_assets', 20);
+
+// Let page-publish-your-agency.php actually win on this route.
+//
+// /publish-your-agency is a GeoDirectory page (body class `geodir-page-add`), and
+// GeoDir_Template_Loader::template_loader filters `template_include` on every GD
+// page. Its search list ends with 'geodirectory.php' then 'page.php', and
+// locate_template() finds Kadence's page.php — so WordPress's own
+// page-{slug}.php hierarchy match is thrown away and the template never renders.
+// That is why this needs a filter at all, unlike the other code-driven pages.
+//
+// Rather than fight template_include after the fact, hook GeoDirectory's own
+// extension point and put our template at the front of the list it searches.
+// locate_template() then resolves it from the child theme first. If the file is
+// ever deleted, locate_template() simply skips it and GD falls through to
+// page.php as before, restoring the previous page — no fatal, no white screen.
+// New function — existing functions untouched.
+
+function ensurance_publish_your_agency_gd_template( $search_files, $default_file ) {
+    if ( is_page('publish-your-agency') ) {
+        array_unshift( $search_files, 'page-publish-your-agency.php' );
+    }
+    return $search_files;
+}
+add_filter('geodir_template_loader_files', 'ensurance_publish_your_agency_gd_template', 10, 2);
+
+// ============================================================================
 // 2b-vi. AUTO INSURANCE (CALM INTELLIGENCE REDESIGN) — SELF-CONTAINED ASSETS
 // ============================================================================
 // /auto-insurance-quote-request ships the same standalone design system as the
@@ -1084,11 +1576,12 @@ add_action('init', 'ensurance_contact_register_cpt');
 
 function ensurance_contact_topic_labels() {
     return array(
-        ''        => 'A general question',
-        'request' => 'About a request I started',
-        'agent'   => "I'm an agent or agency",
-        'press'   => 'Press or media',
-        'privacy' => 'A privacy request',
+        ''         => 'A general question',
+        'request'  => 'About a request I started',
+        'agent'    => "I'm an agent or agency",
+        'founding' => 'Founding Agent membership',
+        'press'    => 'Press or media',
+        'privacy'  => 'A privacy request',
     );
 }
 
