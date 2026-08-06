@@ -63,7 +63,7 @@ get_header( 'agent' );
 			</svg>
 		</span>
 
-		<h1 class="dashboard-setup__title">Hello World</h1>
+		<h1 class="dashboard-setup__title">Your Dashboard Is Coming Soon</h1>
 
 		<p class="dashboard-setup__note">
 			Stay Tuned, great things are afoot.
