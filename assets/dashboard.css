@@ -34,6 +34,20 @@ html body:has(.dashboard-shell) .site-header {
   display: none;
 }
 
+/* Same for the marketing footer. The Agent Dashboard design is a full-height
+   app shell with no site footer — and footer-home.php's
+   `margin-top: var(--space-9)` (home.css) was rendering as a 96px band of page
+   background below the rail, since .dashboard-shell is exactly 100vh with the
+   placeholder's short content. Hiding the footer removes both the chrome and
+   that gap. get_footer('home') must still be CALLED — it closes
+   </body></html> and fires wp_footer() — so this hides the bar, not the
+   include. Note the sticky-CTA rule further down is now redundant for display
+   purposes but is kept: it is scoped to the CTA itself, which lives outside
+   .site-footer in footer-home.php. */
+html body:has(.dashboard-shell) .site-footer {
+  display: none;
+}
+
 .dashboard-page {
   flex: 1 1 auto;
   min-width: 0;

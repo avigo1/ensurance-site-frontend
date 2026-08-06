@@ -24,9 +24,11 @@
  * styled by assets/home.css, which this page loads (via
  * ensurance_dashboard_assets()); assets/dashboard.css layers the dashboard on
  * top. Header and footer must always be swapped together — footer-home.php closes
- * </body></html> itself. The header BAR is hidden on this page in
- * assets/dashboard.css (the sidebar carries the logo instead, per the design);
- * get_header('agent') still has to run to open the document and fire wp_head().
+ * </body></html> itself. Both BARS are hidden on this page in
+ * assets/dashboard.css — the sidebar carries the logo, and the design is a
+ * full-height app shell with no marketing footer — but get_header('agent') and
+ * get_footer('home') still have to RUN: they open and close the document and
+ * fire wp_head() / wp_footer().
  *
  * ACCESS: this is a signed-in surface, so logged-out visitors are bounced to
  * /login before any chrome renders. This is the minimal guard the placeholder
