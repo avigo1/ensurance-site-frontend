@@ -12,13 +12,21 @@
  * agents do NOT manage their own profiles here (see the product direction note in
  * plans/agent-onboarding-1-free-agent.md).
  *
+ * LAYOUT: the page is a two-column shell (.dashboard-shell) — the dark navy left
+ * rail (components/dashboard-sidebar.php) plus the main content column. This is
+ * iteration 1 of the real dashboard build: the rail and its homepage-linked logo
+ * only, no nav items yet (those come in a later iteration), with the "coming
+ * soon" placeholder still filling the content column.
+ *
  * CHROME: agent side of the site. get_header('agent') renders header-agent.php
  * (logo only, no nav, no buttons) paired with the global get_footer('home') /
  * footer-home.php, the same pairing page-publish-your-agency.php uses. Both are
  * styled by assets/home.css, which this page loads (via
- * ensurance_dashboard_assets()); assets/dashboard.css layers the placeholder on
+ * ensurance_dashboard_assets()); assets/dashboard.css layers the dashboard on
  * top. Header and footer must always be swapped together — footer-home.php closes
- * </body></html> itself.
+ * </body></html> itself. The header BAR is hidden on this page in
+ * assets/dashboard.css (the sidebar carries the logo instead, per the design);
+ * get_header('agent') still has to run to open the document and fire wp_head().
  *
  * ACCESS: this is a signed-in surface, so logged-out visitors are bounced to
  * /login before any chrome renders. This is the minimal guard the placeholder
@@ -52,6 +60,10 @@ if ( ! is_user_logged_in() ) {
 get_header( 'agent' );
 ?>
 
+<div class="dashboard-shell">
+
+<?php get_template_part( 'components/dashboard-sidebar' ); ?>
+
 <main id="main" class="dashboard-page">
 
 	<section class="dashboard-setup" aria-live="polite">
@@ -72,5 +84,7 @@ get_header( 'agent' );
 	</section>
 
 </main>
+
+</div><!-- /.dashboard-shell -->
 
 <?php get_footer( 'home' ); ?>

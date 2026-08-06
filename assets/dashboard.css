@@ -13,7 +13,30 @@
    Plan 3 swaps the section body, not the page shell.
    =================================================================== */
 
+/* ── Two-column shell ───────────────────────────────────────────────
+   Left navy rail + main content column, matching the Agent Dashboard
+   template in the design system (templates/agent-dashboard). The rail is
+   a fixed 264px; the content column takes the rest. min-width: 0 on the
+   column is what stops wide children (tables, long strings) from pushing
+   the rail off-screen once the real dashboard content lands. */
+.dashboard-shell {
+  display: flex;
+  align-items: flex-start;
+  min-height: 100vh;
+  background: var(--bg-page);
+}
+
+/* The rail carries the brand, so the header-agent.php bar above it would
+   just repeat the logo. Hide the bar rather than dropping get_header() —
+   the header file opens the document and fires wp_head(). Same :has()
+   hook the sticky-CTA rule below uses. */
+html body:has(.dashboard-shell) .site-header {
+  display: none;
+}
+
 .dashboard-page {
+  flex: 1 1 auto;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   /* Fill the viewport between the header and footer so the blank state
@@ -21,6 +44,66 @@
   min-height: 60vh;
   background: var(--bg-page);
   overflow-x: clip;
+}
+
+/* ── Left rail ──────────────────────────────────────────────────────
+   Iteration 1: the navy column and the brand only. Nav items and the
+   agent chip stack in below the brand later, which is why this is a
+   flex column with a gap already.
+
+   position: sticky + height: 100vh keeps the rail in view while the
+   content column scrolls — the rail's own content is short enough not to
+   need its own scrollbar yet; add overflow-y: auto here when the nav and
+   the bottom-pinned chip arrive. */
+.dash-sidebar {
+  flex: 0 0 264px;
+  width: 264px;
+  align-self: stretch;
+  position: sticky;
+  /* /dashboard is a signed-in surface, so the WordPress admin bar can be
+     overhead for staff. WP publishes its height as
+     --wp-admin--admin-bar--height; offset by it so the rail never slides
+     under the bar, and fall back to 0 for ordinary agents. */
+  top: var(--wp-admin--admin-bar--height, 0px);
+  height: calc(100vh - var(--wp-admin--admin-bar--height, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding: 28px 20px;
+  background: var(--navy-800);
+}
+
+/* Brand — links back to the homepage, same target as the site header's
+   brand link. Inline-flex so the hit area hugs the logo, with the
+   design's 6px inset off the rail padding. */
+.dash-sidebar__brand {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  padding: var(--space-2) 6px;
+  margin: calc(var(--space-2) * -1) 0;
+  border-radius: var(--radius-input);
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.dash-sidebar__brand:hover,
+.dash-sidebar__brand:focus-visible {
+  opacity: 0.8;
+}
+
+.dash-sidebar__brand:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Sized by height like the header/footer brand marks — the source PNG is
+   ~13.5:1, so 15px tall lands at ~203px wide and clears the rail's 212px
+   of inner width. */
+.dash-sidebar__logo {
+  display: block;
+  height: 15px;
+  width: auto;
+  max-width: 100%;
 }
 
 /* ── Page background over parent-theme / plugin globals ──────────────
@@ -107,7 +190,26 @@ html body:has(.dashboard-page) .mobile-sticky-cta {
   text-wrap: pretty;
 }
 
-/* ── Responsive ────────────────────────────────────────────────────── */
+/* ── Responsive ──────────────────────────────────────────────────────
+   Below the tablet breakpoint the rail cannot hold a 264px column beside
+   the content, so it unstacks into a full-width navy bar across the top.
+   The logo still links home, so the hidden header costs nothing here. */
+@media (max-width: 900px) {
+  .dashboard-shell {
+    display: block;
+    min-height: 0;
+  }
+
+  .dash-sidebar {
+    width: auto;
+    height: auto;
+    position: static;
+    flex-direction: row;
+    align-items: center;
+    padding: var(--space-4) var(--container-pad);
+  }
+}
+
 @media (max-width: 640px) {
   .dashboard-setup { padding: var(--space-7) var(--container-pad); }
   .dashboard-setup__note { font-size: 17px; }
