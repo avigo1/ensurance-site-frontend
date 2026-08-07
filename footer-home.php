@@ -23,6 +23,15 @@
         <p class="footer-col__title">Ensurance</p>
         <a href="<?php echo esc_url( home_url( '/how-it-works' ) ); ?>">How it works</a>
         <a href="<?php echo esc_url( home_url( '/coverage' ) ); ?>">Coverage types</a>
+        <?php
+        /*
+         * TODO: give this an href once the state landing page exists — wrap the
+         * path in esc_url( home_url( ... ) ) like the two links above.
+         * Left href-less on purpose: an <a> with no href renders with the same
+         * styling but is inert, rather than being a dead link to nowhere.
+         */
+        ?>
+        <a>Coverage by State</a>
       </nav>
       <nav class="footer-col" aria-label="For agents">
         <p class="footer-col__title">For agents</p>
@@ -33,11 +42,6 @@
         <a href="<?php echo esc_url( home_url( '/trust-center' ) ); ?>">Trust Center</a>
         <a href="<?php echo esc_url( home_url( '/contact' ) ); ?>">Contact Us</a>
       </nav>
-      <!-- Heading only for now — state links to be added later. Switch this
-           div back to a <nav aria-label="Coverage by state"> once it has links. -->
-      <div class="footer-col">
-        <p class="footer-col__title">Coverage by State</p>
-      </div>
     </div>
   </div>
   <div class="footer-bottom">
