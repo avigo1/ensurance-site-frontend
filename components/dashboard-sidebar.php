@@ -2,16 +2,27 @@
 /**
  * Agent Dashboard — left sidebar (dark navy rail).
  *
- * Iteration 1 of the dashboard build: the rail itself plus the brand logo.
- * Mirrors the `templates/agent-dashboard/AgentDashboard.dc.html` design in the
- * Ensurance Design System — a 264px navy-800 column, sticky at full viewport
- * height, holding the inverse (white) logo at the top.
+ * Iteration 2 of the dashboard build: the rail, the brand logo, and the nav
+ * STACK — the reusable item pattern only, with no items in it yet. Mirrors the
+ * `templates/agent-dashboard/AgentDashboard.dc.html` design in the Ensurance
+ * Design System — a 264px navy-800 column, sticky at full viewport height,
+ * holding the inverse (white) logo at the top.
  *
- * The nav items (Dashboard / Access Status / Agency Profile / Eligible Requests
- * / Subscription / Account & Access Settings / Agent Support) and the agent
- * identity chip that pins to the bottom of the rail are DELIBERATELY NOT here
- * yet — they land in a later iteration. Keep the `.dash-sidebar` element and its
- * flex column so those slot in below the brand without reshaping the rail.
+ * The nav items themselves (Dashboard / Access Status / Agency Profile /
+ * Eligible Requests / Subscription / Account & Access Settings / Agent Support)
+ * and the agent identity chip that pins to the bottom of the rail are
+ * DELIBERATELY NOT here yet — they land in a later iteration, as
+ * get_template_part() calls dropped into the empty <nav> below. Nothing else
+ * has to change to add one: components/dashboard-nav-item.php carries the
+ * markup, assets/dashboard.css carries the styling, and the active state
+ * resolves itself off ensurance_dashboard_current_view().
+ *
+ *   get_template_part( 'components/dashboard-nav-item', null, array(
+ *       'view'  => 'access',
+ *       'label' => 'Access Status',
+ *       'href'  => add_query_arg( 'view', 'access', home_url( '/dashboard/' ) ),
+ *       'icon'  => '<svg …></svg>',
+ *   ) );
  *
  * The logo is a link back to the homepage (same target as the site header's
  * brand link). Because this rail carries the logo, page-dashboard.php hides the
@@ -32,6 +43,10 @@
 		/>
 	</a>
 
-	<?php /* Nav + agent chip: next iteration. */ ?>
+	<nav class="dash-nav" aria-label="Dashboard sections">
+		<?php /* Nav items: next iteration — see the usage note above. */ ?>
+	</nav>
+
+	<?php /* Agent identity chip (pins to the rail's bottom): next iteration. */ ?>
 
 </aside>

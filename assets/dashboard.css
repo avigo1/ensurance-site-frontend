@@ -85,6 +85,18 @@ html body:has(.dashboard-shell) .site-footer {
   gap: var(--space-6);
   padding: 28px 20px;
   background: var(--navy-800);
+
+  /* Rail-surface tokens. home.css's palette is built for light surfaces, so it
+     has no values for "text/wash on navy" — the AgentDashboard design expresses
+     those as translucent white, which reads correctly over navy-800 and would
+     keep reading correctly if the rail's background ever changes. Defined once
+     here and referenced by every rule below, so the rail recolors from this
+     block alone. Values are taken from `.ens-nav` in
+     templates/agent-dashboard/AgentDashboard.dc.html. */
+  --rail-text: rgba(255, 255, 255, 0.72);
+  --rail-text-strong: #ffffff;
+  --rail-wash-hover: rgba(255, 255, 255, 0.07);
+  --rail-wash-active: rgba(255, 255, 255, 0.12);
 }
 
 /* Brand — links back to the homepage, same target as the site header's
@@ -118,6 +130,107 @@ html body:has(.dashboard-shell) .site-footer {
   height: 15px;
   width: auto;
   max-width: 100%;
+}
+
+/* ── Nav item pattern ────────────────────────────────────────────────
+   The reusable row rendered by components/dashboard-nav-item.php. Defined
+   here ahead of the items themselves so the next iteration only adds
+   get_template_part() calls, not styling.
+
+   .dash-nav is the stack; .dash-nav__item is the pattern. Both match
+   `.ens-nav` in templates/agent-dashboard/AgentDashboard.dc.html. All
+   colors come from the rail tokens on .dash-sidebar above — nothing here
+   hardcodes a value. */
+.dash-nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.dash-nav__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  /* 11px/14px straight from the design; with the 15px label this renders a
+     ~41px row on desktop. That is under --tap-min, which the mobile
+     breakpoint below corrects — the rail is pointer-driven at this width. */
+  padding: 11px 14px;
+  border-radius: var(--radius-input);
+  color: var(--rail-text);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-snug);
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+}
+
+/* home.css styles bare links with the accent green; these rows are rail
+   chrome, so pin the color across link states rather than letting the
+   global `a` rules repaint them. */
+.dash-nav__item:link,
+.dash-nav__item:visited {
+  color: var(--rail-text);
+}
+
+.dash-nav__item:hover,
+.dash-nav__item:focus-visible {
+  background-color: var(--rail-wash-hover);
+  color: var(--rail-text-strong);
+}
+
+.dash-nav__item:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Press feedback, same as the design's `.ens-nav:active`. */
+.dash-nav__item:active {
+  transform: scale(0.98);
+}
+
+/* Current view. Driven server-side: dashboard-nav-item.php compares its
+   `view` arg against ensurance_dashboard_current_view() and adds is-active
+   (plus aria-current="page"), so the right row is already lit in the
+   initial HTML. Listed after :hover so an active row keeps its stronger
+   wash while the pointer is over it. */
+.dash-nav__item.is-active,
+.dash-nav__item.is-active:hover,
+.dash-nav__item.is-active:focus-visible {
+  background-color: var(--rail-wash-active);
+  color: var(--rail-text-strong);
+}
+
+/* The glyph inherits the row color through every state — icons are authored
+   with stroke/fill="currentColor". */
+.dash-nav__icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: currentColor;
+}
+.dash-nav__icon svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+}
+
+.dash-nav__label {
+  min-width: 0;
+}
+
+/* Colors still change on hover/active — only the motion is dropped. */
+@media (prefers-reduced-motion: reduce) {
+  .dash-nav__item {
+    transition: none;
+  }
+  .dash-nav__item:active {
+    transform: none;
+  }
 }
 
 /* ── Page background over parent-theme / plugin globals ──────────────
@@ -221,6 +334,21 @@ html body:has(.dashboard-page) .mobile-sticky-cta {
     flex-direction: row;
     align-items: center;
     padding: var(--space-4) var(--container-pad);
+  }
+
+  /* The rail is a horizontal bar here, so the nav stack has to lie down with
+     it. Wrapping keeps every item reachable once the items land, rather than
+     letting them overflow the bar. */
+  .dash-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  /* Touch surface at this width, so raise the row from the design's ~41px to
+     the 44px tap minimum. Padding stays as designed — the floor does the work,
+     with the label centered in whatever height results. */
+  .dash-nav__item {
+    min-height: var(--tap-min);
   }
 }
 

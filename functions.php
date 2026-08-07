@@ -599,6 +599,35 @@ function ensurance_dashboard_assets() {
 }
 add_action('wp_enqueue_scripts', 'ensurance_dashboard_assets', 20);
 
+/**
+ * Which dashboard view is currently showing.
+ *
+ * The AgentDashboard design (templates/agent-dashboard/AgentDashboard.dc.html in
+ * the Ensurance Design System) is a single shell whose left rail switches an
+ * in-page view; the prototype holds that in client state. Server-side the same
+ * idea is a `?view=` slug on /dashboard/, which keeps every view linkable,
+ * bookmarkable and back-button-friendly — and lets the rail render its active
+ * item in the initial HTML rather than after a paint.
+ *
+ * Deliberately NOT validated against a list of views: the nav items land in a
+ * later iteration, and an unrecognized slug simply matches no item (nothing
+ * highlights) rather than erroring. `dashboard` is the default view.
+ *
+ * Used by components/dashboard-nav-item.php to decide the `is-active` state.
+ *
+ * @return string Sanitized view slug, e.g. 'dashboard', 'access', 'profile'.
+ */
+function ensurance_dashboard_current_view() {
+    // Read-only presentation state — no side effects, so no nonce to verify.
+    if ( empty( $_GET['view'] ) ) {
+        return 'dashboard';
+    }
+
+    $view = sanitize_key( wp_unslash( $_GET['view'] ) );
+
+    return '' !== $view ? $view : 'dashboard';
+}
+
 // ============================================================================
 // 2b-v-a4. FOUNDING AGENT PLAN SELECTION — SIGN-UP FUNNEL MEMORY
 // ============================================================================
