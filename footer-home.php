@@ -33,6 +33,11 @@
         <a href="<?php echo esc_url( home_url( '/trust-center' ) ); ?>">Trust Center</a>
         <a href="<?php echo esc_url( home_url( '/contact' ) ); ?>">Contact Us</a>
       </nav>
+      <!-- Heading only for now — state links to be added later. Switch this
+           div back to a <nav aria-label="Coverage by state"> once it has links. -->
+      <div class="footer-col">
+        <p class="footer-col__title">Coverage by State</p>
+      </div>
     </div>
   </div>
   <div class="footer-bottom">
