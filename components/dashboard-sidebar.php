@@ -2,25 +2,26 @@
 /**
  * Agent Dashboard — left sidebar (dark navy rail).
  *
- * Iteration 6 of the dashboard build: the rail, the brand logo, and the first
- * FOUR nav items (Dashboard, Access Status, Agency Profile, Eligible Requests).
+ * Iteration 7 of the dashboard build: the rail, the brand logo, and the first
+ * FIVE nav items (Dashboard, Access Status, Agency Profile, Eligible Requests,
+ * Subscription).
  * Mirrors the `templates/agent-dashboard/AgentDashboard.dc.html` design in the
  * Ensurance Design System — a 264px navy-800 column, sticky at full viewport
  * height, holding the inverse (white) logo at the top.
  *
- * The remaining nav items (Subscription / Account & Access Settings / Agent
- * Support) and the agent identity chip that pins to the bottom of the rail are
- * DELIBERATELY NOT here yet — they land in later iterations, as further
- * get_template_part() calls appended to the <nav> below, in the design's order.
+ * The remaining nav items (Account & Access Settings / Agent Support) and the
+ * agent identity chip that pins to the bottom of the rail are DELIBERATELY NOT
+ * here yet — they land in later iterations, as further get_template_part()
+ * calls appended to the <nav> below, in the design's order.
  * Nothing else has to change to add one:
  * components/dashboard-nav-item.php carries the markup, assets/dashboard.css
  * carries the styling, and the active state resolves itself off
  * ensurance_dashboard_current_view().
  *
  *   get_template_part( 'components/dashboard-nav-item', null, array(
- *       'view'  => 'subscription',
- *       'label' => 'Subscription',
- *       'href'  => add_query_arg( 'view', 'subscription', home_url( '/dashboard/' ) ),
+ *       'view'  => 'settings',
+ *       'label' => 'Account & Access Settings',
+ *       'href'  => add_query_arg( 'view', 'settings', home_url( '/dashboard/' ) ),
  *       'icon'  => '<svg …></svg>',
  *   ) );
  *
@@ -116,6 +117,24 @@
 				'label' => 'Eligible Requests',
 				'href'  => add_query_arg( 'view', 'requests', home_url( '/dashboard/' ) ),
 				'icon'  => '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>',
+			)
+		);
+
+		/*
+		 * Subscription — the rail's fifth row. Same shape as the three above
+		 * it: the `?view=subscription` slug has to be in the URL for
+		 * ensurance_dashboard_current_view() to report it and light this item.
+		 * Icon is the design's `calendar` glyph (Lucide, stroke 2, round caps/
+		 * joins) at the same 18px the rail draws every glyph at.
+		 */
+		get_template_part(
+			'components/dashboard-nav-item',
+			null,
+			array(
+				'view'  => 'subscription',
+				'label' => 'Subscription',
+				'href'  => add_query_arg( 'view', 'subscription', home_url( '/dashboard/' ) ),
+				'icon'  => '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>',
 			)
 		);
 		?>
