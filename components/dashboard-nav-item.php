@@ -14,12 +14,13 @@
  * free.
  *
  * USAGE (components/dashboard-sidebar.php wires up the items — Dashboard,
- * Access Status and Agency Profile are in; the rest land in later iterations):
+ * Access Status, Agency Profile and Eligible Requests are in; the rest land in
+ * later iterations):
  *
  *   get_template_part( 'components/dashboard-nav-item', null, array(
- *       'view'  => 'requests',
- *       'label' => 'Eligible Requests',
- *       'href'  => add_query_arg( 'view', 'requests', home_url( '/dashboard/' ) ),
+ *       'view'  => 'subscription',
+ *       'label' => 'Subscription',
+ *       'href'  => add_query_arg( 'view', 'subscription', home_url( '/dashboard/' ) ),
  *       'icon'  => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" …></svg>',
  *   ) );
  *
