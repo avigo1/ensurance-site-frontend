@@ -13,13 +13,13 @@
  * should be keyboard-focusable, middle-clickable and announced as a link for
  * free.
  *
- * USAGE (components/dashboard-sidebar.php wires up the items — Dashboard is in;
- * the rest land in later iterations):
+ * USAGE (components/dashboard-sidebar.php wires up the items — Dashboard and
+ * Access Status are in; the rest land in later iterations):
  *
  *   get_template_part( 'components/dashboard-nav-item', null, array(
- *       'view'  => 'access',
- *       'label' => 'Access Status',
- *       'href'  => add_query_arg( 'view', 'access', home_url( '/dashboard/' ) ),
+ *       'view'  => 'profile',
+ *       'label' => 'Agency Profile',
+ *       'href'  => add_query_arg( 'view', 'profile', home_url( '/dashboard/' ) ),
  *       'icon'  => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" …></svg>',
  *   ) );
  *
