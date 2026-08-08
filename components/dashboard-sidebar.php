@@ -2,25 +2,25 @@
 /**
  * Agent Dashboard — left sidebar (dark navy rail).
  *
- * Iteration 4 of the dashboard build: the rail, the brand logo, and the first
- * TWO nav items (Dashboard, Access Status). Mirrors the
+ * Iteration 5 of the dashboard build: the rail, the brand logo, and the first
+ * THREE nav items (Dashboard, Access Status, Agency Profile). Mirrors the
  * `templates/agent-dashboard/AgentDashboard.dc.html` design in the Ensurance
  * Design System — a 264px navy-800 column, sticky at full viewport height,
  * holding the inverse (white) logo at the top.
  *
- * The remaining nav items (Agency Profile / Eligible Requests / Subscription /
- * Account & Access Settings / Agent Support) and the agent identity chip that
- * pins to the bottom of the rail are DELIBERATELY NOT here yet — they land in
- * later iterations, as further get_template_part() calls appended to the <nav>
- * below, in the design's order. Nothing else has to change to add one:
+ * The remaining nav items (Eligible Requests / Subscription / Account & Access
+ * Settings / Agent Support) and the agent identity chip that pins to the bottom
+ * of the rail are DELIBERATELY NOT here yet — they land in later iterations, as
+ * further get_template_part() calls appended to the <nav> below, in the design's
+ * order. Nothing else has to change to add one:
  * components/dashboard-nav-item.php carries the markup, assets/dashboard.css
  * carries the styling, and the active state resolves itself off
  * ensurance_dashboard_current_view().
  *
  *   get_template_part( 'components/dashboard-nav-item', null, array(
- *       'view'  => 'profile',
- *       'label' => 'Agency Profile',
- *       'href'  => add_query_arg( 'view', 'profile', home_url( '/dashboard/' ) ),
+ *       'view'  => 'requests',
+ *       'label' => 'Eligible Requests',
+ *       'href'  => add_query_arg( 'view', 'requests', home_url( '/dashboard/' ) ),
  *       'icon'  => '<svg …></svg>',
  *   ) );
  *
@@ -80,6 +80,24 @@
 				'label' => 'Access Status',
 				'href'  => add_query_arg( 'view', 'access', home_url( '/dashboard/' ) ),
 				'icon'  => '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>',
+			)
+		);
+
+		/*
+		 * Agency Profile — the rail's third row. Same shape as Access Status:
+		 * the `?view=profile` slug has to be in the URL for
+		 * ensurance_dashboard_current_view() to report it and light this item.
+		 * Icon is the design's `user` glyph (Lucide, stroke 2, round caps/
+		 * joins) at the same 18px the rail draws every glyph at.
+		 */
+		get_template_part(
+			'components/dashboard-nav-item',
+			null,
+			array(
+				'view'  => 'profile',
+				'label' => 'Agency Profile',
+				'href'  => add_query_arg( 'view', 'profile', home_url( '/dashboard/' ) ),
+				'icon'  => '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>',
 			)
 		);
 		?>
