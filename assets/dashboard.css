@@ -145,10 +145,15 @@ html body:has(.dashboard-shell) .site-footer {
    `.ens-nav` in templates/agent-dashboard/AgentDashboard.dc.html. All
    colors come from the rail tokens on .dash-sidebar above — nothing here
    hardcodes a value. */
+/* The design's `gap:4px` reads as too tight against the 41px rows once the
+   rail carries all seven items — the labels crowd each other and the hover
+   wash of one row nearly touches the next. One step up the token scale
+   (8px) separates them without breaking the nav into a list of unrelated
+   buttons. Row height and padding stay exactly as designed. */
 .dash-nav {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--space-2);
 }
 
 .dash-nav__item {
