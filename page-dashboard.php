@@ -14,7 +14,7 @@
  *
  * LAYOUT: the page is a two-column shell (.dashboard-shell) — the dark navy left
  * rail (components/dashboard-sidebar.php) plus the main content column. The rail
- * currently carries four nav items; the content column holds one .dash-view
+ * currently carries five nav items; the content column holds one .dash-view
  * container per item, of which exactly one is visible at a time.
  *
  * VIEW SWITCHING: the design is a stateful component — clicking a rail item
@@ -98,7 +98,7 @@ get_header( 'agent' );
  * tabindex="-1" lets dashboard.js move focus here after a click without
  * putting the container in the tab order.
  */
-$dashboard_views = array( 'dashboard', 'access', 'profile', 'requests' );
+$dashboard_views = array( 'dashboard', 'access', 'profile', 'requests', 'subscription' );
 $dashboard_view  = ensurance_dashboard_current_view();
 
 // ensurance_dashboard_current_view() passes unknown slugs straight through
@@ -208,6 +208,22 @@ $dashboard_view_class = static function ( $view, $current, $modifier = '' ) {
 		<p class="dash-view__intro">
 			Eligible shopper request details may appear here when available in your state
 			or service area.
+		</p>
+	</section>
+
+	<!-- Subscription. The design titles this view "Subscription Status" while
+	     its rail row reads "Subscription" — both are kept as designed. -->
+	<section
+		class="<?php echo esc_attr( $dashboard_view_class( 'subscription', $dashboard_view ) ); ?>"
+		data-view="subscription"
+		tabindex="-1"
+		aria-label="Subscription Status"
+	>
+		<div class="dash-view__eyebrow">Founding Agent Access</div>
+		<h1 class="dash-view__title">Subscription Status</h1>
+		<p class="dash-view__intro">
+			Review your Founding Agent Access status, current plan, billing information,
+			and access period.
 		</p>
 	</section>
 
