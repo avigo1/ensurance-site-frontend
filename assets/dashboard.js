@@ -78,6 +78,21 @@
    *                            forward, where stealing focus is jarring.
    */
   function show(view, moveFocus) {
+    // The view about to be hidden may be the one holding focus: a click puts
+    // focus on its container (below), so a subsequent back/forward would hide
+    // the element the user is standing on. `display: none` does not hand that
+    // focus anywhere useful — it strands it on a hidden node, and the next Tab
+    // restarts from the top of the document. Note it BEFORE the swap so the
+    // focus can be carried over to the incoming view instead.
+    //
+    // This is deliberately narrower than `moveFocus`: it only RESCUES focus
+    // that is already inside a view being hidden. Focus resting anywhere else
+    // (the rail, the sign-out button, the page chrome) is left alone, which is
+    // what keeps back/forward from stealing it.
+    var focused = document.activeElement;
+    var owner = focused && focused.closest ? focused.closest('.dash-view') : null;
+    var rescueFocus = !!owner && owner.getAttribute('data-view') !== view;
+
     views.forEach(function (el) {
       el.classList.toggle('is-active', el.getAttribute('data-view') === view);
     });
@@ -92,11 +107,12 @@
       }
     });
 
-    if (moveFocus) {
+    if (moveFocus || rescueFocus) {
       var active = shell.querySelector('.dash-view.is-active');
       if (active) {
         // Containers carry tabindex="-1" so they can receive focus without
-        // entering the tab order.
+        // entering the tab order. preventScroll keeps the rescue case silent —
+        // back/forward should restore the page, not jump it.
         active.focus({ preventScroll: true });
       }
     }
