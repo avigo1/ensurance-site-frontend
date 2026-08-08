@@ -237,6 +237,25 @@ html body:has(.dashboard-shell) .site-footer {
   }
 }
 
+/* ── Rail footer group ───────────────────────────────────────────────
+   The agency user card plus the sign-out button beneath it, kept together
+   as one block (components/dashboard-sidebar.php).
+
+   `margin-top: auto` is what pins the pair to the bottom — it absorbs
+   whatever height the nav leaves over, so they sit at the foot of the rail
+   on a tall screen and directly under the last nav row on a short one.
+   (That used to live on .dash-user, which was the bottom-most child.)
+
+   The group also sets its own gap. .dash-sidebar's 32px is the spacing
+   BETWEEN the rail's blocks — logo, nav, footer — and reading as that gulf
+   between a card and its own button would detach the two. */
+.dash-rail-foot {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
 /* ── Agency user card ────────────────────────────────────────────────
    The identity chip at the foot of the rail (components/dashboard-user-card.php),
    matching the sidebar's last block in
@@ -244,13 +263,11 @@ html body:has(.dashboard-shell) .site-footer {
    agency initials, agency name, "Founding Agent" sub-label, on a faint
    translucent-white card.
 
-   `margin-top: auto` is what pins it to the bottom — it absorbs whatever
-   height the nav leaves over, so the card sits at the foot of the rail on a
-   tall screen and directly under the last nav row on a short one. Not a
-   link (yet) and carries no hover state: the sign-out control lands in a
-   later iteration. */
+   The card is not itself interactive and carries no hover state — signing
+   out is its own button below it (`.dash-signout`), so the card stays a
+   label. The pinning lives on the `.dash-rail-foot` wrapper that holds the
+   two, not here. */
 .dash-user {
-  margin-top: auto;
   display: flex;
   align-items: center;
   gap: var(--space-3);
@@ -308,6 +325,57 @@ html body:has(.dashboard-shell) .site-footer {
   font-size: var(--text-xs);
   font-weight: var(--weight-regular);
   line-height: var(--leading-snug);
+}
+
+/* ── Sign out ────────────────────────────────────────────────────────
+   components/dashboard-signout.php. The AgentDashboard design has no
+   sign-out control (its prototype has no session to end), so rather than
+   invent a shape this reuses the site's own button — .btn / .btn--sm in
+   assets/home.css — and adds only the one variant home.css is missing: a
+   button on a dark surface. Height, pill radius, weight, icon gap and the
+   :active press all come from .btn, so it reads as an Ensurance button
+   instead of an eighth nav row.
+
+   The colors are the rail's own translucent-white tokens, the same ones
+   .dash-nav__item uses, so the button recolors with the rail rather than
+   pinning white values of its own. */
+.dash-signout {
+  width: 100%;
+  background: transparent;
+  color: var(--rail-text);
+  border-color: var(--rail-wash-active);
+}
+
+/* home.css paints bare links accent green, and this control is an <a> —
+   wp_logout_url() is a nonce-carrying URL, not a form endpoint — so pin the
+   color across link states the way the nav rows do. */
+.dash-signout:link,
+.dash-signout:visited {
+  color: var(--rail-text);
+}
+
+.dash-signout:hover,
+.dash-signout:focus-visible {
+  background: var(--rail-wash-hover);
+  border-color: var(--rail-text-muted);
+  color: var(--rail-text-strong);
+}
+
+/* Same ring, offset and color as the nav rows above — one focus treatment
+   for the whole rail. Stated here rather than left to the global
+   :focus-visible rule in home.css so the rail's focus styling stays legible
+   in one place, and so the ring cannot be lost if .btn's own states are
+   ever extended. */
+.dash-signout:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Match the nav rows' glyph size; stroke is currentColor, so it follows the
+   label through every state. */
+.dash-signout svg {
+  width: 18px;
+  height: 18px;
 }
 
 /* ── View containers ────────────────────────────────────────────────
@@ -542,12 +610,30 @@ html body:has(.dashboard-page) .mobile-sticky-cta {
 
   /* The rail is horizontal here, so "pinned to the bottom" becomes "pinned
      to the end of the bar" — `margin-top: auto` would otherwise fight
-     align-items: center and drop the card to the bar's bottom edge. It also
-     stops shrinking before the name is unreadable. */
-  .dash-user {
+     align-items: center and drop the group to the bar's bottom edge. The
+     card and its sign-out button lie down beside each other too, rather than
+     stacking into a two-row block that would set the bar's height. */
+  .dash-rail-foot {
     margin-top: 0;
     margin-left: auto;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  /* Stops shrinking before the agency name is unreadable. */
+  .dash-user {
     max-width: 240px;
+  }
+
+  /* Touch surface at this width: the same 44px floor the nav rows take,
+     since .btn--sm's 40px is under it. min-height clamps .btn's fixed
+     height. The button also stops shrinking here — the card beside it
+     ellipsizes instead, because a squeezed "Sign out" is the one label on
+     the bar that must stay readable. */
+  .dash-signout {
+    width: auto;
+    min-height: var(--tap-min);
+    flex-shrink: 0;
   }
 }
 

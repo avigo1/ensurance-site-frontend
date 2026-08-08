@@ -13,8 +13,10 @@
  * rest of the dashboard should use to greet the agent, so there is one place to
  * repoint when the real agency record exists.
  *
- * NO SIGN-OUT CONTROL YET — that lands in a later iteration, which is why this
- * is a plain <div> and not a link or a menu button.
+ * THE CARD ITSELF IS NOT INTERACTIVE — it is a plain <div>, not a link or a
+ * menu button. Signing out is its own labeled button directly beneath it
+ * (components/dashboard-signout.php); the two sit in the same
+ * `.dash-rail-foot` group in components/dashboard-sidebar.php.
  *
  * The avatar is aria-hidden: it is the agency name abbreviated, and the name
  * itself is right beside it, so announcing "CI" first would only be noise.
