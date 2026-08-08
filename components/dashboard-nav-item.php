@@ -13,7 +13,8 @@
  * should be keyboard-focusable, middle-clickable and announced as a link for
  * free.
  *
- * USAGE (the next iteration adds the actual items — none are wired up yet):
+ * USAGE (components/dashboard-sidebar.php wires up the items — Dashboard is in;
+ * the rest land in later iterations):
  *
  *   get_template_part( 'components/dashboard-nav-item', null, array(
  *       'view'  => 'access',
