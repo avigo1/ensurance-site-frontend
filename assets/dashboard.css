@@ -147,13 +147,13 @@ html body:has(.dashboard-shell) .site-footer {
    hardcodes a value. */
 /* The design's `gap:4px` reads as too tight against the 41px rows once the
    rail carries all seven items — the labels crowd each other and the hover
-   wash of one row nearly touches the next. One step up the token scale
-   (8px) separates them without breaking the nav into a list of unrelated
-   buttons. Row height and padding stay exactly as designed. */
+   wash of one row nearly touches the next. --space-3 (12px) gives each row
+   its own breathing room while the shared indent and icon column still read
+   the seven as one group. Row height and padding stay exactly as designed. */
 .dash-nav {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-3);
 }
 
 .dash-nav__item {
