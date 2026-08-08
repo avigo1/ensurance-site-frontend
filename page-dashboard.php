@@ -13,9 +13,11 @@
  * plans/agent-onboarding-1-free-agent.md).
  *
  * LAYOUT: the page is a two-column shell (.dashboard-shell) — the dark navy left
- * rail (components/dashboard-sidebar.php) plus the main content column. The rail
- * currently carries five nav items; the content column holds one .dash-view
- * container per item, of which exactly one is visible at a time.
+ * rail (components/dashboard-sidebar.php) plus the main content column. Both
+ * are generated from ensurance_dashboard_views() in functions.php — the single
+ * ordered list of rail rows — so the content column always holds exactly one
+ * .dash-view container per rail item, of which one is visible at a time. Adding
+ * a row means adding one entry there and nothing else.
  *
  * VIEW SWITCHING: the design is a stateful component — clicking a rail item
  * swaps the main region in place with a short fade, no navigation. That is
@@ -89,144 +91,79 @@ get_header( 'agent' );
  * right view immediately with no flash of the wrong one. dashboard.js takes
  * over from there; without it the rail's links simply navigate as before.
  *
- * ADDING A VIEW: give it a container here with the same data-view slug as
- * its rail item's `?view=` arg, and it is wired — nav highlighting, the
- * fade, history and deep links all key off that one string. Rail items whose
- * container does not exist yet keep navigating normally (dashboard.js checks
- * before intercepting), so a nav item and its view can land together.
+ * ADDING A VIEW: append ONE entry to ensurance_dashboard_views() in
+ * functions.php. The container below and the rail item in
+ * components/dashboard-sidebar.php are both generated from that array, so a
+ * row can no longer ship without its view — which used to mean a silent full
+ * page load instead of the in-place fade. Everything (nav highlighting, the
+ * fade, history, deep links) keys off the entry's `view` slug.
+ *
+ * A view whose content is more than eyebrow / title / intro names a `part`
+ * in that array and puts its markup there — see
+ * components/dashboard-view-dashboard.php.
  *
  * tabindex="-1" lets dashboard.js move focus here after a click without
  * putting the container in the tab order.
  */
-$dashboard_views = array( 'dashboard', 'access', 'profile', 'requests', 'subscription' );
+$dashboard_items = ensurance_dashboard_views();
+$dashboard_views = wp_list_pluck( $dashboard_items, 'view' );
 $dashboard_view  = ensurance_dashboard_current_view();
 
 // ensurance_dashboard_current_view() passes unknown slugs straight through
 // (it sanitizes, it does not validate). Harmless when nothing consumed the
-// value, but now an unrecognized `?view=` would match no container and leave
-// the column blank — so fall back to the default view here. Keep this list in
-// step with the containers below. assets/dashboard.js applies the same
-// fallback client-side.
+// value, but an unrecognized `?view=` would match no container and leave the
+// column blank — so fall back to the default view here. The list comes from
+// the registry, so it cannot fall out of step with the containers.
+// assets/dashboard.js applies the same fallback client-side.
 if ( ! in_array( $dashboard_view, $dashboard_views, true ) ) {
 	$dashboard_view = 'dashboard';
 }
 
-/**
- * Class list for a view container — `.dash-view`, plus `is-active` when it
- * is the current one.
- *
- * @param string $view      This container's slug.
- * @param string $current   The slug currently showing.
- * @param string $modifier  Optional extra class.
- * @return string
- */
-$dashboard_view_class = static function ( $view, $current, $modifier = '' ) {
-	$classes = array( 'dash-view' );
+foreach ( $dashboard_items as $dash_item ) :
 
-	if ( '' !== $modifier ) {
-		$classes[] = $modifier;
+	$dash_classes = array( 'dash-view' );
+
+	if ( '' !== $dash_item['modifier'] ) {
+		$dash_classes[] = $dash_item['modifier'];
 	}
 
-	if ( $view === $current ) {
-		$classes[] = 'is-active';
+	if ( $dash_item['view'] === $dashboard_view ) {
+		$dash_classes[] = 'is-active';
 	}
 
-	return implode( ' ', $classes );
-};
+	// A `part` that has not been written yet falls back to the generic
+	// eyebrow / title / intro rather than rendering an empty container, so a
+	// view can be listed before its real markup exists.
+	$dash_has_part = ( '' !== $dash_item['part'] && locate_template( $dash_item['part'] . '.php' ) );
+
+	// Views are titled independently of their rail row in the design
+	// ("Eligible Requests" → "Eligible Request Previews"); the title is the
+	// better label, but a part-rendered view may not set one.
+	$dash_label = ( '' !== $dash_item['title'] ) ? $dash_item['title'] : $dash_item['label'];
+	?>
+
+	<section
+		class="<?php echo esc_attr( implode( ' ', $dash_classes ) ); ?>"
+		data-view="<?php echo esc_attr( $dash_item['view'] ); ?>"
+		tabindex="-1"
+		aria-label="<?php echo esc_attr( $dash_label ); ?>"
+	>
+		<?php if ( $dash_has_part ) : ?>
+
+			<?php get_template_part( $dash_item['part'] ); ?>
+
+		<?php else : ?>
+
+			<div class="dash-view__eyebrow"><?php echo esc_html( $dash_item['eyebrow'] ); ?></div>
+			<h1 class="dash-view__title"><?php echo esc_html( $dash_item['title'] ); ?></h1>
+			<p class="dash-view__intro"><?php echo esc_html( $dash_item['intro'] ); ?></p>
+
+		<?php endif; ?>
+	</section>
+
+	<?php
+endforeach;
 ?>
-
-	<!-- Dashboard — still the placeholder holding state; the design's real
-	     overview (badges + three cards + "Accept or Pass") lands later. -->
-	<section
-		class="<?php echo esc_attr( $dashboard_view_class( 'dashboard', $dashboard_view, 'dash-view--center' ) ); ?>"
-		data-view="dashboard"
-		tabindex="-1"
-		aria-label="Dashboard"
-	>
-
-		<div class="dashboard-setup" aria-live="polite">
-
-			<span class="dashboard-setup__gear" aria-hidden="true">
-				<svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false">
-					<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
-					<circle cx="12" cy="12" r="3"/>
-				</svg>
-			</span>
-
-			<h1 class="dashboard-setup__title">Your Dashboard Is Coming Soon</h1>
-
-			<p class="dashboard-setup__note">
-				Stay Tuned, great things are afoot.
-			</p>
-
-		</div>
-
-	</section>
-
-	<!-- Access Status. Header + intro copy are the design's; the status
-	     rows, badge and CTA it specifies come in a later iteration. -->
-	<section
-		class="<?php echo esc_attr( $dashboard_view_class( 'access', $dashboard_view ) ); ?>"
-		data-view="access"
-		tabindex="-1"
-		aria-label="Access Status"
-	>
-		<div class="dash-view__eyebrow">Founding Agent Access</div>
-		<h1 class="dash-view__title">Access Status</h1>
-		<p class="dash-view__intro">
-			Your Founding Agent Access shows whether your agency can create or manage a
-			profile and review eligible shopper request details when available.
-		</p>
-	</section>
-
-	<!-- Agency Profile. -->
-	<section
-		class="<?php echo esc_attr( $dashboard_view_class( 'profile', $dashboard_view ) ); ?>"
-		data-view="profile"
-		tabindex="-1"
-		aria-label="Agency Profile"
-	>
-		<div class="dash-view__eyebrow">Founding Agent Access</div>
-		<h1 class="dash-view__title">Agency Profile</h1>
-		<p class="dash-view__intro">
-			Complete your agency profile so Ensurance can understand your service areas,
-			coverage types, and contact details.
-		</p>
-	</section>
-
-	<!-- Eligible Requests. The design titles this view "Eligible Request
-	     Previews" while its rail row reads "Eligible Requests" — both are
-	     kept as designed. -->
-	<section
-		class="<?php echo esc_attr( $dashboard_view_class( 'requests', $dashboard_view ) ); ?>"
-		data-view="requests"
-		tabindex="-1"
-		aria-label="Eligible Request Previews"
-	>
-		<div class="dash-view__eyebrow">Founding Agent Access</div>
-		<h1 class="dash-view__title">Eligible Request Previews</h1>
-		<p class="dash-view__intro">
-			Eligible shopper request details may appear here when available in your state
-			or service area.
-		</p>
-	</section>
-
-	<!-- Subscription. The design titles this view "Subscription Status" while
-	     its rail row reads "Subscription" — both are kept as designed. -->
-	<section
-		class="<?php echo esc_attr( $dashboard_view_class( 'subscription', $dashboard_view ) ); ?>"
-		data-view="subscription"
-		tabindex="-1"
-		aria-label="Subscription Status"
-	>
-		<div class="dash-view__eyebrow">Founding Agent Access</div>
-		<h1 class="dash-view__title">Subscription Status</h1>
-		<p class="dash-view__intro">
-			Review your Founding Agent Access status, current plan, billing information,
-			and access period.
-		</p>
-	</section>
-
 </main>
 
 </div><!-- /.dashboard-shell -->

@@ -660,6 +660,132 @@ function ensurance_dashboard_current_view() {
     return '' !== $view ? $view : 'dashboard';
 }
 
+/**
+ * The Agent Dashboard's rail and views — THE single source of truth.
+ *
+ * One entry per row of the left rail in the AgentDashboard design
+ * (templates/agent-dashboard/AgentDashboard.dc.html in the Ensurance Design
+ * System), in the design's order. Everything the dashboard needs is derived
+ * from this array:
+ *
+ *   - components/dashboard-sidebar.php loops it into nav items.
+ *   - page-dashboard.php loops it into the matching .dash-view containers,
+ *     and plucks `view` for the list of slugs it accepts in `?view=`.
+ *
+ * ADDING A ROW: append ONE entry here. The nav item, the view container, the
+ * `?view=` deep link, the active highlight and the in-place fade in
+ * assets/dashboard.js all come with it — there is nothing else to edit and no
+ * second list to keep in step. (Before this array existed, those were three
+ * hand-maintained lists in two files; a row whose container was missing
+ * silently fell back to a full page load and the Dashboard view.)
+ *
+ * FIELDS
+ *   view     string  required  Slug. Used in `?view=`, as the container's
+ *                              data-view, and matched against
+ *                              ensurance_dashboard_current_view() for the
+ *                              active state.
+ *   label    string  required  Rail row text.
+ *   icon     string  optional  Inline SVG for the rail glyph. THEME-AUTHORED
+ *                              markup only — components/dashboard-nav-item.php
+ *                              runs it through wp_kses regardless. Use
+ *                              `currentColor` so it inherits the row's color.
+ *                              Glyphs are the design's (Lucide, stroke 2,
+ *                              round caps/joins) at 18px.
+ *   title    string  optional  <h1> of the view. Several views are titled
+ *                              differently from their rail row in the design
+ *                              ("Eligible Requests" → "Eligible Request
+ *                              Previews") — both are kept as designed. Also
+ *                              becomes the container's aria-label; falls back
+ *                              to `label`.
+ *   eyebrow  string  optional  Kicker above the title. Defaults to "Founding
+ *                              Agent Access", which every view in the design
+ *                              carries.
+ *   intro    string  optional  Lead paragraph.
+ *   href     string  optional  Destination. Defaults to `?view=<view>` on
+ *                              /dashboard/.
+ *   modifier string  optional  Extra class on the container.
+ *   part     string  optional  Template part rendered INSIDE the container
+ *                              instead of the generic eyebrow/title/intro —
+ *                              the escape hatch for views whose real content
+ *                              is a card grid, status rows, an accordion and
+ *                              so on. Ignored if the file does not exist, so
+ *                              a view can be listed before it is built.
+ *
+ * @return array[] Ordered rail items, defaults applied.
+ */
+function ensurance_dashboard_views() {
+    $items = array(
+        // The rail's first row, and the view the page falls back to. Its href
+        // is the bare /dashboard/ URL rather than ?view=dashboard:
+        // ensurance_dashboard_current_view() already defaults to `dashboard`,
+        // so the clean URL lands here and keeps the row lit. Content is still
+        // the placeholder holding state, so it comes from a part; the design's
+        // real overview (badges + three cards + "Accept or Pass") lands later.
+        array(
+            'view'     => 'dashboard',
+            'label'    => 'Dashboard',
+            'icon'     => '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>',
+            'href'     => home_url( '/dashboard/' ),
+            'modifier' => 'dash-view--center',
+            'part'     => 'components/dashboard-view-dashboard',
+        ),
+        array(
+            'view'  => 'access',
+            'label' => 'Access Status',
+            'icon'  => '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>',
+            'title' => 'Access Status',
+            'intro' => 'Your Founding Agent Access shows whether your agency can create or manage a profile and review eligible shopper request details when available.',
+        ),
+        array(
+            'view'  => 'profile',
+            'label' => 'Agency Profile',
+            'icon'  => '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>',
+            'title' => 'Agency Profile',
+            'intro' => 'Complete your agency profile so Ensurance can understand your service areas, coverage types, and contact details.',
+        ),
+        array(
+            'view'  => 'requests',
+            'label' => 'Eligible Requests',
+            'icon'  => '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>',
+            'title' => 'Eligible Request Previews',
+            'intro' => 'Eligible shopper request details may appear here when available in your state or service area.',
+        ),
+        array(
+            'view'  => 'subscription',
+            'label' => 'Subscription',
+            'icon'  => '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>',
+            'title' => 'Subscription Status',
+            'intro' => 'Review your Founding Agent Access status, current plan, billing information, and access period.',
+        ),
+        // Still to come, in the design's order: Account & Access Settings
+        // (`lock`) and Agent Support (`message`).
+    );
+
+    $defaults = array(
+        'view'     => '',
+        'label'    => '',
+        'icon'     => '',
+        'title'    => '',
+        'eyebrow'  => 'Founding Agent Access',
+        'intro'    => '',
+        'href'     => '',
+        'modifier' => '',
+        'part'     => '',
+    );
+
+    foreach ( $items as $i => $item ) {
+        $item = array_merge( $defaults, $item );
+
+        if ( '' === $item['href'] ) {
+            $item['href'] = add_query_arg( 'view', $item['view'], home_url( '/dashboard/' ) );
+        }
+
+        $items[ $i ] = $item;
+    }
+
+    return $items;
+}
+
 // ============================================================================
 // 2b-v-a4. FOUNDING AGENT PLAN SELECTION — SIGN-UP FUNNEL MEMORY
 // ============================================================================

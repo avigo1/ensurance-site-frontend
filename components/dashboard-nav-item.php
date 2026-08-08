@@ -13,9 +13,11 @@
  * should be keyboard-focusable, middle-clickable and announced as a link for
  * free.
  *
- * USAGE (components/dashboard-sidebar.php wires up the items — Dashboard,
- * Access Status, Agency Profile, Eligible Requests and Subscription are in; the
- * rest land in later iterations):
+ * USAGE — you almost certainly do not call this directly. The rail is
+ * generated: components/dashboard-sidebar.php loops ensurance_dashboard_views()
+ * (functions.php) into one of these per entry, and page-dashboard.php loops the
+ * same array into the matching view containers. To add a row, add an entry
+ * there. This file is the markup for a single row:
  *
  *   get_template_part( 'components/dashboard-nav-item', null, array(
  *       'view'  => 'settings',
