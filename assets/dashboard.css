@@ -61,14 +61,13 @@ html body:has(.dashboard-shell) .site-footer {
 }
 
 /* ── Left rail ──────────────────────────────────────────────────────
-   Iteration 1: the navy column and the brand only. Nav items and the
-   agent chip stack in below the brand later, which is why this is a
-   flex column with a gap already.
+   The navy column: brand, nav stack, and the agency user card pinned to
+   the bottom by its own `margin-top: auto`.
 
    position: sticky + height: 100vh keeps the rail in view while the
-   content column scrolls — the rail's own content is short enough not to
-   need its own scrollbar yet; add overflow-y: auto here when the nav and
-   the bottom-pinned chip arrive. */
+   content column scrolls. Now that the rail is full — seven rows plus the
+   card — overflow-y: auto gives it its own scrollbar on short viewports
+   rather than letting the card fall off the bottom of the screen. */
 .dash-sidebar {
   flex: 0 0 264px;
   width: 264px;
@@ -85,6 +84,7 @@ html body:has(.dashboard-shell) .site-footer {
   gap: var(--space-6);
   padding: 28px 20px;
   background: var(--navy-800);
+  overflow-y: auto;
 
   /* Rail-surface tokens. home.css's palette is built for light surfaces, so it
      has no values for "text/wash on navy" — the AgentDashboard design expresses
@@ -95,8 +95,12 @@ html body:has(.dashboard-shell) .site-footer {
      templates/agent-dashboard/AgentDashboard.dc.html. */
   --rail-text: rgba(255, 255, 255, 0.72);
   --rail-text-strong: #ffffff;
+  --rail-text-muted: rgba(255, 255, 255, 0.55);
   --rail-wash-hover: rgba(255, 255, 255, 0.07);
   --rail-wash-active: rgba(255, 255, 255, 0.12);
+  /* Lighter than either nav wash — the user card is a resting surface, not
+     a state, so it must not read as a highlighted row. */
+  --rail-wash-card: rgba(255, 255, 255, 0.06);
 }
 
 /* Brand — links back to the homepage, same target as the site header's
@@ -231,6 +235,79 @@ html body:has(.dashboard-shell) .site-footer {
   .dash-nav__item:active {
     transform: none;
   }
+}
+
+/* ── Agency user card ────────────────────────────────────────────────
+   The identity chip at the foot of the rail (components/dashboard-user-card.php),
+   matching the sidebar's last block in
+   templates/agent-dashboard/AgentDashboard.dc.html: accent circle with the
+   agency initials, agency name, "Founding Agent" sub-label, on a faint
+   translucent-white card.
+
+   `margin-top: auto` is what pins it to the bottom — it absorbs whatever
+   height the nav leaves over, so the card sits at the foot of the rail on a
+   tall screen and directly under the last nav row on a short one. Not a
+   link (yet) and carries no hover state: the sign-out control lands in a
+   later iteration. */
+.dash-user {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  /* 14px from the design — between --space-3 and --space-4, same as the
+     nav rows' own 11px/14px. */
+  padding: 14px;
+  border-radius: var(--radius-icon);
+  background-color: var(--rail-wash-card);
+}
+
+/* The one saturated element on the rail. line-height: 1 keeps the initials
+   optically centered in the circle rather than sitting low. */
+.dash-user__avatar {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-pill);
+  background-color: var(--accent);
+  color: var(--rail-text-strong);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: var(--weight-medium);
+  line-height: 1;
+}
+
+/* min-width: 0 is what lets the name below actually truncate — without it
+   this flex item refuses to shrink past its content and a long agency name
+   pushes the card wider than the rail. */
+.dash-user__meta {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dash-user__name {
+  color: var(--rail-text-strong);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-snug);
+  /* Agency names run long; the design keeps the card one line tall and
+     ellipsizes. The full name stays available as the element's title. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dash-user__role {
+  color: var(--rail-text-muted);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-snug);
 }
 
 /* ── View containers ────────────────────────────────────────────────
@@ -442,6 +519,10 @@ html body:has(.dashboard-page) .mobile-sticky-cta {
     flex-direction: row;
     align-items: center;
     padding: var(--space-4) var(--container-pad);
+    /* The bar grows with its content here, so the desktop rail's own
+       scroller has nothing to scroll — and leaving it on would let the
+       wrapped nav trigger a scrollbar inside the bar. */
+    overflow: visible;
   }
 
   /* The rail is a horizontal bar here, so the nav stack has to lie down with
@@ -457,6 +538,16 @@ html body:has(.dashboard-page) .mobile-sticky-cta {
      with the label centered in whatever height results. */
   .dash-nav__item {
     min-height: var(--tap-min);
+  }
+
+  /* The rail is horizontal here, so "pinned to the bottom" becomes "pinned
+     to the end of the bar" — `margin-top: auto` would otherwise fight
+     align-items: center and drop the card to the bar's bottom edge. It also
+     stops shrinking before the name is unreadable. */
+  .dash-user {
+    margin-top: 0;
+    margin-left: auto;
+    max-width: 240px;
   }
 }
 

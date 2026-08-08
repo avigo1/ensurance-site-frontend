@@ -15,8 +15,10 @@
  * single row, assets/dashboard.css the styling, and the active state resolves
  * itself off ensurance_dashboard_current_view().
  *
- * The agent identity chip that pins to the bottom of the rail is DELIBERATELY
- * NOT here yet — it lands in a later iteration.
+ * The agency user card pins to the bottom of the rail (its `margin-top: auto`
+ * in assets/dashboard.css does the pinning) — see
+ * components/dashboard-user-card.php. Its sign-out control is DELIBERATELY not
+ * there yet; it lands in a later iteration.
  *
  * The logo is a link back to the homepage (same target as the site header's
  * brand link). Because this rail carries the logo, page-dashboard.php hides the
@@ -54,6 +56,6 @@
 		?>
 	</nav>
 
-	<?php /* Agent identity chip (pins to the rail's bottom): next iteration. */ ?>
+	<?php get_template_part( 'components/dashboard-user-card' ); ?>
 
 </aside>

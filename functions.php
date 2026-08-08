@@ -798,6 +798,82 @@ function ensurance_dashboard_views() {
     return $items;
 }
 
+/**
+ * The agency name shown on the dashboard rail's user card.
+ *
+ * The design (templates/agent-dashboard/AgentDashboard.dc.html) takes this from
+ * an `agencyName` prop — "Coastline Insurance Group". Nothing in the funnel
+ * captures an agency name yet: /create-account collects first name, last name,
+ * username and email only, and agents do not manage their own listings (see the
+ * product note in plans/agent-onboarding-1-free-agent.md). So this resolves the
+ * best name the user record actually carries, in that order:
+ *
+ *   display_name → "First Last" → user_login
+ *
+ * When the Agency Profile view lands and the real agency record exists, point
+ * this at it through the `ensurance_dashboard_agency_name` filter rather than
+ * editing the rail — the card, its initials and anything else that greets the
+ * agent all read from here.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return string Agency name, '' if there is no user (logged-out callers).
+ */
+function ensurance_dashboard_agency_name( $user_id = 0 ) {
+    $user = $user_id ? get_userdata( (int) $user_id ) : wp_get_current_user();
+
+    if ( ! ( $user instanceof WP_User ) || empty( $user->ID ) ) {
+        return '';
+    }
+
+    $name = trim( (string) $user->display_name );
+
+    if ( '' === $name ) {
+        $name = trim( $user->first_name . ' ' . $user->last_name );
+    }
+
+    if ( '' === $name ) {
+        $name = (string) $user->user_login;
+    }
+
+    /**
+     * Filter the agency name on the dashboard rail's user card.
+     *
+     * @param string  $name The resolved name.
+     * @param WP_User $user The user it was resolved from.
+     */
+    return (string) apply_filters( 'ensurance_dashboard_agency_name', $name, $user );
+}
+
+/**
+ * Initials for the user card's avatar circle.
+ *
+ * Same rule as the design's `initials`: the first letter of each of the first
+ * two words, uppercased — "Coastline Insurance Group" → "CI". Falls back to the
+ * design's own fallback, "A", when the name yields no letters, so the circle is
+ * never empty.
+ *
+ * @param string $name Name to reduce. Defaults to ensurance_dashboard_agency_name().
+ * @return string One or two uppercase characters.
+ */
+function ensurance_dashboard_agency_initials( $name = '' ) {
+    if ( '' === $name ) {
+        $name = ensurance_dashboard_agency_name();
+    }
+
+    $words    = preg_split( '/\s+/', trim( $name ), -1, PREG_SPLIT_NO_EMPTY );
+    $initials = '';
+
+    foreach ( array_slice( (array) $words, 0, 2 ) as $word ) {
+        $initials .= mb_substr( $word, 0, 1 );
+    }
+
+    // mb_strtoupper is not part of WordPress's mbstring polyfill set, unlike
+    // mb_substr above — so only use it when the extension is really loaded.
+    $initials = function_exists( 'mb_strtoupper' ) ? mb_strtoupper( $initials ) : strtoupper( $initials );
+
+    return '' !== $initials ? $initials : 'A';
+}
+
 // ============================================================================
 // 2b-v-a4. FOUNDING AGENT PLAN SELECTION — SIGN-UP FUNNEL MEMORY
 // ============================================================================
