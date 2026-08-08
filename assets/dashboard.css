@@ -233,6 +233,114 @@ html body:has(.dashboard-shell) .site-footer {
   }
 }
 
+/* ── View containers ────────────────────────────────────────────────
+   One container per rail destination, all rendered into the DOM by
+   page-dashboard.php with only the current one carrying .is-active.
+
+   Two things share this single switch:
+   - PHP lights the right container on first paint, from
+     ensurance_dashboard_current_view() — so a deep link or a JS-less
+     browser lands on the correct view with no flash of the wrong one.
+   - assets/dashboard.js moves .is-active on click, which is what makes
+     the swap instant instead of a page load.
+
+   Because a hidden view is display:none, showing it restarts the
+   animation below automatically — the JS never has to touch style or
+   replay timing. display:none also drops hidden views out of the
+   accessibility tree, so a screen reader only ever sees the current one. */
+.dash-view {
+  display: none;
+}
+
+/* The design's `.ens-view` entrance: fade up 10px, 340ms, on a decelerating
+   curve. Values are taken verbatim from @keyframes ensViewFade in
+   templates/agent-dashboard/AgentDashboard.dc.html. `both` holds the final
+   frame so the view cannot flash back to its start state. */
+.dash-view.is-active {
+  display: block;
+  /* .dashboard-page is a flex column; grow so short views still fill the
+     viewport rather than letting the page background split mid-column. */
+  flex: 1 1 auto;
+  /* Content inset and measure straight from the design's <main>. */
+  padding: 40px 48px 72px;
+  max-width: 1120px;
+  animation: dash-view-in 0.34s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+/* The dashboard view still hosts the "coming soon" placeholder, which
+   centers itself in the column. Keep it a flex column so
+   .dashboard-setup's `flex: 1` has an axis to grow along, and drop the
+   inset — the placeholder brings its own padding. Remove this modifier
+   when the real dashboard content replaces the placeholder. */
+.dash-view--center.is-active {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  max-width: none;
+}
+
+/* Focused programmatically by dashboard.js after a click (tabindex="-1"),
+   so keyboard and screen-reader users land in the content they picked.
+   That is a scroll-position move, not a visual affordance — the rail row
+   already shows what is selected — so suppress the ring here. */
+.dash-view:focus {
+  outline: none;
+}
+
+@keyframes dash-view-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The swap still happens instantly — only the motion is dropped. */
+@media (prefers-reduced-motion: reduce) {
+  .dash-view.is-active {
+    animation: none;
+  }
+}
+
+/* ── View header ─────────────────────────────────────────────────────
+   Shared eyebrow + title + intro that opens every view, matching the
+   design's per-view header block. */
+.dash-view__eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--secondary);
+}
+
+/* Same Kadence override the placeholder title carries — the parent theme
+   prints inline global typography after our stylesheets that colors bare
+   h1 white, which is invisible on this light page. See the memory
+   kadence-white-heading-override. */
+.dash-view__title {
+  margin: 8px 0 22px;
+  font-family: var(--font-display);
+  font-size: clamp(26px, 3.4vw, 32px);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-snug);
+  letter-spacing: var(--tracking-tight);
+  color: var(--text-heading) !important;
+}
+
+.dash-view__intro {
+  margin: 0;
+  max-width: 640px;
+  font-family: var(--font-sans);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-light);
+  line-height: var(--leading-body);
+  color: var(--text-body);
+  text-wrap: pretty;
+}
+
 /* ── Page background over parent-theme / plugin globals ──────────────
    Same fix the other standalone pages carry: AyeCode UI (GeoDirectory,
    the `aui_bs5` body class) ships
@@ -355,4 +463,13 @@ html body:has(.dashboard-page) .mobile-sticky-cta {
 @media (max-width: 640px) {
   .dashboard-setup { padding: var(--space-7) var(--container-pad); }
   .dashboard-setup__note { font-size: 17px; }
+}
+
+/* The design's 48px content inset is desktop-sized; below the rail's
+   breakpoint fall back to the shared container padding. */
+@media (max-width: 900px) {
+  .dash-view.is-active {
+    padding: var(--space-6) var(--container-pad) var(--space-8);
+  }
+  .dash-view--center.is-active { padding: 0; }
 }

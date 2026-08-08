@@ -600,6 +600,38 @@ function ensurance_dashboard_assets() {
 add_action('wp_enqueue_scripts', 'ensurance_dashboard_assets', 20);
 
 /**
+ * Agent Dashboard view-switching script.
+ *
+ * assets/dashboard.js swaps the dashboard's view containers in place on a
+ * rail click — the behavior the AgentDashboard design specifies (setState +
+ * the `.ens-view` fade) — instead of letting the browser navigate. It is a
+ * pure enhancement: without it the rail's links still navigate and PHP
+ * renders the requested view, so nothing here is load-bearing.
+ *
+ * Added as its OWN function rather than a line inside
+ * ensurance_dashboard_assets() to respect the standing rule in CLAUDE.md —
+ * new functions only, never edits to existing ones. Priority 21 keeps it
+ * ordered after that function; the script has no dependencies and is
+ * footer-loaded, so the ordering is for readability, not correctness.
+ *
+ * @return void
+ */
+function ensurance_dashboard_view_script() {
+    if ( ! is_page( 'dashboard' ) ) {
+        return;
+    }
+
+    wp_enqueue_script(
+        'ensurance-dashboard',
+        get_stylesheet_directory_uri() . '/assets/dashboard.js',
+        array(),
+        filemtime( get_stylesheet_directory() . '/assets/dashboard.js' ),
+        true
+    );
+}
+add_action('wp_enqueue_scripts', 'ensurance_dashboard_view_script', 21);
+
+/**
  * Which dashboard view is currently showing.
  *
  * The AgentDashboard design (templates/agent-dashboard/AgentDashboard.dc.html in
