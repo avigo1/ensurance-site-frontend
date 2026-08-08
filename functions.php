@@ -764,7 +764,13 @@ function ensurance_dashboard_views() {
             'title' => 'Account & Access Settings',
             'intro' => 'Update your account details, password, billing information, subscription status, and agency profile settings.',
         ),
-        // Still to come, in the design's order: Agent Support (`message`).
+        array(
+            'view'  => 'support',
+            'label' => 'Agent Support',
+            'icon'  => '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>',
+            'title' => 'Agent Support',
+            'intro' => 'Need help with your profile, access status, request previews, subscription, or billing?',
+        ),
     );
 
     $defaults = array(
