@@ -81,8 +81,14 @@ html body:has(.dashboard-shell) .site-footer {
   height: calc(100vh - var(--wp-admin--admin-bar--height, 0px));
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
-  padding: 28px 20px;
+  /* Vertical rhythm of the rail's three groups (brand / nav / foot). The
+     design's 32px put the nav right under the logo; 48px drops it clear of
+     the brand so the nav reads as its own block. The foot is unaffected —
+     `margin-top: auto` on .dash-rail-foot absorbs whatever is left. */
+  gap: var(--space-7);
+  /* Top inset is the design's 28px plus 12px, to sit the logo a little
+     lower off the top edge; the sides stay as designed. */
+  padding: 40px 20px 28px;
   background: var(--navy-800);
   overflow-y: auto;
 
@@ -591,6 +597,10 @@ html body:has(.dashboard-page) .mobile-sticky-cta {
     position: static;
     flex-direction: row;
     align-items: center;
+    /* The desktop gap is vertical rhythm between stacked groups; here the
+       same property is the horizontal space between the logo and the nav,
+       where 48px is too wide. Hold it at the original 32px. */
+    gap: var(--space-6);
     padding: var(--space-4) var(--container-pad);
     /* The bar grows with its content here, so the desktop rail's own
        scroller has nothing to scroll — and leaving it on would let the
