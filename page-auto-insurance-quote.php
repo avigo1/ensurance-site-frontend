@@ -23,9 +23,30 @@
  * below for the single spot to drop it (e.g. echo do_shortcode('[lead_page]') or
  * the /start wizard) without touching the surrounding chrome.
  *
- * SEO: title / meta description / canonical / robots are owned by Yoast and
- * emitted through wp_head(); this template outputs none of them.
+ * SEO: meta description / canonical / robots are owned by Yoast and emitted
+ * through wp_head(); this template outputs none of them. The <title> is the one
+ * exception — see the title override below.
  */
+
+/**
+ * <title> override.
+ *
+ * The Yoast SEO title stored for this page still reads "SECURE Auto Insurance
+ * Quotes Online | …", which oversells and does not describe what the page
+ * actually is (the guided request intake). Force the correct one here.
+ *
+ * Yoast removes core's _wp_render_title_tag and prints its own title, so
+ * 'wpseo_title' is the hook that actually decides the output. The
+ * 'pre_get_document_title' filter is the fallback for when Yoast is inactive;
+ * it runs at 99 so it beats anything hooked at the default priority.
+ */
+add_filter( 'wpseo_title', function () {
+    return 'Auto Insurance Quote Request | Ensurance';
+} );
+
+add_filter( 'pre_get_document_title', function () {
+    return 'Auto Insurance Quote Request | Ensurance';
+}, 99 );
 
 /**
  * Inline Lucide icon renderer (shared with the other Calm Intelligence page
