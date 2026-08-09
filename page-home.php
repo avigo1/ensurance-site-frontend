@@ -8,8 +8,9 @@
  * and isolated from the shared marketing bundle in functions.php.
  *
  * SEO ownership (Yoast is the active SEO plugin):
- *   - Title, meta description, canonical, and robots are entered in Yoast per
- *     page and emitted through wp_head(). This template outputs none of them.
+ *   - Meta description, canonical, and robots are entered in Yoast per page and
+ *     emitted through wp_head(). This template outputs none of them.
+ *   - The <title> is the one exception — see the title override below.
  *   - Homepage is indexable: $page_robots was 'index, follow' in the package.
  *
  * Preserved exactly as per-page data (not shared across the site):
@@ -24,6 +25,27 @@
  * emit for this page — is output by the template. The FAQ Q&A content is
  * unchanged from the package and mirrors the visible accordion below.
  */
+
+/**
+ * <title> override.
+ *
+ * The homepage ships the title stored in Yoast, which no longer matches the
+ * intended search snippet. Force the correct one here so the rendered <title>
+ * is the only thing that changes — meta description, canonical and robots stay
+ * with Yoast.
+ *
+ * Yoast removes core's _wp_render_title_tag and prints its own title, so
+ * 'wpseo_title' is the hook that actually decides the output. The
+ * 'pre_get_document_title' filter is the fallback for when Yoast is inactive;
+ * it runs at 99 so it beats anything hooked at the default priority.
+ */
+add_filter( 'wpseo_title', function () {
+    return 'Auto Insurance Quote Help | Ensurance';
+} );
+
+add_filter( 'pre_get_document_title', function () {
+    return 'Auto Insurance Quote Help | Ensurance';
+}, 99 );
 
 // --- Per-page FAQPage schema — Q&A verbatim from package index.php ---
 $home_schema = json_decode( <<<'JSON'
