@@ -29,9 +29,29 @@
  *   do_action('uwp_template_display_notices','login'). "Create account" and
  *   "Forgot password?" route to the existing UsersWP register/forgot pages.
  *
- * SEO: title / meta description / canonical / robots are owned by Yoast and
- * emitted through wp_head(); this template outputs none of them.
+ * SEO: meta description / canonical / robots are owned by Yoast and emitted
+ * through wp_head(); this template outputs none of them. The <title> is the one
+ * exception — see the title override below.
  */
+
+/**
+ * <title> override.
+ *
+ * /login is the agent login page, so the tab/SERP title should say so rather
+ * than inheriting whatever generic title is stored for the page.
+ *
+ * Yoast removes core's _wp_render_title_tag and prints its own title, so
+ * 'wpseo_title' is the hook that actually decides the output. The
+ * 'pre_get_document_title' filter is the fallback for when Yoast is inactive;
+ * it runs at 99 so it beats anything hooked at the default priority.
+ */
+add_filter( 'wpseo_title', function () {
+	return 'Agent Login | Ensurance';
+} );
+
+add_filter( 'pre_get_document_title', function () {
+	return 'Agent Login | Ensurance';
+}, 99 );
 
 // --- Inline Lucide icon renderer (shared across templates via function_exists
 //     guard; only one page template renders per request). Paths from Lucide. ---
