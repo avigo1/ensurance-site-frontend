@@ -196,7 +196,7 @@ get_header( 'home' );
           <span class="pp-section__n">3</span>
           <h2>How We Use and Share Information</h2>
         </div>
-        <p class="pp-p">Ensurance.com operates as a marketplace that connects <strong>Consumers</strong> (individuals seeking insurance information or assistance) with <strong>Agents</strong> (licensed insurance professionals and agencies). This matching process &mdash; referred to in this Privacy Policy as <strong>&ldquo;Lead Distribution&rdquo;</strong> &mdash; is a core function of our platform.</p>
+        <p class="pp-p">Ensurance.com operates as a marketplace that connects <strong>Consumers</strong> (individuals seeking insurance information or assistance) with <strong>Agents</strong> (licensed insurance professionals and agencies). This matching process &mdash; referred to in this Privacy Policy as <strong>&ldquo;Request Review&rdquo;</strong> &mdash; is a core function of our platform.</p>
         <p class="pp-p">When you submit your information through our website, you authorize us to use and share that information in the following ways:</p>
         <ul class="pp-list pp-list--titled">
           <li><strong>Connecting You With Agents</strong> We share the information you provide with one or more licensed insurance agents who may be able to assist you. This may include independent agents, agencies, or representatives of insurance carriers. The purpose of this sharing is to respond to your inquiry and help you explore coverage options &mdash; not for unrelated marketing.</li>
@@ -209,7 +209,7 @@ get_header( 'home' );
         <h3 class="pp-sub">Important Disclaimers</h3>
         <ul class="pp-list">
           <li>Ensurance.com <strong>does not sell your personal information for unrelated marketing purposes</strong> outside the scope of connecting you with insurance agents.</li>
-          <li>By submitting your information, you acknowledge that <strong>Lead Distribution</strong> is central to our service, and you consent to this sharing as described.</li>
+          <li>By submitting your information, you acknowledge that <strong>Request Review</strong> is central to our service, and you consent to this sharing as described.</li>
           <li>We <strong>do not guarantee or endorse</strong> any agent&rsquo;s services, the accuracy of their statements, or the outcome of your interactions with them.</li>
         </ul>
         <p class="pp-p">You are encouraged to review an agent&rsquo;s own privacy policy before sharing sensitive information directly with them.</p>
