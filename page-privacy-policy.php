@@ -158,7 +158,7 @@ get_header( 'home' );
         <ul class="pp-list">
           <li><strong>Consumer</strong> &ndash; An individual who visits Ensurance.com or submits information to be connected with licensed insurance agents.</li>
           <li><strong>Agent</strong> &ndash; A licensed insurance professional or agency listed on Ensurance.com and participating in our platform.</li>
-          <li><strong>Lead Distribution</strong> &ndash; The process by which we share Consumer information with one or more Agents to help respond to an insurance inquiry.</li>
+          <li><strong>Request Review</strong> &ndash; The controlled process through which information submitted by a consumer may be made available to eligible licensed agents, agencies, or approved partners for the purpose of responding to the consumer&rsquo;s insurance request.</li>
           <li><strong>Service Providers</strong> &ndash; Vendors who help operate our platform, store data, provide analytics, or support communications.</li>
         </ul>
       </section>
