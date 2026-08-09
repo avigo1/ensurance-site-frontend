@@ -118,7 +118,7 @@ get_header( 'home' );
         <p class="pp-hero__sub">Welcome to Ensurance.com (the &ldquo;Site&rdquo;), owned and operated by Ensurance Incorporated (&ldquo;Ensurance.com,&rdquo; &ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;). Ensurance.com operates a structured insurance request platform designed to help consumers organize insurance needs and move toward licensed insurance support through a controlled process.</p>
         <div class="pp-hero__meta">
           <span class="pp-meta-pill">Effective date: Aug 18, 2025</span>
-          <span class="pp-meta-pill">Last updated: May 07, 2019</span>
+          <span class="pp-meta-pill">Last updated: Aug 08, 2026</span>
         </div>
         <p class="pp-hero__fine">Prefer the plain-English overview first? <a href="<?php echo $pp_trust_url; ?>">Visit the Trust Center</a>.</p>
       </div>
