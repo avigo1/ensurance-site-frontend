@@ -196,7 +196,7 @@ get_header( 'home' );
           <span class="pp-section__n">3</span>
           <h2>How We Use and Share Information</h2>
         </div>
-        <p class="pp-p">Ensurance.com operates as a marketplace that connects <strong>Consumers</strong> (individuals seeking insurance information or assistance) with <strong>Agents</strong> (licensed insurance professionals and agencies). This matching process &mdash; referred to in this Privacy Policy as <strong>&ldquo;Request Review&rdquo;</strong> &mdash; is a core function of our platform.</p>
+        <p class="pp-p">Ensurance.com helps consumers organize insurance requests and, where appropriate, makes those requests available for review by eligible licensed agents, agencies, or approved partners. This matching process &mdash; referred to in this Privacy Policy as <strong>&ldquo;Request Review&rdquo;</strong> &mdash; is a core function of our platform.</p>
         <p class="pp-p">When you submit your information through our website, you authorize us to use and share that information in the following ways:</p>
         <ul class="pp-list pp-list--titled">
           <li><strong>Connecting You With Agents</strong> We share the information you provide with one or more licensed insurance agents who may be able to assist you. This may include independent agents, agencies, or representatives of insurance carriers. The purpose of this sharing is to respond to your inquiry and help you explore coverage options &mdash; not for unrelated marketing.</li>
