@@ -21,7 +21,8 @@
  *   sessions, "remember me", redirect and the agent-profile flow all keep working.
  *     - username / password            → the two configured UsersWP login fields
  *     - remember_me = "forever"         → enables persistent login
- *     - redirect_to                     → post-login destination (account page)
+ *     - redirect_to                     → post-login destination (/dashboard/,
+ *                                         or a validated ?redirect_to= target)
  *     - uwp_login_nonce                 → wp_create_nonce('uwp-login-nonce'),
  *                                         verified in UsersWP class-forms.php
  *     - uwp_login_submit                → submit button name
@@ -98,8 +99,36 @@ $al_cta_monthly = esc_url( ensurance_founding_cta_url( ensurance_founding_agent_
 
 // UsersWP-resolved auth destinations (fall back gracefully if helpers are gone).
 $al_forgot_url   = function_exists( 'uwp_get_forgot_page_url' )  ? esc_url( uwp_get_forgot_page_url() )  : esc_url( wp_lostpassword_url() );
-$al_redirect_to  = function_exists( 'uwp_get_account_page_url' ) ? esc_url( uwp_get_account_page_url() ) : $al_home_url;
 $al_login_action = esc_url( get_permalink() ); // post to self — UsersWP process_login() runs on template_redirect
+
+// Post-login destination.
+//
+// This hidden field DECIDES where a successful login lands: UsersWP's
+// get_login_redirect_url() (class-forms.php) checks $_REQUEST['redirect_to']
+// FIRST, ahead of its own per-role settings, so whatever is emitted here wins —
+// only the 'uwp_login_redirect' filter runs after it
+// (ensurance_founding_plan_login_redirect in functions.php, which fires only for
+// users carrying a founding-plan meta). This used to be hardcoded to the legacy
+// UsersWP account page, which sent every agent WITHOUT that meta to the old
+// dashboard; the new agent dashboard is /dashboard/ (page-dashboard.php), so
+// that is the default now.
+//
+// An incoming ?redirect_to= is honored first so the round-trip works: the
+// /dashboard/ access guard bounces logged-out visitors to
+// /login/?redirect_to=<destination> and expects to get them back there. Run it
+// through wp_validate_redirect() — raw request input — so an off-site value
+// falls back to the dashboard instead of becoming an open redirect. Note
+// wp_validate_redirect() returns an EMPTY string (not the fallback) for empty
+// input, and an empty redirect_to would drop us back into UsersWP's own
+// defaults — hence the explicit empty checks on both sides of it.
+$al_dashboard_url = home_url( '/dashboard/' );
+$al_redirect_raw  = isset( $_GET['redirect_to'] ) && is_string( $_GET['redirect_to'] )
+	? trim( wp_unslash( $_GET['redirect_to'] ) )
+	: '';
+$al_redirect_to   = '' !== $al_redirect_raw
+	? wp_validate_redirect( $al_redirect_raw, $al_dashboard_url )
+	: $al_dashboard_url;
+$al_redirect_to   = esc_url( '' !== $al_redirect_to ? $al_redirect_to : $al_dashboard_url );
 
 get_header( 'home' );
 ?>
