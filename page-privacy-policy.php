@@ -115,7 +115,7 @@ get_header( 'home' );
       <div class="pp-hero__body">
         <span class="pp-hero__badge"><?php echo wp_kses( ensurance_home_icon( 'lock', 13 ), $ensurance_svg_allowed ); ?> Legal &middot; Privacy</span>
         <h1 class="pp-hero__title">Privacy Policy</h1>
-        <p class="pp-hero__sub">Welcome to Ensurance.com (the &ldquo;Site&rdquo;), owned and operated by Ensurance Incorporated (&ldquo;Ensurance.com,&rdquo; &ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;). Ensurance.com operates a nationwide online insurance marketplace designed to connect Consumers (individuals seeking insurance information or assistance) with Agents (licensed insurance professionals or agencies).</p>
+        <p class="pp-hero__sub">Welcome to Ensurance.com (the &ldquo;Site&rdquo;), owned and operated by Ensurance Incorporated (&ldquo;Ensurance.com,&rdquo; &ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;). Ensurance.com operates a structured insurance request platform designed to help consumers organize insurance needs and move toward licensed insurance support through a controlled process.</p>
         <div class="pp-hero__meta">
           <span class="pp-meta-pill">Effective date: Aug 18, 2025</span>
           <span class="pp-meta-pill">Last updated: May 07, 2019</span>
