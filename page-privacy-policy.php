@@ -209,7 +209,7 @@ get_header( 'home' );
         <h3 class="pp-sub">Important Disclaimers</h3>
         <ul class="pp-list">
           <li>Ensurance.com <strong>does not sell your personal information for unrelated marketing purposes</strong> outside the scope of connecting you with insurance agents.</li>
-          <li>By submitting your information, you acknowledge that <strong>Request Review</strong> is central to our service, and you consent to this sharing as described.</li>
+          <li>By submitting your information, you authorize Ensurance to process your request and make relevant information available as described in this Policy for the purpose of helping move your insurance request toward an appropriate next step.</li>
           <li>We <strong>do not guarantee or endorse</strong> any agent&rsquo;s services, the accuracy of their statements, or the outcome of your interactions with them.</li>
         </ul>
         <p class="pp-p">You are encouraged to review an agent&rsquo;s own privacy policy before sharing sensitive information directly with them.</p>
