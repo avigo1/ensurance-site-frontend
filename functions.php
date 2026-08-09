@@ -718,16 +718,22 @@ function ensurance_dashboard_views() {
         // The rail's first row, and the view the page falls back to. Its href
         // is the bare /dashboard/ URL rather than ?view=dashboard:
         // ensurance_dashboard_current_view() already defaults to `dashboard`,
-        // so the clean URL lands here and keeps the row lit. Content is still
-        // the placeholder holding state, so it comes from a part; the design's
-        // real overview (badges + three cards + "Accept or Pass") lands later.
+        // so the clean URL lands here and keeps the row lit.
+        //
+        // Its content comes from a part because the overview's header is more
+        // than the generic eyebrow/title/intro — it carries the "Welcome back"
+        // greeting and a larger H1. `title` here is not rendered by that part;
+        // it is what page-dashboard.php uses for the container's aria-label,
+        // which should name the view ("Agent Dashboard"), not the rail row.
+        // The design's badges, stat tiles, cards and "Accept or Pass" panel
+        // land in a later iteration.
         array(
-            'view'     => 'dashboard',
-            'label'    => 'Dashboard',
-            'icon'     => '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>',
-            'href'     => home_url( '/dashboard/' ),
-            'modifier' => 'dash-view--center',
-            'part'     => 'components/dashboard-view-dashboard',
+            'view'  => 'dashboard',
+            'label' => 'Dashboard',
+            'icon'  => '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>',
+            'href'  => home_url( '/dashboard/' ),
+            'title' => 'Agent Dashboard',
+            'part'  => 'components/dashboard-view-dashboard',
         ),
         array(
             'view'  => 'access',
@@ -872,6 +878,56 @@ function ensurance_dashboard_agency_initials( $name = '' ) {
     $initials = function_exists( 'mb_strtoupper' ) ? mb_strtoupper( $initials ) : strtoupper( $initials );
 
     return '' !== $initials ? $initials : 'A';
+}
+
+/**
+ * The agent's first name, for the dashboard's "Welcome back, {firstName}" line.
+ *
+ * The design takes this from an `agentName` prop and splits on whitespace
+ * (`agentName.split(/\s+/)[0]`). Here it comes off the user record, in the
+ * order that gives the friendliest name actually available:
+ *
+ *   first_name → first word of display_name → user_login
+ *
+ * /create-account collects a first name, so the first branch is what a
+ * funnel-created agent normally hits; the rest cover users created another way
+ * (wp-admin, an import) whose first_name is empty.
+ *
+ * Returns '' when there is no name to greet — the greeting line is then skipped
+ * entirely rather than rendering a bare "Welcome back,".
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return string First name, or '' if there is no user.
+ */
+function ensurance_dashboard_first_name( $user_id = 0 ) {
+    $user = $user_id ? get_userdata( (int) $user_id ) : wp_get_current_user();
+
+    if ( ! ( $user instanceof WP_User ) || empty( $user->ID ) ) {
+        return '';
+    }
+
+    $name = trim( (string) $user->first_name );
+
+    if ( '' === $name ) {
+        $name = trim( (string) $user->display_name );
+    }
+
+    if ( '' === $name ) {
+        $name = (string) $user->user_login;
+    }
+
+    // Only the first word — display_name is often "First Last", and greeting
+    // someone by their full name reads like a form letter.
+    $words = preg_split( '/\s+/', $name, -1, PREG_SPLIT_NO_EMPTY );
+    $first = ( is_array( $words ) && isset( $words[0] ) ) ? $words[0] : '';
+
+    /**
+     * Filter the first name used in the dashboard's welcome line.
+     *
+     * @param string  $first The resolved first name.
+     * @param WP_User $user  The user it was resolved from.
+     */
+    return (string) apply_filters( 'ensurance_dashboard_first_name', $first, $user );
 }
 
 // ============================================================================

@@ -1,16 +1,18 @@
 /* ===================================================================
-   Agent Dashboard (/dashboard) — PLACEHOLDER holding state.
+   Agent Dashboard (/dashboard).
 
    AGENT-SIDE PAGE. Chrome is header-agent.php (logo only) + the global
    footer-home.php. Depends on assets/home.css for the token system,
    base element styles and both chrome bars; this file only adds the
-   placeholder's own layout. All colors/spacing reference the shared
+   dashboard's own layout. All colors/spacing reference the shared
    design tokens — no hardcoded brand values.
 
-   This is Plan 1 of the Founding Agent onboarding: a blank state with a
-   slowly spinning gear while the real dashboard is built (Plan 3). Keep
-   the wrapper (.dashboard-page) and section (.dashboard-setup) hooks;
-   Plan 3 swaps the section body, not the page shell.
+   Built incrementally against templates/agent-dashboard/AgentDashboard.dc.html
+   in the design system. Landed so far: the two-column shell, the left rail,
+   the view containers, and the Dashboard view's header. Still to come: that
+   view's badge row, stat tiles, action cards and "Accept or Pass" panel,
+   then the six remaining views' real contents (they currently render the
+   generic eyebrow/title/intro from ensurance_dashboard_views()).
    =================================================================== */
 
 /* ── Two-column shell ───────────────────────────────────────────────
@@ -53,8 +55,8 @@ html body:has(.dashboard-shell) .site-footer {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  /* Fill the viewport between the header and footer so the blank state
-     sits centered rather than crowding the top on tall screens. */
+  /* Floor the column so a short view still fills the screen beside the
+     full-height rail rather than ending in a band of page background. */
   min-height: 60vh;
   background: var(--bg-page);
   overflow-x: clip;
@@ -423,18 +425,6 @@ html body:has(.dashboard-shell) .site-footer {
   animation: dash-view-in 0.34s cubic-bezier(0.2, 0.7, 0.3, 1) both;
 }
 
-/* The dashboard view still hosts the "coming soon" placeholder, which
-   centers itself in the column. Keep it a flex column so
-   .dashboard-setup's `flex: 1` has an axis to grow along, and drop the
-   inset — the placeholder brings its own padding. Remove this modifier
-   when the real dashboard content replaces the placeholder. */
-.dash-view--center.is-active {
-  display: flex;
-  flex-direction: column;
-  padding: 0;
-  max-width: none;
-}
-
 /* Focused programmatically by dashboard.js after a click (tabindex="-1"),
    so keyboard and screen-reader users land in the content they picked.
    That is a scroll-position move, not a visual affordance — the rail row
@@ -472,7 +462,7 @@ html body:has(.dashboard-shell) .site-footer {
   color: var(--secondary);
 }
 
-/* Same Kadence override the placeholder title carries — the parent theme
+/* Same Kadence override .dash-home__title carries — the parent theme
    prints inline global typography after our stylesheets that colors bare
    h1 white, which is invisible on this light page. See the memory
    kadence-white-heading-override. */
@@ -525,59 +515,58 @@ html body:has(.dashboard-page) .mobile-sticky-cta {
   display: none;
 }
 
-/* ── Blank "setting up" state ───────────────────────────────────────── */
-.dashboard-setup {
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-5);
-  max-width: 440px;
-  margin: 0 auto;
-  padding: var(--space-8) var(--container-pad);
-  text-align: center;
-}
+/* ── Dashboard view header ───────────────────────────────────────────
+   The overview's opening block (components/dashboard-view-dashboard.php).
+   Its own scale rather than the shared .dash-view__* one above: the design
+   opens this view at 40px/900 against the other six views' 32px, and adds
+   a greeting line they do not have.
 
-.dashboard-setup__gear {
-  display: inline-flex;
-  color: var(--accent);
-  /* Slow, calm rotation — this is a reassuring holding state, not a
-     busy spinner. */
-  animation: dashboard-gear-spin 6s linear infinite;
-}
-.dashboard-setup__gear svg { display: block; }
+   The eyebrow is identical across all seven, so this block reuses
+   .dash-view__eyebrow and only styles what differs.
 
-@keyframes dashboard-gear-spin {
-  to { transform: rotate(360deg); }
-}
-
-/* Respect reduced-motion: hold the gear still rather than spinning it. */
-@media (prefers-reduced-motion: reduce) {
-  .dashboard-setup__gear { animation: none; }
-}
-
-/* Scoped heading pin — Kadence prints inline global typography after our
-   stylesheets that colors bare h1 white; on the light page that is
-   invisible. Re-assert the heading color at class specificity. See the
-   memory kadence-white-heading-override. */
-.dashboard-setup__title {
-  margin: 0;
+   Values are taken from the `isDashboard` view in
+   templates/agent-dashboard/AgentDashboard.dc.html. Note the two 900
+   weights: home.css's ramp stops at --weight-extrabold (800), so the
+   heaviest cut the design asks for is written out. */
+.dash-home__welcome {
+  margin: var(--space-3) 0 2px;
   font-family: var(--font-display);
-  font-size: clamp(24px, 4vw, 30px);
-  font-weight: var(--weight-bold);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-extrabold);
   line-height: var(--leading-snug);
   letter-spacing: var(--tracking-tight);
+  color: var(--accent);
+}
+
+/* The design's flat 40px, floored so it does not overflow the column once
+   the rail unstacks and the inset drops to --container-pad.
+
+   The `!important` is the same Kadence override the other view titles
+   carry — the parent theme prints inline global typography after our
+   stylesheets that colors bare h1 white, which is invisible on this light
+   page. See the memory kadence-white-heading-override. */
+.dash-home__title {
+  margin: 6px 0 var(--space-3);
+  font-family: var(--font-display);
+  font-size: clamp(30px, 4vw, 40px);
+  /* Heavier than --weight-extrabold; see the note above. */
+  font-weight: 900;
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-display);
   color: var(--text-heading) !important;
 }
 
-.dashboard-setup__note {
-  margin: 0;
+/* The bottom margin is the gap to the badge row that lands next, so the
+   header already sits correctly against content that has not been built
+   yet. */
+.dash-home__intro {
+  margin: 0 0 22px;
+  max-width: 640px;
   font-family: var(--font-sans);
-  font-size: var(--text-lg);
+  font-size: var(--text-md);
   font-weight: var(--weight-light);
   line-height: var(--leading-body);
-  color: var(--text-muted);
+  color: var(--text-body);
   text-wrap: pretty;
 }
 
@@ -652,16 +641,10 @@ html body:has(.dashboard-page) .mobile-sticky-cta {
   }
 }
 
-@media (max-width: 640px) {
-  .dashboard-setup { padding: var(--space-7) var(--container-pad); }
-  .dashboard-setup__note { font-size: 17px; }
-}
-
 /* The design's 48px content inset is desktop-sized; below the rail's
    breakpoint fall back to the shared container padding. */
 @media (max-width: 900px) {
   .dash-view.is-active {
     padding: var(--space-6) var(--container-pad) var(--space-8);
   }
-  .dash-view--center.is-active { padding: 0; }
 }

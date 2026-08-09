@@ -1,15 +1,15 @@
 <?php
 /**
- * Agent Dashboard (/dashboard) — PLACEHOLDER.
+ * Agent Dashboard (/dashboard).
  *
  * The post-signup destination for the Founding Agent onboarding funnel. A new
  * agent who completes /create-account?plan=60-day (free "Start 60 Day Access")
  * is auto-logged-in and redirected here (see ensurance_founding_plans() in
  * functions.php, whose `60-day` destination points at /dashboard/). This is the
- * FIRST of three onboarding plans — right now the page is intentionally a blank
- * holding state (a slowly spinning gear + "Setting up your dashboard…"). Plan 3
- * replaces the body below with the real subscription + lead-management dashboard;
- * agents do NOT manage their own profiles here (see the product direction note in
+ * FIRST of three onboarding plans; the page is being built out iteratively
+ * against the AgentDashboard template in the design system. Plan 3 brings the
+ * real subscription + lead-management behaviour behind it; agents do NOT manage
+ * their own profiles here (see the product direction note in
  * plans/agent-onboarding-1-free-agent.md).
  *
  * LAYOUT: the page is a two-column shell (.dashboard-shell) — the dark navy left

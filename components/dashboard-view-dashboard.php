@@ -2,32 +2,49 @@
 /**
  * Agent Dashboard — the "Dashboard" view's contents.
  *
- * Still the placeholder holding state (a slowly spinning gear + "Your
- * Dashboard Is Coming Soon"); the design's real overview — badges, the three
- * cards, and the "Accept or Pass" panel — lands later.
+ * ITERATION 1: the view header only — eyebrow, welcome line, H1, intro. The
+ * design's overview continues below this with a badge row, four stat tiles,
+ * three action cards and the "Accept or Pass" panel
+ * (templates/agent-dashboard/AgentDashboard.dc.html); those land in a later
+ * iteration and append INSIDE this part, after the header element.
  *
  * Rendered inside the view's .dash-view container by page-dashboard.php,
  * because this entry in ensurance_dashboard_views() names it as its `part`.
  * That is the escape hatch for views whose content is more than the generic
- * eyebrow / title / intro — the container, the active state and the fade are
- * still handled for us; only what goes inside is ours.
+ * eyebrow / title / intro — the container, its 40px/48px/72px inset and 1120px
+ * measure, the active state and the fade are all still handled for us; only
+ * what goes inside is ours.
  *
- * Styling lives in assets/dashboard.css (`.dashboard-setup`).
+ * The header is its own block (.dash-home__*) rather than the shared
+ * .dash-view__* one because the design sizes the overview larger than the other
+ * six views: a 40px/900 H1 against their 32px, plus the greeting line those do
+ * not have. The eyebrow is identical, so that one class is shared.
+ *
+ * Styling lives in assets/dashboard.css (`.dash-home`).
  */
+
+// The design gates its greeting on a `returning` prop (its "new" agent state
+// hides it). Nothing on the user record distinguishes a first visit from a
+// return, and every arrival here is post-authentication, so the line shows
+// whenever there is a name to use — see ensurance_dashboard_first_name(), which
+// returns '' when there is not.
+$dash_first_name = ensurance_dashboard_first_name();
 ?>
-<div class="dashboard-setup" aria-live="polite">
+<header class="dash-home__header">
 
-	<span class="dashboard-setup__gear" aria-hidden="true">
-		<svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false">
-			<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
-			<circle cx="12" cy="12" r="3"/>
-		</svg>
-	</span>
+	<div class="dash-view__eyebrow">Founding Agent Access</div>
 
-	<h1 class="dashboard-setup__title">Your Dashboard Is Coming Soon</h1>
+	<?php if ( '' !== $dash_first_name ) : ?>
+		<p class="dash-home__welcome">Welcome back, <?php echo esc_html( $dash_first_name ); ?></p>
+	<?php endif; ?>
 
-	<p class="dashboard-setup__note">
-		Stay Tuned, great things are afoot.
+	<h1 class="dash-home__title">Agent Dashboard</h1>
+
+	<p class="dash-home__intro">
+		Manage your agency profile, access status, and eligible shopper request
+		details in one place. Keep your information current, review your access,
+		and check eligible request details when available in your state or
+		service area.
 	</p>
 
-</div>
+</header>
