@@ -26,13 +26,33 @@
  *   so nothing auto-bills. Reconcile that copy (or make 60-day conversion manual
  *   too) before promoting to production.
  *
- * SEO: title / meta description / canonical / robots are owned by Yoast and
- * emitted through wp_head(). This template outputs only FAQPage JSON-LD, which
- * Yoast does not emit for this page and which mirrors the visible FAQ verbatim.
+ * SEO: meta description / canonical / robots are owned by Yoast and emitted
+ * through wp_head(). This template also outputs FAQPage JSON-LD, which Yoast
+ * does not emit for this page and which mirrors the visible FAQ verbatim. The
+ * <title> is the one Yoast field this template overrides — see below.
  *
  * This template renders via the page-{slug}.php hierarchy for the /pricing-plans/
  * page, so it auto-overrides the previous Kadence block content with no DB edit.
  */
+
+/**
+ * <title> override.
+ *
+ * The Yoast SEO title stored for this page still reflects the old /pricing-plans
+ * positioning, so force the "Founding Agent Access" title here.
+ *
+ * Yoast removes core's _wp_render_title_tag and prints its own title, so
+ * 'wpseo_title' is the hook that actually decides the output. The
+ * 'pre_get_document_title' filter is the fallback for when Yoast is inactive;
+ * it runs at 99 so it beats anything hooked at the default priority.
+ */
+add_filter( 'wpseo_title', function () {
+	return 'Founding Agent Access | Ensurance';
+} );
+
+add_filter( 'pre_get_document_title', function () {
+	return 'Founding Agent Access | Ensurance';
+}, 99 );
 
 // The two plans route differently. The free "Start 60 day access" is self-serve:
 // → /create-account?plan=60-day (sign-up first), then the dashboard. The paid
