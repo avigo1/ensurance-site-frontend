@@ -1192,6 +1192,159 @@ function ensurance_dashboard_priority_preview() {
     return isset( $states[ $slot ] ) ? $slot : '';
 }
 
+/**
+ * The matched request Today's `live` slot is asking a decision about.
+ *
+ * Step 5 of templates/agent-dashboard/build-steps.md. The live card names ONE
+ * request — its coverage type and county, when it expires, and the handful of
+ * facts the agent decides on — so this is where that request comes from, and the
+ * only place it does. components/dashboard-slot-live.php renders what this
+ * returns and never fills in a field it is missing.
+ *
+ * THERE IS NO REQUEST TO RETURN TODAY. Nothing in the product produces matched
+ * requests yet — the same reason ensurance_dashboard_request_count() returns 0
+ * and ensurance_dashboard_priority_state() therefore resolves to `setup` — so
+ * this returns an empty array, and a live slot with no request renders NOTHING
+ * rather than a dark card of invented facts.
+ *
+ * The one exception is the admin-only preview toggle: /dashboard/?slot=live is
+ * how this card gets reviewed before a queue exists, so that path (and only that
+ * path) returns the design's own sample request. An agent cannot reach it —
+ * ensurance_dashboard_priority_preview() is capability-gated for exactly this
+ * reason.
+ *
+ * When the real queue lands, return its awaiting request through the filter
+ * below and the card, its countdown and its tiles all follow with no change to
+ * the markup.
+ *
+ * RETURN SHAPE
+ *   coverage   string  Coverage type, as it reads before the word "coverage"
+ *                      in the headline ("Auto" → "Auto coverage — …").
+ *   county     string  County the request came from.
+ *   expires_at int     Unix time the request stops being decidable, 0 for none.
+ *                      A moment rather than a written-down "21h 40m", so the
+ *                      countdown cannot be stale on a cached render.
+ *   facts      array   Up to four ['label' => …, 'value' => …] pairs, in the
+ *                      order they should be shown.
+ *
+ * Coverage and county are BOTH required — the headline names both, so a request
+ * missing either is not renderable and comes back as no request at all.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return array The request, or an empty array when nothing is waiting.
+ */
+function ensurance_dashboard_live_request( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+
+    $request = array();
+
+    // Admin preview only — see the note above. Values are the design's own
+    // sample request, copied from the live card in
+    // templates/agent-dashboard/AgentDashboard.dc.html.
+    if ( 'live' === ensurance_dashboard_priority_preview() ) {
+        $request = array(
+            'coverage'   => 'Auto',
+            'county'     => 'Coastal County',
+            // The design's fixed "Expires in 21h 40m" expressed as a real
+            // moment, so the preview exercises the countdown rather than
+            // hardcoding its output.
+            'expires_at' => time() + ( 21 * HOUR_IN_SECONDS ) + ( 40 * MINUTE_IN_SECONDS ),
+            'facts'      => array(
+                array( 'label' => 'Shopper ZIP', 'value' => '93013' ),
+                array( 'label' => 'Household', 'value' => '2 drivers, 2 vehicles' ),
+                array( 'label' => 'Current carrier', 'value' => 'Renews in 6 weeks' ),
+                array( 'label' => 'Submitted', 'value' => '2 hours ago' ),
+            ),
+        );
+    }
+
+    /**
+     * Filter the request shown in the dashboard's live priority slot.
+     *
+     * The hook the real matching queue attaches to when it exists. Return an
+     * array in the shape documented above, or an empty array for "nothing is
+     * waiting" — anything without a coverage type and a county is ignored.
+     *
+     * @param array $request Request data, empty when there is none.
+     * @param int   $user_id User the slot is being resolved for.
+     */
+    $request = apply_filters( 'ensurance_dashboard_live_request', $request, $user_id );
+
+    if ( ! is_array( $request ) || empty( $request['coverage'] ) || empty( $request['county'] ) ) {
+        return array();
+    }
+
+    // Drop half-filled tiles rather than rendering a labeled empty box.
+    $facts = array();
+
+    if ( ! empty( $request['facts'] ) && is_array( $request['facts'] ) ) {
+        foreach ( $request['facts'] as $fact ) {
+            if ( empty( $fact['label'] ) || empty( $fact['value'] ) ) {
+                continue;
+            }
+
+            $facts[] = array(
+                'label' => (string) $fact['label'],
+                'value' => (string) $fact['value'],
+            );
+        }
+    }
+
+    return array(
+        'coverage'   => (string) $request['coverage'],
+        'county'     => (string) $request['county'],
+        'expires_at' => isset( $request['expires_at'] ) ? (int) $request['expires_at'] : 0,
+        // The design's row is four tiles wide; a fifth would wrap to a lone
+        // tile on a row of its own, so extras are dropped rather than allowed
+        // to reshape the card.
+        'facts'      => array_slice( $facts, 0, 4 ),
+    );
+}
+
+/**
+ * How long is left on a request — the "21h 40m" in the live card's countdown.
+ *
+ * The design writes that string out; here it is computed from the request's
+ * expiry so it is right on every render. Deliberately COARSE and clock-styled
+ * rather than WordPress's own human_time_diff(), which rounds to a single unit
+ * ("22 hours") and loses the minutes the design shows as the deadline closes in.
+ *
+ * Returns '' for an expired or unset deadline, which is the caller's signal to
+ * render no countdown at all — an "Expires in 0m" line would be worse than
+ * none, and an expired request is a queue problem, not a display one.
+ *
+ * @param int $expires_at Unix time the request expires.
+ * @param int $now        Optional. Moment to measure from. Defaults to now.
+ * @return string Countdown like "1d 4h", "21h 40m" or "9m"; '' if none is due.
+ */
+function ensurance_dashboard_countdown( $expires_at, $now = 0 ) {
+    $expires_at = (int) $expires_at;
+    $now        = $now ? (int) $now : time();
+    $left       = $expires_at - $now;
+
+    if ( $expires_at <= 0 || $left <= 0 ) {
+        return '';
+    }
+
+    $days    = (int) floor( $left / DAY_IN_SECONDS );
+    $hours   = (int) floor( ( $left % DAY_IN_SECONDS ) / HOUR_IN_SECONDS );
+    $minutes = (int) floor( ( $left % HOUR_IN_SECONDS ) / MINUTE_IN_SECONDS );
+
+    // Two units at most, largest first — the smaller one stops mattering once
+    // the larger is big enough to say.
+    if ( $days > 0 ) {
+        return sprintf( '%dd %dh', $days, $hours );
+    }
+
+    if ( $hours > 0 ) {
+        return sprintf( '%dh %dm', $hours, $minutes );
+    }
+
+    // Under a minute still reads as "1m" — there IS time left, and rounding it
+    // to zero would say otherwise.
+    return sprintf( '%dm', max( 1, $minutes ) );
+}
+
 // ============================================================================
 // 2b-v-a4. FOUNDING AGENT PLAN SELECTION — SIGN-UP FUNNEL MEMORY
 // ============================================================================

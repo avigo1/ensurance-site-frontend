@@ -11,12 +11,13 @@
    in the design system, one step of templates/agent-dashboard/build-steps.md
    at a time. Landed so far: the two-column shell, the left rail with its four
    nav rows (Step 1), the view containers and their switching (Step 2),
-   Today's greeting row (Step 3), and its one-at-a-time priority slot as a
-   labeled placeholder box (Step 4). Still to come, in that file's order: the
-   slot's four real states, Today's founding-access timeline and reference
-   columns, then the other three views. Requests, Agency Profile and Account
-   render EMPTY containers until then — that is the plan's end state for this
-   step, not an oversight.
+   Today's greeting row (Step 3), its one-at-a-time priority slot (Step 4),
+   and the first of that slot's four states — the dark live request card
+   (Step 5). Still to come, in that file's order: the slot's three remaining
+   states, which are still labeled placeholder boxes, Today's founding-access
+   timeline and reference columns, then the other three views. Requests,
+   Agency Profile and Account render EMPTY containers until then — that is the
+   plan's end state for this step, not an oversight.
    =================================================================== */
 
 /* ── Two-column shell ───────────────────────────────────────────────
@@ -604,17 +605,29 @@ html body:has(.dashboard-shell) .site-footer {
    ensurance_dashboard_priority_state() resolves, and PHP renders only that
    one — so there is nothing here to hide, stack or reset.
 
-   PLACEHOLDER, deliberately. Every state is the same plain labeled box
-   until Steps 5–9 build the real surfaces, at which point each takes its
-   own rule off the [data-slot] attribute — live and setup go dark navy
-   (--navy-800), decided goes accent-tinted, quiet stays this light card.
-   The shared box below is what they will diverge FROM, so its geometry
-   already matches the design's cards: the same 20px radius and the same
-   14px gap to whatever follows.
+   .dash-slot itself now carries only what EVERY state shares — the design's
+   card radius and the gap to what follows. Each state's own surface hangs
+   off [data-slot], the single value driving the slot, so no state needs a
+   class that mirrors what the attribute already says. Landed so far: `live`
+   (Step 5, below). setup / quiet / decided are still Step 4's plain labeled
+   box and take their real surfaces in Steps 7–9 — setup dark navy, decided
+   accent-tinted, quiet a light card.
 
    Radius is the design's own 20px, between --radius-icon (16px) and
    --radius-card (32px) — no token sits at that value. */
 .dash-slot {
+  border-radius: 20px;
+  /* The design's 14px between the slot and the founding-access timeline
+     that lands under it in Step 10. */
+  margin-bottom: 14px;
+}
+
+/* The placeholder box, for the three states still awaiting their surface.
+   Listed by state rather than by a "not yet built" class so each step can
+   simply lift its own selector out of this rule. */
+.dash-slot[data-slot="setup"],
+.dash-slot[data-slot="quiet"],
+.dash-slot[data-slot="decided"] {
   display: flex;
   align-items: center;
   /* Gives the empty placeholder the presence the real card will have,
@@ -623,10 +636,6 @@ html body:has(.dashboard-shell) .site-footer {
   padding: var(--space-5) var(--space-6);
   background: var(--surface-card);
   border: 1px solid var(--border-soft);
-  border-radius: 20px;
-  /* The design's 14px between the slot and the founding-access timeline
-     that lands under it in Step 10. */
-  margin-bottom: 14px;
 }
 
 /* Matched to .dash-view__eyebrow / .dash-today__stamp — the mono uppercase
@@ -638,6 +647,160 @@ html body:has(.dashboard-shell) .site-footer {
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
   color: var(--secondary);
+}
+
+/* ── Today — live request card ───────────────────────────────────────
+   Step 5 of templates/agent-dashboard/build-steps.md, rendered by
+   components/dashboard-slot-live.php into the slot above.
+
+   THE ONLY DARK SURFACE in the main column, and that is the whole point:
+   a request waiting on a decision is the one thing on this page that
+   cannot be scrolled past, so it is the one thing that inverts. Nothing
+   else on Today may take this treatment.
+
+   Values from the `hasLive` branch of
+   templates/agent-dashboard/AgentDashboard.dc.html. Padding is the
+   design's 30px/32px/26px — the shallower foot is deliberate, the tiles
+   need less room under them than the header needs above it.
+
+   Like the rail, this surface needs "text on navy" values the light-surface
+   palette in home.css has no tokens for, so it defines its own here and
+   every rule below references them — the card recolors from this block
+   alone. */
+.dash-slot[data-slot="live"] {
+  padding: 30px 32px 26px;
+  background: var(--navy-800);
+
+  --req-text: #ffffff;
+  --req-text-muted: rgba(255, 255, 255, 0.6);
+  --req-text-faint: rgba(255, 255, 255, 0.45);
+  --req-border: rgba(255, 255, 255, 0.14);
+  /* The design system's --dark-accent (#34D399), which home.css does not
+     carry: --accent (#2b8673) is a CTA green mixed for white surfaces and
+     goes muddy on navy. This is the same mint the design uses for every
+     accent mark on a dark card. */
+  --req-accent: #34d399;
+
+  color: var(--req-text);
+}
+
+/* Eyebrow left, countdown right. Wrapping is ours, not the design's — it
+   assumes desktop; on a narrow column the countdown drops under the eyebrow
+   instead of crushing it. */
+.dash-request__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+/* Same mono uppercase kicker as everywhere else on Today, in the card's
+   accent. 10.5px and 0.2em are the design's; --tracking-mono is that 0.2em. */
+.dash-request__eyebrow {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: var(--tracking-mono);
+  text-transform: uppercase;
+  color: var(--req-accent);
+}
+
+/* The deadline. Muted rather than alarmed — the countdown states a fact; the
+   dark card is what conveys urgency. */
+.dash-request__expiry {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  /* The design's 7px, between --space-1 and --space-2. */
+  gap: 7px;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  line-height: var(--leading-snug);
+  color: var(--req-text-muted);
+  /* "Expires in 21h 40m" is one statement; it wraps as a block under the
+     eyebrow rather than breaking mid-countdown. */
+  white-space: nowrap;
+}
+
+/* Stroke is currentColor, so the glyph follows the line's color. */
+.dash-request__expiry svg {
+  display: block;
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+}
+
+/* EXPLICITLY WHITE, and with !important, for two reasons that stack: home.css
+   paints every h1/h2/h3 with --text-heading (navy on navy), and the parent
+   theme prints inline global typography after our stylesheets that recolors
+   bare headings again. Same override the .dash-view__title and
+   .dash-today__greeting rules above carry, for the same reason.
+
+   Design is 27px/-0.025em/900; the size is floored for the narrow column, and
+   -0.025em is exactly --tracking-tight. */
+.dash-request__title {
+  margin: 0 0 22px;
+  font-family: var(--font-display);
+  font-size: clamp(22px, 2.9vw, 27px);
+  /* home.css's weight ramp stops at 800 (--weight-extrabold); the design's
+     900 is written out, as it is on the greeting. */
+  font-weight: 900;
+  line-height: var(--leading-snug);
+  letter-spacing: var(--tracking-tight);
+  color: var(--req-text) !important;
+}
+
+/* FOUR SEPARATE TILES, each with its own border and radius — not one panel
+   ruled into quarters. The gap grid is what keeps them separate: 10px of the
+   card's own navy shows between them, so each fact reads as its own object.
+
+   auto-fit + minmax means the row fills whatever tiles it is given (a card
+   with three facts leaves no empty track) and reflows to two-up, then one-up,
+   as the column narrows — no media query needed.
+
+   margin: 0 resets the browser's <dl> default AND closes the design's 22px
+   below this grid: that space belongs to the Accept / Pass row, which is
+   Step 6. The card's bottom padding is what holds the tiles off the edge
+   until then. */
+.dash-request__facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.dash-request__fact {
+  padding: 14px 16px;
+  border: 1px solid var(--req-border);
+  /* The design's 10px, the same value the rail's nav rows use — no token
+     sits there (--radius-input is 12px). */
+  border-radius: 10px;
+}
+
+/* 0.16em sits between --tracking-label (0.12em) and --tracking-mono (0.2em);
+   the design tightens its smallest mono label a step, so it is written out. */
+.dash-request__fact-label {
+  margin-bottom: 5px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  /* Bootstrap (AyeCode UI, merged into the same bundle on this site) bolds
+     every <dt>; these labels are quiet by design. */
+  font-weight: var(--weight-regular);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--req-text-faint);
+}
+
+/* margin: 0 clears the browser's 40px indent on <dd>. */
+.dash-request__fact-value {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-snug);
+  color: var(--req-text);
 }
 
 /* ── Page background over parent-theme / plugin globals ──────────────
@@ -745,5 +908,12 @@ html body:has(.dashboard-page) .mobile-sticky-cta {
 @media (max-width: 900px) {
   .dash-view.is-active {
     padding: var(--space-6) var(--container-pad) var(--space-8);
+  }
+
+  /* The card's own 32px inset costs a tenth of the width on a phone, which
+     the fact tiles need more than the frame does. The design has no narrow
+     spec — Step 15 is where all four states get walked across widths. */
+  .dash-slot[data-slot="live"] {
+    padding: var(--space-5) var(--space-5) var(--space-4);
   }
 }

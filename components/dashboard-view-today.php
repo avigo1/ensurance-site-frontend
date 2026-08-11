@@ -23,13 +23,19 @@
  * a-time container that shows the single thing needing the agent's attention.
  * It renders exactly ONE of the four states in
  * ensurance_dashboard_priority_states(), chosen by the single value
- * ensurance_dashboard_priority_state() returns. Each is a plain labeled box for
- * now; Steps 5–9 replace them one at a time with their real surfaces (live
- * request card, decided panel, quiet card, setup card).
+ * ensurance_dashboard_priority_state() returns. Steps 5–9 replace those states
+ * one at a time with their real surfaces; the ones still waiting their turn
+ * (setup, quiet, decided) render as the plain labeled box Step 4 left behind.
+ *
+ * STEP 5 builds the FIRST of them: `live` is now the design's dark navy request
+ * card, rendered by components/dashboard-slot-live.php from the request
+ * ensurance_dashboard_live_request() returns.
  *
  * NOTHING renders when the state is somehow not one of the four. The step is
  * explicit that there is no fallback branch — no "unknown state" box, and never
- * two states at once.
+ * two states at once. The live state extends that rule to its data: a slot that
+ * is live with no request to show renders nothing rather than an empty dark
+ * card, so the card can never appear without the request it is about.
  *
  * PREVIEWING: /dashboard/?slot=quiet (and setup / decided / live) forces a
  * state for administrators, standing in for the design's props panel. See
@@ -53,6 +59,12 @@ $dash_stamp    = ensurance_dashboard_timestamp( $dash_now );
 $dash_slot       = ensurance_dashboard_priority_state();
 $dash_slot_label = ensurance_dashboard_priority_states();
 $dash_slot_label = isset( $dash_slot_label[ $dash_slot ] ) ? $dash_slot_label[ $dash_slot ] : '';
+
+// The request the live card is about — empty for every other state, and empty
+// in `live` too until something in the product actually produces requests (the
+// admin preview toggle aside). An empty one takes the whole slot down with it;
+// see the block above the slot below.
+$dash_request = ( 'live' === $dash_slot ) ? ensurance_dashboard_live_request() : array();
 ?>
 <div class="dash-today__header">
 
@@ -74,14 +86,30 @@ $dash_slot_label = isset( $dash_slot_label[ $dash_slot ] ) ? $dash_slot_label[ $
  * deskState, which shows a single card and never two.
  *
  * The state slug rides on data-slot rather than a modifier class: it IS the
- * value driving the slot, so CSS hooks it as [data-slot="live"] when Steps 5–9
- * give each state its own treatment (the live and setup states go dark navy;
- * quiet and decided stay light). Nothing needs a class that only mirrors it.
+ * value driving the slot, so CSS hooks it as [data-slot="live"] to paint the
+ * dark request card, and the three states still on the placeholder box share the
+ * remaining selectors in assets/dashboard.css. Nothing needs a class that only
+ * mirrors the state.
+ *
+ * The `live` state additionally needs its request. Without one there is nothing
+ * to decide, so the slot is skipped entirely rather than painted empty — which
+ * is why the condition below tests the data and not just the state.
  */
-if ( '' !== $dash_slot_label ) :
+$dash_has_slot = ( '' !== $dash_slot_label ) && ( 'live' !== $dash_slot || ! empty( $dash_request ) );
+
+if ( $dash_has_slot ) :
 	?>
 	<section class="dash-slot" data-slot="<?php echo esc_attr( $dash_slot ); ?>" aria-label="What needs your attention">
-		<p class="dash-slot__label"><?php echo esc_html( $dash_slot_label ); ?></p>
+		<?php if ( 'live' === $dash_slot ) : ?>
+
+			<?php get_template_part( 'components/dashboard-slot-live', null, $dash_request ); ?>
+
+		<?php else : ?>
+
+			<?php // setup / quiet / decided — still Step 4's plain labeled box until Steps 7–9 build their surfaces. ?>
+			<p class="dash-slot__label"><?php echo esc_html( $dash_slot_label ); ?></p>
+
+		<?php endif; ?>
 	</section>
 	<?php
 endif;
