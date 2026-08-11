@@ -105,10 +105,11 @@ get_header( 'agent' );
  * fade, history, deep links) keys off the entry's `view` slug.
  *
  * A view whose content is more than eyebrow / title / intro names a `part`
- * in that array and puts its markup in that template part instead. None do
- * yet: Step 1 of templates/agent-dashboard/build-steps.md rebuilds the rail
- * and leaves the main column empty, so all four containers render empty and
- * fill in one step at a time from Step 2 on.
+ * in that array and puts its markup in that template part instead. Today does
+ * — components/dashboard-view-today.php, where the rest of Phase 2 of
+ * templates/agent-dashboard/build-steps.md lands. The other three carry no
+ * part and no title yet, so they render EMPTY containers and fill in one step
+ * at a time from Step 12 on.
  *
  * tabindex="-1" lets dashboard.js move focus here after a click without
  * putting the container in the tab order.

@@ -754,9 +754,9 @@ function ensurance_dashboard_request_count( $user_id = 0 ) {
  *   title    string  optional  <h1> of the view. Also becomes the container's
  *                              aria-label; falls back to `label`. A view with
  *                              no title and no `part` renders an EMPTY
- *                              container — which is every view as of Step 1
- *                              of templates/agent-dashboard/build-steps.md,
- *                              where the main column stays empty by design.
+ *                              container — which is every view but Today as of
+ *                              Step 3 of templates/agent-dashboard/
+ *                              build-steps.md, where only Today has content.
  *   eyebrow  string  optional  Kicker above the title. Empty by default: the
  *                              current design has no per-view eyebrow.
  *   intro    string  optional  Lead paragraph.
@@ -785,6 +785,12 @@ function ensurance_dashboard_views() {
             // Icon `home`.
             'icon'  => '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>',
             'href'  => home_url( '/dashboard/' ),
+            // Today's <h1> is the greeting itself, not a view name, and the
+            // design gives it no eyebrow or intro — so it renders through its
+            // own part instead of the generic header the other three use.
+            // Everything Phase 2 of build-steps.md adds (priority slot,
+            // timeline, reference columns) appends inside that file.
+            'part'  => 'components/dashboard-view-today',
         ),
         // The only row in the design that carries a count. It is resolved here
         // on every render rather than stored, so the pill can never disagree
@@ -961,6 +967,99 @@ function ensurance_dashboard_first_name( $user_id = 0 ) {
      * @param WP_User $user  The user it was resolved from.
      */
     return (string) apply_filters( 'ensurance_dashboard_first_name', $first, $user );
+}
+
+/**
+ * The Today view's greeting — "Good morning, Marcus".
+ *
+ * Step 3 of templates/agent-dashboard/build-steps.md. The design hardcodes
+ * `greeting: 'Good morning, ' + first`; the requirement is that it be
+ * TIME-AWARE, so the salutation is picked from the hour here:
+ *
+ *   before 12:00 → morning, before 17:00 → afternoon, otherwise evening.
+ *
+ * WHICH clock: the SITE's timezone (wp_date), not the agent's. There is no
+ * server-side way to know the visitor's, and the design's own timestamp is
+ * stamped "PT" — one business clock for everyone. The stamp beside the
+ * greeting names that timezone (ensurance_dashboard_timestamp), so an agent
+ * reading "Good evening" at their 4pm can see which clock it is on. /dashboard
+ * is a signed-in surface and therefore uncached, so the hour is the real one at
+ * render time.
+ *
+ * The name is whatever ensurance_dashboard_first_name() resolves, and the
+ * comma comes with it: a user record with no name at all greets with a bare
+ * "Good morning" rather than "Good morning, ".
+ *
+ * @param int $user_id   Optional. Defaults to the current user.
+ * @param int $timestamp Optional. Unix time to read the hour from. Defaults to
+ *                       now. Pass the same value used for the stamp so the two
+ *                       cannot straddle a minute (or an hour) boundary.
+ * @return string Greeting line, never empty.
+ */
+function ensurance_dashboard_greeting( $user_id = 0, $timestamp = 0 ) {
+    $timestamp = $timestamp ? (int) $timestamp : time();
+    $first     = ensurance_dashboard_first_name( $user_id );
+
+    // 'G' is the 24-hour hour without a leading zero, in the site's timezone.
+    $hour = (int) wp_date( 'G', $timestamp );
+
+    if ( $hour < 12 ) {
+        $greeting = 'Good morning';
+    } elseif ( $hour < 17 ) {
+        $greeting = 'Good afternoon';
+    } else {
+        $greeting = 'Good evening';
+    }
+
+    if ( '' !== $first ) {
+        $greeting .= ', ' . $first;
+    }
+
+    /**
+     * Filter the dashboard's greeting line.
+     *
+     * @param string $greeting The assembled greeting.
+     * @param string $first    First name it was built with, '' if none.
+     * @param int    $hour     Site-local hour the salutation was picked from.
+     */
+    return (string) apply_filters( 'ensurance_dashboard_greeting', $greeting, $first, $hour );
+}
+
+/**
+ * The timestamp shown opposite the greeting — "Tue Aug 11 · 9:42 AM PDT".
+ *
+ * The design's `stamp` is the fixed string "Tue Aug 11 · 9:42 AM PT"; this is
+ * the live equivalent, formatted the same way and in the same site timezone the
+ * greeting reads its hour from.
+ *
+ * The zone comes from wp_date's 'T' rather than a literal "PT", so the label
+ * cannot go stale: it follows the site's timezone setting and says PDT/PST
+ * rather than claiming one of them year-round. A site configured with a manual
+ * UTC offset instead of a named zone gets that offset ("+05:30") — correct, if
+ * less friendly, and the fix is to set a real timezone in Settings → General.
+ *
+ * Built from three wp_date() calls on ONE timestamp rather than a single format
+ * string, because the "·" separator is multibyte and PHP's date() escape
+ * (a backslash) only covers one byte of it.
+ *
+ * @param int $timestamp Optional. Unix time to format. Defaults to now.
+ * @return string Formatted stamp. The CSS uppercases it for display.
+ */
+function ensurance_dashboard_timestamp( $timestamp = 0 ) {
+    $timestamp = $timestamp ? (int) $timestamp : time();
+
+    $stamp = wp_date( 'D M j', $timestamp )
+        . ' · '
+        . wp_date( 'g:i A', $timestamp )
+        . ' ' . wp_date( 'T', $timestamp );
+
+    /**
+     * Filter the dashboard's greeting-row timestamp.
+     *
+     * @param string $stamp     The formatted stamp.
+     * @param int    $timestamp Unix time it was formatted from.
+     */
+    return (string) apply_filters( 'ensurance_dashboard_timestamp', $stamp, $timestamp );
 }
 
 // ============================================================================

@@ -10,10 +10,12 @@
    Built incrementally against templates/agent-dashboard/AgentDashboard.dc.html
    in the design system, one step of templates/agent-dashboard/build-steps.md
    at a time. Landed so far: the two-column shell, the left rail with its four
-   nav rows (Step 1), and the view containers. Still to come, in that file's
-   order: the four views' real contents, starting with Today's greeting and
-   its one-at-a-time priority slot. The main column renders EMPTY containers
-   until then — that is Step 1's specified end state, not an oversight.
+   nav rows (Step 1), the view containers and their switching (Step 2), and
+   Today's greeting row (Step 3). Still to come, in that file's order: Today's
+   one-at-a-time priority slot, its founding-access timeline and reference
+   columns, then the other three views. Requests, Agency Profile and Account
+   render EMPTY containers until then — that is the plan's end state for this
+   step, not an oversight.
    =================================================================== */
 
 /* ── Two-column shell ───────────────────────────────────────────────
@@ -539,6 +541,59 @@ html body:has(.dashboard-shell) .site-footer {
   line-height: var(--leading-body);
   color: var(--text-body);
   text-wrap: pretty;
+}
+
+/* ── Today — greeting row ────────────────────────────────────────────
+   Step 3 of templates/agent-dashboard/build-steps.md. Today opens with the
+   greeting left and the render timestamp right, baseline-aligned so the
+   30px display type and the 11px mono sit on the same line rather than being
+   centered against each other. Values from the Today header block of
+   templates/agent-dashboard/AgentDashboard.dc.html.
+
+   This view does not use the shared .dash-view__* header above — its <h1> is
+   the greeting, and the design gives it no eyebrow or intro. */
+.dash-today__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  /* The design assumes desktop and never wraps. Wrapping lets the stamp drop
+     under the greeting on a narrow column instead of squeezing it; the row gap
+     is what separates them once it does. Column gap is the design's 20px
+     rounded to the nearest token. */
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  margin-bottom: var(--space-5);
+}
+
+/* Same Kadence override the shared .dash-view__title carries: the parent theme
+   prints inline global typography after our stylesheets that colors bare h1
+   white — invisible on this light page. */
+.dash-today__greeting {
+  margin: 0;
+  font-family: var(--font-display);
+  /* The design's 30px, floored for the narrow column. */
+  font-size: clamp(24px, 3.2vw, 30px);
+  /* home.css's weight ramp stops at 800 (--weight-extrabold); the design's
+     900 is written out. */
+  font-weight: 900;
+  line-height: var(--leading-snug);
+  /* Design is -0.03em, between the two tracking tokens; the tighter
+     --tracking-display over-condenses at this size. */
+  letter-spacing: var(--tracking-tight);
+  color: var(--text-heading) !important;
+}
+
+/* No token at 11px (--text-xs is 12px) — matched to .dash-view__eyebrow above,
+   which sets the same size for the same reason. */
+.dash-today__stamp {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  /* Design is 0.14em; --tracking-label is the 0.12em token. */
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-faint);
+  /* Keep the date and time on one line — it wraps as a block above instead. */
+  white-space: nowrap;
 }
 
 /* ── Page background over parent-theme / plugin globals ──────────────
