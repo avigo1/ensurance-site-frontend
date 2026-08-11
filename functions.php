@@ -1108,10 +1108,11 @@ function ensurance_dashboard_priority_states() {
  * matched until their service areas and coverage types exist — which no funnel
  * captures. So a founding agent is genuinely in `setup`, and that is what this
  * returns; `live` only when a request really is waiting, which is where the real
- * queue will light it up with no change here. `quiet` and `decided` are reachable
- * through the filter and the preview toggle below until Steps 7–9 give them real
- * triggers. That is the honest reading of the current product, not a placeholder
- * chosen to look good.
+ * queue will light it up with no change here. `decided` follows a decision the
+ * agent actually made (ensurance_dashboard_decided_slot), so it is reachable
+ * today wherever `live` is; `quiet` is still only reachable through the filter
+ * and the preview toggle below. That is the honest reading of the current
+ * product, not a placeholder chosen to look good.
  *
  * @param int $user_id Optional. Defaults to the current user.
  * @return string One of the keys of ensurance_dashboard_priority_states().
@@ -1246,29 +1247,47 @@ function ensurance_dashboard_priority_preview() {
  * @param int $user_id Optional. Defaults to the current user.
  * @return array The request, or an empty array when nothing is waiting.
  */
+/**
+ * The design's own sample request — the ONE fabricated request on this page.
+ *
+ * Kept in a single function because two preview surfaces are about the same
+ * request and must not disagree about it: the live card
+ * (ensurance_dashboard_live_request) and the confirmation panel that follows a
+ * decision on it (ensurance_dashboard_decided_county), which names the county
+ * a passed request moved on to.
+ *
+ * PREVIEW ONLY. Nothing reaches this except through
+ * ensurance_dashboard_priority_preview(), which is capability-gated — an agent
+ * can never be shown these values. Copied field for field from the live card in
+ * templates/agent-dashboard/AgentDashboard.dc.html.
+ *
+ * @return array A request in ensurance_dashboard_live_request()'s shape.
+ */
+function ensurance_dashboard_sample_request() {
+    return array(
+        'coverage'   => 'Auto',
+        'county'     => 'Coastal County',
+        // The design's fixed "Expires in 21h 40m" expressed as a real moment,
+        // so the preview exercises the countdown rather than hardcoding its
+        // output.
+        'expires_at' => time() + ( 21 * HOUR_IN_SECONDS ) + ( 40 * MINUTE_IN_SECONDS ),
+        'facts'      => array(
+            array( 'label' => 'Shopper ZIP', 'value' => '93013' ),
+            array( 'label' => 'Household', 'value' => '2 drivers, 2 vehicles' ),
+            array( 'label' => 'Current carrier', 'value' => 'Renews in 6 weeks' ),
+            array( 'label' => 'Submitted', 'value' => '2 hours ago' ),
+        ),
+    );
+}
+
 function ensurance_dashboard_live_request( $user_id = 0 ) {
     $user_id = $user_id ? (int) $user_id : get_current_user_id();
 
     $request = array();
 
-    // Admin preview only — see the note above. Values are the design's own
-    // sample request, copied from the live card in
-    // templates/agent-dashboard/AgentDashboard.dc.html.
+    // Admin preview only — see the note above.
     if ( 'live' === ensurance_dashboard_priority_preview() ) {
-        $request = array(
-            'coverage'   => 'Auto',
-            'county'     => 'Coastal County',
-            // The design's fixed "Expires in 21h 40m" expressed as a real
-            // moment, so the preview exercises the countdown rather than
-            // hardcoding its output.
-            'expires_at' => time() + ( 21 * HOUR_IN_SECONDS ) + ( 40 * MINUTE_IN_SECONDS ),
-            'facts'      => array(
-                array( 'label' => 'Shopper ZIP', 'value' => '93013' ),
-                array( 'label' => 'Household', 'value' => '2 drivers, 2 vehicles' ),
-                array( 'label' => 'Current carrier', 'value' => 'Renews in 6 weeks' ),
-                array( 'label' => 'Submitted', 'value' => '2 hours ago' ),
-            ),
-        );
+        $request = ensurance_dashboard_sample_request();
     }
 
     /**
@@ -1396,7 +1415,7 @@ if ( ! defined( 'ENSURANCE_DASHBOARD_DECISION_META' ) ) {
  * The decision an agent has just made, or '' when they have not made one.
  *
  * Read by ensurance_dashboard_decided_slot() to put the slot in `decided`, and
- * by Step 7's confirmation panel to say which way it went.
+ * by components/dashboard-slot-decided.php to say which way it went.
  *
  * TWO SOURCES, and they do not mix. A decision made on a PREVIEWED request
  * (`/dashboard/?slot=live` — see ensurance_dashboard_priority_preview) rides
@@ -1473,8 +1492,8 @@ function ensurance_dashboard_record_decision( $decision, $user_id = 0 ) {
  * the slot.
  *
  * It wins over `live`: a request the agent has already answered is not still
- * waiting on them. Steps 7's Undo is what clears the decision and hands the slot
- * back to `live`.
+ * waiting on them. The decided panel's Undo is what clears the decision and
+ * hands the slot back — see ensurance_dashboard_clear_decision().
  *
  * @param string $state   State resolved so far.
  * @param int    $user_id User the slot is being resolved for.
@@ -1563,6 +1582,228 @@ function ensurance_dashboard_decision_action() {
     }
 
     return $action;
+}
+
+/**
+ * Where an accepted request's contact details are sent.
+ *
+ * Step 7 of templates/agent-dashboard/build-steps.md: the accepted panel names
+ * this address, because "we sent you the shopper's name, phone and email" is
+ * only useful if the agent knows WHICH inbox to go and look in.
+ *
+ * The account's own email today — the address the agent signs in with is the
+ * only one the product actually has. The design calls this the agency's
+ * "request inbox" and shows it separately from sign-in (Steps 11 and 13), so
+ * when that field exists it attaches here and every surface naming the inbox
+ * follows.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return string An email address, or '' when there is none to name.
+ */
+function ensurance_dashboard_request_inbox( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $user    = $user_id ? get_userdata( $user_id ) : false;
+    $inbox   = ( $user && ! empty( $user->user_email ) ) ? $user->user_email : '';
+
+    /**
+     * Filter the inbox an accepted request's contact details are sent to.
+     *
+     * @param string $inbox   Email address, '' when unknown.
+     * @param int    $user_id User the dashboard is being rendered for.
+     */
+    $inbox = (string) apply_filters( 'ensurance_dashboard_request_inbox', $inbox, $user_id );
+
+    return is_email( $inbox ) ? $inbox : '';
+}
+
+/**
+ * The county a just-passed request moved on to.
+ *
+ * Step 7 needs exactly one field of the decided request — the county, so the
+ * passed panel can say which county the request went back out to rather than
+ * gesturing at "another agent" with no place attached. Everything else about
+ * the request is gone from the panel by design: the fact tiles do not reappear.
+ *
+ * A previewed decision is about the sample request, so it reports that request's
+ * county (ensurance_dashboard_sample_request). A real one has nowhere to read it
+ * from yet — the interim store keeps the decision and nothing else (see
+ * ENSURANCE_DASHBOARD_DECISION_META) — so this returns '' and the panel falls
+ * back to a sentence that names no county. The queue supplies it through the
+ * filter when it exists.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return string County name, or '' when it is not known.
+ */
+function ensurance_dashboard_decided_county( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $sample  = ensurance_dashboard_sample_request();
+    $county  = ( 'decided' === ensurance_dashboard_priority_preview() ) ? $sample['county'] : '';
+
+    /**
+     * Filter the county named in the passed-request confirmation.
+     *
+     * @param string $county  County name, '' when unknown.
+     * @param int    $user_id User the slot is being resolved for.
+     */
+    return (string) apply_filters( 'ensurance_dashboard_decided_county', $county, $user_id );
+}
+
+/**
+ * What the decided panel says — its headline and its one sentence.
+ *
+ * Step 7 of templates/agent-dashboard/build-steps.md. The panel confirms a
+ * decision the agent has just made, so both halves of it are about what
+ * ALREADY HAPPENED, not about what they should do next: accepting names the
+ * inbox the contact details went to and what the shopper was told to expect;
+ * passing says the request left the queue and went to another agent in that
+ * county. Neither line asks for anything, and neither hedges — the decision is
+ * done, and Undo is right there for the one case where it was a misclick.
+ *
+ * Copy is the design's own (`decidedTitle` / `decidedBody` in
+ * templates/agent-dashboard/AgentDashboard.dc.html), with its hardcoded inbox
+ * and county replaced by the resolvers above. Each has a fallback that simply
+ * drops the detail rather than printing a blank or a placeholder, because a
+ * sentence that names no inbox is still true and "sent to ." is not.
+ *
+ * @param string $decision One of ensurance_dashboard_decisions().
+ * @param int    $user_id  Optional. Defaults to the current user.
+ * @return array{title:string,body:string} Empty strings for an unknown decision.
+ */
+function ensurance_dashboard_decided_panel( $decision, $user_id = 0 ) {
+    $decision = sanitize_key( $decision );
+    $user_id  = $user_id ? (int) $user_id : get_current_user_id();
+    $panel    = array(
+        'title' => '',
+        'body'  => '',
+    );
+
+    if ( 'accept' === $decision ) {
+        $inbox = ensurance_dashboard_request_inbox( $user_id );
+
+        $panel['title'] = 'Request accepted';
+        $panel['body']  = ( '' !== $inbox )
+            ? sprintf( 'Contact details were sent to %s. The shopper was told to expect you within one business day.', $inbox )
+            : 'Contact details were sent to your request inbox. The shopper was told to expect you within one business day.';
+    } elseif ( 'pass' === $decision ) {
+        $county = ensurance_dashboard_decided_county( $user_id );
+
+        $panel['title'] = 'Request passed';
+        $panel['body']  = ( '' !== $county )
+            ? sprintf( 'It has been removed from your queue and offered to another agent in %s.', $county )
+            : 'It has been removed from your queue and offered to another agent covering that area.';
+    }
+
+    /**
+     * Filter the decided panel's headline and sentence.
+     *
+     * @param array  $panel    ['title' => …, 'body' => …].
+     * @param string $decision 'accept' or 'pass'.
+     * @param int    $user_id  User the panel is being rendered for.
+     */
+    return (array) apply_filters( 'ensurance_dashboard_decided_panel', $panel, $decision, $user_id );
+}
+
+/**
+ * Undo a recorded decision — the other half of the panel's one control.
+ *
+ * Forgets the decision, which is all it takes to hand the slot back: the state
+ * resolver reads that value (ensurance_dashboard_decided_slot), so with nothing
+ * recorded Today returns to whatever it was before — `live` while the request is
+ * still waiting.
+ *
+ * Fires its own action rather than reusing the recorded one with an "undone"
+ * flag, so the queue can unwind an accept (re-lock the contact details, tell the
+ * shopper nothing) without having to tell two meanings of one hook apart.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return bool Whether a decision was there to undo.
+ */
+function ensurance_dashboard_clear_decision( $user_id = 0 ) {
+    $user_id  = $user_id ? (int) $user_id : get_current_user_id();
+    $decision = $user_id ? ensurance_dashboard_decision( $user_id ) : '';
+
+    if ( '' === $decision ) {
+        return false;
+    }
+
+    delete_user_meta( $user_id, ENSURANCE_DASHBOARD_DECISION_META );
+
+    /**
+     * Fires when an agent undoes the decision they just made.
+     *
+     * @param string $decision Decision that was undone — 'accept' or 'pass'.
+     * @param int    $user_id  Agent who undid it.
+     */
+    do_action( 'ensurance_dashboard_decision_undone', $decision, $user_id );
+
+    return true;
+}
+
+/**
+ * Handles the Undo post from the decided panel.
+ *
+ * The mirror of ensurance_dashboard_handle_decision(), and deliberately built
+ * the same way: a form post rather than a link, so undoing works with
+ * JavaScript off, is announced as a button, and cannot be triggered by anything
+ * following a URL. It redirects rather than rendering, so the slot lands back on
+ * a clean address.
+ *
+ * A previewed decision was never written down, so undoing it only drops the
+ * `?decision=` from the URL and puts the preview back on `?slot=live` — the
+ * state the previewed card was decided from.
+ *
+ * A failed nonce returns without undoing and without redirecting: the panel
+ * renders again, still decided, which is the truth.
+ */
+function ensurance_dashboard_handle_undo() {
+    // Cheapest test first — this runs on every front-end request.
+    if ( ! isset( $_POST['dash_undo'] ) || ! is_page( 'dashboard' ) || ! is_user_logged_in() ) {
+        return;
+    }
+
+    $nonce = isset( $_POST['dash_undo_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['dash_undo_nonce'] ) ) : '';
+
+    if ( ! wp_verify_nonce( $nonce, 'ensurance_dashboard_undo' ) ) {
+        return;
+    }
+
+    // The panel's form posts to its own URL, so the preview args are still
+    // readable here — which is how a previewed decision is told from a real one.
+    if ( 'decided' === ensurance_dashboard_priority_preview() ) {
+        $target = add_query_arg( 'slot', 'live', home_url( '/dashboard/' ) );
+    } else {
+        ensurance_dashboard_clear_decision();
+        $target = home_url( '/dashboard/' );
+    }
+
+    wp_safe_redirect( $target );
+    exit;
+}
+add_action( 'template_redirect', 'ensurance_dashboard_handle_undo' );
+
+/**
+ * Where the decided panel's Undo form posts (raw — esc_url at output).
+ *
+ * Its own URL, preview args and all, for the same reason
+ * ensurance_dashboard_decision_action() carries them: the handler reads them
+ * back off the post to tell a previewed decision from a recorded one.
+ *
+ * @return string
+ */
+function ensurance_dashboard_undo_action() {
+    $action = home_url( '/dashboard/' );
+
+    if ( 'decided' !== ensurance_dashboard_priority_preview() ) {
+        return $action;
+    }
+
+    return add_query_arg(
+        array(
+            'slot'     => 'decided',
+            'decision' => ensurance_dashboard_decision(),
+        ),
+        $action
+    );
 }
 
 // ============================================================================

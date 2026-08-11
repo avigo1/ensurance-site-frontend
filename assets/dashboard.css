@@ -12,10 +12,11 @@
    at a time. Landed so far: the two-column shell, the left rail with its four
    nav rows (Step 1), the view containers and their switching (Step 2),
    Today's greeting row (Step 3), its one-at-a-time priority slot (Step 4),
-   and the first of that slot's four states — the dark live request card
-   (Step 5). Still to come, in that file's order: the slot's three remaining
-   states, which are still labeled placeholder boxes, Today's founding-access
-   timeline and reference columns, then the other three views. Requests,
+   the dark live request card with its Accept / Pass controls (Steps 5–6),
+   and the light accent panel that confirms either decision (Step 7). Still
+   to come, in that file's order: the slot's two remaining states, which are
+   still labeled placeholder boxes, Today's founding-access timeline and
+   reference columns, then the other three views. Requests,
    Agency Profile and Account render EMPTY containers until then — that is the
    plan's end state for this step, not an oversight.
    =================================================================== */
@@ -609,9 +610,9 @@ html body:has(.dashboard-shell) .site-footer {
    card radius and the gap to what follows. Each state's own surface hangs
    off [data-slot], the single value driving the slot, so no state needs a
    class that mirrors what the attribute already says. Landed so far: `live`
-   (Step 5, below). setup / quiet / decided are still Step 4's plain labeled
-   box and take their real surfaces in Steps 7–9 — setup dark navy, decided
-   accent-tinted, quiet a light card.
+   (Step 5) and `decided` (Step 7), both below. setup / quiet are still
+   Step 4's plain labeled box and take their real surfaces in Steps 8–9 —
+   quiet a light card, setup dark navy.
 
    Radius is the design's own 20px, between --radius-icon (16px) and
    --radius-card (32px) — no token sits at that value. */
@@ -622,12 +623,11 @@ html body:has(.dashboard-shell) .site-footer {
   margin-bottom: 14px;
 }
 
-/* The placeholder box, for the three states still awaiting their surface.
+/* The placeholder box, for the two states still awaiting their surface.
    Listed by state rather than by a "not yet built" class so each step can
    simply lift its own selector out of this rule. */
 .dash-slot[data-slot="setup"],
-.dash-slot[data-slot="quiet"],
-.dash-slot[data-slot="decided"] {
+.dash-slot[data-slot="quiet"] {
   display: flex;
   align-items: center;
   /* Gives the empty placeholder the presence the real card will have,
@@ -895,6 +895,124 @@ html body:has(.dashboard-shell) .site-footer {
   color: var(--req-text-muted);
 }
 
+/* ── Today — decided panel ───────────────────────────────────────────
+   Step 7 of templates/agent-dashboard/build-steps.md, rendered by
+   components/dashboard-slot-decided.php into the same slot the live card
+   was in.
+
+   THE WEIGHT DROPS ON PURPOSE. The dark card means "this is waiting on
+   you" and nothing is waiting now, so the surface goes light — but tinted
+   with the accent rather than plain white, because something just
+   happened here and the panel should read as the result of a press, not
+   as the page having quietly emptied. It is also the reason this state is
+   NOT one of the neutral placeholder boxes above: the tint is the whole
+   signal.
+
+   Values from the `decided` branch of
+   templates/agent-dashboard/AgentDashboard.dc.html. Padding is the
+   design's 26px/30px — a step in from the live card's 30px/32px, since
+   there are no tiles here to give room to. --accent-50 / --accent-100 are
+   home.css's own accent tints, the same pair .icon-box--accent uses. */
+.dash-slot[data-slot="decided"] {
+  padding: 26px 30px;
+  background: var(--accent-50);
+  border: 1px solid var(--accent-100);
+}
+
+/* Glyph and headline on one row, centered against each other — the check
+   reads as part of the sentence "Request accepted", not as an icon parked
+   above it. */
+.dash-decided__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+/* The design's #2B8673 is exactly --accent; stroke is currentColor, so the
+   glyph takes it from here. flex-shrink guards the circle against
+   squashing into an oval if the headline ever wraps hard. */
+.dash-decided__icon {
+  display: block;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  color: var(--accent);
+}
+
+/* Same Kadence override .dash-view__title and .dash-today__greeting carry:
+   the parent theme prints inline global typography after our stylesheets
+   that recolors bare headings, which on this pale tint would be
+   unreadable. Design is 20px/800/-0.02em; --tracking-tight (-0.025em) is
+   the nearest token and is imperceptible at this size. */
+.dash-decided__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: var(--weight-extrabold);
+  line-height: var(--leading-snug);
+  letter-spacing: var(--tracking-tight);
+  color: var(--text-heading) !important;
+}
+
+/* The one sentence. --text-strong rather than --text-body: this is the
+   only content on the panel, so it carries the surface rather than sitting
+   quietly under a heading. Design is 14.5px/1.6 — floored to --text-sm
+   (14px) and --leading-body (1.65), both within a hair.
+
+   max-width holds it to the design's 560px measure; the 4px foot is the
+   design's, with the rest of the gap to Undo carried by that control. */
+.dash-decided__body {
+  margin: 0 0 4px;
+  max-width: 560px;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  line-height: var(--leading-body);
+  color: var(--text-strong);
+  text-wrap: pretty;
+}
+
+/* THE ONE CONTROL. A <button> in a <form> (it reverses recorded state, so
+   it posts — see the block above the form in the component), stripped back
+   to the design's quiet text link: this is the small way back from a
+   decision that stands, not a second decision competing with the one just
+   made. Nothing here gives it a fill, a border or a button's height.
+
+   The margin is the design's 14px above it, and it lives on the form so a
+   panel whose sentence is missing still spaces correctly. */
+.dash-decided__undo {
+  margin: 14px 0 0;
+}
+
+.dash-decided__undo-button {
+  -webkit-appearance: none;
+  appearance: none;
+  padding: 0;
+  background: none;
+  border: 0;
+  font-family: var(--font-sans);
+  /* The design's 13px, between --text-xs (12px) and --text-sm (14px) — no
+     token sits at that value. */
+  font-size: 13px;
+  line-height: var(--leading-snug);
+  color: var(--accent);
+  cursor: pointer;
+  transition: color 0.18s ease;
+}
+
+.dash-decided__undo-button:hover {
+  color: var(--accent-hover);
+}
+
+/* The panel is light, so the shared --focus-ring (the CTA green) reads
+   here — unlike on the live card, which had to substitute its own mint.
+   Stated anyway because the reset above cleared the UA's own outline. */
+.dash-decided__undo-button:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
 /* ── Page background over parent-theme / plugin globals ──────────────
    Same fix the other standalone pages carry: AyeCode UI (GeoDirectory,
    the `aui_bs5` body class) ships
@@ -1007,5 +1125,11 @@ html body:has(.dashboard-page) .mobile-sticky-cta {
      spec — Step 15 is where all four states get walked across widths. */
   .dash-slot[data-slot="live"] {
     padding: var(--space-5) var(--space-5) var(--space-4);
+  }
+
+  /* Same trade on the panel that replaces it, so the slot does not visibly
+     change inset when a decision is made. */
+  .dash-slot[data-slot="decided"] {
+    padding: var(--space-5);
   }
 }

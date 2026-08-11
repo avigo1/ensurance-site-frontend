@@ -33,15 +33,19 @@
  *
  * STEP 6 gives that card its Accept / Pass controls, which is the first thing in
  * the product that MOVES the slot: either button posts, and the slot comes back
- * `decided` (ensurance_dashboard_decided_slot). `decided` is still Step 4's
- * labeled box until Step 7 builds its confirmation panel — but it is now
- * reachable by using the card rather than only by previewing it.
+ * `decided` (ensurance_dashboard_decided_slot).
+ *
+ * STEP 7 builds what it comes back AS: `decided` is now the light accent panel
+ * in components/dashboard-slot-decided.php, confirming the decision in the same
+ * slot the card was in, with the single Undo that hands the slot back to `live`.
+ * Only `setup` and `quiet` are still Step 4's labeled box.
  *
  * NOTHING renders when the state is somehow not one of the four. The step is
  * explicit that there is no fallback branch — no "unknown state" box, and never
- * two states at once. The live state extends that rule to its data: a slot that
- * is live with no request to show renders nothing rather than an empty dark
- * card, so the card can never appear without the request it is about.
+ * two states at once. The two data-backed states extend that rule to their data:
+ * a slot that is live with no request to show, or decided with no decision to
+ * confirm, renders nothing rather than an empty frame — neither surface can
+ * appear without the thing it is about.
  *
  * PREVIEWING: /dashboard/?slot=quiet (and setup / decided / live) forces a
  * state for administrators, standing in for the design's props panel. See
@@ -71,6 +75,11 @@ $dash_slot_label = isset( $dash_slot_label[ $dash_slot ] ) ? $dash_slot_label[ $
 // admin preview toggle aside). An empty one takes the whole slot down with it;
 // see the block above the slot below.
 $dash_request = ( 'live' === $dash_slot ) ? ensurance_dashboard_live_request() : array();
+
+// …and the decision the decided panel confirms, which is what put the slot in
+// that state to begin with (ensurance_dashboard_decided_slot). Same rule: no
+// decision, no panel.
+$dash_decision = ( 'decided' === $dash_slot ) ? ensurance_dashboard_decision() : '';
 ?>
 <div class="dash-today__header">
 
@@ -93,15 +102,18 @@ $dash_request = ( 'live' === $dash_slot ) ? ensurance_dashboard_live_request() :
  *
  * The state slug rides on data-slot rather than a modifier class: it IS the
  * value driving the slot, so CSS hooks it as [data-slot="live"] to paint the
- * dark request card, and the three states still on the placeholder box share the
- * remaining selectors in assets/dashboard.css. Nothing needs a class that only
- * mirrors the state.
+ * dark request card, [data-slot="decided"] for the light accent panel, and the
+ * two states still on the placeholder box share the remaining selectors in
+ * assets/dashboard.css. Nothing needs a class that only mirrors the state.
  *
- * The `live` state additionally needs its request. Without one there is nothing
- * to decide, so the slot is skipped entirely rather than painted empty — which
- * is why the condition below tests the data and not just the state.
+ * Two of the states additionally need their data: `live` its request, `decided`
+ * the decision it confirms. Without them there is nothing to show, so the slot
+ * is skipped entirely rather than painted empty — which is why the condition
+ * below tests the data and not just the state.
  */
-$dash_has_slot = ( '' !== $dash_slot_label ) && ( 'live' !== $dash_slot || ! empty( $dash_request ) );
+$dash_has_slot = ( '' !== $dash_slot_label )
+	&& ( 'live' !== $dash_slot || ! empty( $dash_request ) )
+	&& ( 'decided' !== $dash_slot || '' !== $dash_decision );
 
 if ( $dash_has_slot ) :
 	?>
@@ -110,9 +122,13 @@ if ( $dash_has_slot ) :
 
 			<?php get_template_part( 'components/dashboard-slot-live', null, $dash_request ); ?>
 
+		<?php elseif ( 'decided' === $dash_slot ) : ?>
+
+			<?php get_template_part( 'components/dashboard-slot-decided', null, array( 'decision' => $dash_decision ) ); ?>
+
 		<?php else : ?>
 
-			<?php // setup / quiet / decided — still Step 4's plain labeled box until Steps 7–9 build their surfaces. ?>
+			<?php // setup / quiet — still Step 4's plain labeled box until Steps 8–9 build their surfaces. ?>
 			<p class="dash-slot__label"><?php echo esc_html( $dash_slot_label ); ?></p>
 
 		<?php endif; ?>
