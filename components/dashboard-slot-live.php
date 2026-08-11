@@ -12,12 +12,9 @@
  *     with its clock glyph right;
  *   - a headline naming the coverage type and the county;
  *   - up to four individually bordered fact tiles in a gap grid — each its own
- *     box, not one shared background split by 1px lines.
- *
- * NO ACCEPT / PASS YET. The step is explicit that the decision controls are
- * Step 6, so the card ends at the tiles. The design's own 22px below the grid
- * belongs to those buttons and is not reproduced here — the card's bottom
- * padding closes it instead.
+ *     box, not one shared background split by 1px lines;
+ *   - the decision row: Accept and Pass as equals, and the one line saying what
+ *     each of them does (STEP 6 — see the block above the form below).
  *
  * The card IS the .dash-slot section (see components/dashboard-view-today.php),
  * so this part renders only its contents. That keeps the one-state-at-a-time
@@ -110,3 +107,42 @@ if ( ! empty( $request['facts'] ) ) :
 	</dl>
 	<?php
 endif;
+
+/*
+ * DECISION CONTROLS — Step 6. Accept and Pass, then one line saying what each
+ * one does.
+ *
+ * THE TWO BUTTONS ARE PEERS. Same size, same weight, same font, same row —
+ * Accept is solid because it is the affirmative, not because it is the answer
+ * the product wants. Pass is a real button rather than a text link, carries no
+ * warning tone and opens no "are you sure?", because passing a request that is
+ * wrong for an agency IS a correct answer and deciding so should not cost an
+ * agent anything. See .dash-request__pass in assets/dashboard.css, which is
+ * where that equality is actually enforced.
+ *
+ * A FORM, NOT JAVASCRIPT. The design flips a component's state; this posts. So
+ * the decision survives JS being off, both controls are announced and operated
+ * as buttons, and nothing can decide a request by following a link. The two
+ * buttons submit the same field with different values, which is why there is one
+ * form here and no client-side code at all.
+ * ensurance_dashboard_handle_decision() takes it from there, and BOTH values
+ * leave the slot in `decided`.
+ *
+ * The note is tied to both buttons with aria-describedby, so a screen reader
+ * reaches "Name, phone, and email unlock on accept…" as part of the control it
+ * describes rather than as a stray line somewhere after it.
+ */
+?>
+<form class="dash-request__decide" method="post" action="<?php echo esc_url( ensurance_dashboard_decision_action() ); ?>">
+
+	<?php wp_nonce_field( 'ensurance_dashboard_decide', 'dash_decide_nonce' ); ?>
+
+	<?php // .btn / .btn-primary from assets/home.css — the site's own button, which is what the design's Button component renders at size md (48px, pill radius, medium weight). ?>
+	<button type="submit" class="btn btn-primary dash-request__accept" name="dash_decision" value="accept" aria-describedby="dash-request-note">Accept request</button>
+
+	<?php // The same .btn geometry, outlined for the dark card — the one variant home.css does not carry, added in dashboard.css beside .dash-signout's. ?>
+	<button type="submit" class="btn dash-request__pass" name="dash_decision" value="pass" aria-describedby="dash-request-note">Pass</button>
+
+	<p class="dash-request__note" id="dash-request-note">Name, phone, and email unlock on accept. Passing removes it from your queue.</p>
+
+</form>

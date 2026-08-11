@@ -1358,6 +1358,213 @@ function ensurance_dashboard_countdown( $expires_at, $now = 0 ) {
     return sprintf( '%dm', max( 1, $minutes ) );
 }
 
+/**
+ * The two decisions an agent can make about a live request — THE list.
+ *
+ * Step 6 of templates/agent-dashboard/build-steps.md. Accept and Pass are peers
+ * in the design and peers here: one list, one handler, one outcome for the slot
+ * (both leave it `decided`). Nothing in this file treats one as the expected
+ * answer and the other as an escape hatch — no confirmation step on Pass, no
+ * extra hoop, no second thought.
+ *
+ * The slugs are what the card's two buttons submit, what the handler validates
+ * against, and what `?decision=` accepts when a previewed card is decided.
+ *
+ * @return string[] Decision slugs, in the order the card offers them.
+ */
+function ensurance_dashboard_decisions() {
+    return array( 'accept', 'pass' );
+}
+
+/**
+ * User-meta key holding the decision an agent has just made on Today's slot.
+ *
+ * INTERIM STORE. The real home for a decision is the matching queue — a row
+ * against the request that was decided, by whom and when — and none of that
+ * exists yet (see ensurance_dashboard_live_request). Until it does, this one
+ * value is what keeps the slot in `decided` across the redirect that follows the
+ * POST, and it is deliberately the smallest thing that can: which way the agent
+ * decided, and nothing else. The queue takes over through the
+ * `ensurance_dashboard_decision_recorded` action and the
+ * `ensurance_dashboard_priority_state` filter, at which point this can go.
+ */
+if ( ! defined( 'ENSURANCE_DASHBOARD_DECISION_META' ) ) {
+    define( 'ENSURANCE_DASHBOARD_DECISION_META', '_ensurance_dashboard_decision' );
+}
+
+/**
+ * The decision an agent has just made, or '' when they have not made one.
+ *
+ * Read by ensurance_dashboard_decided_slot() to put the slot in `decided`, and
+ * by Step 7's confirmation panel to say which way it went.
+ *
+ * TWO SOURCES, and they do not mix. A decision made on a PREVIEWED request
+ * (`/dashboard/?slot=live` — see ensurance_dashboard_priority_preview) rides
+ * back in the URL as `?decision=accept`, exactly like the slot toggle it arrived
+ * with: the request was a sample, so the decision about it is display state and
+ * never touches the user record. A decision made on a REAL request is read from
+ * user meta, where the handler recorded it.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return string 'accept', 'pass', or '' when nothing has been decided.
+ */
+function ensurance_dashboard_decision( $user_id = 0 ) {
+    $decisions = ensurance_dashboard_decisions();
+
+    // Display-only preview state, same as `?slot=` — no side effects, so no
+    // nonce to verify. The capability check lives in the preview function, so a
+    // `?decision=` with no preview in effect is ignored here.
+    if ( '' !== ensurance_dashboard_priority_preview() && ! empty( $_GET['decision'] ) ) {
+        $previewed = sanitize_key( wp_unslash( $_GET['decision'] ) );
+
+        return in_array( $previewed, $decisions, true ) ? $previewed : '';
+    }
+
+    $user_id  = $user_id ? (int) $user_id : get_current_user_id();
+    $decision = (string) get_user_meta( $user_id, ENSURANCE_DASHBOARD_DECISION_META, true );
+
+    return in_array( $decision, $decisions, true ) ? $decision : '';
+}
+
+/**
+ * Record a decision against a real request.
+ *
+ * The seam the matching queue attaches to: everything that should happen when an
+ * agent accepts or passes — releasing the shopper's contact details, telling the
+ * shopper, handing the request to the next agent in that county, writing the
+ * history row Step 12's Requests view lists — hangs off the action below. This
+ * function itself only remembers the decision well enough for the slot to show
+ * it (see ENSURANCE_DASHBOARD_DECISION_META).
+ *
+ * Not called for previewed requests. See ensurance_dashboard_decision().
+ *
+ * @param string $decision One of ensurance_dashboard_decisions().
+ * @param int    $user_id  Optional. Defaults to the current user.
+ * @return bool Whether the decision was valid and recorded.
+ */
+function ensurance_dashboard_record_decision( $decision, $user_id = 0 ) {
+    $decision = sanitize_key( $decision );
+    $user_id  = $user_id ? (int) $user_id : get_current_user_id();
+
+    if ( ! $user_id || ! in_array( $decision, ensurance_dashboard_decisions(), true ) ) {
+        return false;
+    }
+
+    update_user_meta( $user_id, ENSURANCE_DASHBOARD_DECISION_META, $decision );
+
+    /**
+     * Fires when an agent accepts or passes the request in Today's slot.
+     *
+     * @param string $decision 'accept' or 'pass'.
+     * @param int    $user_id  Agent who decided.
+     */
+    do_action( 'ensurance_dashboard_decision_recorded', $decision, $user_id );
+
+    return true;
+}
+
+/**
+ * Puts the priority slot in `decided` once the agent has decided.
+ *
+ * The other half of "both buttons set the slot to `decided`" — the buttons post,
+ * this is what the slot resolves to afterwards. Hooked onto the resolver's own
+ * filter rather than written into ensurance_dashboard_priority_state(), so the
+ * decision is one more input to that single value and not a second thing driving
+ * the slot.
+ *
+ * It wins over `live`: a request the agent has already answered is not still
+ * waiting on them. Steps 7's Undo is what clears the decision and hands the slot
+ * back to `live`.
+ *
+ * @param string $state   State resolved so far.
+ * @param int    $user_id User the slot is being resolved for.
+ * @return string
+ */
+function ensurance_dashboard_decided_slot( $state, $user_id ) {
+    return ( '' !== ensurance_dashboard_decision( $user_id ) ) ? 'decided' : $state;
+}
+add_filter( 'ensurance_dashboard_priority_state', 'ensurance_dashboard_decided_slot', 10, 2 );
+
+/**
+ * Handles the Accept / Pass post from Today's live request card.
+ *
+ * Step 6 of templates/agent-dashboard/build-steps.md. The design's buttons flip a
+ * component's state; there is no component here, so the decision is an ordinary
+ * form post — which means it works with JavaScript off, is announced as a button
+ * either way, and cannot be triggered by a link a shopper or a crawler follows.
+ *
+ * POST-REDIRECT-GET: the handler redirects rather than rendering, so the decided
+ * slot lands on a clean URL and a refresh cannot decide the same request twice.
+ *
+ * WHERE THE DECISION GOES depends on where the request came from, and the rule is
+ * that they match: a previewed request (`?slot=live`) produces a previewed
+ * decision, carried in the URL and written nowhere, because the request it is
+ * about was a sample. A real request — one the `ensurance_dashboard_live_request`
+ * filter supplied — is recorded (ensurance_dashboard_record_decision).
+ *
+ * A failed or expired nonce returns WITHOUT deciding and WITHOUT redirecting:
+ * the card renders again, still awaiting a decision, which is the truth. That is
+ * better than WordPress's "link expired" interstitial for a control an agent
+ * pressed deliberately.
+ */
+function ensurance_dashboard_handle_decision() {
+    // Cheapest test first — this runs on every front-end request.
+    if ( ! isset( $_POST['dash_decision'] ) || ! is_page( 'dashboard' ) || ! is_user_logged_in() ) {
+        return;
+    }
+
+    $decision = sanitize_key( wp_unslash( $_POST['dash_decision'] ) );
+
+    if ( ! in_array( $decision, ensurance_dashboard_decisions(), true ) ) {
+        return;
+    }
+
+    $nonce = isset( $_POST['dash_decide_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['dash_decide_nonce'] ) ) : '';
+
+    if ( ! wp_verify_nonce( $nonce, 'ensurance_dashboard_decide' ) ) {
+        return;
+    }
+
+    // The card's form posts to its own URL, so `?slot=live` is still readable
+    // here — which is how a previewed decision is told from a real one.
+    if ( 'live' === ensurance_dashboard_priority_preview() ) {
+        $target = add_query_arg(
+            array(
+                'slot'     => 'decided',
+                'decision' => $decision,
+            ),
+            home_url( '/dashboard/' )
+        );
+    } else {
+        ensurance_dashboard_record_decision( $decision );
+        $target = home_url( '/dashboard/' );
+    }
+
+    wp_safe_redirect( $target );
+    exit;
+}
+add_action( 'template_redirect', 'ensurance_dashboard_handle_decision' );
+
+/**
+ * Where the live card's Accept / Pass form posts (raw — esc_url at output).
+ *
+ * Its own URL, preview arg and all: the handler reads `?slot=live` back off the
+ * post to tell a previewed decision from a real one. Nothing else is carried —
+ * `?view=` is not, because Today is where the card is and where the decision
+ * lands.
+ *
+ * @return string
+ */
+function ensurance_dashboard_decision_action() {
+    $action = home_url( '/dashboard/' );
+
+    if ( 'live' === ensurance_dashboard_priority_preview() ) {
+        $action = add_query_arg( 'slot', 'live', $action );
+    }
+
+    return $action;
+}
+
 // ============================================================================
 // 2b-v-a4. FOUNDING AGENT PLAN SELECTION — SIGN-UP FUNNEL MEMORY
 // ============================================================================

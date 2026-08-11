@@ -31,6 +31,12 @@
  * card, rendered by components/dashboard-slot-live.php from the request
  * ensurance_dashboard_live_request() returns.
  *
+ * STEP 6 gives that card its Accept / Pass controls, which is the first thing in
+ * the product that MOVES the slot: either button posts, and the slot comes back
+ * `decided` (ensurance_dashboard_decided_slot). `decided` is still Step 4's
+ * labeled box until Step 7 builds its confirmation panel — but it is now
+ * reachable by using the card rather than only by previewing it.
+ *
  * NOTHING renders when the state is somehow not one of the four. The step is
  * explicit that there is no fallback branch — no "unknown state" box, and never
  * two states at once. The live state extends that rule to its data: a slot that

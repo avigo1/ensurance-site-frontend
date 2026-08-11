@@ -675,6 +675,10 @@ html body:has(.dashboard-shell) .site-footer {
   --req-text-muted: rgba(255, 255, 255, 0.6);
   --req-text-faint: rgba(255, 255, 255, 0.45);
   --req-border: rgba(255, 255, 255, 0.14);
+  /* The Pass button's edge and its hover wash — a step up from the tiles'
+     0.14, because a control has to read as pressable where a tile does not. */
+  --req-border-strong: rgba(255, 255, 255, 0.28);
+  --req-wash: rgba(255, 255, 255, 0.1);
   /* The design system's --dark-accent (#34D399), which home.css does not
      carry: --accent (#2b8673) is a CTA green mixed for white surfaces and
      goes muddy on navy. This is the same mint the design uses for every
@@ -760,10 +764,10 @@ html body:has(.dashboard-shell) .site-footer {
    with three facts leaves no empty track) and reflows to two-up, then one-up,
    as the column narrows — no media query needed.
 
-   margin: 0 resets the browser's <dl> default AND closes the design's 22px
-   below this grid: that space belongs to the Accept / Pass row, which is
-   Step 6. The card's bottom padding is what holds the tiles off the edge
-   until then. */
+   margin: 0 resets the browser's <dl> default; the design's 22px below this
+   grid is carried by the Accept / Pass row that follows it (see
+   .dash-request__decide below), so the space belongs to whichever element is
+   actually there. */
 .dash-request__facts {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -801,6 +805,94 @@ html body:has(.dashboard-shell) .site-footer {
   font-weight: var(--weight-regular);
   line-height: var(--leading-snug);
   color: var(--req-text);
+}
+
+/* ── Today — live request: Accept and Pass ───────────────────────────
+   Step 6 of templates/agent-dashboard/build-steps.md, rendered by the form at
+   the end of components/dashboard-slot-live.php.
+
+   TWO CONTROLS OF EQUAL WEIGHT. Both are .btn from home.css, so they share a
+   height, a radius, a font, a weight and a press — the only difference
+   between them is fill: Accept takes the site's primary (accent green,
+   .btn-primary), Pass the same button outlined for a dark surface. Nothing
+   below shrinks Pass, greys it, drops it out of the row or turns it into a
+   text link. Passing is a correct answer to a request an agency cannot serve,
+   and a card that made it feel like giving up would push agents into
+   accepting work they cannot do.
+
+   "Outlined on dark" is the same variant home.css is missing for the rail's
+   .dash-signout, and it is built the same way: .btn supplies the shape, and
+   the colors come from the surface's own translucent whites rather than
+   literal values, so the pair recolors with the card. */
+.dash-request__decide {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  /* The design's 12px, between the two buttons and between them and the
+     note. */
+  gap: 12px;
+  /* …and its 22px above the row. Held here rather than under the fact tiles
+     so the space belongs to whatever is actually there — a request with
+     fewer facts, or none, still spaces correctly. */
+  margin-top: 22px;
+}
+
+/* The exception: with no fact tiles the row follows the headline directly,
+   and the headline already carries that 22px. */
+.dash-request__title + .dash-request__decide {
+  margin-top: 0;
+}
+
+/* These are <button>s, not the <a>s .btn usually dresses, so clear the UA's
+   own control chrome and let both start from .btn alone. */
+.dash-request__accept,
+.dash-request__pass {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.dash-request__pass {
+  background: transparent;
+  color: var(--req-text);
+  border-color: var(--req-border-strong);
+}
+
+.dash-request__pass:hover,
+.dash-request__pass:focus-visible {
+  background: var(--req-wash);
+  border-color: var(--req-text-muted);
+  color: var(--req-text);
+}
+
+/* --focus-ring is --accent, the CTA green mixed for white surfaces; on navy
+   it all but disappears. The ring takes the card's own mint instead — the
+   same substitution the eyebrow makes — and both buttons state it, so the
+   pair keeps one focus treatment. */
+.dash-request__accept:focus-visible,
+.dash-request__pass:focus-visible {
+  outline: 2px solid var(--req-accent);
+  outline-offset: 2px;
+}
+
+/* The one line beside the buttons: what accepting unlocks, what passing does.
+   It sits IN the row rather than under it, so it reads as a caption on the
+   pair and not as a warning attached to either one.
+
+   The design's rgba(255,255,255,.5) falls between the card's two muted
+   values; this takes the brighter --req-text-muted (0.6), because it is the
+   only place the card says what pressing either button does and it is already
+   the smallest type on the surface. */
+.dash-request__note {
+  margin: 0;
+  /* The design's 280px — keeps the sentence a compact block beside the
+     buttons instead of a line running the width of the card. */
+  max-width: 280px;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  /* Between --leading-snug (1.25) and --leading-body (1.65); the design sets
+     1.45 for this block. */
+  line-height: 1.45;
+  color: var(--req-text-muted);
 }
 
 /* ── Page background over parent-theme / plugin globals ──────────────
