@@ -60,9 +60,34 @@
 // they were headed so the login flow can send them back. Must run before any
 // output (get_header) so the redirect headers are still sendable.
 if ( ! is_user_logged_in() ) {
+	// Carry the page's own query args through the login round-trip, so a deep
+	// link survives it: /dashboard/?view=requests comes back to Requests, and
+	// /dashboard/?slot=live comes back to the state a reviewer was looking at.
+	// Sending everyone to the bare /dashboard/ instead made a shared link
+	// silently land on Today, which reads as the link having been ignored.
+	//
+	// Rebuilt from the two args this page understands rather than echoed from
+	// REQUEST_URI: sanitize_key() on each means nothing from the request can
+	// reach the URL unfiltered, and an arg the page does not use cannot ride
+	// along. page-login.php validates the whole thing again with
+	// wp_validate_redirect() before it becomes the post-login destination.
+	$dashboard_args = array();
+
+	foreach ( array( 'view', 'slot' ) as $dashboard_arg ) {
+		if ( ! empty( $_GET[ $dashboard_arg ] ) && is_string( $_GET[ $dashboard_arg ] ) ) {
+			$dashboard_args[ $dashboard_arg ] = sanitize_key( wp_unslash( $_GET[ $dashboard_arg ] ) );
+		}
+	}
+
+	$dashboard_target = home_url( '/dashboard/' );
+
+	if ( ! empty( $dashboard_args ) ) {
+		$dashboard_target = add_query_arg( $dashboard_args, $dashboard_target );
+	}
+
 	$dashboard_login = add_query_arg(
 		'redirect_to',
-		rawurlencode( home_url( '/dashboard/' ) ),
+		rawurlencode( $dashboard_target ),
 		home_url( '/login/' )
 	);
 	wp_safe_redirect( $dashboard_login );
