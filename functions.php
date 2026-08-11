@@ -1062,6 +1062,136 @@ function ensurance_dashboard_timestamp( $timestamp = 0 ) {
     return (string) apply_filters( 'ensurance_dashboard_timestamp', $stamp, $timestamp );
 }
 
+/**
+ * The four states Today's priority slot can be in — THE list.
+ *
+ * Step 4 of templates/agent-dashboard/build-steps.md. The slot is the one
+ * surface under the greeting that shows the single thing needing the agent's
+ * attention, and it shows exactly ONE of these at a time — the design's
+ * `deskState` enum plus the decided state its Accept/Pass buttons produce:
+ *
+ *   live     A matched request is waiting on a decision (Steps 5–6).
+ *   setup    The agent is not matchable yet — something blocks matching (Step 9).
+ *   quiet    Matching is on and nothing is waiting (Step 8).
+ *   decided  The agent just accepted or passed (Step 7).
+ *
+ * In the design's own order of appearance in the template. Keys are the values
+ * the slot is driven by (and the ones `?slot=` accepts); values are the plain
+ * labels the placeholder box shows until each state's real surface is built.
+ *
+ * Three things read this one array: ensurance_dashboard_priority_state()
+ * validates against it, the preview toggle accepts only its keys, and
+ * components/dashboard-view-today.php looks up the label to render. A state
+ * therefore cannot exist in one place and not another.
+ *
+ * @return array<string,string> State slug => placeholder label, in design order.
+ */
+function ensurance_dashboard_priority_states() {
+    return array(
+        'live'    => 'Live request',
+        'setup'   => 'Setup',
+        'quiet'   => 'Quiet',
+        'decided' => 'Decided',
+    );
+}
+
+/**
+ * Which of those four states Today's priority slot is showing.
+ *
+ * THE single value the slot is driven by — the server-side equivalent of the
+ * design's `deskState` prop. components/dashboard-view-today.php renders the one
+ * state this returns and nothing else: no stacking, and no fallback branch that
+ * paints when none of the four match.
+ *
+ * WHAT IT RESOLVES TO TODAY. Nothing in the product produces requests or records
+ * decisions yet (see ensurance_dashboard_request_count), and an agent cannot be
+ * matched until their service areas and coverage types exist — which no funnel
+ * captures. So a founding agent is genuinely in `setup`, and that is what this
+ * returns; `live` only when a request really is waiting, which is where the real
+ * queue will light it up with no change here. `quiet` and `decided` are reachable
+ * through the filter and the preview toggle below until Steps 7–9 give them real
+ * triggers. That is the honest reading of the current product, not a placeholder
+ * chosen to look good.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return string One of the keys of ensurance_dashboard_priority_states().
+ */
+function ensurance_dashboard_priority_state( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $states  = ensurance_dashboard_priority_states();
+
+    $state = ( ensurance_dashboard_request_count( $user_id ) > 0 ) ? 'live' : 'setup';
+
+    /**
+     * Filter the state of the dashboard's priority slot.
+     *
+     * The hook the real queue / onboarding checks attach to when they exist.
+     * Values outside ensurance_dashboard_priority_states() are ignored.
+     *
+     * @param string $state   Resolved state slug.
+     * @param int    $user_id User the slot is being resolved for.
+     */
+    $filtered = (string) apply_filters( 'ensurance_dashboard_priority_state', $state, $user_id );
+
+    if ( isset( $states[ $filtered ] ) ) {
+        $state = $filtered;
+    }
+
+    // The dev toggle wins over everything above — it exists to look at a state
+    // the product cannot currently produce.
+    $preview = ensurance_dashboard_priority_preview();
+
+    return '' !== $preview ? $preview : $state;
+}
+
+/**
+ * The priority slot's dev/preview override — `?slot=quiet` on /dashboard/.
+ *
+ * Step 4 asks for the slot's driving value to be exposed as a tweak toggle, the
+ * way the design's props panel exposes `deskState`. There is no props panel on a
+ * WordPress page, so the equivalent is a query arg: /dashboard/?slot=setup shows
+ * the setup state, ?slot=decided the decided one, and so on through
+ * ensurance_dashboard_priority_states(). Anything else is ignored.
+ *
+ * WHO GETS IT: administrators only, by default. The states carry real-sounding
+ * request, billing and contact copy as they are built out (Steps 5–9), and an
+ * agent stumbling onto ?slot=live would be looking at a fabricated request. The
+ * capability is filterable so a staging reviewer signed in as a plain agent can
+ * be granted it deliberately:
+ *
+ *     add_filter( 'ensurance_dashboard_priority_preview_cap', fn() => 'read' );
+ *
+ * The override lives in the URL rather than in state, so it is display-only,
+ * shareable, and gone the moment it is dropped from the address bar. Note the
+ * rail's links do not carry it: switching views and coming back to Today returns
+ * the slot to its resolved state.
+ *
+ * @return string A valid state slug, or '' when no preview is in effect.
+ */
+function ensurance_dashboard_priority_preview() {
+    // Read-only presentation state — no side effects, so no nonce to verify.
+    // Same reasoning as ensurance_dashboard_current_view().
+    if ( empty( $_GET['slot'] ) ) {
+        return '';
+    }
+
+    /**
+     * Filter the capability required to preview a priority-slot state.
+     *
+     * @param string $capability Capability checked before honoring `?slot=`.
+     */
+    $capability = (string) apply_filters( 'ensurance_dashboard_priority_preview_cap', 'manage_options' );
+
+    if ( ! current_user_can( $capability ) ) {
+        return '';
+    }
+
+    $slot   = sanitize_key( wp_unslash( $_GET['slot'] ) );
+    $states = ensurance_dashboard_priority_states();
+
+    return isset( $states[ $slot ] ) ? $slot : '';
+}
+
 // ============================================================================
 // 2b-v-a4. FOUNDING AGENT PLAN SELECTION — SIGN-UP FUNNEL MEMORY
 // ============================================================================

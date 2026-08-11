@@ -10,9 +10,10 @@
    Built incrementally against templates/agent-dashboard/AgentDashboard.dc.html
    in the design system, one step of templates/agent-dashboard/build-steps.md
    at a time. Landed so far: the two-column shell, the left rail with its four
-   nav rows (Step 1), the view containers and their switching (Step 2), and
-   Today's greeting row (Step 3). Still to come, in that file's order: Today's
-   one-at-a-time priority slot, its founding-access timeline and reference
+   nav rows (Step 1), the view containers and their switching (Step 2),
+   Today's greeting row (Step 3), and its one-at-a-time priority slot as a
+   labeled placeholder box (Step 4). Still to come, in that file's order: the
+   slot's four real states, Today's founding-access timeline and reference
    columns, then the other three views. Requests, Agency Profile and Account
    render EMPTY containers until then — that is the plan's end state for this
    step, not an oversight.
@@ -594,6 +595,49 @@ html body:has(.dashboard-shell) .site-footer {
   color: var(--text-faint);
   /* Keep the date and time on one line — it wraps as a block above instead. */
   white-space: nowrap;
+}
+
+/* ── Today — priority slot ───────────────────────────────────────────
+   Step 4 of templates/agent-dashboard/build-steps.md. The one-surface-at-
+   a-time container under the greeting: it holds exactly one of the four
+   states (live / setup / quiet / decided) that
+   ensurance_dashboard_priority_state() resolves, and PHP renders only that
+   one — so there is nothing here to hide, stack or reset.
+
+   PLACEHOLDER, deliberately. Every state is the same plain labeled box
+   until Steps 5–9 build the real surfaces, at which point each takes its
+   own rule off the [data-slot] attribute — live and setup go dark navy
+   (--navy-800), decided goes accent-tinted, quiet stays this light card.
+   The shared box below is what they will diverge FROM, so its geometry
+   already matches the design's cards: the same 20px radius and the same
+   14px gap to whatever follows.
+
+   Radius is the design's own 20px, between --radius-icon (16px) and
+   --radius-card (32px) — no token sits at that value. */
+.dash-slot {
+  display: flex;
+  align-items: center;
+  /* Gives the empty placeholder the presence the real card will have,
+     rather than collapsing to a single line of label. */
+  min-height: 132px;
+  padding: var(--space-5) var(--space-6);
+  background: var(--surface-card);
+  border: 1px solid var(--border-soft);
+  border-radius: 20px;
+  /* The design's 14px between the slot and the founding-access timeline
+     that lands under it in Step 10. */
+  margin-bottom: 14px;
+}
+
+/* Matched to .dash-view__eyebrow / .dash-today__stamp — the mono uppercase
+   label the design uses for every kicker on this page. */
+.dash-slot__label {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--secondary);
 }
 
 /* ── Page background over parent-theme / plugin globals ──────────────

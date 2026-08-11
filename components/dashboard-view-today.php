@@ -19,8 +19,21 @@
  * assets/dashboard.css, sized off the design's Today header rather than the
  * generic view header.
  *
- * NEXT (Step 4): the one-surface-at-a-time priority slot goes directly below
- * this header, inside the same file.
+ * STEP 4 adds the priority slot directly below that header — the one-surface-at-
+ * a-time container that shows the single thing needing the agent's attention.
+ * It renders exactly ONE of the four states in
+ * ensurance_dashboard_priority_states(), chosen by the single value
+ * ensurance_dashboard_priority_state() returns. Each is a plain labeled box for
+ * now; Steps 5–9 replace them one at a time with their real surfaces (live
+ * request card, decided panel, quiet card, setup card).
+ *
+ * NOTHING renders when the state is somehow not one of the four. The step is
+ * explicit that there is no fallback branch — no "unknown state" box, and never
+ * two states at once.
+ *
+ * PREVIEWING: /dashboard/?slot=quiet (and setup / decided / live) forces a
+ * state for administrators, standing in for the design's props panel. See
+ * ensurance_dashboard_priority_preview().
  *
  * Source: the header block of the Today view in
  * templates/agent-dashboard/AgentDashboard.dc.html (Ensurance Design System).
@@ -32,6 +45,14 @@
 $dash_now      = time();
 $dash_greeting = ensurance_dashboard_greeting( 0, $dash_now );
 $dash_stamp    = ensurance_dashboard_timestamp( $dash_now );
+
+// The one value the slot below is driven by, and the label that goes with it.
+// The lookup is a guard, not a fallback state: the resolver only ever returns a
+// key of the registry, and if that ever stops being true the slot renders
+// nothing rather than inventing a fifth state.
+$dash_slot       = ensurance_dashboard_priority_state();
+$dash_slot_label = ensurance_dashboard_priority_states();
+$dash_slot_label = isset( $dash_slot_label[ $dash_slot ] ) ? $dash_slot_label[ $dash_slot ] : '';
 ?>
 <div class="dash-today__header">
 
@@ -46,3 +67,21 @@ $dash_stamp    = ensurance_dashboard_timestamp( $dash_now );
 	<time class="dash-today__stamp" datetime="<?php echo esc_attr( wp_date( 'c', $dash_now ) ); ?>"><?php echo esc_html( $dash_stamp ); ?></time>
 
 </div>
+
+<?php
+/*
+ * PRIORITY SLOT. One container, one state — the design's `sc-if` chain over
+ * deskState, which shows a single card and never two.
+ *
+ * The state slug rides on data-slot rather than a modifier class: it IS the
+ * value driving the slot, so CSS hooks it as [data-slot="live"] when Steps 5–9
+ * give each state its own treatment (the live and setup states go dark navy;
+ * quiet and decided stay light). Nothing needs a class that only mirrors it.
+ */
+if ( '' !== $dash_slot_label ) :
+	?>
+	<section class="dash-slot" data-slot="<?php echo esc_attr( $dash_slot ); ?>" aria-label="What needs your attention">
+		<p class="dash-slot__label"><?php echo esc_html( $dash_slot_label ); ?></p>
+	</section>
+	<?php
+endif;
