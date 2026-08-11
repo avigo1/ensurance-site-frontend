@@ -1153,11 +1153,20 @@ function ensurance_dashboard_priority_state( $user_id = 0 ) {
  * the setup state, ?slot=decided the decided one, and so on through
  * ensurance_dashboard_priority_states(). Anything else is ignored.
  *
- * WHO GETS IT: administrators only, by default. The states carry real-sounding
- * request, billing and contact copy as they are built out (Steps 5–9), and an
- * agent stumbling onto ?slot=live would be looking at a fabricated request. The
- * capability is filterable so a staging reviewer signed in as a plain agent can
- * be granted it deliberately:
+ * WHO GETS IT: on PRODUCTION, administrators only. The states carry real-
+ * sounding request, billing and contact copy as they are built out (Steps 5–9),
+ * and an agent stumbling onto ?slot=live would be looking at a fabricated
+ * request.
+ *
+ * On STAGING (and any other non-production environment) that drops to any
+ * signed-in user, because the whole point of staging19 is reviewing surfaces the
+ * product cannot produce yet — and every reviewer there is a teammate, on a site
+ * whose data is not real. wp_get_environment_type() is what tells the two apart:
+ * SiteGround's staging system defines WP_ENVIRONMENT_TYPE = 'staging' in that
+ * site's wp-config.php, and production reports the 'production' default.
+ *
+ * Either way the capability stays filterable, so a single reviewer can be
+ * granted or denied it without touching this function:
  *
  *     add_filter( 'ensurance_dashboard_priority_preview_cap', fn() => 'read' );
  *
@@ -1175,12 +1184,16 @@ function ensurance_dashboard_priority_preview() {
         return '';
     }
 
+    // 'read' is "any signed-in user" — /dashboard/ has already bounced everyone
+    // else to /login by the time this runs.
+    $default_cap = ( 'production' === wp_get_environment_type() ) ? 'manage_options' : 'read';
+
     /**
      * Filter the capability required to preview a priority-slot state.
      *
      * @param string $capability Capability checked before honoring `?slot=`.
      */
-    $capability = (string) apply_filters( 'ensurance_dashboard_priority_preview_cap', 'manage_options' );
+    $capability = (string) apply_filters( 'ensurance_dashboard_priority_preview_cap', $default_cap );
 
     if ( ! current_user_can( $capability ) ) {
         return '';
