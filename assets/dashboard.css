@@ -156,14 +156,16 @@ html body:has(.dashboard-shell) .site-footer {
    comes from the rail tokens on .dash-sidebar above; the handful of raw
    pixel values below are the design's own row measurements, which the
    shared scales have no equivalents for (each is noted where it appears). */
-/* The design's own 3px. An earlier iteration opened this to 12px because
-   seven rows at that gap crowded each other; the rail carries four now, so
-   the design's tight stack reads as one group again — which is the point of
-   it. */
+/* DELIBERATELY NOT the design's 3px. That value reads as scrunched on the
+   real rail: four rows on a 264px column (wider than the design's 248px) sit
+   almost touching, and the hover wash of one row runs into the next. 12px
+   gives each row its own space without breaking the four apart — the shared
+   indent and icon column still read them as one group. Row height, padding
+   and radius stay exactly as designed. */
 .dash-nav {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: var(--space-3);
 }
 
 .dash-nav__item {
@@ -596,14 +598,11 @@ html body:has(.dashboard-page) .mobile-sticky-cta {
 
   /* The rail is a horizontal bar here, so the nav stack has to lie down with
      it. Wrapping keeps every item reachable rather than letting them overflow
-     the bar. The desktop 3px is vertical rhythm between stacked rows; laid
-     out side by side the same value runs the labels together, so open it up
-     — this is the one place the design has nothing to say, since its rail
-     never unstacks. */
+     the bar. The 12px gap carries over unchanged — it reads the same between
+     rows side by side as it does stacked. */
   .dash-nav {
     flex-direction: row;
     flex-wrap: wrap;
-    gap: var(--space-2);
   }
 
   /* Touch surface at this width, so raise the row from the design's ~41px to
