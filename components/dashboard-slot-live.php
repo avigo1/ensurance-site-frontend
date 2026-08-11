@@ -69,8 +69,13 @@ $countdown = ensurance_dashboard_countdown( $request['expires_at'] );
 			<?php
 			// The visible text is a duration; the <time> carries the moment it
 			// counts down to, in the site's timezone with the offset attached.
+			//
+			// The <span> is not decoration: the row is a flex container, so an
+			// unwrapped <time> would become a second flex item and take the
+			// row's 7px gap between "Expires in" and the countdown. Wrapping
+			// keeps the sentence one item, spaced by its own space character.
 			?>
-			Expires in <time datetime="<?php echo esc_attr( wp_date( 'c', $request['expires_at'] ) ); ?>"><?php echo esc_html( $countdown ); ?></time>
+			<span>Expires in <time datetime="<?php echo esc_attr( wp_date( 'c', $request['expires_at'] ) ); ?>"><?php echo esc_html( $countdown ); ?></time></span>
 		</p>
 	<?php endif; ?>
 
