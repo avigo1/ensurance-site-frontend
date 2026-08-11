@@ -72,7 +72,13 @@ if ( ! is_user_logged_in() ) {
 get_header( 'agent' );
 ?>
 
-<div class="dashboard-shell">
+<?php
+// The slug assets/dashboard.js falls back to when the URL names a view that
+// has no container. Published as an attribute rather than hardcoded in the
+// script so PHP stays the single source of truth for "where an agent lands"
+// — see ensurance_dashboard_default_view().
+?>
+<div class="dashboard-shell" data-default-view="<?php echo esc_attr( ensurance_dashboard_default_view() ); ?>">
 
 <?php get_template_part( 'components/dashboard-sidebar' ); ?>
 
@@ -87,7 +93,7 @@ get_header( 'agent' );
  * document.
  *
  * $dashboard_view lights the container matching the URL, so a deep link
- * (/dashboard/?view=access), a refresh, or a JS-less browser all paint the
+ * (/dashboard/?view=requests), a refresh, or a JS-less browser all paint the
  * right view immediately with no flash of the wrong one. dashboard.js takes
  * over from there; without it the rail's links simply navigate as before.
  *
@@ -99,8 +105,10 @@ get_header( 'agent' );
  * fade, history, deep links) keys off the entry's `view` slug.
  *
  * A view whose content is more than eyebrow / title / intro names a `part`
- * in that array and puts its markup there — see
- * components/dashboard-view-dashboard.php.
+ * in that array and puts its markup in that template part instead. None do
+ * yet: Step 1 of templates/agent-dashboard/build-steps.md rebuilds the rail
+ * and leaves the main column empty, so all four containers render empty and
+ * fill in one step at a time from Step 2 on.
  *
  * tabindex="-1" lets dashboard.js move focus here after a click without
  * putting the container in the tab order.
@@ -112,11 +120,11 @@ $dashboard_view  = ensurance_dashboard_current_view();
 // ensurance_dashboard_current_view() passes unknown slugs straight through
 // (it sanitizes, it does not validate). Harmless when nothing consumed the
 // value, but an unrecognized `?view=` would match no container and leave the
-// column blank — so fall back to the default view here. The list comes from
-// the registry, so it cannot fall out of step with the containers.
-// assets/dashboard.js applies the same fallback client-side.
+// column blank — so fall back to the default view here. Both the list and the
+// fallback come from the registry, so neither can fall out of step with the
+// containers. assets/dashboard.js applies the same fallback client-side.
 if ( ! in_array( $dashboard_view, $dashboard_views, true ) ) {
-	$dashboard_view = 'dashboard';
+	$dashboard_view = ensurance_dashboard_default_view();
 }
 
 foreach ( $dashboard_items as $dash_item ) :
@@ -132,13 +140,19 @@ foreach ( $dashboard_items as $dash_item ) :
 	}
 
 	// A `part` that has not been written yet falls back to the generic
-	// eyebrow / title / intro rather than rendering an empty container, so a
-	// view can be listed before its real markup exists.
+	// eyebrow / title / intro, so a view can be listed before its real markup
+	// exists.
 	$dash_has_part = ( '' !== $dash_item['part'] && locate_template( $dash_item['part'] . '.php' ) );
 
-	// Views are titled independently of their rail row in the design
-	// ("Eligible Requests" → "Eligible Request Previews"); the title is the
-	// better label, but a part-rendered view may not set one.
+	// …and a view with neither a part nor a title renders an EMPTY container.
+	// That is the state Step 1 of templates/agent-dashboard/build-steps.md
+	// asks for — the rail is rebuilt, the main column stays empty — and it is
+	// what keeps the containers (and therefore the in-place view switching)
+	// in place while the four views are built out one step at a time.
+	$dash_has_header = ( '' !== $dash_item['title'] || '' !== $dash_item['intro'] || '' !== $dash_item['eyebrow'] );
+
+	// A view may be titled independently of its rail row; the title is the
+	// better label, but a part-rendered or not-yet-built view may not set one.
 	$dash_label = ( '' !== $dash_item['title'] ) ? $dash_item['title'] : $dash_item['label'];
 	?>
 
@@ -152,11 +166,19 @@ foreach ( $dashboard_items as $dash_item ) :
 
 			<?php get_template_part( $dash_item['part'] ); ?>
 
-		<?php else : ?>
+		<?php elseif ( $dash_has_header ) : ?>
 
-			<div class="dash-view__eyebrow"><?php echo esc_html( $dash_item['eyebrow'] ); ?></div>
-			<h1 class="dash-view__title"><?php echo esc_html( $dash_item['title'] ); ?></h1>
-			<p class="dash-view__intro"><?php echo esc_html( $dash_item['intro'] ); ?></p>
+			<?php if ( '' !== $dash_item['eyebrow'] ) : ?>
+				<div class="dash-view__eyebrow"><?php echo esc_html( $dash_item['eyebrow'] ); ?></div>
+			<?php endif; ?>
+
+			<?php if ( '' !== $dash_item['title'] ) : ?>
+				<h1 class="dash-view__title"><?php echo esc_html( $dash_item['title'] ); ?></h1>
+			<?php endif; ?>
+
+			<?php if ( '' !== $dash_item['intro'] ) : ?>
+				<p class="dash-view__intro"><?php echo esc_html( $dash_item['intro'] ); ?></p>
+			<?php endif; ?>
 
 		<?php endif; ?>
 	</section>

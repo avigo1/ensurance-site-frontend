@@ -26,12 +26,15 @@
 (function () {
   'use strict';
 
-  var DEFAULT_VIEW = 'dashboard';
-
   var shell = document.querySelector('.dashboard-shell');
   if (!shell) {
     return;
   }
+
+  // The view a bare /dashboard/ (or an unknown ?view=) resolves to. Published
+  // by page-dashboard.php from ensurance_dashboard_default_view(), so this
+  // file cannot drift from the rail's first row the way a hardcoded slug did.
+  var DEFAULT_VIEW = shell.getAttribute('data-default-view') || '';
 
   var items = Array.prototype.slice.call(shell.querySelectorAll('.dash-nav__item'));
   var views = Array.prototype.slice.call(shell.querySelectorAll('.dash-view'));

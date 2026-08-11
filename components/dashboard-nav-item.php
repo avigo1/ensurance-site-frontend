@@ -39,6 +39,12 @@
  *                           injection point. Use `currentColor` for strokes and
  *                           fills so the glyph inherits the row's text color
  *                           through every state.
+ *   badge int     optional  Count shown in an accent pill at the far right of
+ *                           the row. ZERO RENDERS NOTHING — the design hides
+ *                           the badge rather than showing a "0", so a row with
+ *                           an empty queue is indistinguishable from one that
+ *                           never carries a count. Anything below zero is
+ *                           treated the same way.
  *
  * Styling lives in assets/dashboard.css (`.dash-nav__item`); the rail's
  * translucent-white values are tokenized on `.dash-sidebar` there.
@@ -51,6 +57,7 @@ $item = wp_parse_args(
 		'label' => '',
 		'href'  => '',
 		'icon'  => '',
+		'badge' => 0,
 	)
 );
 
@@ -61,6 +68,8 @@ if ( '' === $item['label'] || '' === $item['href'] ) {
 }
 
 $is_active = ( '' !== $item['view'] && $item['view'] === ensurance_dashboard_current_view() );
+
+$badge = (int) $item['badge'];
 
 // Allowlist covering the stroke-based icon set the design uses (Lucide-style:
 // path / circle / rect / line / polyline / polygon inside an <svg>).
@@ -91,9 +100,29 @@ $icon_tags = array(
 	href="<?php echo esc_url( $item['href'] ); ?>"
 	<?php echo $is_active ? ' aria-current="page"' : ''; ?>
 >
-	<?php if ( '' !== $item['icon'] ) : ?>
-		<span class="dash-nav__icon" aria-hidden="true"><?php echo wp_kses( $item['icon'], $icon_tags ); ?></span>
-	<?php endif; ?>
+	<?php // Icon and label are one group so the badge can sit opposite them; the design pairs them the same way on its Requests row. ?>
+	<span class="dash-nav__main">
+		<?php if ( '' !== $item['icon'] ) : ?>
+			<span class="dash-nav__icon" aria-hidden="true"><?php echo wp_kses( $item['icon'], $icon_tags ); ?></span>
+		<?php endif; ?>
 
-	<span class="dash-nav__label"><?php echo esc_html( $item['label'] ); ?></span>
+		<span class="dash-nav__label"><?php echo esc_html( $item['label'] ); ?></span>
+	</span>
+
+	<?php
+	/*
+	 * The count pill. The number alone is meaningless out of context — a
+	 * screen reader would announce "Requests 3" and leave three of what to
+	 * guess — so the visible digit is followed by text that only assistive
+	 * tech hears (.sr-only, assets/home.css). aria-label is deliberately not
+	 * used here: it is unreliable on a plain <span>, and it would also
+	 * replace the row's own accessible name if it were moved up to the <a>.
+	 */
+	if ( $badge > 0 ) :
+		?>
+		<span class="dash-nav__badge">
+			<?php echo esc_html( number_format_i18n( $badge ) ); ?>
+			<span class="sr-only"> awaiting your decision</span>
+		</span>
+	<?php endif; ?>
 </a>

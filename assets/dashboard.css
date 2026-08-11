@@ -8,11 +8,12 @@
    design tokens — no hardcoded brand values.
 
    Built incrementally against templates/agent-dashboard/AgentDashboard.dc.html
-   in the design system. Landed so far: the two-column shell, the left rail,
-   the view containers, and the Dashboard view's header. Still to come: that
-   view's badge row, stat tiles, action cards and "Accept or Pass" panel,
-   then the six remaining views' real contents (they currently render the
-   generic eyebrow/title/intro from ensurance_dashboard_views()).
+   in the design system, one step of templates/agent-dashboard/build-steps.md
+   at a time. Landed so far: the two-column shell, the left rail with its four
+   nav rows (Step 1), and the view containers. Still to come, in that file's
+   order: the four views' real contents, starting with Today's greeting and
+   its one-at-a-time priority slot. The main column renders EMPTY containers
+   until then — that is Step 1's specified end state, not an oversight.
    =================================================================== */
 
 /* ── Two-column shell ───────────────────────────────────────────────
@@ -67,9 +68,10 @@ html body:has(.dashboard-shell) .site-footer {
    the bottom by its own `margin-top: auto`.
 
    position: sticky + height: 100vh keeps the rail in view while the
-   content column scrolls. Now that the rail is full — seven rows plus the
-   card — overflow-y: auto gives it its own scrollbar on short viewports
-   rather than letting the card fall off the bottom of the screen. */
+   content column scrolls. overflow-y: auto gives it its own scrollbar on
+   short viewports rather than letting the card fall off the bottom of the
+   screen — four rows clear most screens, but the rail's foot grows as the
+   design's founding-access progress card lands. */
 .dash-sidebar {
   flex: 0 0 264px;
   width: 264px;
@@ -105,7 +107,7 @@ html body:has(.dashboard-shell) .site-footer {
   --rail-text-strong: #ffffff;
   --rail-text-muted: rgba(255, 255, 255, 0.55);
   --rail-wash-hover: rgba(255, 255, 255, 0.07);
-  --rail-wash-active: rgba(255, 255, 255, 0.12);
+  --rail-wash-active: rgba(255, 255, 255, 0.13);
   /* Lighter than either nav wash — the user card is a resting surface, not
      a state, so it must not read as a highlighted row. */
   --rail-wash-card: rgba(255, 255, 255, 0.06);
@@ -145,37 +147,44 @@ html body:has(.dashboard-shell) .site-footer {
 }
 
 /* ── Nav item pattern ────────────────────────────────────────────────
-   The reusable row rendered by components/dashboard-nav-item.php. Defined
-   here ahead of the items themselves so the next iteration only adds
-   get_template_part() calls, not styling.
+   The reusable row rendered by components/dashboard-nav-item.php — one per
+   entry in ensurance_dashboard_views(), so adding a destination is a
+   registry edit and never a styling one.
 
    .dash-nav is the stack; .dash-nav__item is the pattern. Both match
-   `.ens-nav` in templates/agent-dashboard/AgentDashboard.dc.html. All
-   colors come from the rail tokens on .dash-sidebar above — nothing here
-   hardcodes a value. */
-/* The design's `gap:4px` reads as too tight against the 41px rows once the
-   rail carries all seven items — the labels crowd each other and the hover
-   wash of one row nearly touches the next. --space-3 (12px) gives each row
-   its own breathing room while the shared indent and icon column still read
-   the seven as one group. Row height and padding stay exactly as designed. */
+   `.vnav` in templates/agent-dashboard/AgentDashboard.dc.html. Every color
+   comes from the rail tokens on .dash-sidebar above; the handful of raw
+   pixel values below are the design's own row measurements, which the
+   shared scales have no equivalents for (each is noted where it appears). */
+/* The design's own 3px. An earlier iteration opened this to 12px because
+   seven rows at that gap crowded each other; the rail carries four now, so
+   the design's tight stack reads as one group again — which is the point of
+   it. */
 .dash-nav {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: 3px;
 }
 
 .dash-nav__item {
   display: flex;
   align-items: center;
+  /* Icon + label sit left, the count pill right. With no pill the single
+     child lands left either way, so every row shares one rule — the design
+     sets space-between on its Requests row alone for the same reason. */
+  justify-content: space-between;
   gap: var(--space-3);
-  /* 11px/14px straight from the design; with the 15px label this renders a
-     ~41px row on desktop. That is under --tap-min, which the mobile
+  /* 10px/13px straight from the design; with the 14.5px label this renders a
+     ~39px row on desktop. That is under --tap-min, which the mobile
      breakpoint below corrects — the rail is pointer-driven at this width. */
-  padding: 11px 14px;
-  border-radius: var(--radius-input);
+  padding: 10px 13px;
+  /* The design's 10px. home.css's smallest radius token is --radius-input
+     (12px), which visibly rounds more at this row height, so the value is
+     written out — as the rail's other design-specific measurements are. */
+  border-radius: 10px;
   color: var(--rail-text);
   font-family: var(--font-sans);
-  font-size: 15px;
+  font-size: 14.5px;
   font-weight: var(--weight-regular);
   line-height: var(--leading-snug);
   text-decoration: none;
@@ -185,6 +194,16 @@ html body:has(.dashboard-shell) .site-footer {
     background-color var(--duration-fast) var(--ease-out),
     color var(--duration-fast) var(--ease-out),
     transform var(--duration-fast) var(--ease-out);
+}
+
+/* The icon + label pair, so the badge has something to sit opposite.
+   min-width: 0 lets a long label ellipsize instead of pushing the pill off
+   the rail. */
+.dash-nav__main {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
 }
 
 /* home.css styles bare links with the accent green; these rows are rail
@@ -211,11 +230,15 @@ html body:has(.dashboard-shell) .site-footer {
   transform: scale(0.98);
 }
 
-/* Current view. Driven server-side: dashboard-nav-item.php compares its
-   `view` arg against ensurance_dashboard_current_view() and adds is-active
-   (plus aria-current="page"), so the right row is already lit in the
-   initial HTML. Listed after :hover so an active row keeps its stronger
-   wash while the pointer is over it. */
+/* Current view — a persistent state, not a pointer state: the wash is
+   stronger than :hover's and it stays put once the pointer leaves, so the
+   row the agent is on is always the row that reads as selected.
+
+   Driven server-side: dashboard-nav-item.php compares its `view` arg
+   against ensurance_dashboard_current_view() and adds is-active (plus
+   aria-current="page"), so the right row is already lit in the initial
+   HTML. Listed after :hover so an active row keeps its stronger wash while
+   the pointer is over it. */
 .dash-nav__item.is-active,
 .dash-nav__item.is-active:hover,
 .dash-nav__item.is-active:focus-visible {
@@ -232,12 +255,42 @@ html body:has(.dashboard-shell) .site-footer {
 }
 .dash-nav__icon svg {
   display: block;
-  width: 18px;
-  height: 18px;
+  width: 17px;
+  height: 17px;
 }
 
 .dash-nav__label {
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Count badge ─────────────────────────────────────────────────────
+   The accent pill at the right of a row carrying a count (Requests).
+   Rendered ONLY when that count is above zero — see the note in
+   components/dashboard-nav-item.php — so there is no "empty" variant to
+   style here.
+
+   Accent green rather than a rail token: this is the one element on the
+   rail that has to break out of the translucent-white system to be seen,
+   and it is the same accent the design uses. min-width + padding keep a
+   single digit circular and let three digits grow into a pill; the number
+   never shrinks the label, which ellipsizes first. */
+.dash-nav__badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: var(--rail-text-strong);
+  font-size: 11.5px;
+  font-weight: var(--weight-medium);
+  line-height: 1;
 }
 
 /* Colors still change on hover/active — only the motion is dropped. */
@@ -462,10 +515,9 @@ html body:has(.dashboard-shell) .site-footer {
   color: var(--secondary);
 }
 
-/* Same Kadence override .dash-home__title carries — the parent theme
-   prints inline global typography after our stylesheets that colors bare
-   h1 white, which is invisible on this light page. See the memory
-   kadence-white-heading-override. */
+/* The parent theme prints inline global typography after our stylesheets
+   that colors bare h1 white, which is invisible on this light page — hence
+   the `!important`. See the memory kadence-white-heading-override. */
 .dash-view__title {
   margin: 8px 0 22px;
   font-family: var(--font-display);
@@ -515,61 +567,6 @@ html body:has(.dashboard-page) .mobile-sticky-cta {
   display: none;
 }
 
-/* ── Dashboard view header ───────────────────────────────────────────
-   The overview's opening block (components/dashboard-view-dashboard.php).
-   Its own scale rather than the shared .dash-view__* one above: the design
-   opens this view at 40px/900 against the other six views' 32px, and adds
-   a greeting line they do not have.
-
-   The eyebrow is identical across all seven, so this block reuses
-   .dash-view__eyebrow and only styles what differs.
-
-   Values are taken from the `isDashboard` view in
-   templates/agent-dashboard/AgentDashboard.dc.html. Note the two 900
-   weights: home.css's ramp stops at --weight-extrabold (800), so the
-   heaviest cut the design asks for is written out. */
-.dash-home__welcome {
-  margin: var(--space-3) 0 2px;
-  font-family: var(--font-display);
-  font-size: var(--text-xl);
-  font-weight: var(--weight-extrabold);
-  line-height: var(--leading-snug);
-  letter-spacing: var(--tracking-tight);
-  color: var(--accent);
-}
-
-/* The design's flat 40px, floored so it does not overflow the column once
-   the rail unstacks and the inset drops to --container-pad.
-
-   The `!important` is the same Kadence override the other view titles
-   carry — the parent theme prints inline global typography after our
-   stylesheets that colors bare h1 white, which is invisible on this light
-   page. See the memory kadence-white-heading-override. */
-.dash-home__title {
-  margin: 6px 0 var(--space-3);
-  font-family: var(--font-display);
-  font-size: clamp(30px, 4vw, 40px);
-  /* Heavier than --weight-extrabold; see the note above. */
-  font-weight: 900;
-  line-height: var(--leading-tight);
-  letter-spacing: var(--tracking-display);
-  color: var(--text-heading) !important;
-}
-
-/* The bottom margin is the gap to the badge row that lands next, so the
-   header already sits correctly against content that has not been built
-   yet. */
-.dash-home__intro {
-  margin: 0 0 22px;
-  max-width: 640px;
-  font-family: var(--font-sans);
-  font-size: var(--text-md);
-  font-weight: var(--weight-light);
-  line-height: var(--leading-body);
-  color: var(--text-body);
-  text-wrap: pretty;
-}
-
 /* ── Responsive ──────────────────────────────────────────────────────
    Below the tablet breakpoint the rail cannot hold a 264px column beside
    the content, so it unstacks into a full-width navy bar across the top.
@@ -598,11 +595,15 @@ html body:has(.dashboard-page) .mobile-sticky-cta {
   }
 
   /* The rail is a horizontal bar here, so the nav stack has to lie down with
-     it. Wrapping keeps every item reachable once the items land, rather than
-     letting them overflow the bar. */
+     it. Wrapping keeps every item reachable rather than letting them overflow
+     the bar. The desktop 3px is vertical rhythm between stacked rows; laid
+     out side by side the same value runs the labels together, so open it up
+     — this is the one place the design has nothing to say, since its rail
+     never unstacks. */
   .dash-nav {
     flex-direction: row;
     flex-wrap: wrap;
+    gap: var(--space-2);
   }
 
   /* Touch surface at this width, so raise the row from the design's ~41px to

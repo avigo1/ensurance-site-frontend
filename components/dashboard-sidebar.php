@@ -52,6 +52,7 @@
 					'label' => $dash_item['label'],
 					'href'  => $dash_item['href'],
 					'icon'  => $dash_item['icon'],
+					'badge' => $dash_item['badge'],
 				)
 			);
 		}
