@@ -124,25 +124,51 @@ endif;
  * the decision survives JS being off, both controls are announced and operated
  * as buttons, and nothing can decide a request by following a link. The two
  * buttons submit the same field with different values, which is why there is one
- * form here and no client-side code at all.
+ * form here and no client-side code deciding anything.
  * ensurance_dashboard_handle_decision() takes it from there, and BOTH values
  * leave the slot in `decided`.
  *
  * The note is tied to both buttons with aria-describedby, so a screen reader
  * reaches "Name, phone, and email unlock on accept…" as part of the control it
  * describes rather than as a stray line somewhere after it.
+ *
+ * PENDING STATE. The post is a full page load, and on a slow connection the card
+ * sits there looking untouched — which is exactly when an agent presses again,
+ * or presses the OTHER button, and cannot tell which decision they just filed.
+ * So the pressed button carries a spinner and the row locks after the first
+ * press (assets/dashboard.js). Two things make that safe to add here:
+ *
+ *   - the buttons are NEVER disabled. A disabled submit button drops out of the
+ *     form's payload, taking the accept/pass value with it, and drops out of the
+ *     tab order under the finger that just pressed it. The lock is the submit
+ *     handler refusing the second submit instead;
+ *   - the spinner is markup, not something JS injects, so the pending state is
+ *     styled in dashboard.css with the rest of the card.
+ *
+ * The status line beside it is the same message for a screen reader, which sees
+ * no spinner. It is empty until the press — an empty live region announces
+ * nothing — and role="status" is polite, so it waits its turn.
+ *
+ * With JS off, none of this exists and the form posts exactly as before.
  */
 ?>
 <form class="dash-request__decide" method="post" action="<?php echo esc_url( ensurance_dashboard_decision_action() ); ?>">
 
 	<?php wp_nonce_field( 'ensurance_dashboard_decide', 'dash_decide_nonce' ); ?>
 
-	<?php // .btn / .btn-primary from assets/home.css — the site's own button, which is what the design's Button component renders at size md (48px, pill radius, medium weight). ?>
-	<button type="submit" class="btn btn-primary dash-request__accept" name="dash_decision" value="accept" aria-describedby="dash-request-note">Accept request</button>
+	<?php // .btn / .btn-primary from assets/home.css — the site's own button, which is what the design's Button component renders at size md (48px, pill radius, medium weight). The spinner is hidden until the press and takes the button's own text color, so it can never drift from the label beside it. ?>
+	<button type="submit" class="btn btn-primary dash-request__accept" name="dash_decision" value="accept" aria-describedby="dash-request-note">
+		<span class="dash-request__spinner" aria-hidden="true"></span>Accept request
+	</button>
 
 	<?php // The same .btn geometry, outlined for the dark card — the one variant home.css does not carry, added in dashboard.css beside .dash-signout's. ?>
-	<button type="submit" class="btn dash-request__pass" name="dash_decision" value="pass" aria-describedby="dash-request-note">Pass</button>
+	<button type="submit" class="btn dash-request__pass" name="dash_decision" value="pass" aria-describedby="dash-request-note">
+		<span class="dash-request__spinner" aria-hidden="true"></span>Pass
+	</button>
 
 	<p class="dash-request__note" id="dash-request-note">Name, phone, and email unlock on accept. Passing removes it from your queue.</p>
+
+	<?php // Filled by assets/dashboard.js on the press. .sr-only (home.css) is position:absolute, so it is not a flex item in this row and takes none of its 12px gap. ?>
+	<p class="dash-request__status sr-only" role="status"></p>
 
 </form>

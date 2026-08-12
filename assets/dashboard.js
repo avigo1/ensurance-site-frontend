@@ -172,3 +172,123 @@
   var initial = viewFromLocation();
   show(hasView(initial) ? initial : DEFAULT_VIEW, false);
 })();
+
+/* ===================================================================
+   Today's live request — one press per decision.
+
+   Accept and Pass post a form, so the answer only arrives with the next
+   page. Until it does the card looks exactly as it did before the press:
+   nothing spins, nothing moves, and the two buttons sit 12px apart at
+   48px tall. That silence is what produces the double press — and here
+   the second press is not a duplicate but the OPPOSITE decision, filed
+   because the first one appeared not to register.
+
+   This closes both halves of that. The pressed button gets .is-loading
+   (a spinner, see .dash-request__spinner in assets/dashboard.css) and the
+   row gets .is-deciding, so the press is visible; and every submit after
+   the first is refused, so a second press cannot file anything even if it
+   happens in the same instant.
+
+   Two things this deliberately does NOT do:
+
+   - it never disables the buttons. A disabled submit button is dropped
+     from the payload — taking `dash_decision` with it, i.e. the whole
+     decision — and leaves focus on a node the browser no longer offers,
+     so the next Tab restarts at the top of the page. Refusing the submit
+     event does the same job with neither cost.
+   - it never prevents the FIRST submit or touches what gets posted. The
+     form is the same form; PHP still decides.
+
+   The server is the real guard, not this file: the decision posts with a
+   nonce and redirects (post-redirect-get), so a genuine double post
+   cannot decide the same request twice, and with JS off the form works
+   as it always has. What this adds is the part the server cannot — the
+   card admitting, in the moment, that it heard you.
+   =================================================================== */
+(function () {
+  'use strict';
+
+  var form = document.querySelector('.dash-request__decide');
+  if (!form) {
+    return;
+  }
+
+  var buttons = Array.prototype.slice.call(form.querySelectorAll('button[type="submit"]'));
+  var status = form.querySelector('.dash-request__status');
+  if (buttons.length === 0) {
+    return;
+  }
+
+  // What each decision says while it is in flight. Keyed by the value the
+  // button posts, so a third decision added to ensurance_dashboard_decisions()
+  // still spins — it just falls back to the generic line until named here.
+  var PENDING_TEXT = {
+    accept: 'Accepting this request…',
+    pass: 'Passing this request…'
+  };
+
+  var deciding = false;
+
+  // Which button was pressed. event.submitter is the right answer and is
+  // everywhere current, but it is undefined on older Safari and null for a
+  // form submitted programmatically, so the last pressed button is recorded
+  // as the fallback. Neither is needed for correctness — the browser posts
+  // the submitter's value regardless — only to know which button to spin.
+  var lastPressed = null;
+
+  buttons.forEach(function (button) {
+    button.addEventListener('click', function () {
+      lastPressed = button;
+    });
+  });
+
+  form.addEventListener('submit', function (event) {
+    if (deciding) {
+      // The decision is already posting. This is the second press — the one
+      // this file exists to swallow.
+      event.preventDefault();
+      return;
+    }
+
+    deciding = true;
+
+    var pressed = event.submitter || lastPressed || buttons[0];
+
+    form.classList.add('is-deciding');
+    // For assistive tech the row is now busy; the buttons stay enabled and
+    // stay in the tab order, exactly as they look.
+    form.setAttribute('aria-busy', 'true');
+
+    buttons.forEach(function (button) {
+      button.classList.toggle('is-loading', button === pressed);
+    });
+
+    if (status) {
+      // A screen reader gets no spinner, so it gets the sentence instead.
+      // The region is empty until now, which is what keeps it silent on load.
+      status.textContent = PENDING_TEXT[pressed.value] || 'Filing your decision…';
+    }
+  });
+
+  // Back-button into a bfcache'd copy of this page restores the DOM as it
+  // was — mid-press, spinner turning, submits refused — for a card that is
+  // once again waiting on a decision. Put it back.
+  window.addEventListener('pageshow', function (event) {
+    if (!event.persisted) {
+      return;
+    }
+
+    deciding = false;
+    lastPressed = null;
+    form.classList.remove('is-deciding');
+    form.removeAttribute('aria-busy');
+
+    buttons.forEach(function (button) {
+      button.classList.remove('is-loading');
+    });
+
+    if (status) {
+      status.textContent = '';
+    }
+  });
+})();

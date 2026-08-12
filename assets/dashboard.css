@@ -907,6 +907,78 @@ html body:has(.dashboard-shell) .site-footer {
   color: var(--req-text-muted);
 }
 
+/* ── Today — live request: the press is pending ──────────────────────
+   Filing a decision is a form POST, so the answer arrives as a whole new
+   page. On a slow connection that gap is silent: the card looks untouched,
+   and an agent presses again — or presses the OTHER button — with no way to
+   tell which decision is already on its way. Accept and Pass sit 12px apart
+   and both are 48px tall, which makes the second press easy and its
+   consequence opposite.
+
+   So the row states that it is working: the pressed button spins, the other
+   one recedes, and assets/dashboard.js refuses every submit after the first.
+   The buttons are never `disabled` — see the note in
+   components/dashboard-slot-live.php for why that would break the payload
+   and strand focus.
+
+   Nothing here fires without JS; the class comes from the submit handler. */
+.dash-request__spinner {
+  /* Hidden until the press, so it takes none of .btn's 8px gap at rest and
+     neither button is a pixel wider than it was before this state existed. */
+  display: none;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  /* currentColor on three sides and a transparent fourth: the ring is a gap
+     travelling around the circle. Taking the button's own text color means
+     white on Accept and --req-text on Pass with nothing stated twice. */
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  animation: dash-request-spin 0.7s linear infinite;
+}
+
+.dash-request__decide .btn.is-loading .dash-request__spinner {
+  display: block;
+}
+
+@keyframes dash-request-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Unlike the quiet slot's pulse, this one is not decoration — it is the only
+   visible sign that the press landed, and dropping it would leave a reduced-
+   motion agent with the silent card this whole block exists to fix. It steps
+   instead: the same ring, ticking eight times a second-and-a-half rather than
+   sweeping continuously. */
+@media (prefers-reduced-motion: reduce) {
+  .dash-request__spinner {
+    animation: dash-request-spin 1.5s steps(8, end) infinite;
+  }
+}
+
+/* The button not pressed. It stays in place, stays readable and keeps its
+   size — this is "not this one, and not now", not a disabled control. */
+.dash-request__decide.is-deciding .btn:not(.is-loading) {
+  opacity: 0.5;
+}
+
+/* Both buttons stop responding to the pointer: .btn's hover lift and the two
+   fills would otherwise keep promising a press that the submit handler is
+   already refusing. Pass's own :hover rule is (0,2,0), so the row's class
+   carries this one past it. */
+.dash-request__decide.is-deciding .btn,
+.dash-request__decide.is-deciding .btn:hover {
+  cursor: default;
+  transform: none;
+}
+
+.dash-request__decide.is-deciding .dash-request__pass:hover {
+  background: transparent;
+  border-color: var(--req-border-strong);
+}
+
 /* ── Today — decided panel ───────────────────────────────────────────
    Step 7 of templates/agent-dashboard/build-steps.md, rendered by
    components/dashboard-slot-decided.php into the same slot the live card
