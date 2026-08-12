@@ -754,9 +754,9 @@ function ensurance_dashboard_request_count( $user_id = 0 ) {
  *   title    string  optional  <h1> of the view. Also becomes the container's
  *                              aria-label; falls back to `label`. A view with
  *                              no title and no `part` renders an EMPTY
- *                              container — which is every view but Today as of
- *                              Step 3 of templates/agent-dashboard/
- *                              build-steps.md, where only Today has content.
+ *                              container — which is Account alone as of Step 13
+ *                              of templates/agent-dashboard/build-steps.md,
+ *                              and nothing once Step 14 lands.
  *   eyebrow  string  optional  Kicker above the title. Empty by default: the
  *                              current design has no per-view eyebrow.
  *   intro    string  optional  Lead paragraph.
@@ -820,6 +820,15 @@ function ensurance_dashboard_views() {
             'label' => 'Agency Profile',
             // Icon `user`.
             'icon'  => '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>',
+            // The design's own title and intro, through the shared view header.
+            // The intro is the whole reason this view is not a form: it says
+            // what these fields DO (decide which requests reach the agent) and
+            // who changes them (support), which is Step 13's first requirement
+            // and the scope note at the top of build-steps.md restated for the
+            // one view an agent would otherwise expect to edit.
+            'title' => 'Agency Profile',
+            'intro' => 'These fields decide which requests reach you. To change anything here, message agent support and we will update it for you.',
+            'part'  => 'components/dashboard-view-profile',
         ),
         array(
             'view'  => 'account',
@@ -3142,6 +3151,176 @@ function ensurance_dashboard_request_rows( $user_id = 0, $now = 0 ) {
             'status' => $status,
             'label'  => $statuses[ $status ]['label'],
             'tone'   => $statuses[ $status ]['tone'],
+        );
+    }
+
+    return $clean;
+}
+
+/**
+ * The design's own sample agency record — license number and phone.
+ *
+ * The two fields on the Agency Profile view that no other surface resolves, and
+ * the only two the product has nowhere to read from at all: /create-account
+ * collects first name, last name, username and email, and nothing since captures
+ * a license or a phone number (the same gap behind
+ * ensurance_dashboard_service_areas).
+ *
+ * PREVIEW ONLY, like ensurance_dashboard_sample_request() and
+ * ensurance_dashboard_sample_matching() — nothing reaches these values except
+ * through the capability-gated ensurance_dashboard_priority_preview(). An agent
+ * is never shown a license number that is not theirs.
+ *
+ * Copied field for field from the `isProf` view of
+ * templates/agent-dashboard/AgentDashboard.dc.html.
+ *
+ * @return array{license:string,phone:string}
+ */
+function ensurance_dashboard_sample_agency() {
+    return array(
+        'license' => 'CA-0K48219',
+        'phone'   => '(805) 555-0142',
+    );
+}
+
+/**
+ * The agency's license number, as shown on the Agency Profile view.
+ *
+ * NOTHING CARRIES IT TODAY. It is verified out of band — the manual approval
+ * behind a founding agency's account is the record (see the identity step in
+ * ensurance_dashboard_setup_steps) — and no field in the product stores the
+ * number itself. So this returns '' and the profile drops the chip rather than
+ * printing a labeled blank, which on this view would read as "your license is
+ * missing" rather than "we have not put it on screen yet".
+ *
+ * The admin preview is the one exception, gated on `?slot=quiet` for the same
+ * reason ensurance_dashboard_service_areas() is: that is the preview in which
+ * the agency record is fully populated, so one URL shows the whole profile as
+ * the design draws it.
+ *
+ * Point the filter at the real agency record when it exists.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return string License number, '' when it is not known.
+ */
+function ensurance_dashboard_license_number( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $sample  = ensurance_dashboard_sample_agency();
+    $license = ( 'quiet' === ensurance_dashboard_priority_preview() ) ? $sample['license'] : '';
+
+    /**
+     * Filter the agency license number shown on the Agency Profile view.
+     *
+     * @param string $license License number, '' when unknown.
+     * @param int    $user_id User the profile is being resolved for.
+     */
+    return (string) apply_filters( 'ensurance_dashboard_license_number', $license, $user_id );
+}
+
+/**
+ * The agency's phone number, as shown on the Agency Profile view.
+ *
+ * Mirrors ensurance_dashboard_license_number() in every respect, including
+ * having nothing to return outside the admin preview.
+ *
+ * IT IS NOT A CONTACT ROUTE. The number is here as matching-relevant reference —
+ * what an accepted shopper would be given — not as a way to reach the agency, so
+ * the profile prints it as a value and never as a `tel:` link.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return string Phone number as it should be displayed, '' when not known.
+ */
+function ensurance_dashboard_agency_phone( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $sample  = ensurance_dashboard_sample_agency();
+    $phone   = ( 'quiet' === ensurance_dashboard_priority_preview() ) ? $sample['phone'] : '';
+
+    /**
+     * Filter the agency phone number shown on the Agency Profile view.
+     *
+     * @param string $phone   Phone number, '' when unknown.
+     * @param int    $user_id User the profile is being resolved for.
+     */
+    return (string) apply_filters( 'ensurance_dashboard_agency_phone', $phone, $user_id );
+}
+
+/**
+ * The four labeled values at the top of the Agency Profile view.
+ *
+ * Step 13 of templates/agent-dashboard/build-steps.md: agency name, request
+ * inbox, license number, phone — the identifying half of the agency record, over
+ * the service areas and coverage types that follow it.
+ *
+ * STATIC VALUES, NOT A FORM. The step is explicit — no inputs, no Save, and
+ * emphatically not a disabled form, which would be a dead affordance on every
+ * field. So this resolver returns strings to print, and the component that
+ * renders them has no interactive element in it at all.
+ *
+ * NOTHING NEW IS RESOLVED HERE, the same rule Today's reference column follows
+ * (see ensurance_dashboard_shopper_rows): the name and inbox come from the
+ * resolvers that already own them, so the profile, the rail's user card and the
+ * quiet panel's sentence can never disagree about the agency they describe.
+ *
+ * SHAPE — a list of ['key' => …, 'label' => …, 'value' => …] in display order.
+ * A field with no value is DROPPED rather than rendered empty: two of the four
+ * have nothing to resolve today, and a labeled blank chip on a read-only profile
+ * reads as data that has gone missing.
+ *
+ * Labels are the design's own (the `isProf` view of
+ * templates/agent-dashboard/AgentDashboard.dc.html).
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return array<int,array{key:string,label:string,value:string}>
+ */
+function ensurance_dashboard_profile_fields( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+
+    $fields = array(
+        array(
+            'key'   => 'name',
+            'label' => 'Agency name',
+            'value' => ensurance_dashboard_agency_name( $user_id ),
+        ),
+        array(
+            'key'   => 'inbox',
+            'label' => 'Request inbox',
+            'value' => ensurance_dashboard_request_inbox( $user_id ),
+        ),
+        array(
+            'key'   => 'license',
+            'label' => 'License number',
+            'value' => ensurance_dashboard_license_number( $user_id ),
+        ),
+        array(
+            'key'   => 'phone',
+            'label' => 'Phone',
+            'value' => ensurance_dashboard_agency_phone( $user_id ),
+        ),
+    );
+
+    /**
+     * Filter the labeled values on the Agency Profile view.
+     *
+     * The hook the real agency record attaches to when it exists. Fields must
+     * keep the shape documented above; anything missing a label or a value is
+     * dropped rather than rendered blank.
+     *
+     * @param array $fields  Fields in display order.
+     * @param int   $user_id User the profile is being resolved for.
+     */
+    $fields = (array) apply_filters( 'ensurance_dashboard_profile_fields', $fields, $user_id );
+
+    $clean = array();
+
+    foreach ( $fields as $i => $field ) {
+        if ( empty( $field['label'] ) || empty( $field['value'] ) ) {
+            continue;
+        }
+
+        $clean[] = array(
+            'key'   => isset( $field['key'] ) ? (string) $field['key'] : (string) $i,
+            'label' => (string) $field['label'],
+            'value' => (string) $field['value'],
         );
     }
 

@@ -132,10 +132,11 @@ get_header( 'agent' );
  * A view whose content is more than eyebrow / title / intro names a `part`
  * in that array, which renders after the header — Today
  * (components/dashboard-view-today.php, where Phase 2 of
- * templates/agent-dashboard/build-steps.md landed) and Requests
- * (components/dashboard-view-requests.php, Step 12). Agency Profile and
- * Account still carry no part and no title, so they render EMPTY containers
- * until Steps 13 and 14 fill them in.
+ * templates/agent-dashboard/build-steps.md landed), Requests
+ * (components/dashboard-view-requests.php, Step 12) and Agency Profile
+ * (components/dashboard-view-profile.php, Step 13). Account still carries no
+ * part and no title, so it renders an EMPTY container until Step 14 fills it
+ * in.
  *
  * tabindex="-1" lets dashboard.js move focus here after a click without
  * putting the container in the tab order.
