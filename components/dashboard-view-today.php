@@ -41,15 +41,20 @@
  *
  * STEP 8 takes the slot's ordinary day: `quiet` is now the light card in
  * components/dashboard-slot-quiet.php — matching is on, nothing is waiting, and
- * that is a normal condition rather than an empty state. Only `setup` is still
- * Step 4's labeled box.
+ * that is a normal condition rather than an empty state.
+ *
+ * STEP 9 finishes the set with the state an agent meets FIRST: `setup` is now
+ * the second dark card, in components/dashboard-slot-setup.php — the agent is
+ * not matchable yet, one thing is blocking it, and the card asks for that one
+ * thing. Step 4's labeled box is gone, and with it the last placeholder branch
+ * in this file.
  *
  * NOTHING renders when the state is somehow not one of the four. The step is
  * explicit that there is no fallback branch — no "unknown state" box, and never
- * two states at once. The two data-backed states extend that rule to their data:
- * a slot that is live with no request to show, or decided with no decision to
- * confirm, renders nothing rather than an empty frame — neither surface can
- * appear without the thing it is about.
+ * two states at once. The data-backed states extend that rule to their data: a
+ * slot that is live with no request to show, decided with no decision to
+ * confirm, or setup with nothing left blocking, renders nothing rather than an
+ * empty frame — no surface can appear without the thing it is about.
  *
  * PREVIEWING: /dashboard/?slot=quiet (and setup / decided / live) forces a
  * state for administrators, standing in for the design's props panel. See
@@ -84,6 +89,12 @@ $dash_request = ( 'live' === $dash_slot ) ? ensurance_dashboard_live_request() :
 // that state to begin with (ensurance_dashboard_decided_slot). Same rule: no
 // decision, no panel.
 $dash_decision = ( 'decided' === $dash_slot ) ? ensurance_dashboard_decision() : '';
+
+// …and the setup card's copy and checklist, resolved here rather than inside the
+// part because the slot's own guard needs to know whether anything is still
+// blocking (an empty title means nothing is). Same rule as the two above: no
+// blocking step, no card.
+$dash_setup = ( 'setup' === $dash_slot ) ? ensurance_dashboard_setup_panel() : array();
 ?>
 <div class="dash-today__header">
 
@@ -105,19 +116,21 @@ $dash_decision = ( 'decided' === $dash_slot ) ? ensurance_dashboard_decision() :
  * deskState, which shows a single card and never two.
  *
  * The state slug rides on data-slot rather than a modifier class: it IS the
- * value driving the slot, so CSS hooks it as [data-slot="live"] to paint the
- * dark request card, [data-slot="decided"] for the light accent panel, and the
- * two states still on the placeholder box share the remaining selectors in
- * assets/dashboard.css. Nothing needs a class that only mirrors the state.
+ * value driving the slot, so CSS hooks it as [data-slot="live"] and
+ * [data-slot="setup"] to paint the two dark cards, [data-slot="decided"] for the
+ * light accent panel and [data-slot="quiet"] for the light card. Nothing needs a
+ * class that only mirrors the state.
  *
- * Two of the states additionally need their data: `live` its request, `decided`
- * the decision it confirms. Without them there is nothing to show, so the slot
- * is skipped entirely rather than painted empty — which is why the condition
- * below tests the data and not just the state.
+ * Three of the states additionally need their data: `live` its request,
+ * `decided` the decision it confirms, `setup` a step that is still blocking.
+ * Without them there is nothing to show, so the slot is skipped entirely rather
+ * than painted empty — which is why the condition below tests the data and not
+ * just the state.
  */
 $dash_has_slot = ( '' !== $dash_slot_label )
 	&& ( 'live' !== $dash_slot || ! empty( $dash_request ) )
-	&& ( 'decided' !== $dash_slot || '' !== $dash_decision );
+	&& ( 'decided' !== $dash_slot || '' !== $dash_decision )
+	&& ( 'setup' !== $dash_slot || ! empty( $dash_setup['title'] ) );
 
 if ( $dash_has_slot ) :
 	?>
@@ -130,19 +143,18 @@ if ( $dash_has_slot ) :
 
 			<?php get_template_part( 'components/dashboard-slot-decided', null, array( 'decision' => $dash_decision ) ); ?>
 
+		<?php elseif ( 'setup' === $dash_slot ) : ?>
+
+			<?php get_template_part( 'components/dashboard-slot-setup', null, $dash_setup ); ?>
+
 		<?php elseif ( 'quiet' === $dash_slot ) : ?>
 
 			<?php
-			// No args: unlike the two above, this surface is not about a
-			// request or a decision — it reads its own copy. See the part's
-			// docblock.
+			// No args: alone among the four, this surface is not about a
+			// request, a decision or an outstanding step — it reads its own
+			// copy. See the part's docblock.
 			get_template_part( 'components/dashboard-slot-quiet' );
 			?>
-
-		<?php else : ?>
-
-			<?php // setup — still Step 4's plain labeled box until Step 9 builds its surface. ?>
-			<p class="dash-slot__label"><?php echo esc_html( $dash_slot_label ); ?></p>
 
 		<?php endif; ?>
 	</section>

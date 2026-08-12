@@ -2035,6 +2035,298 @@ function ensurance_dashboard_quiet_panel( $user_id = 0 ) {
     return (array) apply_filters( 'ensurance_dashboard_quiet_panel', $panel, $user_id );
 }
 
+/**
+ * Where "message agent support" goes, from every surface that says it.
+ *
+ * Step 9 of templates/agent-dashboard/build-steps.md gives the setup card
+ * exactly ONE button, and it routes to agent support rather than to a form the
+ * agent fills in themselves. That is not a v1 shortcut — the scope note at the
+ * top of build-steps.md makes it the rule for the whole product: agency data is
+ * read-only, and every "change this" path ends at support (Steps 8, 13, 14 and
+ * the Step 15 pass all restate it). So the destination lives here, once, and
+ * those surfaces link to it rather than each deciding for themselves.
+ *
+ * IT IS THE ACCOUNT VIEW, which is what the design does — its `finishSetup`
+ * switches the view to `account`, the same place the profile view's locked
+ * notice sends people. Step 14 builds that view's agent-support row (hours,
+ * reply time, and the one action on the page); until then the link lands on the
+ * stub, which is still the right destination and not a dead end.
+ *
+ * Read off ensurance_dashboard_views() rather than written out, so the URL
+ * cannot drift from the rail's own Account row. If support ever gets a real
+ * destination — a help desk, a mailto, a contact form — filter it here and every
+ * surface follows.
+ *
+ * @return string Absolute URL.
+ */
+function ensurance_dashboard_support_url() {
+    $url = '';
+
+    foreach ( ensurance_dashboard_views() as $view ) {
+        if ( 'account' === $view['view'] ) {
+            $url = (string) $view['href'];
+            break;
+        }
+    }
+
+    /**
+     * Filter the destination behind the product's "message agent support" links.
+     *
+     * @param string $url Resolved support URL.
+     */
+    $url = (string) apply_filters( 'ensurance_dashboard_support_url', $url );
+
+    // The registry always carries an Account row, so this is a guard rather than
+    // a branch anyone should hit — /contact is the one page that reaches a human
+    // without going through the dashboard at all.
+    return '' !== $url ? $url : home_url( '/contact/' );
+}
+
+/**
+ * The three things that have to be true before an agent can be matched.
+ *
+ * Step 9 of templates/agent-dashboard/build-steps.md — the checklist on the
+ * setup card, and the definition of "not yet matchable" that puts the slot in
+ * `setup` to begin with (see ensurance_dashboard_matchable_slot below). One
+ * list, read by both, so the card can never show a blocking step the state
+ * resolver disagrees about.
+ *
+ * IN THE DESIGN'S ORDER, which is also the order matching applies them: an
+ * agency has to exist before it has service areas, and requests are filtered by
+ * county before coverage type. That order is what makes "Step N of 3" mean
+ * anything — N is a position in a sequence, not a count of what is missing.
+ *
+ * STATUS IS DERIVED, NEVER STORED. Each step has a `done` test against the
+ * resolver that owns the data, and exactly one not-done step becomes `current`:
+ * the FIRST one. Everything after it is `upcoming` and, per the step, not
+ * actionable — the card asks for one thing at a time because support handles
+ * them one at a time. A step that is done stays done wherever it sits in the
+ * list; the sequence orders the work, it does not gate the record.
+ *
+ * WHAT IS ACTUALLY KNOWN TODAY. Service areas and coverage types have no funnel
+ * capturing them (see ensurance_dashboard_service_areas), so both come back
+ * empty and a founding agent is genuinely blocked on the first of them — which
+ * is exactly the "Step 2 of 3" the design draws. The identity step reads as done
+ * for anyone signed in: /create-account plus the manual approval that follows is
+ * how a founding agency gets an account at all, so the account existing IS the
+ * verification record until a real one exists to point the filter at.
+ *
+ * RETURN SHAPE — one entry per step, in order:
+ *   key     string  Stable slug ('identity', 'areas', 'coverages').
+ *   number  int     1-based position, for the "Step N of 3" eyebrow.
+ *   label   string  The checklist line, phrased for the status it came back in.
+ *   status  string  'done' | 'current' | 'upcoming'.
+ *   title   string  Headline naming this step, used when it is the current one.
+ *   body    string  One sentence on why it blocks matching.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return array<int,array{key:string,number:int,label:string,status:string,title:string,body:string}>
+ */
+function ensurance_dashboard_setup_steps( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+
+    // `label` is how the line reads while it is still outstanding; `done_label`
+    // once it is not. The design writes the finished identity step as "Agency
+    // name and license verified" and the outstanding one as "Service areas —
+    // not set", so the phrasing genuinely differs per state rather than a single
+    // string being recolored.
+    $steps = array(
+        array(
+            'key'        => 'identity',
+            'label'      => 'Agency name and license',
+            'done_label' => 'Agency name and license verified',
+            'title'      => 'Confirm your agency name and license',
+            'body'       => 'Every founding agency is verified before matching starts. Until that is on file, nothing can reach you — message agent support and we will finish it with you.',
+            'done'       => ( '' !== ensurance_dashboard_agency_name( $user_id ) ),
+        ),
+        array(
+            'key'        => 'areas',
+            'label'      => 'Service areas',
+            'done_label' => 'Service areas set',
+            'title'      => 'Add the counties you write in',
+            // The design's own sentence, verbatim.
+            'body'       => 'Requests are matched to service area first. Until this is set, nothing can reach you — message agent support and we will add them for you.',
+            'done'       => ( array() !== ensurance_dashboard_service_areas( $user_id ) ),
+        ),
+        array(
+            'key'        => 'coverages',
+            'label'      => 'Coverage types',
+            'done_label' => 'Coverage types set',
+            // Written to the pattern of the one above — the design only draws
+            // the service-areas card, but the same slot has to speak when
+            // coverage types are the thing standing in the way.
+            'title'      => 'Add the coverage types you write',
+            'body'       => 'After service area, requests are matched on coverage type. Until this is set, nothing can reach you — message agent support and we will add them for you.',
+            'done'       => ( array() !== ensurance_dashboard_coverage_types( $user_id ) ),
+        ),
+    );
+
+    // The first outstanding step, and only the first: the card names one
+    // blocking thing, so exactly one line can be current.
+    $current = -1;
+
+    foreach ( $steps as $i => $step ) {
+        if ( ! $step['done'] ) {
+            $current = $i;
+            break;
+        }
+    }
+
+    $resolved = array();
+
+    foreach ( $steps as $i => $step ) {
+        if ( $step['done'] ) {
+            $status = 'done';
+        } elseif ( $i === $current ) {
+            $status = 'current';
+        } else {
+            $status = 'upcoming';
+        }
+
+        // "Service areas — not set". The suffix is on the current line only:
+        // it is the one the card is about, and an upcoming step is not missing
+        // yet — its turn has not come.
+        $label = ( 'done' === $status ) ? $step['done_label'] : $step['label'];
+
+        if ( 'current' === $status ) {
+            $label .= ' — not set';
+        }
+
+        $resolved[] = array(
+            'key'    => $step['key'],
+            'number' => $i + 1,
+            'label'  => $label,
+            'status' => $status,
+            'title'  => $step['title'],
+            'body'   => $step['body'],
+        );
+    }
+
+    /**
+     * Filter the dashboard's setup checklist.
+     *
+     * The hook real onboarding attaches to when it exists. Entries must keep
+     * the shape documented above; a `status` outside done / current / upcoming
+     * is treated as outstanding by everything that reads this.
+     *
+     * @param array $resolved Resolved steps, in order.
+     * @param int   $user_id  User the checklist is being resolved for.
+     */
+    return (array) apply_filters( 'ensurance_dashboard_setup_steps', $resolved, $user_id );
+}
+
+/**
+ * Whether the agent can be matched at all — nothing on the setup checklist is
+ * outstanding.
+ *
+ * The one question the `setup` state answers, asked in one place so the card and
+ * the state resolver cannot disagree.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return bool
+ */
+function ensurance_dashboard_matchable( $user_id = 0 ) {
+    foreach ( ensurance_dashboard_setup_steps( $user_id ) as $step ) {
+        if ( 'done' !== $step['status'] ) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Sends a matchable agent with nothing waiting to `quiet` instead of `setup`.
+ *
+ * ensurance_dashboard_priority_state() falls back to `setup` whenever no request
+ * is waiting, which was right while setup was a labeled box and is now too
+ * blunt: Step 9 defines `setup` as "not yet matchable", and an agent whose
+ * checklist is finished is matchable — they are simply having a quiet day
+ * (Step 8). Without this, a fully set-up agency would be shown a setup card with
+ * nothing left to set up.
+ *
+ * A FILTER, not an edit to the resolver, for the same reason
+ * ensurance_dashboard_decided_slot is one: the slot stays driven by a single
+ * value with several inputs. Priority 9 puts it BEFORE the decided check, which
+ * must keep the last word — a decision the agent just made outranks both.
+ *
+ * Nothing reaches this today: no funnel captures service areas or coverage
+ * types, so the checklist can never come back finished and `setup` still wins.
+ * It is the branch the real profile lights up, with no change here.
+ *
+ * @param string $state   State resolved so far.
+ * @param int    $user_id User the slot is being resolved for.
+ * @return string
+ */
+function ensurance_dashboard_matchable_slot( $state, $user_id ) {
+    return ( 'setup' === $state && ensurance_dashboard_matchable( $user_id ) ) ? 'quiet' : $state;
+}
+add_filter( 'ensurance_dashboard_priority_state', 'ensurance_dashboard_matchable_slot', 9, 2 );
+
+/**
+ * What the setup card says — its eyebrow, headline, sentence, checklist and the
+ * one button under them.
+ *
+ * Step 9 of templates/agent-dashboard/build-steps.md. First run: the agent has
+ * an account and cannot be matched yet, so this is the action of the moment and
+ * gets the same dark navy weight as a waiting request. Everything on it is about
+ * ONE thing — the first outstanding step (ensurance_dashboard_setup_steps) — with
+ * the other two visible only so the agent can see how much is left.
+ *
+ * The headline names that one blocking thing and the sentence says why it blocks
+ * matching. Neither is written down here: both come off the step itself, so a
+ * card about coverage types cannot end up captioned with the copy for counties.
+ *
+ * ONE BUTTON, and it goes to agent support (ensurance_dashboard_support_url) —
+ * not to a form. The agent cannot fix any of this themselves in v1, and a button
+ * that opened an editable profile would be promising something the product does
+ * not do.
+ *
+ * NO BLOCKING STEP, NO CARD. With the checklist finished there is no headline to
+ * write and nothing to ask for, so the title comes back empty and the component
+ * renders nothing — the same rule the live card and the decided panel follow.
+ * The slot should not be in this state at all by then; see
+ * ensurance_dashboard_matchable_slot.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return array{eyebrow:string,title:string,body:string,steps:array,cta:string,cta_url:string}
+ */
+function ensurance_dashboard_setup_panel( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $steps   = ensurance_dashboard_setup_steps( $user_id );
+
+    $panel = array(
+        'eyebrow' => '',
+        'title'   => '',
+        'body'    => '',
+        'steps'   => $steps,
+        'cta'     => 'Message agent support',
+        'cta_url' => ensurance_dashboard_support_url(),
+    );
+
+    foreach ( $steps as $step ) {
+        if ( 'current' !== $step['status'] ) {
+            continue;
+        }
+
+        // "Step 2 of 3" — the position of the blocking step in the sequence,
+        // counted against the checklist actually shown rather than a literal 3,
+        // so the two can never disagree if onboarding ever grows a fourth.
+        $panel['eyebrow'] = sprintf( 'Step %d of %d', $step['number'], count( $steps ) );
+        $panel['title']   = $step['title'];
+        $panel['body']    = $step['body'];
+        break;
+    }
+
+    /**
+     * Filter the setup card's copy.
+     *
+     * @param array $panel   ['eyebrow' => …, 'title' => …, 'body' => …, 'steps' => …, 'cta' => …, 'cta_url' => …].
+     * @param int   $user_id User the card is being rendered for.
+     */
+    return (array) apply_filters( 'ensurance_dashboard_setup_panel', $panel, $user_id );
+}
+
 // ============================================================================
 // 2b-v-a4. FOUNDING AGENT PLAN SELECTION — SIGN-UP FUNNEL MEMORY
 // ============================================================================

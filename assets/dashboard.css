@@ -606,13 +606,13 @@ html body:has(.dashboard-shell) .site-footer {
    ensurance_dashboard_priority_state() resolves, and PHP renders only that
    one — so there is nothing here to hide, stack or reset.
 
-   .dash-slot itself now carries only what EVERY state shares — the design's
+   .dash-slot itself carries only what EVERY state shares — the design's
    card radius and the gap to what follows. Each state's own surface hangs
    off [data-slot], the single value driving the slot, so no state needs a
-   class that mirrors what the attribute already says. Landed so far: `live`
-   (Step 5), `decided` (Step 7) and `quiet` (Step 8), all below. setup is
-   still Step 4's plain labeled box and takes its real surface — dark navy,
-   the same weight as the live card — in Step 9.
+   class that mirrors what the attribute already says. All four have landed:
+   `live` (Step 5), `decided` (Step 7), `quiet` (Step 8) and `setup`
+   (Step 9), each below. There is no placeholder rule left here, and no
+   selector for a state that does not exist.
 
    Radius is the design's own 20px, between --radius-icon (16px) and
    --radius-card (32px) — no token sits at that value. */
@@ -623,54 +623,22 @@ html body:has(.dashboard-shell) .site-footer {
   margin-bottom: 14px;
 }
 
-/* The placeholder box, for the one state still awaiting its surface. Listed
-   by state rather than by a "not yet built" class so each step can simply
-   lift its own selector out of this rule — Step 8 just did, leaving setup. */
+/* ── Today — the dark slot palette ───────────────────────────────────
+   TWO of the four states invert, and they are the two that mean something
+   is waiting on the agent: `live` (a request needs a decision) and `setup`
+   (matching cannot start yet). Everything else on Today is light. Nothing
+   else may take this treatment.
+
+   Both need "text on navy" values the light-surface palette in home.css has
+   no tokens for, so the pair is defined once here and every rule for either
+   card references it — the two surfaces recolor together, from this block
+   alone, and cannot drift apart into two shades of the same idea. */
+.dash-slot[data-slot="live"],
 .dash-slot[data-slot="setup"] {
-  display: flex;
-  align-items: center;
-  /* Gives the empty placeholder the presence the real card will have,
-     rather than collapsing to a single line of label. */
-  min-height: 132px;
-  padding: var(--space-5) var(--space-6);
-  background: var(--surface-card);
-  border: 1px solid var(--border-soft);
-}
-
-/* Matched to .dash-view__eyebrow / .dash-today__stamp — the mono uppercase
-   label the design uses for every kicker on this page. */
-.dash-slot__label {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
-  color: var(--secondary);
-}
-
-/* ── Today — live request card ───────────────────────────────────────
-   Step 5 of templates/agent-dashboard/build-steps.md, rendered by
-   components/dashboard-slot-live.php into the slot above.
-
-   THE ONLY DARK SURFACE in the main column, and that is the whole point:
-   a request waiting on a decision is the one thing on this page that
-   cannot be scrolled past, so it is the one thing that inverts. Nothing
-   else on Today may take this treatment.
-
-   Values from the `hasLive` branch of
-   templates/agent-dashboard/AgentDashboard.dc.html. Padding is the
-   design's 30px/32px/26px — the shallower foot is deliberate, the tiles
-   need less room under them than the header needs above it.
-
-   Like the rail, this surface needs "text on navy" values the light-surface
-   palette in home.css has no tokens for, so it defines its own here and
-   every rule below references them — the card recolors from this block
-   alone. */
-.dash-slot[data-slot="live"] {
-  padding: 30px 32px 26px;
-  background: var(--navy-800);
-
   --req-text: #ffffff;
+  /* The design's body copy on navy (0.7) and its quieter supporting text
+     (0.6) — one step apart, and used for exactly that distinction. */
+  --req-text-soft: rgba(255, 255, 255, 0.7);
   --req-text-muted: rgba(255, 255, 255, 0.6);
   --req-text-faint: rgba(255, 255, 255, 0.45);
   --req-border: rgba(255, 255, 255, 0.14);
@@ -684,7 +652,27 @@ html body:has(.dashboard-shell) .site-footer {
      accent mark on a dark card. */
   --req-accent: #34d399;
 
+  background: var(--navy-800);
   color: var(--req-text);
+}
+
+/* ── Today — live request card ───────────────────────────────────────
+   Step 5 of templates/agent-dashboard/build-steps.md, rendered by
+   components/dashboard-slot-live.php into the slot above.
+
+   A DARK SURFACE, and that is the whole point: a request waiting on a
+   decision cannot be scrolled past, so it inverts. It shares the treatment
+   with exactly one other state — `setup`, which is the same claim on the
+   agent's attention before any request can arrive — and with nothing else
+   on Today. See the shared dark palette above.
+
+   Values from the `hasLive` branch of
+   templates/agent-dashboard/AgentDashboard.dc.html. Padding is the
+   design's 30px/32px/26px — the shallower foot is deliberate, the tiles
+   need less room under them than the header needs above it. The navy and
+   the text values come from the shared dark palette above. */
+.dash-slot[data-slot="live"] {
+  padding: 30px 32px 26px;
 }
 
 /* Eyebrow left, countdown right. Wrapping is ours, not the design's — it
@@ -1166,6 +1154,172 @@ html body:has(.dashboard-shell) .site-footer {
   text-wrap: pretty;
 }
 
+/* ── Today — setup card ──────────────────────────────────────────────
+   Step 9 of templates/agent-dashboard/build-steps.md, rendered by
+   components/dashboard-slot-setup.php into the same slot.
+
+   THE SAME WEIGHT AS THE LIVE REQUEST, and deliberately so: an agent who
+   cannot be matched yet is being asked for something, exactly as an agent
+   with a request waiting is. It takes the shared dark palette above and the
+   design's 30px/32px inset — the live card's, without the shallower foot
+   (there are no tiles here, and the button below wants full room).
+
+   Values from the `isSetup` branch of
+   templates/agent-dashboard/AgentDashboard.dc.html. */
+.dash-slot[data-slot="setup"] {
+  padding: 30px 32px;
+}
+
+/* Same mono uppercase kicker as the live card's, in the same mint. This one
+   counts — "Step 2 of 3" — which is the only thing on the card that says
+   how much is left. 10.5px / 0.2em are the design's; --tracking-mono is
+   that 0.2em. */
+.dash-setup__eyebrow {
+  margin: 0 0 12px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: var(--tracking-mono);
+  text-transform: uppercase;
+  color: var(--req-accent);
+}
+
+/* EXPLICITLY WHITE, with !important, for the same stacked reasons
+   .dash-request__title carries it: home.css paints every h2 with
+   --text-heading (navy on navy), and the parent theme prints inline global
+   typography after our stylesheets that recolors bare headings again.
+
+   Design is 26px/-0.025em/900 — a point under the live card's 27px, since
+   this headline is an instruction and that one is the request itself. Same
+   clamp for the narrow column, and -0.025em is exactly --tracking-tight. */
+.dash-setup__title {
+  margin: 0 0 10px;
+  font-family: var(--font-display);
+  font-size: clamp(21px, 2.8vw, 26px);
+  /* home.css's weight ramp stops at 800 (--weight-extrabold); the design's
+     900 is written out, as it is on the live card and the greeting. */
+  font-weight: 900;
+  line-height: var(--leading-snug);
+  letter-spacing: var(--tracking-tight);
+  color: var(--req-text) !important;
+}
+
+/* WHY IT BLOCKS MATCHING — one sentence, and the only prose on the card.
+   --req-text-soft (0.7) rather than the live card's --req-text-muted (0.6):
+   this sentence is the card's argument, where the live card's note is a
+   caption on two buttons. Design is 15px/1.6, floored to --leading-body;
+   max-width holds its 520px measure. */
+.dash-setup__body {
+  margin: 0 0 22px;
+  max-width: 520px;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: var(--leading-body);
+  color: var(--req-text-soft);
+  text-wrap: pretty;
+}
+
+/* THE CHECKLIST. Hairline-ruled rows, not tiles and not a bordered panel:
+   these are three lines of one sequence, and the rules are what hold them
+   together as a list rather than three facts. The design's 440px measure
+   keeps them a column beside the card's air instead of a full-width table.
+
+   list-style / padding reset the UA's bullets and indent — the markers here
+   are the glyphs the design draws, not disc bullets. */
+.dash-setup__steps {
+  margin: 0 0 24px;
+  padding: 0;
+  max-width: 440px;
+  list-style: none;
+}
+
+.dash-setup__step {
+  display: flex;
+  align-items: center;
+  /* The design's 11px between the marker and the line, and its 11px of
+     vertical room per row. */
+  gap: 11px;
+  padding: 11px 0;
+  font-family: var(--font-sans);
+  font-size: 14.5px;
+  line-height: var(--leading-snug);
+}
+
+/* Between the rows only — a rule above the first would fence the list off
+   from the sentence that introduces it. */
+.dash-setup__step + .dash-setup__step {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* THREE DISTINCT STATES, distinguished by weight of color rather than by
+   decoration: done recedes (it is finished and needs no attention), current
+   is full white (it is what the headline is about), upcoming is dimmest (it
+   is not the agent's turn to think about it).
+
+   The design's 0.55 / 0.4 are carried by --req-text-muted (0.6) and
+   --req-text-faint (0.45) — both within a hair, and both already the card's
+   own values, so the three lines cannot drift from the surface they sit on.
+   Color is NOT the only signal: each line also carries a hidden status word
+   for screen readers, and its own wording. */
+.dash-setup__step--done {
+  color: var(--req-text-muted);
+}
+
+.dash-setup__step--current {
+  color: var(--req-text);
+}
+
+.dash-setup__step--upcoming {
+  color: var(--req-text-faint);
+}
+
+/* The marker column. Fixed at the design's 18px so the three lines share a
+   text origin whichever glyph they carry, and flex-shrink guards the circle
+   against squashing into an oval when a label wraps. */
+.dash-setup__marker {
+  display: block;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+
+/* The done glyph's stroke is currentColor; the mint is stated here rather
+   than inherited from the row, because the row is deliberately muted and the
+   check is the one thing on it that should still read as a result. */
+.dash-setup__step--done .dash-setup__marker {
+  color: var(--req-accent);
+}
+
+/* The two not-done markers: an empty ring, drawn rather than glyphed — it
+   has no shape of its own. The current step's takes the card's mint, the
+   upcoming one a border faint enough to read as an outline of a step rather
+   than as a control. */
+.dash-setup__ring {
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+}
+
+.dash-setup__step--current .dash-setup__ring {
+  border-color: var(--req-accent);
+}
+
+/* THE ONE CONTROL. .btn / .btn-primary from home.css do all the work — it is
+   the site's own primary button, unmodified, because this is an ordinary
+   primary action and not a special case. Nothing below it competes with it:
+   there is no secondary button, no skip link, and no per-step affordance
+   anywhere above.
+
+   The only rule it needs of its own is the focus ring: .btn already sizes,
+   shapes and colors it, and it is an <a>, so there is no UA control chrome
+   to reset either.
+
+   --focus-ring is --accent, the CTA green mixed for white surfaces; on navy
+   it all but disappears. Same substitution the live card's buttons make. */
+.dash-setup__action:focus-visible {
+  outline: 2px solid var(--req-accent);
+  outline-offset: 2px;
+}
+
 /* ── Page background over parent-theme / plugin globals ──────────────
    Same fix the other standalone pages carry: AyeCode UI (GeoDirectory,
    the `aui_bs5` body class) ships
@@ -1291,6 +1445,13 @@ html body:has(.dashboard-page) .mobile-sticky-cta {
      is the state that alternates with `live` day to day, so the two should
      not disagree about the slot's inset. */
   .dash-slot[data-slot="quiet"] {
+    padding: var(--space-5);
+  }
+
+  /* Same trade on the other dark card. It matches `live` exactly here, as it
+     does at full width — the two are one treatment and a phone should not be
+     where they start to look like two. */
+  .dash-slot[data-slot="setup"] {
     padding: var(--space-5);
   }
 }
