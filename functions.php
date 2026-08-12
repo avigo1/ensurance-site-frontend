@@ -2327,6 +2327,303 @@ function ensurance_dashboard_setup_panel( $user_id = 0 ) {
     return (array) apply_filters( 'ensurance_dashboard_setup_panel', $panel, $user_id );
 }
 
+/**
+ * When founding access started — the timeline's origin, and the date every other
+ * date on it is counted from.
+ *
+ * Step 10 of templates/agent-dashboard/build-steps.md. Unlike most of the
+ * dashboard's data, this one is REAL today: a founding agency gets an account
+ * through /create-account (see ensurance_founding_plans), and the moment that
+ * account was created is the moment its 60 days started. So `user_registered` is
+ * not a stand-in for the access record — until a subscription record exists, it
+ * IS the access record.
+ *
+ * It is stored in UTC, and the offset is stated rather than left to strtotime's
+ * default, which would read the string as server-local and slide the whole
+ * timeline by the server's offset.
+ *
+ * THE FILTER IS THE SEAM. When real founding-access records exist (a Stripe
+ * subscription, a manually set start for an agency onboarded by hand), point
+ * `ensurance_dashboard_access_start` at them and every date, the day counter and
+ * the elapsed/future split follow with no other change.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return int Unix timestamp, or 0 when there is no start date to count from.
+ */
+function ensurance_dashboard_access_start( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $user    = $user_id ? get_userdata( $user_id ) : null;
+    $start   = 0;
+
+    if ( $user && ! empty( $user->user_registered ) ) {
+        $parsed = strtotime( $user->user_registered . ' +00:00' );
+        $start  = $parsed ? (int) $parsed : 0;
+    }
+
+    /**
+     * Filter when founding access started for an agent.
+     *
+     * @param int $start   Unix timestamp, 0 when unknown.
+     * @param int $user_id User the timeline is being resolved for.
+     */
+    return (int) apply_filters( 'ensurance_dashboard_access_start', $start, $user_id );
+}
+
+/**
+ * How long founding access runs before it converts — 60 days.
+ *
+ * Named once rather than written into the timeline, because it decides three
+ * things that must agree: the "60-day mark" label, the date under it, and the
+ * "N days left" the today segment counts down. A term change moves all three.
+ *
+ * @return int Days. At least 1.
+ */
+function ensurance_dashboard_access_term() {
+    /**
+     * Filter the founding access term, in days.
+     *
+     * @param int $days Term length.
+     */
+    return max( 1, (int) apply_filters( 'ensurance_dashboard_access_term', 60 ) );
+}
+
+/**
+ * What continued access costs after the term — the design's "$29 / month".
+ *
+ * The public price, from the /pricing-plans card and its FAQ ("Founding Agent
+ * Access may continue at $29 per month unless canceled before the subscription
+ * begins"), stated in the design's shorter form.
+ *
+ * NOTE, carried over from page-pricing-plans.php and still unresolved: the free
+ * 60-day path collects NO payment method, so nothing auto-bills at the end of the
+ * term. The date and the price below are what the product PROMISES, not something
+ * the billing system will execute on its own today. Whichever way that is
+ * reconciled — automatic conversion, or manual conversion with the copy softened —
+ * this string and ensurance_dashboard_founding_timeline() are the two places on
+ * the dashboard that have to move with it.
+ *
+ * @return string Formatted price, '' to drop it from the timeline.
+ */
+function ensurance_dashboard_access_price() {
+    /**
+     * Filter the price shown on the founding access timeline.
+     *
+     * @param string $price Formatted price string.
+     */
+    return (string) apply_filters( 'ensurance_dashboard_access_price', '$29 / month' );
+}
+
+/**
+ * Whole calendar days from one moment to another, in the site's timezone.
+ *
+ * CALENDAR days, not 86400-second blocks: both ends are floored to local midnight
+ * before they are compared, so "day 18" turns over when the date does rather than
+ * at the hour access started. That also makes it DST-safe — a 23- or 25-hour day
+ * still counts as one.
+ *
+ * @param int $from Unix timestamp to count from.
+ * @param int $to   Unix timestamp to count to.
+ * @return int Days between them. Negative when $to is before $from.
+ */
+function ensurance_dashboard_days_between( $from, $to ) {
+    $tz   = wp_timezone();
+    $from = ( new DateTimeImmutable( '@' . (int) $from ) )->setTimezone( $tz )->setTime( 0, 0 );
+    $to   = ( new DateTimeImmutable( '@' . (int) $to ) )->setTimezone( $tz )->setTime( 0, 0 );
+    $diff = $from->diff( $to );
+
+    return (int) $diff->days * ( $diff->invert ? -1 : 1 );
+}
+
+/**
+ * How far into founding access the agent is — the "day N" on the timeline.
+ *
+ * DAYS ELAPSED, which is what makes the timeline's arithmetic hold: the design
+ * reads day 18 on Aug 11 from a Jul 24 start (18 days elapsed), and puts the
+ * 60-day mark 60 days after that same start. Counting from 1 instead would leave
+ * the counter and the cancel date one day apart forever. The first day is
+ * therefore day 0 — zero days used — which is exactly what the segment beside it
+ * says by naming today's date as the start.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @param int $now     Optional. Moment to measure to. Defaults to now.
+ * @return int Days elapsed, 0 when there is no start date.
+ */
+function ensurance_dashboard_access_day( $user_id = 0, $now = 0 ) {
+    $start = ensurance_dashboard_access_start( $user_id );
+
+    if ( ! $start ) {
+        return 0;
+    }
+
+    return max( 0, ensurance_dashboard_days_between( $start, $now ? (int) $now : time() ) );
+}
+
+/**
+ * The founding access timeline — access started → today → the 60-day mark → the
+ * first charge.
+ *
+ * Step 10 of templates/agent-dashboard/build-steps.md, and the ONLY place billing
+ * dates appear on Today. Nothing else in the view may restate them — not the
+ * greeting row, and not the sidebar's founding-access card, which Step 1 left out
+ * for exactly this reason.
+ *
+ * BUILT TO BE REITERATED. The component that draws this takes whatever list it is
+ * given and does not know what a "60-day mark" is, and every visual difference
+ * between one segment and the next is DERIVED from `at` rather than authored:
+ *
+ *   - a segment whose `at` has passed is elapsed and takes the accent rule;
+ *   - a segment whose `at` is still ahead (or unknown) takes the neutral border;
+ *   - the LAST elapsed segment is the current one, and takes the accent label.
+ *
+ * So a fifth milestone — a verification date, a renewal, a second charge — is one
+ * entry through the filter below, in the right place, with the right rule, with
+ * nothing else touched. Same for dropping one: pass four, pass three, pass six.
+ *
+ * WHAT EACH SEGMENT CARRIES:
+ *   key     string  Stable slug, for filters targeting one segment.
+ *   label   string  The first line — what the moment is.
+ *   date    string  The second line's date, '' when the moment has no date to show.
+ *   note    string  The rest of the second line, joined to `date` with an em dash.
+ *   at      int     Unix timestamp the status is derived from. 0 = unknown, treated as ahead.
+ *   status  string  'done' | 'current' | 'upcoming'. Derived, never authored.
+ *
+ * TODAY'S SECOND LINE IS "N DAYS LEFT", where the design writes "Profile live,
+ * matching on". Two reasons for the change. It would be a second copy of status
+ * the priority slot already owns, which Step 15 forbids outright; and it can
+ * simply be FALSE — an agent in `setup` is neither live nor matching, and the
+ * timeline has no business claiming otherwise. Days remaining is true in every
+ * state, is nowhere else on the page, and is what an agent looking at a countdown
+ * actually wants from it.
+ *
+ * NO START DATE, NO TIMELINE. An empty list takes the whole section down in
+ * components/dashboard-timeline.php rather than drawing four rules over blanks —
+ * the same rule the live card and the setup card follow.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @param int $now     Optional. Moment to resolve against. Defaults to now.
+ * @return array<int,array{key:string,label:string,date:string,note:string,at:int,status:string}>
+ */
+function ensurance_dashboard_founding_timeline( $user_id = 0, $now = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $now     = $now ? (int) $now : time();
+    $start   = ensurance_dashboard_access_start( $user_id );
+
+    if ( ! $start ) {
+        return array();
+    }
+
+    $term = ensurance_dashboard_access_term();
+
+    // The two future dates, stepped in DAYS rather than by adding seconds, so a
+    // DST change inside the term cannot land the mark on the wrong date.
+    $origin = ( new DateTimeImmutable( '@' . $start ) )->setTimezone( wp_timezone() );
+    $mark   = $origin->modify( sprintf( '+%d days', $term ) )->getTimestamp();
+    $charge = $origin->modify( sprintf( '+%d days', $term + 1 ) )->getTimestamp();
+
+    $day  = max( 0, ensurance_dashboard_days_between( $start, $now ) );
+    $left = $term - $day;
+
+    // The countdown, phrased for the day it is on. Past the term it stops
+    // counting rather than going negative — the two segments after it carry
+    // what happened instead.
+    if ( $left > 1 ) {
+        $remaining = sprintf( '%d days left', $left );
+    } elseif ( 1 === $left ) {
+        $remaining = '1 day left';
+    } elseif ( 0 === $left ) {
+        $remaining = 'Last day';
+    } else {
+        $remaining = 'Access period ended';
+    }
+
+    $segments = array(
+        array(
+            'key'   => 'started',
+            'label' => 'Access started',
+            'date'  => wp_date( 'M j', $start ),
+            'note'  => '',
+            'at'    => $start,
+        ),
+        array(
+            'key'   => 'today',
+            // "Today — day 18". The em dash is the design's.
+            'label' => sprintf( 'Today — day %d', $day ),
+            'date'  => '',
+            'note'  => $remaining,
+            // Always the last elapsed moment, which is what makes this the
+            // current segment on every day of the term and after it.
+            'at'    => $now,
+        ),
+        array(
+            'key'   => 'mark',
+            'label' => sprintf( '%d-day mark', $term ),
+            'date'  => wp_date( 'M j', $mark ),
+            'note'  => 'cancel by this date',
+            'at'    => $mark,
+        ),
+        array(
+            'key'   => 'charge',
+            'label' => 'First charge',
+            'date'  => wp_date( 'M j', $charge ),
+            'note'  => ensurance_dashboard_access_price(),
+            'at'    => $charge,
+        ),
+    );
+
+    /**
+     * Filter the founding access timeline before statuses are derived.
+     *
+     * The hook to add, remove or reword a milestone. Entries must keep the shape
+     * documented above minus `status`, which is resolved below from `at` — so a
+     * segment added here cannot be given the wrong rule.
+     *
+     * @param array $segments Segments in display order.
+     * @param int   $user_id  User the timeline is being resolved for.
+     * @param int   $now      Moment the timeline is resolved against.
+     */
+    $segments = (array) apply_filters( 'ensurance_dashboard_founding_timeline', $segments, $user_id, $now );
+
+    // The current segment is the elapsed one nearest to now. Found first, because
+    // "is this the current one" cannot be answered while looking at one segment
+    // in isolation — every other part of the status can.
+    $current = -1;
+    $nearest = 0;
+
+    foreach ( $segments as $i => $segment ) {
+        $at = isset( $segment['at'] ) ? (int) $segment['at'] : 0;
+
+        if ( $at > 0 && $at <= $now && $at >= $nearest ) {
+            $nearest = $at;
+            $current = $i;
+        }
+    }
+
+    $resolved = array();
+
+    foreach ( $segments as $i => $segment ) {
+        $at = isset( $segment['at'] ) ? (int) $segment['at'] : 0;
+
+        if ( $i === $current ) {
+            $status = 'current';
+        } elseif ( $at > 0 && $at <= $now ) {
+            $status = 'done';
+        } else {
+            $status = 'upcoming';
+        }
+
+        $resolved[] = array(
+            'key'    => isset( $segment['key'] ) ? (string) $segment['key'] : (string) $i,
+            'label'  => isset( $segment['label'] ) ? (string) $segment['label'] : '',
+            'date'   => isset( $segment['date'] ) ? (string) $segment['date'] : '',
+            'note'   => isset( $segment['note'] ) ? (string) $segment['note'] : '',
+            'at'     => $at,
+            'status' => $status,
+        );
+    }
+
+    return $resolved;
+}
+
 // ============================================================================
 // 2b-v-a4. FOUNDING AGENT PLAN SELECTION — SIGN-UP FUNNEL MEMORY
 // ============================================================================

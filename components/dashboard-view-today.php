@@ -49,6 +49,13 @@
  * thing. Step 4's labeled box is gone, and with it the last placeholder branch
  * in this file.
  *
+ * STEP 10 adds the first thing on Today that is NOT the slot: the founding access
+ * timeline, under it and separated by a rule. Four moments of the 60-day term,
+ * drawn by the deliberately generic components/dashboard-timeline.php from the
+ * segments ensurance_dashboard_founding_timeline() resolves. It is reference
+ * rather than an action, it renders in every slot state, and it is the only place
+ * billing dates appear on this view — see the note above the call itself.
+ *
  * NOTHING renders when the state is somehow not one of the four. The step is
  * explicit that there is no fallback branch — no "unknown state" box, and never
  * two states at once. The data-backed states extend that rule to their data: a
@@ -160,3 +167,36 @@ if ( $dash_has_slot ) :
 	</section>
 	<?php
 endif;
+
+/*
+ * FOUNDING ACCESS TIMELINE. Step 10 — the four moments of the 60-day term, under
+ * the slot and separated from it by a rule rather than boxed into a card of its
+ * own. It is reference, not an action: the slot above is the one thing on Today
+ * asking anything of the agent, and a second bordered surface would read as a
+ * competing one.
+ *
+ * IT RENDERS IN EVERY SLOT STATE, and outside the slot's guard entirely — the
+ * term is running whether or not a request is waiting, and it is the same four
+ * dates on the day an agent is still in setup as on the day they accept
+ * something. That is also why it sits outside the <section> above: nothing here
+ * is about what needs the agent's attention.
+ *
+ * THE ONLY PLACE BILLING DATES APPEAR ON TODAY. Step 10 says so outright, and
+ * Step 15 generalizes it — no date may show up twice on the same page. The
+ * greeting row's stamp is today's date and clock, not a billing date; the
+ * sidebar's founding-access card, which would have restated the day count, is the
+ * piece Step 1 deliberately left out. Anything added later that wants to say
+ * "day 18" or "Sep 23" belongs here instead.
+ *
+ * The part itself is generic (see its docblock) — the founding-access meaning is
+ * all in ensurance_dashboard_founding_timeline(), which is also where a fifth
+ * milestone would be added.
+ */
+get_template_part(
+	'components/dashboard-timeline',
+	null,
+	array(
+		'label'    => 'Founding access timeline',
+		'segments' => ensurance_dashboard_founding_timeline(),
+	)
+);

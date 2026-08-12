@@ -1320,6 +1320,166 @@ html body:has(.dashboard-shell) .site-footer {
   outline-offset: 2px;
 }
 
+/* ── Founding access timeline ─────────────────────────────────────────
+   Step 10. The band under the priority slot, and the first thing on Today
+   that is not the slot.
+
+   SEPARATED BY A RULE, NOT WRAPPED IN A CARD, which the step asks for
+   outright: everything above this is a surface asking for a decision, and
+   a second bordered box would put dates in the same visual register as the
+   thing needing an answer. A hairline and 40px of air do the whole job.
+
+   The design's 40px / 22px are written out — --space-6 (32) and --space-7
+   (48) sit either side of the first, and no token is at 22px.
+
+   COUNT-AGNOSTIC on purpose (the step asks for a piece open to
+   reiteration): every rule below is written against a segment rather than
+   against a position, so three segments or six lay out as readily as the
+   four the founding timeline happens to have.
+
+   A NAMED CONTAINER, and the reflow below is queried against it rather than
+   against the viewport. The track wraps on the width it actually gets, which
+   is the column's — not the window's, which is a different number on this
+   page at every width (the rail takes 264px of it above 900px and none of it
+   below). Reflowing on the viewport meant a stretch around 800px where four
+   columns no longer fit but the two-up rule had not fired yet, and the track
+   broke 3 + 1 with the last segment stretched across the full width. It also
+   keeps the promise the rest of the block makes: drop this into a narrower
+   column and it reflows for that column, with nothing to re-tune. */
+.dash-timeline {
+  container: dash-timeline / inline-size;
+  margin-top: 40px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border-soft);
+}
+
+/* Same mono kicker as every other section label on the agent side, at the
+   design's 10.5px / 0.2em (--tracking-mono is that 0.2em). A <p> rather
+   than a heading — see the note in components/dashboard-timeline.php. */
+.dash-timeline__label {
+  margin: 0 0 22px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: var(--tracking-mono);
+  text-transform: uppercase;
+  color: var(--secondary);
+}
+
+/* THE TRACK. gap: 0 between columns is not an oversight — each segment's
+   top rule is its own border, and the four have to touch for the run to
+   read as one timeline rather than as four separate headers. The air
+   between the columns comes from padding INSIDE each segment instead, so
+   the rule keeps spanning it.
+
+   The row gap only ever applies once the track wraps, where 3px rules
+   stacked with no air between rows would read as a table.
+
+   list-style / padding reset the UA's numbering and indent: the sequence is
+   carried by the left-to-right run and by the rules, and printed markers
+   would compete with both. */
+.dash-timeline__track {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 18px 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Equal columns that stay readable: flex-grow splits the width evenly at
+   desktop, and the 150px basis is the point below which a label like
+   "Access started" would start wrapping every line — past it the track
+   wraps into rows instead of squeezing four columns into a phone.
+
+   border-box so the 14px trailing inset comes out of the column rather
+   than adding to it, which is what keeps the four columns equal. */
+.dash-timeline__seg {
+  box-sizing: border-box;
+  flex: 1 1 150px;
+  padding: 12px 14px 0 0;
+  border-top: 3px solid var(--border-strong);
+}
+
+/* THE ONE DISTINCTION THE DESIGN DRAWS: elapsed segments take the accent
+   rule, segments still ahead the neutral border. Both elapsed statuses get
+   it — `current` is elapsed too, it is simply the nearest one. */
+.dash-timeline__seg--done,
+.dash-timeline__seg--current {
+  border-top-color: var(--accent);
+}
+
+/* The trailing inset is what separates one column's text from the next
+   one's rule; on the last there is no next, so it would only pull the
+   final label off the content's right edge. */
+.dash-timeline__seg:last-child {
+  padding-right: 0;
+}
+
+/* Design is 13.5px/500 — no token sits at 13.5px (--text-xs is 12,
+   --text-sm is 14), and --weight-medium is that 500. Muted by default
+   because most segments are moments that have not happened yet. */
+.dash-timeline__seg-label {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-snug);
+  color: var(--text-muted);
+}
+
+/* Elapsed reads as record — full heading weight of color, because it
+   happened. */
+.dash-timeline__seg--done .dash-timeline__seg-label {
+  color: var(--text-heading);
+}
+
+/* …and the current one takes the accent, the only saturated mark in the
+   band. It is where the agent is standing, and the accent rule stops
+   there. */
+.dash-timeline__seg--current .dash-timeline__seg-label {
+  color: var(--accent);
+}
+
+/* The date line. 12.5px again has no token; --leading-snug keeps a wrapped
+   detail ("Sep 22 — cancel by this date" on a narrow column) tight enough
+   to stay one block under its label. */
+.dash-timeline__seg-detail {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  line-height: var(--leading-snug);
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+/* Two per row as soon as four 150px columns stop fitting — 620px is that
+   point with a little margin, so the track never breaks 3 + 1. 45% cannot
+   fit three across, and flex-grow spreads the pair back to the full width.
+
+   Both thresholds are the CONTAINER's width, not the window's; see the note
+   on .dash-timeline. */
+@container dash-timeline (max-width: 620px) {
+  .dash-timeline__seg {
+    flex-basis: 45%;
+  }
+}
+
+/* One per row once half the column is too narrow to hold a date line without
+   breaking it over three — four full-width rows read better than a cramped
+   2 × 2. 400px puts every phone here with room to spare: below the rail's
+   900px breakpoint the view falls back to --container-pad (24px a side), so
+   a 390px screen gives the track 342px and a 430px one 382px. Every segment
+   is last in its row now, so none has a neighbouring rule to be held off and
+   the trailing inset would only shorten the labels. */
+@container dash-timeline (max-width: 400px) {
+  .dash-timeline__seg {
+    flex-basis: 100%;
+    padding-right: 0;
+  }
+}
+
 /* ── Page background over parent-theme / plugin globals ──────────────
    Same fix the other standalone pages carry: AyeCode UI (GeoDirectory,
    the `aui_bs5` body class) ships
