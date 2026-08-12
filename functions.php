@@ -835,6 +835,15 @@ function ensurance_dashboard_views() {
             'label' => 'Account',
             // Icon `lock`.
             'icon'  => '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
+            // The design's own title and intro, through the shared view header.
+            // The intro is what makes the rows below legible as rows rather than
+            // as settings with their controls missing: nothing here is self-serve
+            // YET, and support can do all of it today. It is also the promise the
+            // support row at the bottom has to keep, which is why that row is the
+            // one action on the view.
+            'title' => 'Account',
+            'intro' => 'Self-serve account changes are coming soon. Agent support can update any of this for you today.',
+            'part'  => 'components/dashboard-view-account',
         ),
     );
 
@@ -2092,9 +2101,9 @@ function ensurance_dashboard_quiet_panel( $user_id = 0 ) {
  *
  * IT IS THE ACCOUNT VIEW, which is what the design does — its `finishSetup`
  * switches the view to `account`, the same place the profile view's locked
- * notice sends people. Step 14 builds that view's agent-support row (hours,
- * reply time, and the one action on the page); until then the link lands on the
- * stub, which is still the right destination and not a dead end.
+ * notice sends people. That view's agent-support row (reply time, and the one
+ * action on the page) is the end of the chain, and its button is the link that
+ * finally reaches a human: see ensurance_dashboard_support_contact_url().
  *
  * Read off ensurance_dashboard_views() rather than written out, so the URL
  * cannot drift from the rail's own Account row. If support ever gets a real
@@ -3321,6 +3330,362 @@ function ensurance_dashboard_profile_fields( $user_id = 0 ) {
             'key'   => isset( $field['key'] ) ? (string) $field['key'] : (string) $i,
             'label' => (string) $field['label'],
             'value' => (string) $field['value'],
+        );
+    }
+
+    return $clean;
+}
+
+/**
+ * The design's own sample ACCOUNT values — a card and a password age.
+ *
+ * PREVIEW ONLY, and gated exactly like ensurance_dashboard_sample_agency(): the
+ * Account view's rows fall back to these under `?slot=quiet`, which is the state
+ * in which the whole agent record is populated, so one URL shows the view as the
+ * design draws it. ensurance_dashboard_priority_preview() is capability-gated, so
+ * a real agent can never be shown them.
+ *
+ * `password` is an AGE in days rather than a date, because the design's own value
+ * is one ("password last changed 18 days ago") and a fixed date would drift out
+ * of that sentence the week after it was written.
+ *
+ * Copied field for field from the `isAcct` view of
+ * templates/agent-dashboard/AgentDashboard.dc.html.
+ *
+ * @return array{payment:string,password:int}
+ */
+function ensurance_dashboard_sample_account() {
+    return array(
+        'payment'  => 'Visa •••• 4242 — expires 09/28',
+        'password' => 18,
+    );
+}
+
+/**
+ * The card the subscription would be billed to, written the way it should read.
+ *
+ * NOTHING CARRIES ONE TODAY, and that is a fact about the product rather than a
+ * gap in this resolver: the free 60-day founding path collects no payment method
+ * at all (see the note in ensurance_dashboard_access_price), so there is nothing
+ * to resolve and this returns ''. The Account view says so in plain words instead
+ * of dropping the row — an account view that shows a first-charge date but no
+ * payment row leaves the obvious question unanswered, and "no card on file" IS
+ * the answer.
+ *
+ * A DISPLAY STRING, not card data. Whatever fills this in later (Stripe, most
+ * likely) should return the same already-redacted summary the design writes —
+ * brand, last four, expiry — because nothing on this page has any business
+ * handling more of a card than that.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return string Payment method summary, '' when there is none on file.
+ */
+function ensurance_dashboard_payment_method( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $sample  = ensurance_dashboard_sample_account();
+    $payment = ( 'quiet' === ensurance_dashboard_priority_preview() ) ? $sample['payment'] : '';
+
+    /**
+     * Filter the payment method shown on the Account view.
+     *
+     * @param string $payment Redacted payment method summary, '' when none.
+     * @param int    $user_id User the account is being resolved for.
+     */
+    return (string) apply_filters( 'ensurance_dashboard_payment_method', $payment, $user_id );
+}
+
+/**
+ * The address an agent SIGNS IN with, for the Account view's sign-in row.
+ *
+ * DELIBERATELY NOT ensurance_dashboard_request_inbox(), even though the two are
+ * the same address on every account today. They answer different questions — this
+ * one is "how do I get in", that one is "where do matched requests land" — and
+ * the moment an agency points its request inbox at a shared address through the
+ * filter, a sign-in row reading from it would be telling agents to log in with a
+ * mailbox that has no account behind it.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return string Email address, '' when there is no user or no address.
+ */
+function ensurance_dashboard_signin_email( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $user    = $user_id ? get_userdata( $user_id ) : false;
+    $email   = ( $user && ! empty( $user->user_email ) ) ? (string) $user->user_email : '';
+
+    return is_email( $email ) ? $email : '';
+}
+
+/**
+ * When the agent's password was last changed — the second half of the sign-in row.
+ *
+ * WORDPRESS DOES NOT RECORD THIS. The user record keeps the hash and nothing
+ * about when it was set, so there is no honest value to return and this comes
+ * back 0; the sign-in row then prints the address alone rather than guessing at
+ * an age. Registration date is NOT a stand-in — it would silently claim every
+ * agent last changed their password on the day they signed up.
+ *
+ * A MOMENT, not a written-out "18 days ago", so a cached render cannot go stale —
+ * the same rule the timeline and the Recent column follow.
+ *
+ * A password-age plugin, or a reset flow that stamps its own user meta, points the
+ * filter here and the row picks the clause back up with no other change.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @param int $now     Optional. Moment the sample age is measured back from.
+ * @return int Unix timestamp, 0 when it is not known.
+ */
+function ensurance_dashboard_password_changed( $user_id = 0, $now = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $now     = $now ? (int) $now : time();
+    $changed = 0;
+
+    if ( 'quiet' === ensurance_dashboard_priority_preview() ) {
+        $sample  = ensurance_dashboard_sample_account();
+        $changed = $now - ( (int) $sample['password'] * DAY_IN_SECONDS );
+    }
+
+    /**
+     * Filter when the agent's password was last changed.
+     *
+     * @param int $changed Unix timestamp, 0 when unknown.
+     * @param int $user_id User the account is being resolved for.
+     */
+    return (int) apply_filters( 'ensurance_dashboard_password_changed', $changed, $user_id );
+}
+
+/**
+ * Where the Account view's one action actually goes.
+ *
+ * THE END OF THE LINE. Every "change this" path in the product routes to agent
+ * support, and ensurance_dashboard_support_url() sends all of them to this VIEW —
+ * the profile's locked notice, the setup card's button, the quiet panel's closing
+ * line. So the Message button here is the last link in that chain and has to reach
+ * a human: /contact/, with the topic preselected so these arrive tagged as coming
+ * from an agent (see $ct_topics in page-contact.php).
+ *
+ * Not ensurance_founding_agent_contact_url(), whose `founding` topic is for
+ * PROSPECTIVE members coming off the /pricing-plans CTAs. An agent messaging from
+ * inside the dashboard has already joined.
+ *
+ * @return string Raw URL — esc_url at output.
+ */
+function ensurance_dashboard_support_contact_url() {
+    $url = add_query_arg( 'topic', 'agent', home_url( '/contact/' ) );
+
+    /**
+     * Filter the destination behind the Account view's Message button.
+     *
+     * The hook for a real support desk (a help widget, a ticket form) when one
+     * exists. Everything in the dashboard that says "message agent support" ends
+     * up here, so changing it moves all of them.
+     *
+     * @param string $url Contact URL.
+     */
+    return (string) apply_filters( 'ensurance_dashboard_support_contact_url', $url );
+}
+
+/**
+ * The Account view's ruled rows — access and billing, payment, sign-in, support.
+ *
+ * Step 14 of templates/agent-dashboard/build-steps.md, and the last of the three
+ * views outside Today. It is the answer to "what am I signed up for, what happens
+ * at the end of it, and how do I change any of it".
+ *
+ * DISPLAY-ONLY, WITH ONE EXCEPTION. The step is explicit: no Cancel, no Update, no
+ * Change — the agent support row is the single row carrying an action. That is not
+ * a placeholder for buttons that are coming; it is the product's actual shape
+ * today (the scope note at the top of build-steps.md), and a Cancel button that
+ * opened a contact form would be a worse lie than no button. So `action` is set on
+ * exactly one row here, and the component that renders these has no other
+ * interactive element in it.
+ *
+ * THE DATES COME FROM THE TIMELINE, never from a second calculation. Today's
+ * founding access timeline (ensurance_dashboard_founding_timeline) owns the cancel
+ * date and the first-charge date; this view reads the same two segments, so the
+ * two surfaces cannot disagree about when an agent is charged. They are on
+ * different views, which is what keeps Step 15's "no date in two places" intact —
+ * the rule is about one screen, and an account page that hid its own billing dates
+ * to satisfy it would be unusable.
+ *
+ * TENSE IS DERIVED. The segments carry their own status, so the sentence reads
+ * "begins Sep 23" while the charge is ahead and "from Sep 23" once it is not,
+ * and the cancel clause stops inviting a cancellation the window has closed on.
+ * Every founding agent crosses that boundary on day 60.
+ *
+ * SHAPE — one entry per row, in display order:
+ *   key    string  Stable slug, for filters targeting one row.
+ *   title  string  The row's name.
+ *   detail string  The line under it.
+ *   action array   ['label' => …, 'url' => …], or empty for a display-only row.
+ *
+ * A row with no title or no detail is DROPPED rather than ruled off around a
+ * blank — the same rule the profile's chips follow.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @param int $now     Optional. Moment to resolve against. Defaults to now.
+ * @return array<int,array{key:string,title:string,detail:string,action:array}>
+ */
+function ensurance_dashboard_account_rows( $user_id = 0, $now = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $now     = $now ? (int) $now : time();
+
+    // ── Founding access: what it costs, when that starts, and the window to
+    // get out before it does. Built from the timeline's own two future
+    // milestones so the dates are the same object Today shows.
+    $mark   = array();
+    $charge = array();
+
+    foreach ( ensurance_dashboard_founding_timeline( $user_id, $now ) as $segment ) {
+        if ( 'mark' === $segment['key'] ) {
+            $mark = $segment;
+        } elseif ( 'charge' === $segment['key'] ) {
+            $charge = $segment;
+        }
+    }
+
+    $sentences = array();
+
+    // The design's `billNote` — "$29 / month begins Sep 23." The price rides on
+    // the charge segment's note (ensurance_dashboard_access_price), so filtering
+    // the price away drops the clause instead of printing a bare date.
+    if ( ! empty( $charge['date'] ) && ! empty( $charge['note'] ) ) {
+        $sentences[] = ( 'upcoming' === $charge['status'] )
+            ? sprintf( '%s begins %s.', $charge['note'], $charge['date'] )
+            : sprintf( '%s from %s.', $charge['note'], $charge['date'] );
+    }
+
+    if ( ! empty( $mark['date'] ) ) {
+        $sentences[] = ( 'upcoming' === $mark['status'] )
+            ? sprintf( 'Cancel before %s and you are never charged — message support and we will take care of it.', $mark['date'] )
+            : sprintf( 'The cancel window closed %s — message support to make a change.', $mark['date'] );
+    }
+
+    // NO START DATE, NO DATES AT ALL — the timeline returns nothing without one
+    // (a user record with no registration date), so the row falls back to the
+    // terms themselves, which are true whether or not this account's dates are
+    // known. It still says the two things that matter: it converts, and it can
+    // be stopped before it does.
+    if ( empty( $sentences ) ) {
+        $price = ensurance_dashboard_access_price();
+
+        $sentences[] = ( '' !== $price )
+            ? sprintf(
+                'Founding access runs %d days, then continues at %s. Cancel before it ends and you are never charged — message support and we will take care of it.',
+                ensurance_dashboard_access_term(),
+                $price
+            )
+            : sprintf(
+                'Founding access runs %d days. Cancel before it ends and you are never charged — message support and we will take care of it.',
+                ensurance_dashboard_access_term()
+            );
+    }
+
+    $rows = array(
+        array(
+            'key'    => 'access',
+            'title'  => 'Founding Agent Access',
+            'detail' => implode( ' ', $sentences ),
+        ),
+    );
+
+    // ── Payment method. Nothing on file is the normal state on this plan, so it
+    // is stated rather than hidden — see ensurance_dashboard_payment_method().
+    $payment = ensurance_dashboard_payment_method( $user_id );
+
+    $rows[] = array(
+        'key'    => 'payment',
+        'title'  => 'Payment method',
+        'detail' => ( '' !== $payment ) ? $payment : 'No card on file — the 60-day founding access does not require one.',
+    );
+
+    // ── Sign-in. The address is the row; the password age is a clause that only
+    // appears when something actually knows it.
+    $email = ensurance_dashboard_signin_email( $user_id );
+
+    if ( '' !== $email ) {
+        $changed = ensurance_dashboard_password_changed( $user_id, $now );
+        $detail  = $email;
+
+        if ( $changed > 0 && $changed <= $now ) {
+            $days = ensurance_dashboard_days_between( $changed, $now );
+
+            if ( $days <= 0 ) {
+                $aged = 'password last changed today';
+            } elseif ( 1 === $days ) {
+                $aged = 'password last changed yesterday';
+            } else {
+                $aged = sprintf( 'password last changed %d days ago', $days );
+            }
+
+            $detail = sprintf( '%s — %s', $email, $aged );
+        }
+
+        $rows[] = array(
+            'key'    => 'signin',
+            'title'  => 'Sign-in',
+            'detail' => $detail,
+        );
+    }
+
+    /*
+     * ── Agent support, and the one row with an action.
+     *
+     * THE HOURS ARE NOT THE DESIGN'S. It writes "Weekdays 7am–5pm PT · typical
+     * reply under 2 hours", and both halves of that are a promise nothing else in
+     * the product makes: /contact states one to two business days, in its intro,
+     * its trust cues, its FAQ answer and its success screen. Shipping a two-hour
+     * SLA on the one surface an agent is told to use for everything — cancelling,
+     * service areas, a locked profile — would set an expectation the team has
+     * already said it does not meet, on the page where missing it costs the most.
+     * So the row keeps its shape and states the reply time the rest of the site
+     * states. Real staffed hours belong here through the filter below, alongside
+     * a matching change to page-contact.php.
+     */
+    $rows[] = array(
+        'key'    => 'support',
+        'title'  => 'Agent support',
+        'detail' => 'Messages are answered by email, usually within one to two business days.',
+        'action' => array(
+            'label' => 'Message',
+            'url'   => ensurance_dashboard_support_contact_url(),
+        ),
+    );
+
+    /**
+     * Filter the Account view's rows.
+     *
+     * The hook a real subscription record attaches to. Rows must keep the shape
+     * documented above; anything missing a title or a detail is dropped, and an
+     * `action` without both a label and a URL is ignored rather than rendered as
+     * a dead control.
+     *
+     * @param array $rows    Rows in display order.
+     * @param int   $user_id User the account is being resolved for.
+     * @param int   $now     Moment the rows were resolved against.
+     */
+    $rows = (array) apply_filters( 'ensurance_dashboard_account_rows', $rows, $user_id, $now );
+
+    $clean = array();
+
+    foreach ( $rows as $i => $row ) {
+        if ( empty( $row['title'] ) || empty( $row['detail'] ) ) {
+            continue;
+        }
+
+        $action = array();
+
+        if ( ! empty( $row['action']['label'] ) && ! empty( $row['action']['url'] ) ) {
+            $action = array(
+                'label' => (string) $row['action']['label'],
+                'url'   => (string) $row['action']['url'],
+            );
+        }
+
+        $clean[] = array(
+            'key'    => isset( $row['key'] ) ? (string) $row['key'] : (string) $i,
+            'title'  => (string) $row['title'],
+            'detail' => (string) $row['detail'],
+            'action' => $action,
         );
     }
 

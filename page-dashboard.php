@@ -133,10 +133,11 @@ get_header( 'agent' );
  * in that array, which renders after the header — Today
  * (components/dashboard-view-today.php, where Phase 2 of
  * templates/agent-dashboard/build-steps.md landed), Requests
- * (components/dashboard-view-requests.php, Step 12) and Agency Profile
- * (components/dashboard-view-profile.php, Step 13). Account still carries no
- * part and no title, so it renders an EMPTY container until Step 14 fills it
- * in.
+ * (components/dashboard-view-requests.php, Step 12), Agency Profile
+ * (components/dashboard-view-profile.php, Step 13) and Account
+ * (components/dashboard-view-account.php, Step 14). All four are built; a new
+ * view added to the registry before its part exists still renders its header
+ * alone rather than erroring.
  *
  * tabindex="-1" lets dashboard.js move focus here after a click without
  * putting the container in the tab order.

@@ -2079,6 +2079,132 @@ html body:has(.dashboard-shell) .site-footer {
   color: var(--accent-hover);
 }
 
+/* ── Account — the read-only subscription record ─────────────────────
+   Step 14 of templates/agent-dashboard/build-steps.md, rendered by
+   components/dashboard-view-account.php under the shared view header.
+
+   RULES, NOT CARDS, and for the same reason Today's reference band has
+   none: every bordered surface in this product is something asking to be
+   acted on, and three of these four rows cannot be acted on at all. The
+   hairlines group each title with the line under it and hold the column
+   together; nothing here has a fill, a radius or a shadow.
+
+   ONE CONTROL ON THE VIEW. There is no hover state in this block except on
+   that link, and no focus style but its own — a row an agent cannot change
+   should not light up under the cursor as though they could. */
+
+/* The design's 720px cap: the rows are one column of prose, and a rule
+   running the full width of a 1080px view would read as a page divider
+   rather than as the edge of a record. list-style/padding reset the <ul>. */
+.dash-account {
+  max-width: 720px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* flex-start rather than center, so the Message button sits on the first
+   line of the support row instead of floating to the middle of a sentence
+   that has wrapped. wrap is what lets it drop below the text on a narrow
+   column — see the note on the action below. */
+.dash-account__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px 0;
+  border-top: 1px solid var(--border-soft);
+}
+
+/* The design closes the list with a second rule — the record has a bottom
+   edge, unlike Today's reference rows, which trail off into the page. */
+.dash-account__row:last-child {
+  border-bottom: 1px solid var(--border-soft);
+}
+
+/* min-width: 0 lets the text column shrink past its longest unbroken word
+   (a sign-in address is one) instead of pushing the action off the row. */
+.dash-account__what {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+/* The row's name, at the design's 15px. Regular weight is stated because
+   this is the heavier of the two lines by COLOR, not by weight — bolding it
+   would make four ruled rows read as four section headings. */
+.dash-account__title {
+  margin: 0 0 4px;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-snug);
+  color: var(--text-heading);
+}
+
+/* The line under it. The 420px cap is the design's, on the one row long
+   enough to need it — the billing sentence — and harmless on the three that
+   never reach it. anywhere so a long sign-in address breaks inside the
+   column rather than widening the row. */
+.dash-account__detail {
+  max-width: 420px;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
+}
+
+/* THE ONE ACTION. Same 13px accent link as the decided panel's Undo, which
+   is the other place in this dashboard where a single quiet control sits
+   under a block of text — one treatment for "the one thing you can do
+   here". The vertical padding is the design's, and it also carries the tap
+   target: 13px text alone is under the touch minimum.
+
+   No underline: it is on its own beside the row rather than inside a
+   sentence, so its position and color are unambiguous — unlike the profile
+   notice's inline link, which had to be underlined to be findable at all. */
+.dash-account__action {
+  flex-shrink: 0;
+  padding: 6px 0;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: var(--leading-snug);
+  color: var(--accent);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.18s ease;
+}
+
+.dash-account__action:hover,
+.dash-account__action:focus-visible {
+  color: var(--accent-hover);
+}
+
+/* The view is light, so the shared ring reads here — stated because the
+   link sits on the page background with no frame of its own to define it. */
+.dash-account__action:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+/* Below 520px — the same point the Requests table restacks — the action
+   moves under the text rather than squeezing the sentence beside it into a
+   column two words wide. The row's own flex-wrap does the move; this only
+   closes the gap it would otherwise inherit from the 20px between them. */
+@media (max-width: 520px) {
+  .dash-account__row {
+    gap: 8px;
+  }
+
+  .dash-account__what {
+    flex-basis: 100%;
+  }
+}
+
 /* ── Page background over parent-theme / plugin globals ──────────────
    Same fix the other standalone pages carry: AyeCode UI (GeoDirectory,
    the `aui_bs5` body class) ships
