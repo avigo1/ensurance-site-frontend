@@ -130,11 +130,12 @@ get_header( 'agent' );
  * fade, history, deep links) keys off the entry's `view` slug.
  *
  * A view whose content is more than eyebrow / title / intro names a `part`
- * in that array and puts its markup in that template part instead. Today does
- * — components/dashboard-view-today.php, where the rest of Phase 2 of
- * templates/agent-dashboard/build-steps.md lands. The other three carry no
- * part and no title yet, so they render EMPTY containers and fill in one step
- * at a time from Step 12 on.
+ * in that array, which renders after the header — Today
+ * (components/dashboard-view-today.php, where Phase 2 of
+ * templates/agent-dashboard/build-steps.md landed) and Requests
+ * (components/dashboard-view-requests.php, Step 12). Agency Profile and
+ * Account still carry no part and no title, so they render EMPTY containers
+ * until Steps 13 and 14 fill them in.
  *
  * tabindex="-1" lets dashboard.js move focus here after a click without
  * putting the container in the tab order.
@@ -165,9 +166,9 @@ foreach ( $dashboard_items as $dash_item ) :
 		$dash_classes[] = 'is-active';
 	}
 
-	// A `part` that has not been written yet falls back to the generic
-	// eyebrow / title / intro, so a view can be listed before its real markup
-	// exists.
+	// A `part` that has not been written yet simply does not render, so a view
+	// can be listed before its real markup exists — it falls back to whatever
+	// header its registry entry sets.
 	$dash_has_part = ( '' !== $dash_item['part'] && locate_template( $dash_item['part'] . '.php' ) );
 
 	// …and a view with neither a part nor a title renders an EMPTY container.
@@ -188,11 +189,18 @@ foreach ( $dashboard_items as $dash_item ) :
 		tabindex="-1"
 		aria-label="<?php echo esc_attr( $dash_label ); ?>"
 	>
-		<?php if ( $dash_has_part ) : ?>
-
-			<?php get_template_part( $dash_item['part'] ); ?>
-
-		<?php elseif ( $dash_has_header ) : ?>
+		<?php
+		/*
+		 * HEADER THEN PART, and a view may have either or both. The header is
+		 * the same object on Requests, Agency Profile and Account — a title
+		 * over one line of scope — so it is described once in the registry and
+		 * rendered here, and each of those views' parts carries only the
+		 * content below it. Today is the view with a part and no header: its
+		 * <h1> is the greeting, which the design gives no eyebrow or intro, so
+		 * nothing here prints and the part renders alone.
+		 */
+		?>
+		<?php if ( $dash_has_header ) : ?>
 
 			<?php if ( '' !== $dash_item['eyebrow'] ) : ?>
 				<div class="dash-view__eyebrow"><?php echo esc_html( $dash_item['eyebrow'] ); ?></div>
@@ -205,6 +213,12 @@ foreach ( $dashboard_items as $dash_item ) :
 			<?php if ( '' !== $dash_item['intro'] ) : ?>
 				<p class="dash-view__intro"><?php echo esc_html( $dash_item['intro'] ); ?></p>
 			<?php endif; ?>
+
+		<?php endif; ?>
+
+		<?php if ( $dash_has_part ) : ?>
+
+			<?php get_template_part( $dash_item['part'] ); ?>
 
 		<?php endif; ?>
 	</section>

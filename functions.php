@@ -763,12 +763,17 @@ function ensurance_dashboard_request_count( $user_id = 0 ) {
  *   href     string  optional  Destination. Defaults to `?view=<view>` on
  *                              /dashboard/.
  *   modifier string  optional  Extra class on the container.
- *   part     string  optional  Template part rendered INSIDE the container
- *                              instead of the generic eyebrow/title/intro —
- *                              the escape hatch for views whose real content
- *                              is a card grid, status rows, an accordion and
- *                              so on. Ignored if the file does not exist, so
- *                              a view can be listed before it is built.
+ *   part     string  optional  Template part rendered INSIDE the container,
+ *                              AFTER the generic eyebrow/title/intro — the
+ *                              escape hatch for views whose real content is a
+ *                              card grid, status rows, an accordion and so on.
+ *                              The two compose: a view that sets a title and a
+ *                              part gets the shared header and then its own
+ *                              markup (Requests), and one that sets only a
+ *                              part renders the part alone (Today, whose <h1>
+ *                              is the greeting). Ignored if the file does not
+ *                              exist, so a view can be listed before it is
+ *                              built.
  *
  * @return array[] Ordered rail items, defaults applied.
  */
@@ -802,6 +807,13 @@ function ensurance_dashboard_views() {
             // Icon `file-text`.
             'icon'  => '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>',
             'badge' => ensurance_dashboard_request_count(),
+            // The design's own title and scope line. Both go through the shared
+            // view header, and the part below adds only the table — the header
+            // is the same object on all three of the non-Today views, so it is
+            // described once here rather than rebuilt in each part.
+            'title' => 'Requests',
+            'intro' => 'Every request matched to your service areas since access started.',
+            'part'  => 'components/dashboard-view-requests',
         ),
         array(
             'view'  => 'profile',
@@ -1221,11 +1233,17 @@ function ensurance_dashboard_priority_preview() {
  * this returns an empty array, and a live slot with no request renders NOTHING
  * rather than a dark card of invented facts.
  *
- * The one exception is the admin-only preview toggle: /dashboard/?slot=live is
- * how this card gets reviewed before a queue exists, so that path (and only that
- * path) returns the design's own sample request. An agent cannot reach it —
- * ensurance_dashboard_priority_preview() is capability-gated for exactly this
- * reason.
+ * The exception is the admin-only preview toggle, which returns the design's own
+ * sample request — the way this card gets reviewed before a queue exists. An
+ * agent cannot reach it: ensurance_dashboard_priority_preview() is capability-
+ * gated for exactly this reason. TWO preview states qualify, not one:
+ * /dashboard/?slot=live because the card is what that state renders, and
+ * ?slot=decided because the request still EXISTS after it is decided — Step 12's
+ * Requests view lists it with an Accepted / Passed badge (see
+ * ensurance_dashboard_request_rows), and a decided preview that dropped the row
+ * out of the table would be showing a confirmation about a request no history
+ * contains. Today itself is unaffected: the decided state renders its own panel
+ * and never reads this.
  *
  * When the real queue lands, return its awaiting request through the filter
  * below and the card, its countdown and its tiles all follow with no change to
@@ -1238,6 +1256,12 @@ function ensurance_dashboard_priority_preview() {
  *   expires_at int     Unix time the request stops being decidable, 0 for none.
  *                      A moment rather than a written-down "21h 40m", so the
  *                      countdown cannot be stale on a cached render.
+ *   matched_at int     Unix time the request was matched to this agent, 0 for
+ *                      unknown. The card does not print it; the Requests row
+ *                      for the same request stamps itself from it.
+ *   detail     string  One-line summary of the request for the Requests row —
+ *                      the same facts the card spreads across tiles, written as
+ *                      a sentence fragment. '' when there is nothing to add.
  *   facts      array   Up to four ['label' => …, 'value' => …] pairs, in the
  *                      order they should be shown.
  *
@@ -1271,6 +1295,15 @@ function ensurance_dashboard_sample_request() {
         // so the preview exercises the countdown rather than hardcoding its
         // output.
         'expires_at' => time() + ( 21 * HOUR_IN_SECONDS ) + ( 40 * MINUTE_IN_SECONDS ),
+        // Same treatment in the other direction: the design's Requests row
+        // stamps this request "2h ago" and its card calls it "2 hours ago", and
+        // both are the one moment it was matched.
+        'matched_at' => time() - ( 2 * HOUR_IN_SECONDS ),
+        // The Requests row's one line, from the design's own `reqRows`. It is
+        // the two tiles an agent scans first, not a summary of all four — the
+        // carrier and the submitted time say nothing in a list where every row
+        // carries a stamp of its own.
+        'detail'     => '2 drivers, 2 vehicles · ZIP 93013',
         'facts'      => array(
             array( 'label' => 'Shopper ZIP', 'value' => '93013' ),
             array( 'label' => 'Household', 'value' => '2 drivers, 2 vehicles' ),
@@ -1285,8 +1318,8 @@ function ensurance_dashboard_live_request( $user_id = 0 ) {
 
     $request = array();
 
-    // Admin preview only — see the note above.
-    if ( 'live' === ensurance_dashboard_priority_preview() ) {
+    // Admin preview only — see the note above for why `decided` counts too.
+    if ( in_array( ensurance_dashboard_priority_preview(), array( 'live', 'decided' ), true ) ) {
         $request = ensurance_dashboard_sample_request();
     }
 
@@ -1326,6 +1359,8 @@ function ensurance_dashboard_live_request( $user_id = 0 ) {
         'coverage'   => (string) $request['coverage'],
         'county'     => (string) $request['county'],
         'expires_at' => isset( $request['expires_at'] ) ? (int) $request['expires_at'] : 0,
+        'matched_at' => isset( $request['matched_at'] ) ? (int) $request['matched_at'] : 0,
+        'detail'     => isset( $request['detail'] ) ? (string) $request['detail'] : '',
         // The design's row is four tiles wide; a fifth would wrap to a lone
         // tile on a row of its own, so extras are dropped rather than allowed
         // to reshape the card.
@@ -2888,6 +2923,226 @@ function ensurance_dashboard_activity( $user_id = 0, $limit = 4, $now = 0 ) {
         if ( count( $clean ) >= $limit ) {
             break;
         }
+    }
+
+    return $clean;
+}
+
+/**
+ * The four states a matched request can be in on the Requests view — THE list.
+ *
+ * Step 12 of templates/agent-dashboard/build-steps.md: each row carries a status
+ * badge, and its tone maps to the status. One array holds both halves of that
+ * mapping, so a row can only ever be in a state that has a label and a tone, and
+ * neither can be written down twice.
+ *
+ * THE TONES ARE THE DESIGN'S, and there are three of them for four states:
+ *
+ *   awaiting → info     the one row still asking something of the agent
+ *   accepted → ok       a request they took
+ *   passed   → neutral  a request they let go
+ *   expired  → neutral  a request that timed out
+ *
+ * Passed and expired share a tone on purpose. Neither is an outcome to
+ * congratulate or warn about — both are simply closed — and a distinct color for
+ * each would put weight on a difference the badge's own word already states.
+ * Nothing here is red: passing is a legitimate answer (Step 6 says not to
+ * discourage it), and an expired request is a queue event, not the agent's
+ * error.
+ *
+ * @return array<string,array{label:string,tone:string}> Status slug => label and
+ *                                                       badge tone.
+ */
+function ensurance_dashboard_request_statuses() {
+    return array(
+        'awaiting' => array(
+            'label' => 'Awaiting you',
+            'tone'  => 'info',
+        ),
+        'accepted' => array(
+            'label' => 'Accepted',
+            'tone'  => 'ok',
+        ),
+        'passed'   => array(
+            'label' => 'Passed',
+            'tone'  => 'neutral',
+        ),
+        'expired'  => array(
+            'label' => 'Expired',
+            'tone'  => 'neutral',
+        ),
+    );
+}
+
+/**
+ * The design's own sample history — the closed requests behind the Requests
+ * preview.
+ *
+ * The counterpart of ensurance_dashboard_sample_request() and
+ * ensurance_dashboard_sample_matching(), and separate from the first of those on
+ * purpose: this is everything the agent has ALREADY answered, while the sample
+ * request is the one still waiting. ensurance_dashboard_request_rows() puts the
+ * two together, which is what makes the awaiting row at the top of the table the
+ * same request Today is asking about rather than a fifth invention.
+ *
+ * PREVIEW ONLY. Nothing reaches this except through
+ * ensurance_dashboard_priority_preview(), which is capability-gated — an agent
+ * can never be shown these values. Copied row for row from `reqRows` in
+ * templates/agent-dashboard/AgentDashboard.dc.html, minus its first row (the
+ * awaiting one, which comes from the live request instead), with the design's
+ * fixed date strings expressed as real moments so the preview exercises
+ * ensurance_dashboard_relative_time() rather than hardcoding its output.
+ *
+ * @param int $now Optional. Moment the sample's ages are measured back from.
+ * @return array<int,array{key:string,title:string,detail:string,at:int,status:string}>
+ */
+function ensurance_dashboard_sample_history( $now = 0 ) {
+    $now = $now ? (int) $now : time();
+
+    return array(
+        array(
+            'key'    => 'sample-home-ventura',
+            'title'  => 'Home — Ventura County',
+            'detail' => 'Single family, purchased 2019',
+            'at'     => $now - ( 5 * DAY_IN_SECONDS ),
+            'status' => 'accepted',
+        ),
+        array(
+            'key'    => 'sample-auto-santa-barbara',
+            'title'  => 'Auto — Santa Barbara County',
+            'detail' => '1 driver · ZIP 93101',
+            'at'     => $now - ( 9 * DAY_IN_SECONDS ),
+            'status' => 'passed',
+        ),
+        array(
+            'key'    => 'sample-life-coastal',
+            'title'  => 'Life — Coastal County',
+            'detail' => 'Term, age 41',
+            'at'     => $now - ( 12 * DAY_IN_SECONDS ),
+            'status' => 'accepted',
+        ),
+        array(
+            'key'    => 'sample-home-coastal',
+            'title'  => 'Home — Coastal County',
+            'detail' => 'Condo · ZIP 93013',
+            'at'     => $now - ( 16 * DAY_IN_SECONDS ),
+            'status' => 'expired',
+        ),
+    );
+}
+
+/**
+ * Every request matched to this agent, newest first — the Requests view's table.
+ *
+ * Step 12 of templates/agent-dashboard/build-steps.md. The whole history in one
+ * list: what the request was, the one line that describes it, when it arrived,
+ * and where it ended up.
+ *
+ * THE TOP ROW IS TODAY'S SLOT, NOT A COPY OF IT. The step is explicit that the
+ * awaiting row is the only row tied to Today, and the tie is real rather than
+ * cosmetic — the row is built from ensurance_dashboard_live_request(), the same
+ * resolver the live card renders, and its status follows
+ * ensurance_dashboard_decision(). So accepting on Today does not leave a stale
+ * "Awaiting you" in the table: the same row re-reads as Accepted, and Undo puts
+ * it back. Nothing in this file can disagree with the slot about the one request
+ * that is in both places, because there is only one request.
+ *
+ * EVERYTHING BELOW IT IS HISTORY, AND THERE IS NONE YET. No decision writes a
+ * history row — ensurance_dashboard_record_decision() names that as the queue's
+ * job — so the table holds at most the live row today, and usually nothing at
+ * all. The admin preview is the one exception, for the same reason the live card
+ * has one: /dashboard/?view=requests&slot=live is how the full five-row table
+ * gets reviewed before a queue exists. (`?slot=` is the preview switch for the
+ * whole dashboard, not just Today; the reference band on Today reads it the same
+ * way.)
+ *
+ * NEWEST FIRST is the caller's contract, not a sort applied here: rows may
+ * legitimately arrive with no timestamp at all — the queue can know an order it
+ * cannot date — and re-sorting on `at` would drop those to the bottom. The live
+ * row is prepended because it is by definition the most recent thing matched.
+ *
+ * SHAPE — a list of ['key' => …, 'title' => …, 'detail' => …, 'at' => …,
+ * 'when' => …, 'status' => …, 'label' => …, 'tone' => …]. `when` is what the row
+ * prints, derived from `at` when the entry does not state it; `label` and `tone`
+ * come from ensurance_dashboard_request_statuses() and are not overridable per
+ * row, so two rows in the same state can never look different. A row with no
+ * title, or in a state that list does not name, is dropped.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @param int $now     Optional. Moment relative stamps are measured from.
+ * @return array<int,array{key:string,title:string,detail:string,at:int,when:string,status:string,label:string,tone:string}>
+ */
+function ensurance_dashboard_request_rows( $user_id = 0, $now = 0 ) {
+    $user_id  = $user_id ? (int) $user_id : get_current_user_id();
+    $now      = $now ? (int) $now : time();
+    $statuses = ensurance_dashboard_request_statuses();
+    $rows     = array();
+
+    // The request Today is asking about, as the table's newest row. Its status
+    // is whatever the agent has done with it so far — nothing yet, accepted, or
+    // passed — which is what keeps the two surfaces telling one story.
+    $live = ensurance_dashboard_live_request( $user_id );
+
+    if ( ! empty( $live ) ) {
+        $decision = ensurance_dashboard_decision( $user_id );
+
+        $decided = array(
+            'accept' => 'accepted',
+            'pass'   => 'passed',
+        );
+
+        $rows[] = array(
+            'key'    => 'live',
+            'title'  => sprintf( '%s — %s', $live['coverage'], $live['county'] ),
+            'detail' => $live['detail'],
+            'at'     => $live['matched_at'],
+            'status' => isset( $decided[ $decision ] ) ? $decided[ $decision ] : 'awaiting',
+        );
+    }
+
+    // Admin preview only — see the note above.
+    if ( '' !== ensurance_dashboard_priority_preview() ) {
+        $rows = array_merge( $rows, ensurance_dashboard_sample_history( $now ) );
+    }
+
+    /**
+     * Filter the rows of the dashboard's Requests table.
+     *
+     * The hook the real matching queue attaches to when it exists. Entries must
+     * keep the shape documented above and arrive NEWEST FIRST — they are not
+     * re-sorted. `when` is optional and is derived from `at` when omitted;
+     * `status` must be one of ensurance_dashboard_request_statuses(), whose
+     * label and tone are applied afterwards and cannot be overridden per row.
+     *
+     * @param array $rows    Rows, newest first.
+     * @param int   $user_id User the table is being resolved for.
+     * @param int   $now     Moment relative stamps are measured from.
+     */
+    $rows = (array) apply_filters( 'ensurance_dashboard_request_rows', $rows, $user_id, $now );
+
+    $clean = array();
+
+    foreach ( $rows as $i => $row ) {
+        $status = isset( $row['status'] ) ? sanitize_key( $row['status'] ) : '';
+
+        // A row with nothing to name, or in a state the badge has no word for,
+        // is dropped rather than rendered as a blank line or an unlabeled chip.
+        if ( empty( $row['title'] ) || ! isset( $statuses[ $status ] ) ) {
+            continue;
+        }
+
+        $at = isset( $row['at'] ) ? (int) $row['at'] : 0;
+
+        $clean[] = array(
+            'key'    => isset( $row['key'] ) ? (string) $row['key'] : (string) $i,
+            'title'  => (string) $row['title'],
+            'detail' => isset( $row['detail'] ) ? (string) $row['detail'] : '',
+            'at'     => $at,
+            'when'   => isset( $row['when'] ) ? (string) $row['when'] : ensurance_dashboard_relative_time( $at, $now ),
+            'status' => $status,
+            'label'  => $statuses[ $status ]['label'],
+            'tone'   => $statuses[ $status ]['tone'],
+        );
     }
 
     return $clean;
