@@ -2624,6 +2624,275 @@ function ensurance_dashboard_founding_timeline( $user_id = 0, $now = 0 ) {
     return $resolved;
 }
 
+/**
+ * A past moment written the way Today's Recent column writes it — "2h ago",
+ * "Aug 6".
+ *
+ * Step 11 of templates/agent-dashboard/build-steps.md, whose activity rows carry
+ * a relative timestamp on the right. The design writes those strings out; here
+ * they are derived from the moment itself, so a cached render cannot go stale.
+ *
+ * COARSE ON PURPOSE, and it switches units the way the design's own list does:
+ * anything inside the last day reads as elapsed time ("2h ago"), anything older
+ * reads as a date ("Aug 6"). That is the boundary at which an agent stops
+ * thinking in hours and starts thinking in days — "43h ago" answers a question
+ * nobody asked. This is deliberately NOT ensurance_dashboard_countdown(), which
+ * measures the other direction (time LEFT on a request, to the minute, because a
+ * deadline closing in is exactly when the minutes matter).
+ *
+ * A dated string gains its year once it is outside the current one, so an entry
+ * from a previous term cannot read as this August.
+ *
+ * Returns '' for an unknown moment, or one that has not happened — a row with
+ * nothing to stamp drops the stamp rather than printing "0m ago" or a date in
+ * the future.
+ *
+ * @param int $at  Unix timestamp of the moment.
+ * @param int $now Optional. Moment to measure from. Defaults to now.
+ * @return string Relative time like "12m ago" / "2h ago", or a date; '' if none.
+ */
+function ensurance_dashboard_relative_time( $at, $now = 0 ) {
+    $at  = (int) $at;
+    $now = $now ? (int) $now : time();
+
+    if ( $at <= 0 || $at > $now ) {
+        return '';
+    }
+
+    $ago = $now - $at;
+
+    if ( $ago < MINUTE_IN_SECONDS ) {
+        return 'Just now';
+    }
+
+    if ( $ago < HOUR_IN_SECONDS ) {
+        return sprintf( '%dm ago', (int) floor( $ago / MINUTE_IN_SECONDS ) );
+    }
+
+    if ( $ago < DAY_IN_SECONDS ) {
+        return sprintf( '%dh ago', (int) floor( $ago / HOUR_IN_SECONDS ) );
+    }
+
+    // Same-year dates stay short, the way the design writes them; older ones
+    // carry the year, since "Aug 6" with no year is a different claim.
+    $format = ( wp_date( 'Y', $at ) === wp_date( 'Y', $now ) ) ? 'M j' : 'M j, Y';
+
+    return wp_date( $format, $at );
+}
+
+/**
+ * What a shopper sees of this agency — the left reference column on Today.
+ *
+ * Step 11 of templates/agent-dashboard/build-steps.md: the four pieces of the
+ * agency that face outward, so an agent can check what is being shown on their
+ * behalf without leaving Today. Displayed name, the counties they are matched
+ * in, the coverages they are matched on, and the inbox a matched request is sent
+ * to.
+ *
+ * READ-ONLY, WITH NO EDIT AFFORDANCE — not even a disabled one. The step says so
+ * outright, and the scope note at the top of build-steps.md makes it the rule for
+ * the whole product: agency data is not editable in v1, and every "change this"
+ * path ends at agent support. So these are values and captions and nothing else;
+ * the sentence that routes changes to support is already on the quiet panel
+ * (Step 8) and gets its own row on Account (Step 14).
+ *
+ * NOTHING NEW IS RESOLVED HERE. Every value comes from the resolver that already
+ * owns it — ensurance_dashboard_agency_name(), _service_areas(),
+ * _coverage_types(), _request_inbox() — which is what keeps this column and the
+ * surfaces that state the same things (the rail's user card, the quiet panel's
+ * sentence) from ever disagreeing. Two of those have nothing to return outside
+ * the admin preview today, and their rows simply do not render: a caption over a
+ * blank would be the one thing worse than a missing row, since it would read as
+ * "your service areas are empty" rather than "not set up yet".
+ *
+ * SHAPE — a list of ['key' => …, 'value' => …, 'caption' => …], in display
+ * order, with `value` shown above `caption`. Any row missing either half is
+ * dropped.
+ *
+ * Captions are the design's own (the "What shoppers see" block of
+ * templates/agent-dashboard/AgentDashboard.dc.html).
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return array<int,array{key:string,value:string,caption:string}>
+ */
+function ensurance_dashboard_shopper_rows( $user_id = 0 ) {
+    $user_id   = $user_id ? (int) $user_id : get_current_user_id();
+    $areas     = ensurance_dashboard_service_areas( $user_id );
+    $coverages = ensurance_dashboard_coverage_types( $user_id );
+
+    $rows = array(
+        array(
+            'key'     => 'name',
+            'value'   => ensurance_dashboard_agency_name( $user_id ),
+            'caption' => 'Displayed name',
+        ),
+        array(
+            'key'     => 'areas',
+            // Plain commas, not wp_sprintf's "%l" — this is a list under a
+            // label, not prose, and "Coastal, Ventura, and Santa Barbara"
+            // reads as a sentence fragment in a column of values.
+            'value'   => implode( ', ', $areas ),
+            'caption' => 'Service areas',
+        ),
+        array(
+            'key'     => 'coverages',
+            'value'   => implode( ', ', $coverages ),
+            'caption' => 'Coverage types',
+        ),
+        array(
+            'key'     => 'inbox',
+            'value'   => ensurance_dashboard_request_inbox( $user_id ),
+            'caption' => 'Where requests are sent',
+        ),
+    );
+
+    /**
+     * Filter the rows in Today's "What shoppers see" column.
+     *
+     * The hook the real agency record attaches to when it exists. Rows must keep
+     * the shape documented above; anything missing a value or a caption is
+     * dropped rather than rendered blank.
+     *
+     * @param array $rows    Rows in display order.
+     * @param int   $user_id User the column is being resolved for.
+     */
+    $rows = (array) apply_filters( 'ensurance_dashboard_shopper_rows', $rows, $user_id );
+
+    $clean = array();
+
+    foreach ( $rows as $i => $row ) {
+        if ( empty( $row['value'] ) || empty( $row['caption'] ) ) {
+            continue;
+        }
+
+        $clean[] = array(
+            'key'     => isset( $row['key'] ) ? (string) $row['key'] : (string) $i,
+            'value'   => (string) $row['value'],
+            'caption' => (string) $row['caption'],
+        );
+    }
+
+    return $clean;
+}
+
+/**
+ * What has happened on this account lately — the right reference column on Today.
+ *
+ * Step 11 of templates/agent-dashboard/build-steps.md. Four lines at most, each
+ * one thing that happened and when: a request matched, a decision made, a detail
+ * updated, a license verified. It is a record, not a queue — nothing here is
+ * actionable, and nothing here restates the priority slot's ask.
+ *
+ * IT IS ALSO NOT A STATUS PANEL. Step 11 forbids repeating what the rail already
+ * says, and Step 15 generalizes it: no status, count or date may appear twice on
+ * the page. So this column never counts anything ("4 matched this month" belongs
+ * to the quiet panel), never says what is waiting (the slot owns that), and never
+ * dates the term (the timeline owns that).
+ *
+ * NOTHING IS RECORDED YET. No matched request, decision or profile change writes
+ * an activity trail — the same gap behind ensurance_dashboard_request_count() and
+ * ensurance_dashboard_match_stats() — so this returns an empty list and the
+ * column does not render. The admin preview is the one exception, for the same
+ * reason the live card has one: this band has to be reviewable before the product
+ * produces the events it lists.
+ *
+ * THE PREVIEW IS NOT SLOT-SPECIFIC. Unlike the sample request or the sample
+ * matching data, which each belong to one slot state, the reference band renders
+ * under EVERY state — so any `?slot=` preview shows the sample rows.
+ *
+ * SHAPE — a list of ['key' => …, 'what' => …, 'at' => …, 'when' => …], newest
+ * first. `at` is the moment; `when` is what the row prints, derived from `at`
+ * when the entry does not state it. The order given is the order shown: entries
+ * are not re-sorted, since an entry may legitimately arrive with no timestamp at
+ * all. Anything with nothing to say (no `what`) is dropped, and the list is cut
+ * to $limit.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @param int $limit   Optional. Most rows to return. Step 11 caps the column at 4.
+ * @param int $now     Optional. Moment relative stamps are measured from.
+ * @return array<int,array{key:string,what:string,at:int,when:string}>
+ */
+function ensurance_dashboard_activity( $user_id = 0, $limit = 4, $now = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $limit   = max( 0, (int) $limit );
+    $now     = $now ? (int) $now : time();
+
+    $entries = array();
+
+    // Admin preview only — see the note above. The design's own four rows, with
+    // its fixed strings ("2h ago", "Aug 6") expressed as real moments so the
+    // preview exercises ensurance_dashboard_relative_time() rather than
+    // hardcoding its output.
+    if ( '' !== ensurance_dashboard_priority_preview() ) {
+        $entries = array(
+            array(
+                'key'  => 'matched',
+                'what' => 'Auto request matched — Coastal County',
+                'at'   => $now - ( 2 * HOUR_IN_SECONDS ),
+            ),
+            array(
+                'key'  => 'accepted',
+                'what' => 'Home request accepted — Ventura',
+                'at'   => $now - ( 5 * DAY_IN_SECONDS ),
+            ),
+            array(
+                'key'  => 'areas',
+                'what' => 'Service areas updated',
+                'at'   => $now - ( 7 * DAY_IN_SECONDS ),
+            ),
+            array(
+                'key'  => 'license',
+                'what' => 'License CA-0K48219 verified',
+                'at'   => $now - ( 18 * DAY_IN_SECONDS ),
+            ),
+        );
+    }
+
+    /**
+     * Filter Today's recent activity rows.
+     *
+     * The hook a real activity trail attaches to when it exists. Entries must
+     * keep the shape documented above and arrive newest first; `when` is
+     * optional and is derived from `at` when omitted.
+     *
+     * @param array $entries Entries, newest first.
+     * @param int   $user_id User the column is being resolved for.
+     * @param int   $limit   Most rows the column will show.
+     * @param int   $now     Moment relative stamps are measured from.
+     */
+    $entries = (array) apply_filters( 'ensurance_dashboard_activity', $entries, $user_id, $limit, $now );
+
+    // Asked for nothing, return nothing — the cap is applied after each row is
+    // built below, which would otherwise let a zero limit through with one row.
+    if ( 0 === $limit ) {
+        return array();
+    }
+
+    $clean = array();
+
+    foreach ( $entries as $i => $entry ) {
+        if ( empty( $entry['what'] ) ) {
+            continue;
+        }
+
+        $at   = isset( $entry['at'] ) ? (int) $entry['at'] : 0;
+        $when = isset( $entry['when'] ) ? (string) $entry['when'] : ensurance_dashboard_relative_time( $at, $now );
+
+        $clean[] = array(
+            'key'  => isset( $entry['key'] ) ? (string) $entry['key'] : (string) $i,
+            'what' => (string) $entry['what'],
+            'at'   => $at,
+            'when' => $when,
+        );
+
+        if ( count( $clean ) >= $limit ) {
+            break;
+        }
+    }
+
+    return $clean;
+}
+
 // ============================================================================
 // 2b-v-a4. FOUNDING AGENT PLAN SELECTION — SIGN-UP FUNNEL MEMORY
 // ============================================================================

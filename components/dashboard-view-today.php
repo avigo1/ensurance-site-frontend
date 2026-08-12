@@ -56,6 +56,10 @@
  * rather than an action, it renders in every slot state, and it is the only place
  * billing dates appear on this view — see the note above the call itself.
  *
+ * STEP 11 closes the view with the two reference columns —
+ * components/dashboard-reference.php, "What shoppers see" and "Recent" — the
+ * page's footnotes, ruled rather than boxed and read-only throughout.
+ *
  * NOTHING renders when the state is somehow not one of the four. The step is
  * explicit that there is no fallback branch — no "unknown state" box, and never
  * two states at once. The data-backed states extend that rule to their data: a
@@ -200,3 +204,19 @@ get_template_part(
 		'segments' => ensurance_dashboard_founding_timeline(),
 	)
 );
+
+/*
+ * REFERENCE COLUMNS. Step 11 — "What shoppers see" and "Recent", the two
+ * below-the-fold columns in components/dashboard-reference.php, and the end of
+ * the Today view.
+ *
+ * LAST BECAUSE THEY ARE THE FOOTNOTES. Today reads top to bottom in order of
+ * what it asks of the agent: the greeting, the one thing needing a decision, the
+ * term running underneath it, and then this — two columns that ask nothing and
+ * exist to be checked. Neither restates the rail, the slot or the timeline; see
+ * the part's docblock, which is also where the read-only rule lives.
+ *
+ * Outside the slot's guard, like the timeline: what a shopper sees and what
+ * happened last week are true in every slot state.
+ */
+get_template_part( 'components/dashboard-reference' );

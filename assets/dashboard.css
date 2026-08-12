@@ -13,12 +13,12 @@
    nav rows (Step 1), the view containers and their switching (Step 2),
    Today's greeting row (Step 3), its one-at-a-time priority slot (Step 4),
    the dark live request card with its Accept / Pass controls (Steps 5–6),
-   and the light accent panel that confirms either decision (Step 7). Still
-   to come, in that file's order: the slot's two remaining states, which are
-   still labeled placeholder boxes, Today's founding-access timeline and
-   reference columns, then the other three views. Requests,
-   Agency Profile and Account render EMPTY containers until then — that is the
-   plan's end state for this step, not an oversight.
+   the light accent panel that confirms either decision (Step 7), the slot's
+   quiet and setup states (Steps 8–9), the founding-access timeline under it
+   (Step 10) and the two reference columns that close the view (Step 11) —
+   which completes Today. Still to come, in that file's order: the other three
+   views. Requests, Agency Profile and Account render EMPTY containers until
+   then — that is the plan's end state for this step, not an oversight.
    =================================================================== */
 
 /* ── Two-column shell ───────────────────────────────────────────────
@@ -1478,6 +1478,149 @@ html body:has(.dashboard-shell) .site-footer {
     flex-basis: 100%;
     padding-right: 0;
   }
+}
+
+/* ── Today — reference columns ───────────────────────────────────────
+   Step 11 of templates/agent-dashboard/build-steps.md, rendered by
+   components/dashboard-reference.php: "What shoppers see" and "Recent",
+   the two below-the-fold columns that close the Today view.
+
+   NO CARD, AND NOT AN OVERSIGHT. Neither column has a border, a fill or a
+   radius — a mono label over hairline-ruled rows is the whole treatment.
+   Every bordered surface on this view is asking the agent for something;
+   these two ask for nothing, and giving them the same frame would put them
+   in the same conversation as the slot above.
+
+   THE TRACK COUNT FOLLOWS THE CONTENT. auto-fit rather than a stated
+   `1fr 1fr`, so a band with only one column to show (activity is not
+   recorded yet, and the shopper rows can thin out to two) stretches that
+   column across the full width instead of leaving an empty track beside
+   it — which is the reflow Step 15 rules out.
+
+   COLLAPSES AT 660px, the step's threshold, and the arithmetic is what
+   sets it rather than a breakpoint: two 308px columns plus the design's
+   44px gutter is exactly 660, so the second column drops the moment the
+   band is narrower than that. It is the BAND's width that decides, not the
+   window's — the same reason the timeline queries its own container (the
+   rail takes 264px of the viewport above 900px and none of it below), and
+   here it falls out of auto-fit for free.
+
+   min() keeps the 308px floor from overflowing a container narrower than
+   itself, which is what would otherwise push a phone into a horizontal
+   scroll.
+
+   The design's 44px margin and gutter are written out — --space-7 (48) is
+   the nearest token and it is not this. */
+.dash-reference {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(308px, 100%), 1fr));
+  align-items: start;
+  gap: 44px;
+  margin-top: 44px;
+}
+
+/* Same mono kicker as the timeline's label and every other section label on
+   the agent side. The 6px below it is the design's — deliberately tight,
+   because the first row's own rule is what separates the label from the
+   list, and more air would leave the rule floating between the two. */
+.dash-reference__label {
+  margin: 0 0 6px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: var(--tracking-mono);
+  text-transform: uppercase;
+  color: var(--secondary);
+}
+
+/* The rows themselves. margin/padding/list-style reset the UA's defaults on
+   <dl> and <ul> — the two columns are the same object with different
+   contents, and neither wants a bullet or an indent. */
+.dash-reference__rows {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A HAIRLINE PER ROW, on top rather than bottom: the first row's rule is
+   what closes the gap under the label, and the last row ends on text rather
+   than on a rule left hanging under the column. */
+.dash-reference__row {
+  padding: 14px 0;
+  border-top: 1px solid var(--border-soft);
+}
+
+/* VALUE ON TOP, CAPTION BENEATH — the design's order, and the reason for
+   column-reverse: the markup keeps <dt> (the caption) before <dd> so the
+   pair is announced as "Displayed name: …", while the value takes the line
+   an agent actually scans. See the note in the component.
+
+   The 2px is the design's caption offset, expressed as the gap now that the
+   two are flex items. */
+.dash-reference__row--fact {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 2px;
+}
+
+/* margin: 0 clears the browser's 40px indent on <dd>. 14.5px is the
+   design's, between --text-sm (14px) and --text-md (16px), and the same
+   size the event rows opposite take — the two columns read as one band. */
+.dash-reference__value {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 14.5px;
+  line-height: var(--leading-snug);
+  color: var(--text-heading);
+  text-wrap: pretty;
+}
+
+/* The caption explains the value above it and should never out-weigh it —
+   muted, and the design's 12.5px (no token sits there). */
+.dash-reference__caption {
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  line-height: var(--leading-snug);
+  color: var(--text-muted);
+}
+
+/* WHAT HAPPENED LEFT, WHEN RIGHT. Baseline alignment rather than center, so
+   a two-line event keeps its stamp level with the event's FIRST line — the
+   two belong to the same sentence, and a centered stamp would drift into
+   the gap between the lines. */
+.dash-reference__row--event {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* min-width: 0 lets a long event wrap instead of forcing the row wider than
+   the column and pushing the stamp off it. --text-strong rather than the
+   opposite column's --text-heading: these are things that happened, not
+   values being checked. */
+.dash-reference__event {
+  min-width: 0;
+  font-family: var(--font-sans);
+  font-size: 14.5px;
+  line-height: var(--leading-snug);
+  color: var(--text-strong);
+  text-wrap: pretty;
+}
+
+/* The stamp. Mono, because these are a column of timestamps and a
+   proportional font lets "2h ago" and "Aug 6" wander; --text-faint, because
+   the event is the content and the time is the index to it. nowrap keeps
+   "Aug 6" from breaking across two lines in a narrow column — the event
+   beside it has the room to wrap instead. */
+.dash-reference__when {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: var(--leading-snug);
+  color: var(--text-faint);
+  white-space: nowrap;
 }
 
 /* ── Page background over parent-theme / plugin globals ──────────────
