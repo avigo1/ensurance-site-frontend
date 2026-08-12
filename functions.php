@@ -2447,13 +2447,17 @@ function ensurance_dashboard_access_term() {
  * Access may continue at $29 per month unless canceled before the subscription
  * begins"), stated in the design's shorter form.
  *
- * NOTE, carried over from page-pricing-plans.php and still unresolved: the free
- * 60-day path collects NO payment method, so nothing auto-bills at the end of the
- * term. The date and the price below are what the product PROMISES, not something
- * the billing system will execute on its own today. Whichever way that is
- * reconciled — automatic conversion, or manual conversion with the copy softened —
- * this string and ensurance_dashboard_founding_timeline() are the two places on
- * the dashboard that have to move with it.
+ * A CARD IS TAKEN UP FRONT. The 60 days are free; the payment method is not
+ * optional, and the subscription converts against the card already on file unless
+ * it is cancelled before the term ends. That is why the timeline states a first
+ * charge as a fact and the Account view's founding-access row leads with the
+ * cancel window.
+ *
+ * WHAT IS NOT SETTLED is where in the theme that card becomes readable — nothing
+ * here can see it yet, which is why ensurance_dashboard_payment_method() comes
+ * back empty and its row waits. This string and
+ * ensurance_dashboard_founding_timeline() are the two places on the dashboard
+ * that move if the price or the term does.
  *
  * @return string Formatted price, '' to drop it from the timeline.
  */
@@ -3362,20 +3366,21 @@ function ensurance_dashboard_sample_account() {
 }
 
 /**
- * The card the subscription would be billed to, written the way it should read.
+ * The card the subscription is billed to, written the way it should read.
  *
- * NOTHING CARRIES ONE TODAY, and that is a fact about the product rather than a
- * gap in this resolver: the free 60-day founding path collects no payment method
- * at all (see the note in ensurance_dashboard_access_price), so there is nothing
- * to resolve and this returns ''. The Account view says so in plain words instead
- * of dropping the row — an account view that shows a first-charge date but no
- * payment row leaves the obvious question unanswered, and "no card on file" IS
- * the answer.
+ * A CARD IS REQUIRED to take founding access — the 60 days are free, the payment
+ * method is not optional — so every agent looking at this row has one. Nothing in
+ * the theme can reach it yet (whatever takes the card at sign-up owns that
+ * record), so this returns '' and the Account view DROPS the row rather than
+ * describing a card it cannot see. Same rule as the profile's license and phone
+ * chips: a labeled blank on a read-only record reads as data that has gone
+ * missing, and a sentence in its place would be this file guessing at the state
+ * of someone's billing.
  *
- * A DISPLAY STRING, not card data. Whatever fills this in later (Stripe, most
- * likely) should return the same already-redacted summary the design writes —
- * brand, last four, expiry — because nothing on this page has any business
- * handling more of a card than that.
+ * A DISPLAY STRING, not card data. Whatever fills this in (Stripe, most likely)
+ * should return the same already-redacted summary the design writes — brand, last
+ * four, expiry — because nothing on this page has any business handling more of a
+ * card than that.
  *
  * @param int $user_id Optional. Defaults to the current user.
  * @return string Payment method summary, '' when there is none on file.
@@ -3588,15 +3593,19 @@ function ensurance_dashboard_account_rows( $user_id = 0, $now = 0 ) {
         ),
     );
 
-    // ── Payment method. Nothing on file is the normal state on this plan, so it
-    // is stated rather than hidden — see ensurance_dashboard_payment_method().
+    // ── Payment method, when something can tell us what it is. A card is
+    // required to take founding access, so an unresolved one is a gap in what
+    // this theme can read rather than a fact about the account — the row waits
+    // instead of characterizing it. See ensurance_dashboard_payment_method().
     $payment = ensurance_dashboard_payment_method( $user_id );
 
-    $rows[] = array(
-        'key'    => 'payment',
-        'title'  => 'Payment method',
-        'detail' => ( '' !== $payment ) ? $payment : 'No card on file — the 60-day founding access does not require one.',
-    );
+    if ( '' !== $payment ) {
+        $rows[] = array(
+            'key'    => 'payment',
+            'title'  => 'Payment method',
+            'detail' => $payment,
+        );
+    }
 
     // ── Sign-in. The address is the row; the password age is a clause that only
     // appears when something actually knows it.

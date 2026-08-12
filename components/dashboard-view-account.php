@@ -35,9 +35,10 @@
  *
  * PREVIEWING: /dashboard/?view=account&slot=quiet fills in the card and the
  * password age, the same admin-only toggle the profile's license and phone use
- * (ensurance_dashboard_sample_account). Without it an agent sees their real
- * dates, their real sign-in address, and the truth about the card — that there
- * is not one.
+ * (ensurance_dashboard_sample_account). Without it an agent sees their real dates
+ * and their real sign-in address, and no payment row at all — nothing in the
+ * theme can read the card yet, and the row is dropped rather than describing one
+ * it cannot see (ensurance_dashboard_payment_method).
  *
  * Source: the `isAcct` view of templates/agent-dashboard/AgentDashboard.dc.html
  * (Ensurance Design System). Styling lives in assets/dashboard.css
