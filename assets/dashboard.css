@@ -17,9 +17,16 @@
    quiet and setup states (Steps 8–9), the founding-access timeline under it
    (Step 10) and the two reference columns that close the view (Step 11) —
    which completes Today. Then the views beside it: the Requests table
-   (Step 12) and the read-only Agency Profile (Step 13). Still to come, in
-   that file's order: Account, which renders an EMPTY container until Step 14
-   — that is the plan's end state for this step, not an oversight.
+   (Step 12), the read-only Agency Profile (Step 13) and the Account rows
+   (Step 14) — all four views built.
+
+   Step 15 is the pass over the finished thing rather than a new surface, so
+   it adds no block of its own: every state was walked at 1280 / 1024 / 768
+   (and down to 390), and the two places that did not hold are fixed where
+   they live — the live card's fact tiles, which orphaned a fourth tile onto a
+   row of its own between roughly 900 and 1050px, and the collapsed rail,
+   which overflowed the document sideways on a phone. Both are noted at the
+   rules that carry them.
    =================================================================== */
 
 /* ── Two-column shell ───────────────────────────────────────────────
@@ -641,8 +648,16 @@ html body:has(.dashboard-shell) .site-footer {
    selector for a state that does not exist.
 
    Radius is the design's own 20px, between --radius-icon (16px) and
-   --radius-card (32px) — no token sits at that value. */
+   --radius-card (32px) — no token sits at that value.
+
+   It is also the container the surfaces inside it measure themselves
+   against — the live card's fact tiles today. The slot's width is not the
+   window's: the rail takes 264px of the viewport above 900px and none of it
+   below, so a state that reflows off the window would break at the wrong
+   moment on one side of that line or the other. Same construction, and the
+   same reason, as .dash-timeline below. */
 .dash-slot {
+  container: dash-slot / inline-size;
   border-radius: 20px;
   /* The design's 14px between the slot and the founding-access timeline
      that lands under it in Step 10. */
@@ -773,9 +788,10 @@ html body:has(.dashboard-shell) .site-footer {
    ruled into quarters. The gap grid is what keeps them separate: 10px of the
    card's own navy shows between them, so each fact reads as its own object.
 
-   auto-fit + minmax means the row fills whatever tiles it is given (a card
-   with three facts leaves no empty track) and reflows to two-up, then one-up,
-   as the column narrows — no media query needed.
+   auto-fit + minmax means the row fills whatever tiles it is given, so a card
+   with three facts leaves no empty track; the two queries below are what keep
+   the four-tile card — the only one the product actually builds — from
+   reflowing into 3 + 1 on the way down.
 
    margin: 0 resets the browser's <dl> default; the design's 22px below this
    grid is carried by the Accept / Pass row that follows it (see
@@ -783,9 +799,37 @@ html body:has(.dashboard-shell) .site-footer {
    actually there. */
 .dash-request__facts {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
   gap: 10px;
   margin: 0;
+}
+
+/* TWO PER ROW as soon as four 150px tiles stop fitting: 4 × 150 + 3 × 10 is
+   630, so 640 is that point with a little margin, and auto-fit would
+   otherwise drop to three and leave the fourth tile alone on a row of its
+   own. Exactly the reflow — and exactly the fix — the timeline's own 620px
+   query makes below; the numbers differ only because the tiles carry a gap
+   between them and the timeline's columns do not.
+
+   Both thresholds measure the SLOT, not the window; see the note on
+   .dash-slot above. Stated as explicit tracks rather than a wider auto-fit
+   floor, because 2 × 2 is the point: a floor big enough to rule three out
+   here would rule four out at full width too. */
+@container dash-slot (max-width: 640px) {
+  .dash-request__facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* One per row once half the card is too narrow to hold a value without
+   breaking it over two lines — four full-width tiles read better than a
+   cramped 2 × 2, the same call the timeline makes at its own 400px. Below the
+   rail's 900px breakpoint the view falls back to --container-pad and the card
+   to --space-5, so a 390px screen gives the slot 294px and lands here. */
+@container dash-slot (max-width: 340px) {
+  .dash-request__facts {
+    grid-template-columns: 1fr;
+  }
 }
 
 .dash-request__fact {
@@ -2249,6 +2293,15 @@ html body:has(.dashboard-page) .mobile-sticky-cta {
     position: static;
     flex-direction: row;
     align-items: center;
+    /* THE BAR WRAPS, and this is what keeps it inside the screen. Brand + four
+       nav rows + the agency card + Sign out do not fit on one line much below
+       900px, and a row that cannot wrap does not shrink — it overflows, and
+       because .dashboard-shell is display:block here that overflow scrolls the
+       whole DOCUMENT sideways (the foot ran ~215px past the viewport on a
+       390px screen). Wrapping drops the foot to a line of its own instead;
+       `margin-left: auto` below keeps it at the end of whichever line it lands
+       on. */
+    flex-wrap: wrap;
     /* The desktop gap is vertical rhythm between stacked groups; here the
        same property is the horizontal space between the logo and the nav,
        where 48px is too wide. Hold it at the original 32px. */
@@ -2286,10 +2339,17 @@ html body:has(.dashboard-page) .mobile-sticky-cta {
     margin-left: auto;
     flex-direction: row;
     align-items: center;
+    /* Wrapping alone is not enough on a phone, where the card and the button
+       together are wider than the line they land on. min-width: 0 is what lets
+       this group shrink past its own content so the name inside can ellipsize
+       — the same guard .dash-user__meta carries on the desktop rail. */
+    min-width: 0;
   }
 
-  /* Stops shrinking before the agency name is unreadable. */
+  /* Stops shrinking before the agency name is unreadable — and, with
+     min-width: 0, is allowed to shrink that far in the first place. */
   .dash-user {
+    min-width: 0;
     max-width: 240px;
   }
 
@@ -2314,7 +2374,8 @@ html body:has(.dashboard-page) .mobile-sticky-cta {
 
   /* The card's own 32px inset costs a tenth of the width on a phone, which
      the fact tiles need more than the frame does. The design has no narrow
-     spec — Step 15 is where all four states get walked across widths. */
+     spec; Step 15 walked all four states across 1280 / 1024 / 768 and down to
+     390, and this is the inset they were walked with. */
   .dash-slot[data-slot="live"] {
     padding: var(--space-5) var(--space-5) var(--space-4);
   }

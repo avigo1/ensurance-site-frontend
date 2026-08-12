@@ -2836,15 +2836,28 @@ function ensurance_dashboard_shopper_rows( $user_id = 0 ) {
  * What has happened on this account lately — the right reference column on Today.
  *
  * Step 11 of templates/agent-dashboard/build-steps.md. Four lines at most, each
- * one thing that happened and when: a request matched, a decision made, a detail
- * updated, a license verified. It is a record, not a queue — nothing here is
- * actionable, and nothing here restates the priority slot's ask.
+ * one thing that happened and when: a decision made, a detail updated, a license
+ * verified. It is a record, not a queue — nothing here is actionable, and nothing
+ * here restates the priority slot's ask.
  *
  * IT IS ALSO NOT A STATUS PANEL. Step 11 forbids repeating what the rail already
  * says, and Step 15 generalizes it: no status, count or date may appear twice on
  * the page. So this column never counts anything ("4 matched this month" belongs
  * to the quiet panel), never says what is waiting (the slot owns that), and never
  * dates the term (the timeline owns that).
+ *
+ * AND IT DOES NOT DATE A MATCH — the rule Step 15's pass added, because the
+ * column was breaking it twice over. A request ARRIVING is already stamped
+ * everywhere it needs to be: the live card's "Submitted" tile carries the one
+ * still waiting, the quiet panel's "Last match" stat carries the most recent one
+ * when nothing is, and the Requests view stamps every one of them. A "request
+ * matched" row here put that same moment on Today a second time — beside the tile
+ * saying it in the live state, and beside a stat that disagreed with it in the
+ * quiet one. Decisions and record changes are what this column is for; the
+ * arrival belongs to the surfaces above it. Anything attached through the filter
+ * below should follow the same line — and, when a real trail starts recording
+ * decisions, hold the newest one back while the decided panel is still confirming
+ * it, for the same reason: the slot is already saying it, five inches higher.
  *
  * NOTHING IS RECORDED YET. No matched request, decision or profile change writes
  * an activity trail — the same gap behind ensurance_dashboard_request_count() and
@@ -2876,17 +2889,19 @@ function ensurance_dashboard_activity( $user_id = 0, $limit = 4, $now = 0 ) {
 
     $entries = array();
 
-    // Admin preview only — see the note above. The design's own four rows, with
-    // its fixed strings ("2h ago", "Aug 6") expressed as real moments so the
-    // preview exercises ensurance_dashboard_relative_time() rather than
-    // hardcoding its output.
+    // Admin preview only — see the note above. The design's own rows, with its
+    // fixed strings ("2h ago", "Aug 6") expressed as real moments so the preview
+    // exercises ensurance_dashboard_relative_time() rather than hardcoding its
+    // output.
+    //
+    // The design's newest row is "Auto request matched — Coastal County", stamped
+    // the same 2h ago as the live card's Submitted tile. It is not here: see the
+    // note above on why this column does not date a match. Its place is taken by
+    // the passed request from ensurance_dashboard_sample_history(), so the two
+    // decision rows on this column are the same two decisions the Requests view
+    // lists — one fabricated agency, described the same way on both views.
     if ( '' !== ensurance_dashboard_priority_preview() ) {
         $entries = array(
-            array(
-                'key'  => 'matched',
-                'what' => 'Auto request matched — Coastal County',
-                'at'   => $now - ( 2 * HOUR_IN_SECONDS ),
-            ),
             array(
                 'key'  => 'accepted',
                 'what' => 'Home request accepted — Ventura',
@@ -2896,6 +2911,11 @@ function ensurance_dashboard_activity( $user_id = 0, $limit = 4, $now = 0 ) {
                 'key'  => 'areas',
                 'what' => 'Service areas updated',
                 'at'   => $now - ( 7 * DAY_IN_SECONDS ),
+            ),
+            array(
+                'key'  => 'passed',
+                'what' => 'Auto request passed — Santa Barbara',
+                'at'   => $now - ( 9 * DAY_IN_SECONDS ),
             ),
             array(
                 'key'  => 'license',

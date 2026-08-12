@@ -25,11 +25,16 @@
  *
  * NEITHER COLUMN REPEATS THE RAIL. Step 11 says not to, and Step 15 generalizes
  * it to the whole page: no status, count or date twice. The rail carries identity
- * and the awaiting-request badge; the slot carries what is waiting; the timeline
- * carries the term's dates. So this band states none of them — the displayed name
- * is here as OUTWARD-FACING data (what a shopper reads), which is a different
- * claim from the rail's identity chip, and the activity rows are events rather
- * than a count of them.
+ * and the awaiting-request badge; the slot carries what is waiting, and the date
+ * it arrived; the timeline carries the term's dates. So this band states none of
+ * them — the displayed name is here as OUTWARD-FACING data (what a shopper
+ * reads), which is a different claim from the rail's identity chip, and the
+ * activity rows are events rather than a count of them.
+ *
+ * Recent is also where Step 15's pass found the one date that WAS on Today twice:
+ * a "request matched" row stamps the same moment the live card's Submitted tile
+ * and the quiet panel's "Last match" stat already carry. Matches are no longer
+ * listed here — see ensurance_dashboard_activity(), which owns that rule.
  *
  * NO ARGS, like the quiet panel: the two resolvers below are the whole input, and
  * they are the ones that already own these values elsewhere on the page (see
