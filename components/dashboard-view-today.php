@@ -38,7 +38,11 @@
  * STEP 7 builds what it comes back AS: `decided` is now the light accent panel
  * in components/dashboard-slot-decided.php, confirming the decision in the same
  * slot the card was in, with the single Undo that hands the slot back to `live`.
- * Only `setup` and `quiet` are still Step 4's labeled box.
+ *
+ * STEP 8 takes the slot's ordinary day: `quiet` is now the light card in
+ * components/dashboard-slot-quiet.php — matching is on, nothing is waiting, and
+ * that is a normal condition rather than an empty state. Only `setup` is still
+ * Step 4's labeled box.
  *
  * NOTHING renders when the state is somehow not one of the four. The step is
  * explicit that there is no fallback branch — no "unknown state" box, and never
@@ -126,9 +130,18 @@ if ( $dash_has_slot ) :
 
 			<?php get_template_part( 'components/dashboard-slot-decided', null, array( 'decision' => $dash_decision ) ); ?>
 
+		<?php elseif ( 'quiet' === $dash_slot ) : ?>
+
+			<?php
+			// No args: unlike the two above, this surface is not about a
+			// request or a decision — it reads its own copy. See the part's
+			// docblock.
+			get_template_part( 'components/dashboard-slot-quiet' );
+			?>
+
 		<?php else : ?>
 
-			<?php // setup / quiet — still Step 4's plain labeled box until Steps 8–9 build their surfaces. ?>
+			<?php // setup — still Step 4's plain labeled box until Step 9 builds its surface. ?>
 			<p class="dash-slot__label"><?php echo esc_html( $dash_slot_label ); ?></p>
 
 		<?php endif; ?>

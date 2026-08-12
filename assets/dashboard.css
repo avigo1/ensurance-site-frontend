@@ -610,9 +610,9 @@ html body:has(.dashboard-shell) .site-footer {
    card radius and the gap to what follows. Each state's own surface hangs
    off [data-slot], the single value driving the slot, so no state needs a
    class that mirrors what the attribute already says. Landed so far: `live`
-   (Step 5) and `decided` (Step 7), both below. setup / quiet are still
-   Step 4's plain labeled box and take their real surfaces in Steps 8–9 —
-   quiet a light card, setup dark navy.
+   (Step 5), `decided` (Step 7) and `quiet` (Step 8), all below. setup is
+   still Step 4's plain labeled box and takes its real surface — dark navy,
+   the same weight as the live card — in Step 9.
 
    Radius is the design's own 20px, between --radius-icon (16px) and
    --radius-card (32px) — no token sits at that value. */
@@ -623,11 +623,10 @@ html body:has(.dashboard-shell) .site-footer {
   margin-bottom: 14px;
 }
 
-/* The placeholder box, for the two states still awaiting their surface.
-   Listed by state rather than by a "not yet built" class so each step can
-   simply lift its own selector out of this rule. */
-.dash-slot[data-slot="setup"],
-.dash-slot[data-slot="quiet"] {
+/* The placeholder box, for the one state still awaiting its surface. Listed
+   by state rather than by a "not yet built" class so each step can simply
+   lift its own selector out of this rule — Step 8 just did, leaving setup. */
+.dash-slot[data-slot="setup"] {
   display: flex;
   align-items: center;
   /* Gives the empty placeholder the presence the real card will have,
@@ -1013,6 +1012,160 @@ html body:has(.dashboard-shell) .site-footer {
   border-radius: 3px;
 }
 
+/* ── Today — quiet panel ─────────────────────────────────────────────
+   Step 8 of templates/agent-dashboard/build-steps.md, rendered by
+   components/dashboard-slot-quiet.php into the same slot.
+
+   A REAL CARD, NOT A PLACEHOLDER. White surface, hairline border, the
+   slot's own radius — deliberately the same frame the rest of the product
+   uses for ordinary content, because "nothing is waiting on you" is the
+   ordinary condition for a working agent. Nothing here is dashed, greyed
+   or centered in an empty box: that vocabulary says something is missing,
+   and nothing is.
+
+   It is also why this state is NOT one of the neutral placeholder boxes
+   above, despite sharing their white-and-hairline palette: the box is a
+   min-height frame around a label, this is a card with content in it.
+
+   Values from the `isQuiet` branch of
+   templates/agent-dashboard/AgentDashboard.dc.html — the design's 30px/32px
+   inset, the live card's without its shallower foot (there are no tiles
+   here to sit above). */
+.dash-slot[data-slot="quiet"] {
+  padding: 30px 32px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-soft);
+}
+
+/* The status line. Mono uppercase like every other kicker on Today, in the
+   accent — the one saturated mark on the panel, which is the point: it is
+   the only part making a claim about right now. 10.5px / 0.2em are the
+   design's, --tracking-mono is that 0.2em. */
+.dash-quiet__status {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 12px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: var(--tracking-mono);
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+/* The dot, from the design's `.vpulse`: 8px, and a 2.4s fade to 35% and
+   back — slow enough to read as a heartbeat rather than as a notification
+   blinking for attention. currentColor rather than a stated --accent, so
+   the dot can never drift from the label beside it. */
+.dash-quiet__pulse {
+  display: block;
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: dash-quiet-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes dash-quiet-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* The dot is decorative and the sentence beside it says the same thing, so
+   there is nothing to preserve by animating it here. */
+@media (prefers-reduced-motion: reduce) {
+  .dash-quiet__pulse {
+    animation: none;
+  }
+}
+
+/* Same Kadence override .dash-view__title, .dash-today__greeting and
+   .dash-decided__title carry: the parent theme prints inline global
+   typography after our stylesheets that recolors bare headings. Design is
+   22px/800/-0.02em — no token sits at 22px (--text-xl is 20, --text-2xl is
+   24), and --tracking-tight (-0.025em) is the nearest token to -0.02em. */
+.dash-quiet__title {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: var(--weight-extrabold);
+  line-height: var(--leading-snug);
+  letter-spacing: var(--tracking-tight);
+  color: var(--text-heading) !important;
+}
+
+/* The one sentence — counties, coverages and the inbox. --text-body rather
+   than the decided panel's --text-strong: that panel's sentence is the only
+   content it has, this one has a stat row and a closing line under it and
+   should not out-weigh them. Design is 14.5px/1.6, floored to --text-sm and
+   --leading-body; max-width holds the design's 540px measure. */
+.dash-quiet__body {
+  margin: 0 0 24px;
+  max-width: 540px;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  line-height: var(--leading-body);
+  color: var(--text-body);
+  text-wrap: pretty;
+}
+
+/* THE STAT ROW. Ruled top and bottom, not boxed — see the note in the
+   component. The 34px column gap is the design's; the row gap is ours, for
+   the widths where three stats cannot sit side by side (the design assumes
+   desktop), where 34px of vertical air would break the group apart. */
+.dash-quiet__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-5) 34px;
+  margin: 0 0 22px;
+  padding: 18px 0;
+  border-top: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+/* Same mono label as the live card's fact tiles, at the design's 10px/0.16em
+   — a value that sits between --tracking-label (0.12em) and --tracking-mono
+   (0.2em), so it is stated rather than tokenized. */
+.dash-quiet__stat-label {
+  margin-bottom: 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--secondary);
+}
+
+/* margin: 0 clears the browser's 40px indent on <dd>. 15px is the design's,
+   between --text-sm (14px) and --text-md (16px). */
+.dash-quiet__stat-value {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: var(--leading-snug);
+  color: var(--text-heading);
+}
+
+/* The closing line. Muted and unlinked on purpose: it is the panel's
+   quietest element, and v1 has no add-a-county affordance for it to point
+   at — see the note in the component. 13.5px is the design's, between
+   --text-xs (12px) and --text-sm (14px). */
+.dash-quiet__note {
+  margin: 0;
+  max-width: 540px;
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  line-height: var(--leading-body);
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
 /* ── Page background over parent-theme / plugin globals ──────────────
    Same fix the other standalone pages carry: AyeCode UI (GeoDirectory,
    the `aui_bs5` body class) ships
@@ -1130,6 +1283,14 @@ html body:has(.dashboard-page) .mobile-sticky-cta {
   /* Same trade on the panel that replaces it, so the slot does not visibly
      change inset when a decision is made. */
   .dash-slot[data-slot="decided"] {
+    padding: var(--space-5);
+  }
+
+  /* …and on the quiet card, which is the same frame around a sentence and a
+     stat row. Matched to the live card rather than to the decided panel: it
+     is the state that alternates with `live` day to day, so the two should
+     not disagree about the slot's inset. */
+  .dash-slot[data-slot="quiet"] {
     padding: var(--space-5);
   }
 }

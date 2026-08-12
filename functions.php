@@ -1806,6 +1806,235 @@ function ensurance_dashboard_undo_action() {
     );
 }
 
+/**
+ * The design's own sample matching profile — the fabricated counties, coverage
+ * types and match stats behind the `quiet` preview.
+ *
+ * The counterpart of ensurance_dashboard_sample_request(), and kept in one
+ * function for the same reason: the quiet panel's sentence and its stat row are
+ * about the same agency, and must not disagree about it.
+ *
+ * PREVIEW ONLY. Nothing reaches this except through
+ * ensurance_dashboard_priority_preview(), which is capability-gated — an agent
+ * can never be shown these values. Copied field for field from the `isQuiet`
+ * branch of templates/agent-dashboard/AgentDashboard.dc.html, with one change:
+ * the design's fixed "Matched in August" label is built from the current month
+ * here, so the preview cannot read as stale in September.
+ *
+ * @return array{areas:string[],coverages:string[],stats:array<int,array{label:string,value:string}>}
+ */
+function ensurance_dashboard_sample_matching() {
+    return array(
+        // Bare county names — see ensurance_dashboard_service_areas().
+        'areas'     => array( 'Coastal', 'Ventura', 'Santa Barbara' ),
+        'coverages' => array( 'Auto', 'Home', 'Life' ),
+        'stats'     => array(
+            array( 'label' => 'Last match', 'value' => '2 days ago' ),
+            array( 'label' => sprintf( 'Matched in %s', wp_date( 'F' ) ), 'value' => '4 requests' ),
+            array( 'label' => 'Typical pace here', 'value' => '1–3 per week' ),
+        ),
+    );
+}
+
+/**
+ * The counties an agent's requests are matched from.
+ *
+ * Step 8 of templates/agent-dashboard/build-steps.md: the quiet panel's one
+ * sentence names them, because "matching is on" means nothing without saying
+ * matching on WHAT — and the counties are half of that answer
+ * (ensurance_dashboard_coverage_types is the other half).
+ *
+ * NAMES CARRY NO "COUNTY". The list is 'Coastal', not 'Coastal County', because
+ * the surfaces that name the whole list say the word once for all of them
+ * ("Coastal, Ventura, and Santa Barbara counties") — pluralized by whoever is
+ * printing it. That is the opposite of ensurance_dashboard_sample_request(),
+ * whose `county` names ONE county inline ("Auto coverage — Coastal County") and
+ * therefore carries the word itself.
+ *
+ * THERE ARE NO SERVICE AREAS TO RETURN TODAY. No funnel captures them — it is
+ * the same gap that keeps ensurance_dashboard_priority_state() in `setup` — so
+ * this returns an empty array and the sentence falls back to naming no counties
+ * rather than inventing some. The admin preview is the one exception, for the
+ * same reason the live card has one.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return string[] County names without the word "County", '' entries dropped.
+ */
+function ensurance_dashboard_service_areas( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $sample  = ensurance_dashboard_sample_matching();
+    $areas   = ( 'quiet' === ensurance_dashboard_priority_preview() ) ? $sample['areas'] : array();
+
+    /**
+     * Filter the counties an agent is matched in.
+     *
+     * The hook the real agency profile attaches to when it exists.
+     *
+     * @param string[] $areas   County names, empty when none are set.
+     * @param int      $user_id User the dashboard is being rendered for.
+     */
+    $areas = apply_filters( 'ensurance_dashboard_service_areas', $areas, $user_id );
+
+    return is_array( $areas ) ? array_values( array_filter( array_map( 'strval', $areas ) ) ) : array();
+}
+
+/**
+ * The coverage types an agent's requests are matched on.
+ *
+ * The other half of what the quiet panel's sentence names (see
+ * ensurance_dashboard_service_areas, which this mirrors in every respect —
+ * including having nothing to return today outside the admin preview).
+ *
+ * Stored as they are DISPLAYED — 'Auto', not 'auto'. The quiet sentence runs
+ * them mid-sentence and lowercases them there; a badge or a label wants them as
+ * written.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return string[] Coverage type names, '' entries dropped.
+ */
+function ensurance_dashboard_coverage_types( $user_id = 0 ) {
+    $user_id   = $user_id ? (int) $user_id : get_current_user_id();
+    $sample    = ensurance_dashboard_sample_matching();
+    $coverages = ( 'quiet' === ensurance_dashboard_priority_preview() ) ? $sample['coverages'] : array();
+
+    /**
+     * Filter the coverage types an agent is matched on.
+     *
+     * @param string[] $coverages Coverage type names, empty when none are set.
+     * @param int      $user_id   User the dashboard is being rendered for.
+     */
+    $coverages = apply_filters( 'ensurance_dashboard_coverage_types', $coverages, $user_id );
+
+    return is_array( $coverages ) ? array_values( array_filter( array_map( 'strval', $coverages ) ) ) : array();
+}
+
+/**
+ * The quiet panel's stat row — what matching has actually done lately.
+ *
+ * Step 8 asks for three: last match, matched this month, typical pace. They are
+ * the evidence behind the pulsing "Matching is on" — an agent with nothing
+ * waiting is being asked to believe the system is working, and three numbers is
+ * how the panel earns that instead of asserting it.
+ *
+ * NONE OF THEM EXIST YET. Matches are not recorded (the same gap behind
+ * ensurance_dashboard_request_count), so this returns an empty array outside the
+ * admin preview and components/dashboard-slot-quiet.php drops the whole ruled
+ * row — an empty band of hairlines, or a "last match: never", would both be
+ * worse than the panel simply not making the claim.
+ *
+ * SHAPE — a list of ['label' => …, 'value' => …] pairs, in the order shown. Any
+ * pair missing either half is dropped, the same rule the live card's fact tiles
+ * follow: a labeled blank is not a stat.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return array<int,array{label:string,value:string}>
+ */
+function ensurance_dashboard_match_stats( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $sample  = ensurance_dashboard_sample_matching();
+    $stats   = ( 'quiet' === ensurance_dashboard_priority_preview() ) ? $sample['stats'] : array();
+
+    /**
+     * Filter the stats shown on Today's quiet panel.
+     *
+     * The hook the real match history attaches to when it exists.
+     *
+     * @param array $stats   List of ['label' => …, 'value' => …] pairs.
+     * @param int   $user_id User the dashboard is being rendered for.
+     */
+    $stats = apply_filters( 'ensurance_dashboard_match_stats', $stats, $user_id );
+
+    if ( ! is_array( $stats ) ) {
+        return array();
+    }
+
+    $clean = array();
+
+    foreach ( $stats as $stat ) {
+        if ( empty( $stat['label'] ) || empty( $stat['value'] ) ) {
+            continue;
+        }
+
+        $clean[] = array(
+            'label' => (string) $stat['label'],
+            'value' => (string) $stat['value'],
+        );
+    }
+
+    return $clean;
+}
+
+/**
+ * What the quiet panel says — its status label, headline, sentence, stats and
+ * closing line.
+ *
+ * Step 8 of templates/agent-dashboard/build-steps.md. Nothing is waiting on the
+ * agent, and the panel's whole job is to make that read as a NORMAL condition
+ * rather than as a dead end: matching is on, here is exactly what it is watching
+ * for, here is what it has done lately, and here is who to talk to if the volume
+ * is wrong. There is deliberately no "check back later" — nothing about this
+ * state asks the agent to come back, because the email does that.
+ *
+ * THE SENTENCE IS ASSEMBLED, NOT WRITTEN DOWN. It names the counties, the
+ * coverage types and the inbox, and each of the three can be missing today (see
+ * the resolvers above), so each has a fallback that drops the detail and leaves a
+ * sentence that is still true — never a blank, never a placeholder. With nothing
+ * known at all it degrades to "You are in the running for every request matched
+ * to your service areas. Nothing is required of you until one lands — we email
+ * you the moment it does."
+ *
+ * The closing line is PLAIN TEXT, not a link: v1's agency profile is read-only,
+ * and Step 8 is explicit that no add-a-county or add-a-coverage affordance may
+ * appear here. It routes volume changes to agent support, which is where every
+ * "change this" path in the product ends.
+ *
+ * Copy is the design's own (the `isQuiet` branch of
+ * templates/agent-dashboard/AgentDashboard.dc.html).
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return array{status:string,title:string,body:string,stats:array,note:string}
+ */
+function ensurance_dashboard_quiet_panel( $user_id = 0 ) {
+    $user_id   = $user_id ? (int) $user_id : get_current_user_id();
+    $areas     = ensurance_dashboard_service_areas( $user_id );
+    $coverages = ensurance_dashboard_coverage_types( $user_id );
+    $inbox     = ensurance_dashboard_request_inbox( $user_id );
+
+    // WHAT is being matched. Lowercased because these run mid-sentence — the
+    // design writes "every auto, home, and life request", and "every Auto,
+    // Home, and Life request" reads like a form label dropped into prose.
+    // wp_sprintf's %l is the list join: "a", "a and b", "a, b, and c".
+    $kinds = ! empty( $coverages )
+        ? sprintf( 'every %s request', wp_sprintf( '%l', array_map( 'strtolower', $coverages ) ) )
+        : 'every request';
+
+    // …and WHERE from. The word "county" is added once for the whole list, which
+    // is why the names themselves do not carry it.
+    $where = ! empty( $areas )
+        ? sprintf( 'from %s %s', wp_sprintf( '%l', $areas ), ( 1 === count( $areas ) ) ? 'county' : 'counties' )
+        : 'matched to your service areas';
+
+    $lands = ( '' !== $inbox )
+        ? sprintf( 'Nothing is required of you until one lands — we email %s the moment it does.', $inbox )
+        : 'Nothing is required of you until one lands — we email you the moment it does.';
+
+    $panel = array(
+        'status' => 'Matching is on',
+        'title'  => 'No request is waiting on you',
+        'body'   => sprintf( 'You are in the running for %s %s. %s', $kinds, $where, $lands ),
+        'stats'  => ensurance_dashboard_match_stats( $user_id ),
+        'note'   => 'To widen what reaches you, message agent support and we will update your counties or coverage types.',
+    );
+
+    /**
+     * Filter the quiet panel's copy.
+     *
+     * @param array $panel   ['status' => …, 'title' => …, 'body' => …, 'stats' => …, 'note' => …].
+     * @param int   $user_id User the panel is being rendered for.
+     */
+    return (array) apply_filters( 'ensurance_dashboard_quiet_panel', $panel, $user_id );
+}
+
 // ============================================================================
 // 2b-v-a4. FOUNDING AGENT PLAN SELECTION — SIGN-UP FUNNEL MEMORY
 // ============================================================================
