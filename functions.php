@@ -5626,17 +5626,3 @@ function ensurance_investor_brief_fonts() {
     );
 }
 add_action( 'wp_enqueue_scripts', 'ensurance_investor_brief_fonts', 20 );
-
-// ─────────────────────────────────────────────────────────────────────
-// Agent Dashboard sample data — TEMPORARY, and meant to be reverted.
-//
-// Populates the dashboard through the filters it already publishes, so the
-// four priority-slot states, the Requests table's four badges, the setup
-// checklist and the founding-access timeline can be reviewed before the
-// matching queue exists. Off unless `?demo=1` is in the URL, and gated on the
-// same capability as the dashboard's own `?slot=` preview.
-//
-// To remove: delete this block and inc/dashboard-sample-data.php. Nothing else
-// in the theme refers to either.
-// ─────────────────────────────────────────────────────────────────────
-require_once get_stylesheet_directory() . '/inc/dashboard-sample-data.php';
