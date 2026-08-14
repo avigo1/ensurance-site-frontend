@@ -425,12 +425,13 @@ a {
 .primary-nav .nav-login {
   display: inline-flex;
   align-items: center;
+  height: 40px;          /* same box height as .nav-cta, so the two sit on one line */
   margin-left: auto;
-  padding: 8px 0;
+  padding: 0;
   border: 0;
   background: none;
   border-radius: 0;
-  font-size: var(--text-xs);
+  font-size: calc(var(--text-sm) - 1px);
   font-weight: var(--weight-medium);
   color: var(--text-muted);
   text-decoration: none;
@@ -1192,12 +1193,11 @@ a.card:hover .coverage-tile__arrow {
     display: flex;
   }
 
-  /* In the stacked mobile panel the link keeps a comfortable tap target
-     without the old pill's fixed height. */
+  /* Stacked panel — match the 48px row height the mobile buttons use. */
   .primary-nav .nav-login {
     margin-left: 0;
     margin-top: 8px;
-    padding: 12px 0;
+    height: 48px;
   }
 
   .primary-nav .nav-cta {
