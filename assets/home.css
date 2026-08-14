@@ -419,27 +419,29 @@ a {
   color: var(--text-heading);
 }
 
-/* Agent login — secondary (outline) button. margin-left:auto pushes it and the
-   primary CTA to the right as a pair (the CTA no longer needs its own auto). */
+/* Agent login — plain text link, sized a step below the nav links so it reads
+   as a utility item rather than a button. margin-left:auto still pushes it and
+   the primary CTA to the right as a pair (the CTA no longer needs its own auto). */
 .primary-nav .nav-login {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  height: 40px;
-  padding: 0 18px;
   margin-left: auto;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--border-strong);
-  background: #fff;
-  color: var(--primary);
+  padding: 8px 0;
+  border: 0;
+  background: none;
+  border-radius: 0;
+  font-size: var(--text-xs);
   font-weight: var(--weight-medium);
-  transition: all var(--duration-base) var(--ease-out);
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-out);
 }
 
-.primary-nav .nav-login:hover {
-  border-color: var(--accent);
-  color: var(--primary);
-  transform: translateY(-2px);
+.primary-nav .nav-login:hover,
+.primary-nav .nav-login:focus-visible {
+  color: var(--text-heading);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .primary-nav .nav-cta {
@@ -1190,10 +1192,12 @@ a.card:hover .coverage-tile__arrow {
     display: flex;
   }
 
+  /* In the stacked mobile panel the link keeps a comfortable tap target
+     without the old pill's fixed height. */
   .primary-nav .nav-login {
     margin-left: 0;
     margin-top: 8px;
-    height: 48px;
+    padding: 12px 0;
   }
 
   .primary-nav .nav-cta {
