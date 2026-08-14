@@ -89,7 +89,7 @@ $aq_compare_bad = array(
 $aq_compare_good = array(
     'Answer guided questions about your vehicles and drivers once.',
     'A structured request, organized before review.',
-    'Licensed agents, agencies, or approved partners review available carriers.',
+    'Licensed review of available carriers, where appropriate.',
     'Auto quote options where available — at your own pace.',
 );
 
@@ -105,7 +105,7 @@ $aq_include = array(
 $aq_steps = array(
     array( 'file-text',    'Answer a few guided questions',                'Tell Ensurance about your vehicles and drivers. Minimal typing, one step at a time, all in one place.' ),
     array( 'layers',       'Your details become one request',              'Ensurance structures everything into a single, organized auto request — so nothing important is missing or repeated.' ),
-    array( 'shield-check', 'Licensed professionals review available carriers', 'Licensed agents, agencies, or approved insurance partners review your request against the carriers available to them.' ),
+    array( 'shield-check', 'Licensed review of available carriers, where appropriate.', 'When a licensed professional engages with your request, they can review available carriers based on your details.' ),
     array( 'sparkles',     'Receive auto quote options where available',   'Where coverage and eligibility allow, you receive auto quote options and a clearer next step — no pressure to decide.' ),
 );
 
@@ -113,15 +113,15 @@ $aq_steps = array(
 $aq_review = array(
     array( 'user',      'A licensed professional, not a robot', 'Licensed agents, agencies, or approved partners review available carriers — a person decides what may fit your situation.' ),
     array( 'file-text', 'One organized request',                'Your vehicle and driver details stay together as a single request, so nothing important is missing or repeated.' ),
-    array( 'lock',      'Shared only where appropriate',        'Your structured auto request is reviewed where appropriate — not auctioned to a long list of companies.' ),
+    array( 'lock',      'Controlled request access',        'Access to your structured auto request is controlled — not auctioned or broadly distributed.' ),
 );
 
 // §FAQ — also feeds the FAQPage JSON-LD below.
 $aq_faq = array(
-    array( 'What is a guided auto insurance request?', 'A guided auto insurance request is a short, structured set of questions about your vehicles, drivers, and coverage needs. Ensurance organizes your answers into one clear request so licensed agents, agencies, or approved insurance partners can review available carriers — instead of you re-entering the same details across separate forms.' ),
+    array( 'What is a guided auto insurance request?', 'A guided auto insurance request is a short, structured set of questions about your vehicles, drivers, and coverage needs. Ensurance organizes your answers into one clear request so the request can move into controlled licensed review of available carriers — instead of you re-entering the same details across separate forms.' ),
     array( 'Can one auto request help me access multiple carrier options?', "Often, yes. A licensed professional can review multiple available carriers from your single structured auto request, so you don't have to repeat the same vehicle and driver details across separate sites." ),
     array( 'What details may be needed for an auto insurance request?', "Typically your vehicle details, the drivers on the policy, the coverage you're looking for, and your location for eligibility. You don't need to have everything ready before you begin — the guided questions handle it one step at a time." ),
-    array( 'Who reviews my auto insurance request?', 'Licensed agents, agencies, or approved insurance partners review your structured auto request. A licensed professional — not an automated list — decides which available carrier options may fit.' ),
+    array( 'Who reviews my auto insurance request?', 'Your structured auto request moves through controlled licensed review. A licensed professional can evaluate which available carrier options may fit.' ),
     array( 'Are auto quote options guaranteed?', "No. Availability, eligibility, carrier participation, and licensed professional review determine which auto quote options may be available. Ensurance doesn't promise instant quotes or guaranteed savings." ),
     array( 'What happens after I start?', 'You answer a few guided questions about your vehicles and drivers. Ensurance structures your details and moves them into licensed review, where you may receive auto quote options where available — at your own pace, with no pressure to decide.' ),
 );
@@ -157,7 +157,7 @@ get_header( 'home' );
     <div class="aq-hero__inner">
       <span class="aq-pill"><?php echo wp_kses( ensurance_home_icon( 'car', 14 ), $ensurance_svg_allowed ); ?> Auto insurance</span>
       <h1 class="aq-hero__title">Find your way to the <span class="aq-accent">right auto coverage</span>.</h1>
-      <p class="aq-hero__sub">Answer a few guided questions once. Ensurance organizes your vehicle and driver details so licensed agents can review available carriers and surface quote options where available.</p>
+      <p class="aq-hero__sub">Answer a few guided questions once. Ensurance organizes your vehicle and driver details so your request can move into controlled licensed review and toward quote options where available.</p>
       <div class="aq-hero__actions">
         <a class="btn btn-primary btn--lg" href="<?php echo $aq_start_url; ?>" data-track="cta_click_start_auto_quote_request" data-cta-text="Start auto request" data-page-type="auto_insurance">Start auto request <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 18 ), $ensurance_svg_allowed ); ?></a>
         <a class="btn btn-ghost btn--lg" href="<?php echo $aq_hiw_url; ?>" data-track="hero_how_it_works_click" data-cta-text="How Ensurance works" data-page-type="auto_insurance">How Ensurance works</a>

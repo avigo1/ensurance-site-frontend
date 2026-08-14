@@ -66,20 +66,20 @@ $ensurance_svg_allowed = array(
 $sq_cues = array(
     array( 'clock', 'About 3 minutes' ),
     array( 'lock',  'Never sold or blasted to a list' ),
-    array( 'user',  'One agent, not a hundred calls' ),
+    array( 'user',  'Controlled licensed review' ),
 );
 
 // §What happens next — three steps (icon / title / body).
 $sq_next = array(
     array( 'sparkles', 'A few guided questions', 'Short steps, one at a time — mostly taps, minimal typing.' ),
-    array( 'user',     'One independent agent',  'We pair you with a single licensed agent who shops multiple carriers for you.' ),
-    array( 'message',  'They reach out your way', 'By email, text, or call — only the channel you choose, usually within a business day.' ),
+    array( 'user',     'Controlled licensed review',  'Your request is organized for licensed review of available coverage options.' ),
+    array( 'message',  'Contact happens your way', 'By email, text, or call — based on the contact preference you choose.' ),
 );
 
 // §Trust band — three protections (icon / title / body).
 $sq_trust = array(
-    array( 'shield-check', 'Reviewed by a licensed agent', 'Your request goes to one independent agent — never auctioned to a long list of buyers.' ),
-    array( 'lock',         'Your details stay private',    "We don't sell your information or blast it out. You choose how and when you're contacted." ),
+    array( 'shield-check', 'Prepared for licensed review', 'Your request moves through controlled licensed review — not auctioned or broadly distributed.' ),
+  array( 'lock', 'Your details stay private', "We don't sell your information or broadly distribute it. Your request is handled through a controlled process." ),
     array( 'file-text',    'No commitment to start',       'Starting a request is free and never binds you to anything. You review options and decide.' ),
 );
 
@@ -96,7 +96,7 @@ get_header( 'home' );
       <div class="sq-request__intro">
         <span class="eyebrow">Start your request</span>
         <h1 class="sq-request__title">Tell us what you need. We'll handle the rest.</h1>
-        <p class="sq-request__sub">A few guided questions, then we pair you with one independent agent who shops multiple carriers for you. About three minutes.</p>
+        <p class="sq-request__sub">A few guided questions, then Ensurance organizes your request for licensed review of available coverage options. About three minutes.</p>
       </div>
 
       <!-- ── FORM SLOT ────────────────────────────────────────────────
@@ -128,7 +128,7 @@ get_header( 'home' );
       <span class="sq-callout__icon"><?php echo wp_kses( ensurance_home_icon( 'shield-check', 20 ), $ensurance_svg_allowed ); ?></span>
       <div>
         <p class="sq-callout__title">You're always in control</p>
-        <p class="sq-callout__body">We only share your request with the one agent you approve. Nothing gets blasted to a list, and nothing binds until you say so.</p>
+        <p class="sq-callout__body">Your request moves through a controlled process designed to reduce broad sharing and unwanted contact. Nothing binds you to purchase coverage.</p>
       </div>
     </div>
   </section>

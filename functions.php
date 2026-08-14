@@ -2478,3 +2478,59 @@ function ensurance_investor_brief_fonts() {
     );
 }
 add_action( 'wp_enqueue_scripts', 'ensurance_investor_brief_fonts', 20 );
+/**
+ * ENSURANCE SEO: Noindex live utility and transaction pages.
+ *
+ * These URLs remain live and crawlable, but should not appear
+ * in search-engine results.
+ *
+ * Works with Yoast SEO's existing robots meta tag.
+ */
+add_filter( 'wpseo_robots', function( $robots, $presentation ) {
+
+    if ( is_admin() ) {
+        return $robots;
+    }
+
+    $request_uri = isset( $_SERVER['REQUEST_URI'] )
+        ? wp_unslash( $_SERVER['REQUEST_URI'] )
+        : '';
+
+    $request_path = wp_parse_url( $request_uri, PHP_URL_PATH );
+
+    if ( ! is_string( $request_path ) ) {
+        return $robots;
+    }
+
+    // Normalize the path so trailing slashes do not affect matching.
+    $request_path = '/' . trim( $request_path, '/' );
+
+    if ( '/' !== $request_path ) {
+        $request_path .= '/';
+    }
+
+    $noindex_paths = array(
+
+        // Checkout / payment utility
+        '/20614-2/',
+        '/gp-instant-payment/',
+        '/gp-invoices/',
+
+        // Account utility
+        '/create-account/',
+        '/forgot/',
+        '/reset/',
+
+        // Confirmation / transaction utility
+        '/thank-you/',
+        '/gp-checkout__trashed/gp-receipt/',
+        '/gp-checkout__trashed/gp-transaction-failed/',
+    );
+
+    if ( in_array( $request_path, $noindex_paths, true ) ) {
+        return 'noindex, follow';
+    }
+
+    return $robots;
+
+}, 99, 2 );

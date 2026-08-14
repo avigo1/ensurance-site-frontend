@@ -64,7 +64,7 @@ add_action( 'wp_head', function () {
                 '@id'         => $url,
                 'url'         => $url,
                 'name'        => 'Privacy Policy | Ensurance',
-                'description' => 'How Ensurance.com collects, uses, shares, and protects your information — for consumers and licensed agents using our marketplace.',
+                'description' => 'How Ensurance.com collects, uses, shares, and protects your information — for consumers and licensed agents using our platform.',
             ),
             array(
                 '@type'           => 'BreadcrumbList',
@@ -115,7 +115,7 @@ get_header( 'home' );
       <div class="pp-hero__body">
         <span class="pp-hero__badge"><?php echo wp_kses( ensurance_home_icon( 'lock', 13 ), $ensurance_svg_allowed ); ?> Legal &middot; Privacy</span>
         <h1 class="pp-hero__title">Privacy Policy</h1>
-        <p class="pp-hero__sub">Welcome to Ensurance.com (the &ldquo;Site&rdquo;), owned and operated by Ensurance Incorporated (&ldquo;Ensurance.com,&rdquo; &ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;). Ensurance.com operates a nationwide online insurance marketplace designed to connect Consumers (individuals seeking insurance information or assistance) with Agents (licensed insurance professionals or agencies).</p>
+        <p class="pp-hero__sub">Welcome to Ensurance.com (the &ldquo;Site&rdquo;), owned and operated by Ensurance Incorporated (&ldquo;Ensurance.com,&rdquo; &ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;). Ensurance.com provides a structured insurance request platform designed to help Consumers organize insurance information and, when appropriate, connect with licensed insurance professionals or agencies.</p>
         <div class="pp-hero__meta">
           <span class="pp-meta-pill">Effective date: Aug 18, 2025</span>
           <span class="pp-meta-pill">Last updated: May 07, 2019</span>
@@ -141,7 +141,7 @@ get_header( 'home' );
 
       <!-- Intro -->
       <div class="pp-intro">
-        <p class="pp-p">This Privacy Policy explains how we collect, use, share, and protect your information when you use our website, marketplace, and related services. It applies to both <strong>Consumers</strong> (individuals seeking insurance information or assistance) and <strong>Agents</strong> (licensed insurance professionals or agencies participating in our platform).</p>
+        <p class="pp-p">This Privacy Policy explains how we collect, use, share, and protect your information when you use our website, platform, and related services. It applies to both <strong>Consumers</strong> (individuals seeking insurance information or assistance) and <strong>Agents</strong> (licensed insurance professionals or agencies participating in our platform).</p>
         <p class="pp-p">By accessing or using Ensurance.com, you agree to this Privacy Policy. If you do not agree, please do not use our services.</p>
         <div class="pp-note" role="note">
           <span class="pp-note__icon"><?php echo wp_kses( ensurance_home_icon( 'file-text', 18 ), $ensurance_svg_allowed ); ?></span>
@@ -156,9 +156,9 @@ get_header( 'home' );
           <h2>Definitions</h2>
         </div>
         <ul class="pp-list">
-          <li><strong>Consumer</strong> &ndash; An individual who visits Ensurance.com or submits information to be connected with licensed insurance agents.</li>
-          <li><strong>Agent</strong> &ndash; A licensed insurance professional or agency listed on Ensurance.com and participating in our platform.</li>
-          <li><strong>Lead Distribution</strong> &ndash; The process by which we share Consumer information with one or more Agents to help respond to an insurance inquiry.</li>
+          <li><strong>Consumer</strong> &ndash; An individual who visits Ensurance.com, seeks insurance information or assistance, or submits an insurance request through the platform.</li>
+          <li><strong>Agent</strong> &ndash; A licensed insurance professional or agency participating in Ensurance and eligible to review insurance requests through the platform.</li>
+          <li><strong>Request Access</strong> &ndash; The process by which Ensurance may make information from a Consumer's insurance request available to eligible Agents for review and potential engagement.</li>
           <li><strong>Service Providers</strong> &ndash; Vendors who help operate our platform, store data, provide analytics, or support communications.</li>
         </ul>
       </section>
@@ -196,7 +196,7 @@ get_header( 'home' );
           <span class="pp-section__n">3</span>
           <h2>How We Use and Share Information</h2>
         </div>
-        <p class="pp-p">Ensurance.com operates as a marketplace that connects <strong>Consumers</strong> (individuals seeking insurance information or assistance) with <strong>Agents</strong> (licensed insurance professionals and agencies). This matching process &mdash; referred to in this Privacy Policy as <strong>&ldquo;Lead Distribution&rdquo;</strong> &mdash; is a core function of our platform.</p>
+        <p class="pp-p">Ensurance.com provides a structured insurance request platform that helps <strong>Consumers</strong> organize insurance information and when appropriate, makes those requests available to <strong>Agents</strong> for review and potential engagement. This controlled request-access process is a core function of our platform.</p>
         <p class="pp-p">When you submit your information through our website, you authorize us to use and share that information in the following ways:</p>
         <ul class="pp-list pp-list--titled">
           <li><strong>Connecting You With Agents</strong> We share the information you provide with one or more licensed insurance agents who may be able to assist you. This may include independent agents, agencies, or representatives of insurance carriers. The purpose of this sharing is to respond to your inquiry and help you explore coverage options &mdash; not for unrelated marketing.</li>
@@ -208,8 +208,8 @@ get_header( 'home' );
         </ul>
         <h3 class="pp-sub">Important Disclaimers</h3>
         <ul class="pp-list">
-          <li>Ensurance.com <strong>does not sell your personal information for unrelated marketing purposes</strong> outside the scope of connecting you with insurance agents.</li>
-          <li>By submitting your information, you acknowledge that <strong>Lead Distribution</strong> is central to our service, and you consent to this sharing as described.</li>
+          <li>Ensurance.com <strong>does not sell your personal information for unrelated marketing purposes</strong> outside the scope of providing the services you request through Ensurance.</li>
+          <li>By submitting your information, you acknowledge that <strong>Request Access</strong> is central to our service, and information may be made available to eligible Agents as described in this Privacy Policy.</li>
           <li>We <strong>do not guarantee or endorse</strong> any agent&rsquo;s services, the accuracy of their statements, or the outcome of your interactions with them.</li>
         </ul>
         <p class="pp-p">You are encouraged to review an agent&rsquo;s own privacy policy before sharing sensitive information directly with them.</p>
@@ -244,10 +244,10 @@ get_header( 'home' );
         <p class="pp-p">We collect and process:</p>
         <ul class="pp-list">
           <li><strong>Account Information</strong> &ndash; names, contact details, licensing details, agency information.</li>
-          <li><strong>Public Content</strong> &ndash; reviews, ratings, uploaded media, and profile content visible to the public.</li>
+        
           <li><strong>Contact Information</strong> &ndash; data used for invitations or referrals.</li>
           <li><strong>Communications</strong> &ndash; messages sent through the platform, inquiries, and support interactions.</li>
-          <li><strong>Transactional Data</strong> &ndash; lead requests, subscription purchases, payment details.</li>
+          <li><strong>Transactional Data</strong> &ndash; insurance request activity, subscription purchases, payment details.</li>
           <li><strong>Location &amp; Device Information</strong> &ndash; IP address, geolocation (if enabled), browser type, device identifiers, operating system.</li>
           <li><strong>Professional Information</strong> &ndash; agency affiliation, licensing status, professional certifications.</li>
           <li><strong>Sensitive Personal Information</strong> &ndash; voluntarily provided and relevant to platform use.</li>

@@ -72,12 +72,12 @@ $sq_cues = array(
 $sq_next = array(
     array( 'sparkles', 'A few guided questions', 'Answer short questions about your location, vehicle, coverage needs, and contact preferences.' ),
     array( 'user',     'Your request is organized', 'Ensurance organizes your details so your auto quote request is clearer before review.' ),
-    array( 'message',  'Move toward quote options', 'Where available, a licensed agent, agency, or approved partner may follow up based on your request and contact preference.' ),
+    array( 'message',  'Move toward quote options', 'Where available, your request may move into controlled licensed review and follow-up based on your contact preference.' ),
 );
 
 // §Trust band — three protections (icon / title / body).
 $sq_trust = array(
-    array( 'shield-check', 'Prepared for licensed review', 'Your request is organized so it can be reviewed by a licensed agent, agency, or approved partner where available.' ),
+    array( 'shield-check', 'Prepared for licensed review', 'Your request is organized for controlled licensed review where available.' ),
     array( 'lock',         'Your details are handled carefully', 'Your request is handled through a more controlled process designed to reduce unnecessary exposure and unwanted contact.' ),
     array( 'file-text',    'No commitment to start',       'Starting a request is free and does not require you to buy coverage. You review your next step and decide.' ),
 );
