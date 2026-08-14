@@ -3774,7 +3774,12 @@ function ensurance_founding_plans() {
         'monthly' => array(
             'label'       => 'Join as a Founding Agent',
             'package_id'  => 16,
-            'destination' => home_url( '/publish-your-agency/insurance-agencies/?package_id=16' ),
+            // Paid $29/mo path: a verified agent who logs in is routed here (via
+            // ensurance_founding_plan_login_redirect), where the Stripe Checkout
+            // launch route (page-founding-checkout.php →
+            // ensurance_founding_checkout_start) creates a subscription Session
+            // and hands off to Stripe. See section 2b-v-a5.
+            'destination' => home_url( '/founding-checkout/' ),
         ),
     );
 }
@@ -3914,6 +3919,193 @@ function ensurance_founding_plan_login_redirect( $redirect_to, $redirect_page_id
     return $redirect_to;
 }
 add_filter( 'uwp_login_redirect', 'ensurance_founding_plan_login_redirect', 10, 4 );
+
+// ============================================================================
+// 2b-v-a5. FOUNDING AGENT — COMPANY NAME + STRIPE SUBSCRIPTION CHECKOUT
+// ============================================================================
+// Self-serve paid onboarding for the $29/mo "Join as a Founding Agent" plan.
+//
+// FLOW: /create-account?plan=monthly → account created (email-activation) → the
+// agent verifies by email and logs in → ensurance_founding_plan_login_redirect
+// sends them to /founding-checkout/ (the `monthly` destination) →
+// ensurance_founding_checkout_start() creates a Stripe Checkout Session and
+// redirects to Stripe → on payment, Stripe fires its events and MAKE reads the
+// session metadata (company_name / first_name / last_name) to update the agent
+// row → Stripe returns the browser to /dashboard/?checkout=success.
+//
+// WordPress is intentionally NOT in the Stripe→status loop (no webhook handler);
+// the authoritative subscription status lives in Stripe/Make. The only local
+// signal is a best-effort "_ensurance_subscription_active" flag set on the
+// success return, used purely to avoid sending a paid agent back through
+// checkout (which would open a SECOND subscription).
+//
+// CONFIG (per environment, in wp-config.php — never committed): define
+// ENSURANCE_STRIPE_SECRET_KEY and ENSURANCE_STRIPE_PRICE_MONTHLY (Stripe TEST
+// key + a test $29/mo recurring Price on staging; LIVE values on prod). Missing
+// config bails gracefully to the manual contact URL.
+
+/** User-meta key holding a new agent's company / agency name (Make match key). */
+if ( ! defined( 'ENSURANCE_COMPANY_META' ) ) {
+    define( 'ENSURANCE_COMPANY_META', '_ensurance_company_name' );
+}
+
+/** User-meta flag: this agent has completed Stripe checkout at least once. */
+if ( ! defined( 'ENSURANCE_SUBSCRIPTION_ACTIVE_META' ) ) {
+    define( 'ENSURANCE_SUBSCRIPTION_ACTIVE_META', '_ensurance_subscription_active' );
+}
+
+/**
+ * Durably remember the company / agency name entered at sign-up.
+ *
+ * Hooked on uwp_after_custom_fields_save alongside ensurance_remember_founding_plan
+ * (same rationale — it fires after the user row exists and still holds the raw
+ * submitted $data). Kept as its OWN function rather than folded into the plan
+ * saver, per the standing CLAUDE.md rule (new functions, not edits to existing
+ * ones). `company` is not a UsersWP field, so UsersWP ignores it in validation
+ * but passes it through in $data — exactly how the `plan` field flows.
+ *
+ * @param string $form_type 'register' | 'account' | ...
+ * @param array  $data      raw submitted fields (includes our `company`)
+ * @param array  $result    validated fields
+ * @param int    $user_id   the new user's id
+ */
+function ensurance_remember_company_name( $form_type, $data, $result, $user_id ) {
+    if ( 'register' !== $form_type || empty( $user_id ) ) {
+        return;
+    }
+    if ( isset( $data['company'] ) && '' !== trim( (string) $data['company'] ) ) {
+        update_user_meta( $user_id, ENSURANCE_COMPANY_META, sanitize_text_field( wp_unslash( $data['company'] ) ) );
+    }
+}
+add_action( 'uwp_after_custom_fields_save', 'ensurance_remember_company_name', 10, 4 );
+
+/** Read an agent's stored company / agency name ('' if none). */
+function ensurance_get_company_name( $user_id ) {
+    return trim( (string) get_user_meta( (int) $user_id, ENSURANCE_COMPANY_META, true ) );
+}
+
+/**
+ * Mark the agent's subscription active on the Stripe success return.
+ *
+ * Best-effort only: WordPress is not on the Stripe webhook, so this is the local
+ * signal that keeps a returning subscriber out of checkout (see the guard in
+ * ensurance_founding_checkout_start). The source of truth stays Stripe/Make.
+ * Runs on the /dashboard/?checkout=success landing.
+ */
+function ensurance_mark_subscription_active_on_return() {
+    if ( ! is_user_logged_in() || ! is_page( 'dashboard' ) ) {
+        return;
+    }
+    if ( ! isset( $_GET['checkout'] ) || 'success' !== $_GET['checkout'] ) {
+        return;
+    }
+    update_user_meta( get_current_user_id(), ENSURANCE_SUBSCRIPTION_ACTIVE_META, 1 );
+}
+add_action( 'template_redirect', 'ensurance_mark_subscription_active_on_return' );
+
+/**
+ * Create a Stripe Checkout Session for the $29/mo plan and redirect to it.
+ *
+ * Called by page-founding-checkout.php before any output. ALWAYS exits: to
+ * Stripe on success; to /login, /dashboard/, /pricing-plans/ or the manual
+ * contact URL otherwise. Uses the Stripe REST API via wp_remote_post (the same
+ * outbound idiom as the site's other integrations — no SDK to bundle). The
+ * agent identifiers are stamped onto BOTH the session metadata and the
+ * subscription metadata, so Make can match the agent row from whichever event
+ * it watches.
+ *
+ * @return void  Never returns — every path calls exit.
+ */
+function ensurance_founding_checkout_start() {
+    if ( ! is_user_logged_in() ) {
+        wp_safe_redirect( add_query_arg( 'redirect_to', rawurlencode( home_url( '/founding-checkout/' ) ), home_url( '/login/' ) ) );
+        exit;
+    }
+
+    $user = wp_get_current_user();
+
+    // Already checked out once — never open a second subscription.
+    if ( get_user_meta( $user->ID, ENSURANCE_SUBSCRIPTION_ACTIVE_META, true ) ) {
+        wp_safe_redirect( home_url( '/dashboard/' ) );
+        exit;
+    }
+
+    // Only the paid monthly plan checks out here.
+    if ( 'monthly' !== ensurance_get_remembered_founding_plan( $user->ID ) ) {
+        wp_safe_redirect( home_url( '/dashboard/' ) );
+        exit;
+    }
+
+    // Config must be present; otherwise fall back to the manual contact path.
+    if ( ! defined( 'ENSURANCE_STRIPE_SECRET_KEY' ) || ! ENSURANCE_STRIPE_SECRET_KEY
+        || ! defined( 'ENSURANCE_STRIPE_PRICE_MONTHLY' ) || ! ENSURANCE_STRIPE_PRICE_MONTHLY ) {
+        error_log( 'Ensurance founding checkout: ENSURANCE_STRIPE_SECRET_KEY / ENSURANCE_STRIPE_PRICE_MONTHLY not configured.' );
+        wp_safe_redirect( ensurance_founding_agent_contact_url() );
+        exit;
+    }
+
+    $company = ensurance_get_company_name( $user->ID );
+
+    // Stripe expects application/x-www-form-urlencoded with bracket-notation keys;
+    // wp_remote_post form-encodes an array body, and Stripe decodes the keys back.
+    $body = array(
+        'mode'                    => 'subscription',
+        'line_items[0][price]'    => ENSURANCE_STRIPE_PRICE_MONTHLY,
+        'line_items[0][quantity]' => 1,
+        'customer_email'          => $user->user_email,
+        'client_reference_id'     => (string) $user->ID,
+        // Build these as plain strings, NOT via add_query_arg — Stripe needs the
+        // literal {CHECKOUT_SESSION_ID} token (add_query_arg would URL-encode the
+        // braces, and wp_remote_post's own encoding would then double-encode them,
+        // so Stripe could not substitute the session id).
+        'success_url'             => home_url( '/dashboard/?checkout=success&session_id={CHECKOUT_SESSION_ID}' ),
+        'cancel_url'              => home_url( '/pricing-plans/?checkout=cancelled' ),
+        // Match key for the Make scenario — on the session…
+        'metadata[wp_user_id]'    => (string) $user->ID,
+        'metadata[company_name]'  => $company,
+        'metadata[first_name]'    => $user->first_name,
+        'metadata[last_name]'     => $user->last_name,
+        'metadata[plan]'          => 'monthly',
+        // …and on the subscription, so it rides subscription/invoice events too.
+        'subscription_data[metadata][wp_user_id]'   => (string) $user->ID,
+        'subscription_data[metadata][company_name]' => $company,
+        'subscription_data[metadata][first_name]'   => $user->first_name,
+        'subscription_data[metadata][last_name]'    => $user->last_name,
+        'subscription_data[metadata][plan]'         => 'monthly',
+    );
+
+    $response = wp_remote_post(
+        'https://api.stripe.com/v1/checkout/sessions',
+        array(
+            'timeout' => 20,
+            'headers' => array(
+                'Authorization' => 'Bearer ' . ENSURANCE_STRIPE_SECRET_KEY,
+                'Content-Type'  => 'application/x-www-form-urlencoded',
+            ),
+            'body'    => $body,
+        )
+    );
+
+    if ( is_wp_error( $response ) ) {
+        error_log( 'Ensurance founding checkout: Stripe request failed — ' . $response->get_error_message() );
+        wp_safe_redirect( add_query_arg( 'checkout', 'error', home_url( '/pricing-plans/' ) ) );
+        exit;
+    }
+
+    $code = (int) wp_remote_retrieve_response_code( $response );
+    $data = json_decode( wp_remote_retrieve_body( $response ), true );
+
+    if ( $code < 200 || $code >= 300 || empty( $data['url'] ) ) {
+        $msg = isset( $data['error']['message'] ) ? $data['error']['message'] : 'unexpected response';
+        error_log( 'Ensurance founding checkout: Stripe returned ' . $code . ' — ' . $msg );
+        wp_safe_redirect( add_query_arg( 'checkout', 'error', home_url( '/pricing-plans/' ) ) );
+        exit;
+    }
+
+    // External host → wp_redirect (wp_safe_redirect would reject stripe.com).
+    wp_redirect( esc_url_raw( $data['url'] ) );
+    exit;
+}
 
 // ============================================================================
 // 2b-v-b. FOUNDING AGENT ACCESS (/pricing-plans) — SELF-CONTAINED ASSETS

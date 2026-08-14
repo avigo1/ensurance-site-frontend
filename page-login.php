@@ -87,15 +87,13 @@ $al_trust_url    = esc_url( home_url( '/trust-center' ) );
 $al_agents_url   = esc_url( home_url( '/for-agents' ) );
 $al_contact_url  = esc_url( home_url( '/contact' ) );
 
-// The two Founding Agent paths differ: the free "Start 60 Day Access" is
-// self-serve (→ /create-account?plan=60-day, then the dashboard). The paid
-// "Join as a Founding Agent" ($29/mo) is a MANUAL, contact-first process — it
-// links to /contact/?topic=founding so the team can set the agent up by hand
-// (ensurance_founding_agent_contact_url). Registry + funnel: functions.php.
-// Logged-in agents skip sign-up/contact and go straight to the dashboard
-// (ensurance_founding_cta_url); logged-out visitors get the normal paths.
-$al_cta_60day   = esc_url( ensurance_founding_cta_url( ensurance_create_account_url( '60-day' ) ) ); // Start 60 Day Access → self-serve signup
-$al_cta_monthly = esc_url( ensurance_founding_cta_url( ensurance_founding_agent_contact_url() ) );   // Join as a Founding Agent → manual, contact-first
+// Both Founding Agent paths are self-serve sign-ups (→ /create-account?plan=…):
+// the free "Start 60 Day Access" (plan=60-day → dashboard) and the paid "Join as
+// a Founding Agent" ($29/mo, plan=monthly → Stripe checkout, then dashboard).
+// Registry + funnel: functions.php. Logged-in agents skip sign-up and go straight
+// to the dashboard (ensurance_founding_cta_url); logged-out visitors sign up.
+$al_cta_60day   = esc_url( ensurance_founding_cta_url( ensurance_create_account_url( '60-day' ) ) );  // Start 60 Day Access → self-serve signup
+$al_cta_monthly = esc_url( ensurance_founding_cta_url( ensurance_create_account_url( 'monthly' ) ) ); // Join as a Founding Agent → self-serve signup → Stripe
 
 // UsersWP-resolved auth destinations (fall back gracefully if helpers are gone).
 $al_forgot_url   = function_exists( 'uwp_get_forgot_page_url' )  ? esc_url( uwp_get_forgot_page_url() )  : esc_url( wp_lostpassword_url() );
