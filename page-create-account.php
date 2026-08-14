@@ -111,6 +111,12 @@ get_header( 'home' );
       </div>
 
       <div class="ca-field">
+        <label for="company">Company / Agency name</label>
+        <input id="company" name="company" type="text" autocomplete="organization" placeholder="Acme Insurance Agency" required aria-describedby="company-hint" />
+        <span class="ca-field__hint" id="company-hint">Enter the exact company name on your Ensurance record.</span>
+      </div>
+
+      <div class="ca-field">
         <label for="username">Username</label>
         <input id="username" name="username" type="text" autocomplete="username" placeholder="janedoe" required />
       </div>

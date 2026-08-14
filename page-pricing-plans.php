@@ -9,40 +9,58 @@
  * layering assets/pricing-plans.css + assets/pricing-plans.js on top. Loaded
  * and isolated from the shared marketing bundle in functions.php.
  *
- * Sign-up funnel — the two plans route DIFFERENTLY:
- *   - 60-day (free): self-serve. CTA → /create-account?plan=60-day → account
- *     created → /dashboard/ (Plan 1). Funnel: ensurance_create_account_url /
+ * Sign-up funnel — both plans are self-serve sign-ups (CTA → /create-account):
+ *   - 60-day (free): CTA → /create-account?plan=60-day → account created →
+ *     /dashboard/ (Plan 1). Funnel: ensurance_create_account_url /
  *     ensurance_founding_plans in functions.php.
- *   - monthly ($29/mo): MANUAL, contact-first (Plan 2). CTA →
- *     /contact/?topic=founding; the team sets up the profile + membership by hand.
- *     There is NO self-serve checkout for this plan. URL:
- *     ensurance_founding_agent_contact_url(). The $29 card + terms copy reflect
- *     this (no recurring-charge authorization shown).
- *   The `monthly` registry entry / package_id=16 / create-account?plan=monthly
- *   plumbing is left DORMANT for a possible future self-serve revival — see
- *   plans/agent-onboarding-2-founding-agent.md.
+ *   - monthly ($29/mo): CTA → /create-account?plan=monthly → account created →
+ *     (email verification + login) → /founding-checkout/ → Stripe Checkout
+ *     subscription → /dashboard/. Stripe → Make updates the agent row. The $29
+ *     card + terms copy carry the recurring-charge authorization. Route +
+ *     handler: functions.php section 2b-v-a5 (ensurance_founding_checkout_start).
  *   NOTE (unresolved): the 60-day card copy promises "$0 for 60 days, then $29/mo",
  *   implying automatic conversion — but the free path collects no payment method,
  *   so nothing auto-bills. Reconcile that copy (or make 60-day conversion manual
  *   too) before promoting to production.
  *
- * SEO: title / meta description / canonical / robots are owned by Yoast and
- * emitted through wp_head(). This template outputs only FAQPage JSON-LD, which
- * Yoast does not emit for this page and which mirrors the visible FAQ verbatim.
+ * SEO: meta description / canonical / robots are owned by Yoast and emitted
+ * through wp_head(). This template also outputs FAQPage JSON-LD, which Yoast
+ * does not emit for this page and which mirrors the visible FAQ verbatim. The
+ * <title> is the one Yoast field this template overrides — see below.
  *
  * This template renders via the page-{slug}.php hierarchy for the /pricing-plans/
  * page, so it auto-overrides the previous Kadence block content with no DB edit.
  */
 
-// The two plans route differently. The free "Start 60 day access" is self-serve:
-// → /create-account?plan=60-day (sign-up first), then the dashboard. The paid
-// "Join as a Founding Agent" ($29/mo) is a MANUAL, contact-first process — it
-// links to /contact/?topic=founding so the team sets the agent up by hand (no
-// self-serve checkout). Registry + funnel live in functions.php
-// (ensurance_create_account_url / ensurance_founding_agent_contact_url). The hero
-// buttons (#plans) remain in-page jump links to the plan comparison below.
-$fa_cta_60day   = ensurance_create_account_url( '60-day' );      // Start 60 day access → self-serve signup
-$fa_cta_monthly = ensurance_founding_agent_contact_url();        // Join as a Founding Agent → manual, contact-first (not self-serve checkout)
+/**
+ * <title> override.
+ *
+ * The Yoast SEO title stored for this page still reflects the old /pricing-plans
+ * positioning, so force the "Founding Agent Access" title here.
+ *
+ * Yoast removes core's _wp_render_title_tag and prints its own title, so
+ * 'wpseo_title' is the hook that actually decides the output. The
+ * 'pre_get_document_title' filter is the fallback for when Yoast is inactive;
+ * it runs at 99 so it beats anything hooked at the default priority.
+ */
+add_filter( 'wpseo_title', function () {
+	return 'Founding Agent Access | Ensurance';
+} );
+
+add_filter( 'pre_get_document_title', function () {
+	return 'Founding Agent Access | Ensurance';
+}, 99 );
+
+// Both plans are self-serve sign-ups. The free "Start 60 day access" →
+// /create-account?plan=60-day, then the dashboard. The paid "Join as a Founding
+// Agent" ($29/mo) → /create-account?plan=monthly, then (after email verification
+// and login) Stripe Checkout and the dashboard. Registry + funnel live in
+// functions.php (ensurance_create_account_url; Stripe route in section 2b-v-a5).
+// The hero buttons (#plans) remain in-page jump links to the plan comparison.
+// Both CTAs are wrapped in ensurance_founding_cta_url() so an already-logged-in
+// agent is sent straight to /dashboard/ instead of back through sign-up.
+$fa_cta_60day   = ensurance_founding_cta_url( ensurance_create_account_url( '60-day' ) );  // Start 60 day access → self-serve signup
+$fa_cta_monthly = ensurance_founding_cta_url( ensurance_create_account_url( 'monthly' ) ); // Join as a Founding Agent → self-serve signup → Stripe
 
 /**
  * Inline Lucide glyphs (stroke 2, round caps) used on this page.
@@ -248,11 +266,11 @@ get_header( 'home' );
 							<li><span class="fa-tick"><?php echo wp_kses( ensurance_fa_icon( 'check', 13 ), $fa_svg_allowed ); ?></span><?php echo esc_html( $b ); ?></li>
 						<?php endforeach; ?>
 					</ul>
-					<a class="fa-btn fa-btn--outline fa-btn--block" href="<?php echo esc_url( $fa_cta_monthly ); ?>" data-event="plan_monthly_contact_click">Join as a Founding Agent <?php echo wp_kses( ensurance_fa_icon( 'arrow-right', 17 ), $fa_svg_allowed ); ?></a>
+					<a class="fa-btn fa-btn--outline fa-btn--block" href="<?php echo esc_url( $fa_cta_monthly ); ?>" data-event="plan_monthly_checkout_click">Join as a Founding Agent <?php echo wp_kses( ensurance_fa_icon( 'arrow-right', 17 ), $fa_svg_allowed ); ?></a>
 					<p class="fa-plan__note">You stay in control of which opportunities you choose to pursue.</p>
 					<div class="fa-consent">
 						<?php echo wp_kses( ensurance_fa_icon( 'lock', 13, 'fa-consent__icon' ), $fa_svg_allowed ); ?>
-						<span>Founding Agent Access is set up personally. Contact our team and we'll get your agency profile and $29/mo membership ready for you — no payment is taken online.</span>
+						<span>By continuing, I authorize a recurring $29/month charge for Founding Agent Access, billed through Stripe until I cancel. You'll create your account, then complete payment securely on Stripe.</span>
 					</div>
 				</article>
 			</div>
@@ -401,7 +419,7 @@ get_header( 'home' );
 				</div>
 				<div class="fa-terms__card">
 					<span class="fa-terms__tag">Founding Agent Access · $29 per month</span>
-					<p class="fa-terms__text">Founding Agent Access is $29 per month. There is no online sign-up — contact our team and we'll set up your membership and agency profile with you. Billing terms are agreed with you directly before anything begins.</p>
+					<p class="fa-terms__text">Founding Agent Access is $29 per month, billed as a recurring subscription through Stripe. You create your account, then complete payment securely on Stripe. Cancel anytime; access continues through the current billing period.</p>
 				</div>
 			</div>
 			<p class="fa-terms__cancel"><?php echo wp_kses( ensurance_fa_icon( 'circle-check', 16, 'fa-terms__cancel-icon' ), $fa_svg_allowed ); ?> Cancel anytime. Access continues through the current billing period.</p>

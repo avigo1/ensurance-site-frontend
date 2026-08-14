@@ -21,7 +21,8 @@
  *   sessions, "remember me", redirect and the agent-profile flow all keep working.
  *     - username / password            → the two configured UsersWP login fields
  *     - remember_me = "forever"         → enables persistent login
- *     - redirect_to                     → post-login destination (account page)
+ *     - redirect_to                     → post-login destination (/dashboard/,
+ *                                         or a validated ?redirect_to= target)
  *     - uwp_login_nonce                 → wp_create_nonce('uwp-login-nonce'),
  *                                         verified in UsersWP class-forms.php
  *     - uwp_login_submit                → submit button name
@@ -29,9 +30,29 @@
  *   do_action('uwp_template_display_notices','login'). "Create account" and
  *   "Forgot password?" route to the existing UsersWP register/forgot pages.
  *
- * SEO: title / meta description / canonical / robots are owned by Yoast and
- * emitted through wp_head(); this template outputs none of them.
+ * SEO: meta description / canonical / robots are owned by Yoast and emitted
+ * through wp_head(); this template outputs none of them. The <title> is the one
+ * exception — see the title override below.
  */
+
+/**
+ * <title> override.
+ *
+ * /login is the agent login page, so the tab/SERP title should say so rather
+ * than inheriting whatever generic title is stored for the page.
+ *
+ * Yoast removes core's _wp_render_title_tag and prints its own title, so
+ * 'wpseo_title' is the hook that actually decides the output. The
+ * 'pre_get_document_title' filter is the fallback for when Yoast is inactive;
+ * it runs at 99 so it beats anything hooked at the default priority.
+ */
+add_filter( 'wpseo_title', function () {
+	return 'Agent Login | Ensurance';
+} );
+
+add_filter( 'pre_get_document_title', function () {
+	return 'Agent Login | Ensurance';
+}, 99 );
 
 // --- Inline Lucide icon renderer (shared across templates via function_exists
 //     guard; only one page template renders per request). Paths from Lucide. ---
@@ -66,18 +87,46 @@ $al_trust_url    = esc_url( home_url( '/trust-center' ) );
 $al_agents_url   = esc_url( home_url( '/for-agents' ) );
 $al_contact_url  = esc_url( home_url( '/contact' ) );
 
-// The two Founding Agent paths differ: the free "Start 60 Day Access" is
-// self-serve (→ /create-account?plan=60-day, then the dashboard). The paid
-// "Join as a Founding Agent" ($29/mo) is a MANUAL, contact-first process — it
-// links to /contact/?topic=founding so the team can set the agent up by hand
-// (ensurance_founding_agent_contact_url). Registry + funnel: functions.php.
-$al_cta_60day   = esc_url( ensurance_create_account_url( '60-day' ) );   // Start 60 Day Access → self-serve signup
-$al_cta_monthly = esc_url( ensurance_founding_agent_contact_url() );     // Join as a Founding Agent → manual, contact-first
+// Both Founding Agent paths are self-serve sign-ups (→ /create-account?plan=…):
+// the free "Start 60 Day Access" (plan=60-day → dashboard) and the paid "Join as
+// a Founding Agent" ($29/mo, plan=monthly → Stripe checkout, then dashboard).
+// Registry + funnel: functions.php. Logged-in agents skip sign-up and go straight
+// to the dashboard (ensurance_founding_cta_url); logged-out visitors sign up.
+$al_cta_60day   = esc_url( ensurance_founding_cta_url( ensurance_create_account_url( '60-day' ) ) );  // Start 60 Day Access → self-serve signup
+$al_cta_monthly = esc_url( ensurance_founding_cta_url( ensurance_create_account_url( 'monthly' ) ) ); // Join as a Founding Agent → self-serve signup → Stripe
 
 // UsersWP-resolved auth destinations (fall back gracefully if helpers are gone).
 $al_forgot_url   = function_exists( 'uwp_get_forgot_page_url' )  ? esc_url( uwp_get_forgot_page_url() )  : esc_url( wp_lostpassword_url() );
-$al_redirect_to  = function_exists( 'uwp_get_account_page_url' ) ? esc_url( uwp_get_account_page_url() ) : $al_home_url;
 $al_login_action = esc_url( get_permalink() ); // post to self — UsersWP process_login() runs on template_redirect
+
+// Post-login destination.
+//
+// This hidden field DECIDES where a successful login lands: UsersWP's
+// get_login_redirect_url() (class-forms.php) checks $_REQUEST['redirect_to']
+// FIRST, ahead of its own per-role settings, so whatever is emitted here wins —
+// only the 'uwp_login_redirect' filter runs after it
+// (ensurance_founding_plan_login_redirect in functions.php, which fires only for
+// users carrying a founding-plan meta). This used to be hardcoded to the legacy
+// UsersWP account page, which sent every agent WITHOUT that meta to the old
+// dashboard; the new agent dashboard is /dashboard/ (page-dashboard.php), so
+// that is the default now.
+//
+// An incoming ?redirect_to= is honored first so the round-trip works: the
+// /dashboard/ access guard bounces logged-out visitors to
+// /login/?redirect_to=<destination> and expects to get them back there. Run it
+// through wp_validate_redirect() — raw request input — so an off-site value
+// falls back to the dashboard instead of becoming an open redirect. Note
+// wp_validate_redirect() returns an EMPTY string (not the fallback) for empty
+// input, and an empty redirect_to would drop us back into UsersWP's own
+// defaults — hence the explicit empty checks on both sides of it.
+$al_dashboard_url = home_url( '/dashboard/' );
+$al_redirect_raw  = isset( $_GET['redirect_to'] ) && is_string( $_GET['redirect_to'] )
+	? trim( wp_unslash( $_GET['redirect_to'] ) )
+	: '';
+$al_redirect_to   = '' !== $al_redirect_raw
+	? wp_validate_redirect( $al_redirect_raw, $al_dashboard_url )
+	: $al_dashboard_url;
+$al_redirect_to   = esc_url( '' !== $al_redirect_to ? $al_redirect_to : $al_dashboard_url );
 
 get_header( 'home' );
 ?>

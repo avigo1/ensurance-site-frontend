@@ -101,6 +101,12 @@ body { background: var(--bg-page) !important; }
   transition: border-color var(--duration-fast) var(--ease-out),
               box-shadow var(--duration-fast) var(--ease-out);
 }
+.ca-field__hint {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-weight: var(--weight-light);
+  line-height: var(--leading-body);
+}
 .ca-field input::placeholder { color: var(--text-faint); }
 .ca-field input:focus {
   outline: none;
