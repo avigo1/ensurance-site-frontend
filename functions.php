@@ -4108,6 +4108,102 @@ function ensurance_founding_checkout_start() {
 }
 
 // ============================================================================
+// 2b-v-a6. FOUNDING AGENT — CREATE STARTER SHEET ROW ON EMAIL VERIFICATION
+// ============================================================================
+// A self-serve agent becomes a WordPress user at sign-up but has NO row in the
+// auto_insurance_agents Google Sheet — and the Make "Agent_Signup" scenario that
+// sets subscription_tier=Growth on payment is UPDATE-ONLY, so with no row it
+// always fails. Fix: the moment a funnel agent verifies their email, fire a Make
+// "Agent Row Upsert" webhook that creates the row as `Starter`; Stripe checkout
+// later flips it to `Growth`. This also makes unpaid agents legitimately Starter,
+// which is the unified lead-pricing model (see §2b-v-a5 / plans/).
+//
+// TIMING: hooked on uwp_email_activation_success, which UsersWP fires ONLY on a
+// successful email-link activation (permalinks.php → uwp_process_activation_link),
+// passing the user id. That handler wp_safe_redirect()s to /login immediately
+// after the do_action (no auto-login), so this callback runs synchronously before
+// the redirect — the POST is therefore NON-BLOCKING so it cannot delay it.
+//
+// CONFIG (wp-config.php, per environment — never committed):
+// ENSURANCE_AGENT_UPSERT_WEBHOOK_URL = the Make custom-webhook URL. If unset, this
+// logs and no-ops (activation still succeeds).
+
+/** User-meta flag: the agent-row upsert webhook was already fired for this user. */
+if ( ! defined( 'ENSURANCE_AGENT_ROW_NOTIFIED_META' ) ) {
+    define( 'ENSURANCE_AGENT_ROW_NOTIFIED_META', '_ensurance_agent_row_notified' );
+}
+
+/**
+ * On email-link activation of a founding-funnel agent, POST their identity to the
+ * Make "Agent Row Upsert" webhook so a Starter auto_insurance_agents row exists.
+ *
+ * Fires for BOTH plans (monthly and free 60-day — anyone carrying the founding
+ * plan meta); non-agent registrations are skipped. Fire-and-forget + a per-user
+ * guard; the Make scenario upserts (match-or-add), so a repeat never duplicates a
+ * row. New function only — no edits to existing ones (CLAUDE.md rule).
+ *
+ * @param int $user_id The user who just activated (the only arg UsersWP passes).
+ */
+function ensurance_notify_agent_row_on_activation( $user_id ) {
+    $user_id = (int) $user_id;
+    if ( ! $user_id ) {
+        return;
+    }
+
+    // Email-link activation only (this hook also fires on admin manual activation).
+    if ( ! isset( $_GET['uwp_activate'] ) || 'yes' !== $_GET['uwp_activate'] ) {
+        return;
+    }
+
+    // Founding-funnel agents only — monthly OR 60-day carry the plan meta.
+    $plan = ensurance_get_remembered_founding_plan( $user_id );
+    if ( '' === $plan ) {
+        return;
+    }
+
+    // Fire at most once per user (guards double-clicked activation links).
+    if ( get_user_meta( $user_id, ENSURANCE_AGENT_ROW_NOTIFIED_META, true ) ) {
+        return;
+    }
+
+    if ( ! defined( 'ENSURANCE_AGENT_UPSERT_WEBHOOK_URL' ) || ! ENSURANCE_AGENT_UPSERT_WEBHOOK_URL ) {
+        error_log( 'Ensurance agent-row webhook: ENSURANCE_AGENT_UPSERT_WEBHOOK_URL not configured.' );
+        return;
+    }
+
+    $user = get_userdata( $user_id );
+    if ( ! $user ) {
+        return;
+    }
+
+    $payload = array(
+        'event'        => 'agent_signup_activated',
+        'wp_user_id'   => $user_id,
+        'company_name' => ensurance_get_company_name( $user_id ),
+        'first_name'   => $user->first_name,
+        'last_name'    => $user->last_name,
+        'email'        => $user->user_email,
+        'plan'         => $plan, // 'monthly' | '60-day'
+        'tier'         => 'Starter',
+    );
+
+    // Fire-and-forget: the activation handler redirects immediately after this
+    // hook returns, so do NOT block on the response.
+    wp_remote_post(
+        ENSURANCE_AGENT_UPSERT_WEBHOOK_URL,
+        array(
+            'blocking' => false,
+            'timeout'  => 5,
+            'headers'  => array( 'Content-Type' => 'application/json' ),
+            'body'     => wp_json_encode( $payload ),
+        )
+    );
+
+    update_user_meta( $user_id, ENSURANCE_AGENT_ROW_NOTIFIED_META, 1 );
+}
+add_action( 'uwp_email_activation_success', 'ensurance_notify_agent_row_on_activation', 10, 1 );
+
+// ============================================================================
 // 2b-v-b. FOUNDING AGENT ACCESS (/pricing-plans) — SELF-CONTAINED ASSETS
 // ============================================================================
 // /pricing-plans is repositioned as "Founding Agent Access" and ships the same
