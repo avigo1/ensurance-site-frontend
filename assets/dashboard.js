@@ -292,3 +292,115 @@
     }
   });
 })();
+
+/* ===================================================================
+   Requests — the filter pills and the sort toggle.
+
+   BOTH ACT ON THE ROWS ALREADY IN THE DOM. Nothing here fetches, no URL
+   changes, and ensurance_dashboard_request_rows() is neither re-queried
+   nor re-ordered server-side: components/dashboard-view-requests.php
+   renders the whole list, and this file only decides which of those rows
+   are shown and in what order. The design's own filters are client-side
+   for the same reason — the list is short and already here.
+
+   PROGRESSIVE ENHANCEMENT, and stricter than the view switcher's: the
+   controls ship with the `hidden` attribute and this file removes it. A
+   pill is not a link and has nowhere to degrade to, so without JS the
+   right answer is not a dead control but no control — an agent gets the
+   full list, unfiltered, newest first, which is what they got before the
+   controls existed.
+
+   SORT IS A REVERSAL, NOT A RE-SORT. Rows arrive newest first as the
+   caller's contract and may carry no timestamp at all (the queue can know
+   an order it cannot date), so reversing the rendered order is the only
+   transform that cannot drop an undated row to the bottom. It is also why
+   the second order reads "Oldest first" rather than the design's "Renewal
+   soonest": no request in this app carries a renewal date.
+   =================================================================== */
+(function () {
+  'use strict';
+
+  var controls = document.querySelector('.dash-requests-controls');
+  var list = document.querySelector('.dash-requests');
+  if (!controls || !list) {
+    return;
+  }
+
+  var pills = Array.prototype.slice.call(controls.querySelectorAll('.dash-requests-pill'));
+  var sortToggle = controls.querySelector('.dash-requests-controls__sort-toggle');
+  var shownCount = document.querySelector('.dash-requests__note-shown');
+
+  // The rows in the order PHP printed them — newest first. Held once, so the
+  // reversal below has something to reverse BACK to.
+  var rows = Array.prototype.slice.call(list.querySelectorAll('.dash-requests__row'));
+  if (rows.length === 0) {
+    return;
+  }
+
+  // What the toggle says in each order. Keyed by the value it carries, so the
+  // button's label and its state can never disagree.
+  var SORT_LABELS = {
+    newest: 'Newest first',
+    oldest: 'Oldest first'
+  };
+
+  var filter = 'all';
+
+  /**
+   * Apply the current filter: hide the rows in other states and report how
+   * many are left. `hidden` rather than a class — it is the browser's own
+   * "not rendered, not announced", so assistive tech and find-in-page agree
+   * with what is on screen.
+   */
+  function applyFilter() {
+    var shown = 0;
+
+    rows.forEach(function (row) {
+      var match = filter === 'all' || row.getAttribute('data-status') === filter;
+      row.hidden = !match;
+      if (match) {
+        shown += 1;
+      }
+    });
+
+    // Only the first number moves; the sentence around it is PHP's, so no
+    // copy is assembled here.
+    if (shownCount) {
+      shownCount.textContent = String(shown);
+    }
+  }
+
+  pills.forEach(function (pill) {
+    pill.addEventListener('click', function () {
+      filter = pill.getAttribute('data-filter') || 'all';
+
+      pills.forEach(function (other) {
+        var isActive = other === pill;
+        other.classList.toggle('is-active', isActive);
+        other.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      });
+
+      applyFilter();
+    });
+  });
+
+  if (sortToggle) {
+    sortToggle.addEventListener('click', function () {
+      var next = sortToggle.getAttribute('data-sort') === 'newest' ? 'oldest' : 'newest';
+
+      sortToggle.setAttribute('data-sort', next);
+      sortToggle.textContent = SORT_LABELS[next];
+
+      // Re-append in the wanted order. appendChild MOVES an existing node, so
+      // this reorders the list in place rather than rebuilding it — the rows
+      // keep their identity, and anything later steps attach to them survives.
+      var ordered = next === 'oldest' ? rows.slice().reverse() : rows;
+      ordered.forEach(function (row) {
+        list.appendChild(row);
+      });
+    });
+  }
+
+  // Last: the controls only become visible once they work.
+  controls.removeAttribute('hidden');
+})();
