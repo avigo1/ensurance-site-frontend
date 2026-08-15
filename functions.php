@@ -3254,7 +3254,11 @@ function ensurance_dashboard_license_number( $user_id = 0 ) {
  * The agency's phone number, as shown on the Agency Profile view.
  *
  * Mirrors ensurance_dashboard_license_number() in every respect, including
- * having nothing to return outside the admin preview.
+ * having nothing to return outside the admin preview — with one difference in
+ * what the view does about it. Phone is one of the four fields the profile
+ * promises, so an unresolved number holds its chip and reads "Not on file"
+ * instead of being dropped the way the license is
+ * (ensurance_dashboard_profile_fields).
  *
  * IT IS NOT A CONTACT ROUTE. The number is here as matching-relevant reference —
  * what an accepted shopper would be given — not as a way to reach the agency, so
@@ -3278,11 +3282,67 @@ function ensurance_dashboard_agency_phone( $user_id = 0 ) {
 }
 
 /**
- * The four labeled values at the top of the Agency Profile view.
+ * The name of the PERSON the account belongs to, as shown on Agency Profile.
  *
- * Step 13 of templates/agent-dashboard/build-steps.md: agency name, request
- * inbox, license number, phone — the identifying half of the agency record, over
- * the service areas and coverage types that follow it.
+ * Distinct from ensurance_dashboard_agency_name(), which names the BUSINESS and
+ * is what the rail's user card, its initials and the quiet panel all greet. The
+ * profile shows both because they answer different questions — who we have on
+ * file as the agent, and which agency they are matched as — and support needs to
+ * be told which of the two is wrong when one of them is.
+ *
+ * WHAT IT READS. The user record is all the product has: /create-account collects
+ * first name, last name, username and email, so "First Last" is the real answer
+ * when both halves are there. It falls back to display_name and then user_login
+ * so the chip is never blank for an account that has a name in some form.
+ *
+ * THEY CAN COME BACK IDENTICAL, and that is the record rather than a bug: nothing
+ * captures an agency name yet, so ensurance_dashboard_agency_name() falls back to
+ * this same user record and both chips print the person's name. The locked notice
+ * at the bottom of the view is the path to fixing it, and the agency filter is
+ * where a real agency record attaches.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return string Agent name, '' if there is no user (logged-out callers).
+ */
+function ensurance_dashboard_agent_name( $user_id = 0 ) {
+    $user = $user_id ? get_userdata( (int) $user_id ) : wp_get_current_user();
+
+    if ( ! ( $user instanceof WP_User ) || empty( $user->ID ) ) {
+        return '';
+    }
+
+    $name = trim( $user->first_name . ' ' . $user->last_name );
+
+    if ( '' === $name ) {
+        $name = trim( (string) $user->display_name );
+    }
+
+    if ( '' === $name ) {
+        $name = (string) $user->user_login;
+    }
+
+    /**
+     * Filter the agent's own name on the Agency Profile view.
+     *
+     * @param string  $name The resolved name.
+     * @param WP_User $user The user it was resolved from.
+     */
+    return (string) apply_filters( 'ensurance_dashboard_agent_name', $name, $user );
+}
+
+/**
+ * The labeled values at the top of the Agency Profile view.
+ *
+ * Step 13 of templates/agent-dashboard/build-steps.md: the identifying half of
+ * the agency record, over the service areas and coverage types that follow it.
+ *
+ * FOUR OF THEM ARE PROMISED. Agent name, agency name, phone and email are what
+ * this view exists to confirm, so they hold their slot whether or not anything
+ * can resolve them — a chip reading "Not on file" tells an agent that we do not
+ * have their phone number, which is precisely the thing the locked notice below
+ * asks them to message support about. License number is the exception: it is
+ * verified out of band and is not part of what the view promises, so it appears
+ * only when it is known (see ensurance_dashboard_license_number).
  *
  * STATIC VALUES, NOT A FORM. The step is explicit — no inputs, no Save, and
  * emphatically not a disabled form, which would be a dead affordance on every
@@ -3294,40 +3354,64 @@ function ensurance_dashboard_agency_phone( $user_id = 0 ) {
  * resolvers that already own them, so the profile, the rail's user card and the
  * quiet panel's sentence can never disagree about the agency they describe.
  *
- * SHAPE — a list of ['key' => …, 'label' => …, 'value' => …] in display order.
- * A field with no value is DROPPED rather than rendered empty: two of the four
- * have nothing to resolve today, and a labeled blank chip on a read-only profile
- * reads as data that has gone missing.
+ * STATIC VALUES, NOT A FORM — see the note above; that is as true of the empty
+ * chips as of the filled ones. "Not on file" is a statement about the record,
+ * not a prompt: there is nothing to click on it and nothing to type into it.
+ *
+ * SHAPE — a list of ['key' => …, 'label' => …, 'value' => …, 'empty' => bool] in
+ * display order. A promised field with nothing to resolve carries the placeholder
+ * as its `value` and `empty` true, which is what the component renders in the
+ * faint shade. Any other field with no value is DROPPED rather than rendered
+ * blank.
  *
  * Labels are the design's own (the `isProf` view of
- * templates/agent-dashboard/AgentDashboard.dc.html).
+ * templates/agent-dashboard/AgentDashboard.dc.html), except the inbox: the design
+ * calls it "Request inbox", and this view says "Email" because on a record of who
+ * we have on file it sits beside a name and a phone number and is read as the
+ * agency's address. The value is unchanged — it is still the inbox an accepted
+ * request's contact details are sent to (ensurance_dashboard_request_inbox), and
+ * Today's accepted panel still names it in those words.
  *
  * @param int $user_id Optional. Defaults to the current user.
- * @return array<int,array{key:string,label:string,value:string}>
+ * @return array<int,array{key:string,label:string,value:string,empty:bool}>
  */
 function ensurance_dashboard_profile_fields( $user_id = 0 ) {
     $user_id = $user_id ? (int) $user_id : get_current_user_id();
 
+    // What a promised field says when nothing resolves it. One phrase for all
+    // four, because four different ways of saying "we do not have this" would
+    // read as four different problems.
+    $unknown = 'Not on file';
+
     $fields = array(
         array(
-            'key'   => 'name',
-            'label' => 'Agency name',
-            'value' => ensurance_dashboard_agency_name( $user_id ),
+            'key'     => 'agent',
+            'label'   => 'Agent name',
+            'value'   => ensurance_dashboard_agent_name( $user_id ),
+            'promise' => true,
         ),
         array(
-            'key'   => 'inbox',
-            'label' => 'Request inbox',
-            'value' => ensurance_dashboard_request_inbox( $user_id ),
+            'key'     => 'name',
+            'label'   => 'Agency name',
+            'value'   => ensurance_dashboard_agency_name( $user_id ),
+            'promise' => true,
+        ),
+        array(
+            'key'     => 'phone',
+            'label'   => 'Phone',
+            'value'   => ensurance_dashboard_agency_phone( $user_id ),
+            'promise' => true,
+        ),
+        array(
+            'key'     => 'inbox',
+            'label'   => 'Email',
+            'value'   => ensurance_dashboard_request_inbox( $user_id ),
+            'promise' => true,
         ),
         array(
             'key'   => 'license',
             'label' => 'License number',
             'value' => ensurance_dashboard_license_number( $user_id ),
-        ),
-        array(
-            'key'   => 'phone',
-            'label' => 'Phone',
-            'value' => ensurance_dashboard_agency_phone( $user_id ),
         ),
     );
 
@@ -3335,8 +3419,9 @@ function ensurance_dashboard_profile_fields( $user_id = 0 ) {
      * Filter the labeled values on the Agency Profile view.
      *
      * The hook the real agency record attaches to when it exists. Fields must
-     * keep the shape documented above; anything missing a label or a value is
-     * dropped rather than rendered blank.
+     * keep the shape documented above. A field marked `promise` keeps its slot
+     * with a "not on file" placeholder when it has no value; any other field
+     * with no value is dropped rather than rendered blank.
      *
      * @param array $fields  Fields in display order.
      * @param int   $user_id User the profile is being resolved for.
@@ -3346,14 +3431,22 @@ function ensurance_dashboard_profile_fields( $user_id = 0 ) {
     $clean = array();
 
     foreach ( $fields as $i => $field ) {
-        if ( empty( $field['label'] ) || empty( $field['value'] ) ) {
+        if ( empty( $field['label'] ) ) {
+            continue;
+        }
+
+        $value = isset( $field['value'] ) ? (string) $field['value'] : '';
+        $empty = ( '' === trim( $value ) );
+
+        if ( $empty && empty( $field['promise'] ) ) {
             continue;
         }
 
         $clean[] = array(
             'key'   => isset( $field['key'] ) ? (string) $field['key'] : (string) $i,
             'label' => (string) $field['label'],
-            'value' => (string) $field['value'],
+            'value' => $empty ? $unknown : $value,
+            'empty' => $empty,
         );
     }
 

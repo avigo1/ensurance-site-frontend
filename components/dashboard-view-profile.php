@@ -22,16 +22,19 @@
  * page-dashboard.php, the same shared header the Requests view uses. This file
  * is only what sits under it.
  *
- * NOTHING IS INVENTED. Each of the four chips renders only if its value
- * resolves, and each badge group only if it has badges (see
+ * NOTHING IS INVENTED. The four chips this view promises — agent name, agency
+ * name, phone, email — always render, and a value nothing resolves says "Not on
+ * file" in the faint shade rather than being filled in or quietly dropped. Every
+ * other chip and each badge group appears only when it has something to show (see
  * ensurance_dashboard_profile_fields, _service_areas, _coverage_types). Today
- * that means a real founding agent sees their name and inbox, no license or
- * phone, no badge groups — and the locked notice, which is the one thing on this
- * view that always renders, because it is the answer to everything the view is
- * missing.
+ * that means a real founding agent sees their name twice — nothing captures an
+ * agency name separately from the account yet — their email, no phone, no license
+ * chip at all, no badge groups, and the locked notice, which is the one thing on
+ * this view that always renders, because it is the answer to everything the view
+ * is missing.
  *
- * PREVIEWING: /dashboard/?view=profile&slot=quiet shows the design's full
- * profile — all four chips and both badge groups. That is the same preview toggle
+ * PREVIEWING: /dashboard/?view=profile&slot=quiet shows the full profile — every
+ * chip resolved, license included, and both badge groups. That is the same preview toggle
  * the quiet panel uses, because it is the state in which the whole agency record
  * is populated; see ensurance_dashboard_license_number().
  *
@@ -99,10 +102,21 @@ if ( ! empty( $profile_types ) ) {
 	if ( ! empty( $profile_fields ) ) :
 		?>
 		<dl class="dash-profile__fields">
-			<?php foreach ( $profile_fields as $profile_field ) : ?>
+			<?php
+			foreach ( $profile_fields as $profile_field ) :
+				/*
+				 * A value we do not have keeps the chip and states it, in the
+				 * faint shade the Requests grid uses for a blank answer — the
+				 * shade is the whole difference, so a screen reader hears
+				 * "Phone, Not on file" and gets the same reading as the eye.
+				 * Nothing marks it up as missing beyond that: it is one of the
+				 * things the notice at the bottom sends an agent to support
+				 * about, not an error on the page.
+				 */
+				?>
 				<div class="dash-profile__field">
 					<dt class="dash-profile__label"><?php echo esc_html( $profile_field['label'] ); ?></dt>
-					<dd class="dash-profile__value"><?php echo esc_html( $profile_field['value'] ); ?></dd>
+					<dd class="dash-profile__value<?php echo ! empty( $profile_field['empty'] ) ? ' dash-profile__value--empty' : ''; ?>"><?php echo esc_html( $profile_field['value'] ); ?></dd>
 				</div>
 			<?php endforeach; ?>
 		</dl>

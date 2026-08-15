@@ -2365,8 +2365,9 @@ button.dash-requests__line[aria-expanded="true"] .dash-requests__caret svg {
    this block and no focus style but the browser's own on the one link. */
 
 /* The design's four-across grid, wrapping to two and then one as the column
-   narrows — auto-fit, so a profile with fewer chips (two of the four have
-   nothing to resolve today) fills the row instead of leaving empty tracks.
+   narrows — auto-fit, so the row fills whatever it is given: the four promised
+   chips always, plus the license when it resolves, wrapping onto a second row
+   rather than leaving an empty track.
 
    min() keeps the 240px floor from overflowing a container narrower than
    itself. The 18px gutter, 720px cap and 26px below are the design's; margin
@@ -2419,6 +2420,17 @@ button.dash-requests__line[aria-expanded="true"] .dash-requests__caret svg {
   line-height: var(--leading-snug);
   color: var(--text-heading);
   overflow-wrap: anywhere;
+}
+
+/* A promised field with nothing on file. It keeps its chip and says so in the
+   faint shade — the same treatment, and the same reasoning, as a blank answer
+   in the Requests field grid (.dash-requests__field-value--empty): what we do
+   not hold about an agency is worth seeing on the one view that exists to
+   confirm the record, and a grid that silently drops it reads as though the
+   field were never asked for. The chip is otherwise unchanged — no dashed
+   border, no icon, nothing that turns a missing value into an error. */
+.dash-profile__value--empty {
+  color: var(--text-faint);
 }
 
 /* 26px between the groups, and 32px under the last one before the notice —
