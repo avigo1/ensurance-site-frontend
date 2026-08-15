@@ -60,12 +60,18 @@
  *
  * WHAT IS DELIBERATELY MISSING FROM THE PANEL. The handoff's panel also carries
  * a contact strip — masked phone and email on awaiting rows, real contact plus
- * Call / Email links on accepted ones. This app has neither field, and it does
- * not withhold contact details behind a mask: an accepted request's details are
- * EMAILED to the agency rather than shown on the dashboard at all. That is a
- * permission decision, not a layout one, so per the handoff's own rule it is
- * left to the team rather than guessed at here. No strip, no mask, no fabricated
- * phone number.
+ * Call / Email links on accepted ones. None of it is built here, and the reason
+ * is not that this app masks contact details differently: it is that nothing in
+ * the product holds a shopper's phone or email at all, there is no masking
+ * helper to reuse, and nothing yet releases contact details on accept.
+ * ensurance_dashboard_record_decision() writes one user-meta flag and fires
+ * `ensurance_dashboard_decision_recorded`, which has no listener — releasing the
+ * details is named there as the queue's job, unwritten.
+ *
+ * So the strip is not a layout this file can adapt; it is a record, a permission
+ * rule and a release step that do not exist. Per the handoff's own instruction —
+ * enforce masking with the app's existing rule, ask rather than guess — it waits
+ * for the team. No strip, no mask, no fabricated phone number.
  *
  * THE CONTROLS ARE UI STATE, NOT A QUERY. The filter pills and the sort toggle
  * act on the rows this file has already rendered: no request, no `?` arg, no
