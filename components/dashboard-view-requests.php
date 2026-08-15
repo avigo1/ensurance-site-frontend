@@ -7,8 +7,9 @@
  * The handoff is a VISUAL restyle: the data behind this file is unchanged —
  * ensurance_dashboard_request_rows() is still the whole input, still resolved
  * the same way, still newest-first — and only the markup and its styling move.
- * Steps 1 (row grid + list chrome) and 2 (the expanded panel) of its working
- * order are in; steps 3 and 4 are not.
+ * Steps 1 (row grid + list chrome), 2 (the expanded panel) and 3 (the closed
+ * treatment for passed and expired rows) of its working order are in; step 4,
+ * the in-row Accept / Pass, is not — see the note at the foot of this block.
  *
  * THE HEADER IS NOT HERE. The title and the one line of scope above this list
  * come from the view's registry entry in ensurance_dashboard_views() and are
@@ -39,17 +40,30 @@
  * have no field here, so they are simply not printed — the handoff already says
  * the cue only appears when there is one.
  *
- * ONLY A ROW WITH SOMETHING BEHIND IT OPENS. The design expands every row,
- * because every row in its sample data carries a full household / vehicle /
- * coverage record. This app has exactly one source of per-request detail —
- * the `facts` on ensurance_dashboard_live_request(), up to four label/value
- * pairs — and only the live row has it. So the disclosure is conditional: a row
- * with facts becomes a <button> with a caret and a panel, and a row without
- * stays the inert <div> it was, with no caret and no hover surface. A row that
- * looked expandable and opened onto nothing would be worse than a row that does
- * not open. (Step 3 of the handoff gives passed and expired rows a panel of
- * their own — a locked note, which needs no request data — so after it lands
- * the only inert rows are accepted ones with no facts.)
+ * WHICH ROWS OPEN. The design expands every row, because every row in its
+ * sample data carries a full household / vehicle / coverage record. Here a row
+ * opens for one of two quite different reasons:
+ *
+ *   - it is the live request, whose `facts` on
+ *     ensurance_dashboard_live_request() are this app's only per-request
+ *     detail — up to four label/value pairs, and no other row has any;
+ *   - it is CLOSED, where the panel is a note about the request rather than
+ *     the request, so it needs no request data at all.
+ *
+ * Everything else — an accepted row with no facts behind it — stays the inert
+ * <div> it was, with no caret and no hover surface. A row that looked
+ * expandable and opened onto nothing would be worse than a row that does not
+ * open.
+ *
+ * CLOSED ROWS SAY LESS, NOT DIMMER. A passed or expired request's particulars
+ * are no longer the agent's to read, so the row prints "Detail closed" in place
+ * of its detail and its panel holds only the locked note — no field grid, no
+ * contact. The withholding is real rather than cosmetic: the detail string is
+ * never printed, so it is not in the page for anyone to read off. It is not
+ * ENFORCEMENT, though — ensurance_dashboard_request_rows() still returns
+ * `detail` to whatever calls it. Per the handoff, closing that off belongs
+ * wherever the app enforces access, and is a question for the team rather than
+ * a change to make from here.
  *
  * READ FROM THE RESOLVER, NOT THROUGH THE ROW. ensurance_dashboard_request_rows()
  * does not carry `facts`, and widening it would mean editing an existing
@@ -72,6 +86,22 @@
  * rule and a release step that do not exist. Per the handoff's own instruction —
  * enforce masking with the app's existing rule, ask rather than guess — it waits
  * for the team. No strip, no mask, no fabricated phone number.
+ *
+ * NO IN-ROW ACCEPT / PASS EITHER, which is step 4 of the handoff and the one
+ * step that cannot be done as written. It asks for the buttons to be wired to
+ * the EXISTING handlers — same mutation, same payload — and the existing handler
+ * is ensurance_dashboard_record_decision(), which stores one flag against the
+ * USER:
+ *
+ *     update_user_meta( $user_id, ENSURANCE_DASHBOARD_DECISION_META, $decision )
+ *
+ * There is no request identifier in it, and ensurance_dashboard_request_rows()
+ * maps that single flag onto the row keyed `live` and no other. So "accept row
+ * 3" is not expressible against it: a decision posted from any row would be
+ * recorded once for the agent and would surface on the top row. Per-request
+ * decision state is a schema change rather than a restyle, so the buttons wait
+ * on whoever owns the matching queue. Today's slot keeps its own Accept / Pass,
+ * which is the one place the current handler is correct.
  *
  * THE CONTROLS ARE UI STATE, NOT A QUERY. The filter pills and the sort toggle
  * act on the rows this file has already rendered: no request, no `?` arg, no
@@ -204,10 +234,17 @@ $request_facts = ! empty( $request_live['facts'] ) ? $request_live['facts'] : ar
 	<?php
 	foreach ( $request_rows as $row_index => $row ) :
 
-		// See "ONLY A ROW WITH SOMETHING BEHIND IT OPENS" above. `live` is the
-		// key ensurance_dashboard_request_rows() gives the row it builds from
-		// ensurance_dashboard_live_request(), and the only tie between the two.
-		$row_opens = ( 'live' === $row['key'] && ! empty( $request_facts ) );
+		// A closed request — see "CLOSED ROWS" above. Both states are closed in
+		// the same way and differ only in the words the panel uses, so the two
+		// are asked about together everywhere except there.
+		$row_closed = in_array( $row['status'], array( 'passed', 'expired' ), true );
+
+		// See "WHICH ROWS OPEN" above. `live` is the key
+		// ensurance_dashboard_request_rows() gives the row it builds from
+		// ensurance_dashboard_live_request(), and the only tie between the two;
+		// a closed row opens on its status alone, since its panel is a note
+		// about the request rather than the request.
+		$row_opens = $row_closed || ( 'live' === $row['key'] && ! empty( $request_facts ) );
 		$row_panel = 'dash-request-panel-' . (int) $row_index;
 		?>
 
@@ -249,8 +286,26 @@ $request_facts = ! empty( $request_live['facts'] ) ? $request_live['facts'] : ar
 					<span class="dash-requests__title"><?php echo esc_html( $row['title'] ); ?></span>
 				</span>
 
+				<?php
+				/*
+				 * A CLOSED ROW DOES NOT SAY WHAT THE REQUEST WAS. Its detail is
+				 * replaced by "Detail closed" rather than dimmed or truncated —
+				 * a passed or expired request's particulars are no longer the
+				 * agent's to read, and the row still has to hold its column.
+				 *
+				 * This is a real withholding, not a visual one: the string is
+				 * never printed, so it is not in the HTML for anyone to read off
+				 * the page. What it is NOT is enforcement —
+				 * ensurance_dashboard_request_rows() still hands `detail` to
+				 * whatever calls it, and a second caller would still get it.
+				 * Closing that off belongs wherever the app enforces access,
+				 * which is the handoff's own instruction.
+				 */
+				?>
 				<span class="dash-requests__what">
-					<?php if ( '' !== $row['detail'] ) : ?>
+					<?php if ( $row_closed ) : ?>
+						<span class="dash-requests__detail dash-requests__detail--closed">Detail closed</span>
+					<?php elseif ( '' !== $row['detail'] ) : ?>
 						<span class="dash-requests__detail"><?php echo esc_html( $row['detail'] ); ?></span>
 					<?php endif; ?>
 				</span>
@@ -323,16 +378,94 @@ $request_facts = ! empty( $request_live['facts'] ) ? $request_live['facts'] : ar
 				?>
 				<div class="dash-requests__panel" id="<?php echo esc_attr( $row_panel ); ?>" hidden>
 
-					<div class="dash-requests__fields">
+					<?php if ( $row_closed ) : ?>
 
-						<?php foreach ( $request_facts as $fact ) : ?>
-							<div class="dash-requests__field">
-								<div class="dash-requests__field-label"><?php echo esc_html( $fact['label'] ); ?></div>
-								<div class="dash-requests__field-value"><?php echo esc_html( $fact['value'] ); ?></div>
+						<?php
+						/*
+						 * THE LOCKED NOTE, and it is the WHOLE panel on a closed
+						 * row: no field grid, no contact. Opening a passed or
+						 * expired request says why it is closed and nothing
+						 * about what it was.
+						 *
+						 * The lock is the same glyph the rail's Account row
+						 * uses, at the design's 16px. Decorative — the title
+						 * beside it says "passed" / "expired" in words — so it
+						 * is hidden from assistive tech rather than labeled.
+						 */
+						?>
+						<div class="dash-requests__closed">
+
+							<span class="dash-requests__closed-icon" aria-hidden="true">
+								<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+							</span>
+
+							<div class="dash-requests__closed-body">
+
+								<?php
+								/*
+								 * TWO SENTENCES, and both are the design's with
+								 * one claim removed. The design's expired line
+								 * says the detail closed "within 24 hours";
+								 * nothing in this app sets a 24-hour window —
+								 * `expires_at` is a per-request moment supplied
+								 * by whatever produced the request — so the
+								 * window is described rather than numbered.
+								 *
+								 * "Offered to another agent" is this product's
+								 * own words for what passing does, not the
+								 * design's: it is what the decided panel on
+								 * Today already tells an agent (see
+								 * ensurance_dashboard_decided_panel()), and the
+								 * two surfaces must not describe the same event
+								 * differently.
+								 */
+								if ( 'passed' === $row['status'] ) :
+									?>
+									<div class="dash-requests__closed-title">You passed this request</div>
+									<p class="dash-requests__closed-why">The request detail is no longer available to you — it was removed from your queue and offered to another agent covering that area.</p>
+									<?php
+								else :
+									?>
+									<div class="dash-requests__closed-title">This request expired</div>
+									<p class="dash-requests__closed-why">No decision was made before it expired, so the detail closed and the request was offered to another agent covering that area.</p>
+									<?php
+								endif;
+								?>
+
+								<?php
+								/*
+								 * The design closes this note with a mono line
+								 * carrying the decision note and a request
+								 * reference. This app has neither: requests have
+								 * no reference number, and no decision note is
+								 * recorded (see
+								 * ensurance_dashboard_record_decision(), which
+								 * stores a flag). The row's own stamp is the
+								 * only other value that could go here and it is
+								 * already on the row, two columns to the right.
+								 * So the line is left out rather than filled
+								 * with something to fill it.
+								 */
+								?>
+
 							</div>
-						<?php endforeach; ?>
 
-					</div>
+						</div>
+
+					<?php else : ?>
+
+						<div class="dash-requests__fields">
+
+							<?php foreach ( $request_facts as $fact ) : ?>
+								<div class="dash-requests__field">
+									<div class="dash-requests__field-label"><?php echo esc_html( $fact['label'] ); ?></div>
+									<div class="dash-requests__field-value"><?php echo esc_html( $fact['value'] ); ?></div>
+								</div>
+							<?php endforeach; ?>
+
+						</div>
+
+					<?php endif; ?>
 
 				</div>
 				<?php

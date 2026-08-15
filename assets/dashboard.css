@@ -2047,6 +2047,13 @@ button.dash-requests__line:focus-visible {
   text-overflow: ellipsis;
 }
 
+/* "Detail closed" — the same slot at the same size, in the faint shade the
+   closed rows' status uses. It is standing in for a fact, not stating one,
+   so it must not read with the weight of the detail it replaced. */
+.dash-requests__detail--closed {
+  color: var(--text-faint);
+}
+
 /* The fixed track's contents: the label-over-stamp block, then the caret,
    the design's 12px apart. The caret's own 12px is reserved on every row
    whether or not it draws a chevron — see the note in the component. */
@@ -2165,6 +2172,52 @@ button.dash-requests__line[aria-expanded="true"] .dash-requests__caret svg {
   font-size: 14.5px;
   line-height: 1.5;
   color: var(--text-heading);
+  text-wrap: pretty;
+}
+
+/* THE LOCKED NOTE — the whole panel on a passed or expired row. Same sunken
+   surface and radius as the field grid it stands in place of, so opening a
+   closed row lands on an object the same size and shape as opening an open
+   one; only what is written in it differs. 18px 22px is the handoff's, a
+   little tighter than the grid's 20px because this is three lines rather
+   than four columns. */
+.dash-requests__closed {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  padding: 18px 22px;
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+  background: var(--gray-100);
+}
+
+/* Faint, and aligned to the title's cap-height rather than centered on the
+   block — the note is left-read from the title down, and a lock floating
+   beside the middle of the paragraph reads as decoration. */
+.dash-requests__closed-icon {
+  display: flex;
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--text-faint);
+}
+
+.dash-requests__closed-title {
+  margin-bottom: 4px;
+  font-family: var(--font-sans);
+  font-size: 14.5px;
+  line-height: var(--leading-snug);
+  color: var(--text-heading);
+}
+
+/* Capped at 460px, the handoff's: this is a sentence to read once, and a
+   line that runs the full width of the content column is harder to. */
+.dash-requests__closed-why {
+  margin: 0;
+  max-width: 460px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-muted);
   text-wrap: pretty;
 }
 
