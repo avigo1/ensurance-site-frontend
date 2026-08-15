@@ -7,6 +7,8 @@
  * The handoff is a VISUAL restyle: the data behind this file is unchanged —
  * ensurance_dashboard_request_rows() is still the whole input, still resolved
  * the same way, still newest-first — and only the markup and its styling move.
+ * Steps 1 (row grid + list chrome) and 2 (the expanded panel) of its working
+ * order are in; steps 3 and 4 are not.
  *
  * THE HEADER IS NOT HERE. The title and the one line of scope above this list
  * come from the view's registry entry in ensurance_dashboard_views() and are
@@ -24,8 +26,9 @@
  * THE FOUR COLUMNS, and what this app has to put in them. The design's row is
  * status gutter / who / what / status, drawn from a request record with a
  * requester name, a location, a vehicle and adverse cues. This app's rows carry
- * two strings — `title` ("Auto — Santa Barbara County") and `detail` ("1 driver
- * · ZIP 93101") — so they map onto the design's shape without inventing fields:
+ * two strings — `title` ("Auto — Santa Barbara County") and `detail` ("2
+ * drivers, 2 vehicles · ZIP 93013") — so they map onto the design's shape
+ * without inventing fields:
  *
  *   gutter  → the accent dot, filled only while the row is awaiting a decision
  *   who     → `title`, the row's subject
@@ -36,13 +39,43 @@
  * have no field here, so they are simply not printed — the handoff already says
  * the cue only appears when there is one.
  *
+ * ONLY A ROW WITH SOMETHING BEHIND IT OPENS. The design expands every row,
+ * because every row in its sample data carries a full household / vehicle /
+ * coverage record. This app has exactly one source of per-request detail —
+ * the `facts` on ensurance_dashboard_live_request(), up to four label/value
+ * pairs — and only the live row has it. So the disclosure is conditional: a row
+ * with facts becomes a <button> with a caret and a panel, and a row without
+ * stays the inert <div> it was, with no caret and no hover surface. A row that
+ * looked expandable and opened onto nothing would be worse than a row that does
+ * not open. (Step 3 of the handoff gives passed and expired rows a panel of
+ * their own — a locked note, which needs no request data — so after it lands
+ * the only inert rows are accepted ones with no facts.)
+ *
+ * READ FROM THE RESOLVER, NOT THROUGH THE ROW. ensurance_dashboard_request_rows()
+ * does not carry `facts`, and widening it would mean editing an existing
+ * function in functions.php — which CLAUDE.md rules out. So the panel calls
+ * ensurance_dashboard_live_request() directly and matches it to the one row
+ * built from it, which the row shaper keys `live`. Same resolver, same
+ * capability gate, no new data and no change to what any of it returns.
+ *
+ * WHAT IS DELIBERATELY MISSING FROM THE PANEL. The handoff's panel also carries
+ * a contact strip — masked phone and email on awaiting rows, real contact plus
+ * Call / Email links on accepted ones. This app has neither field, and it does
+ * not withhold contact details behind a mask: an accepted request's details are
+ * EMAILED to the agency rather than shown on the dashboard at all. That is a
+ * permission decision, not a layout one, so per the handoff's own rule it is
+ * left to the team rather than guessed at here. No strip, no mask, no fabricated
+ * phone number.
+ *
  * THE CONTROLS ARE UI STATE, NOT A QUERY. The filter pills and the sort toggle
  * act on the rows this file has already rendered: no request, no `?` arg, no
  * change to what ensurance_dashboard_request_rows() returns or the order it
  * returns it in. They are marked `hidden` here and revealed by
  * assets/dashboard.js, so a browser without JS gets the full unfiltered list
  * rather than controls that do nothing — the same progressive-enhancement rule
- * the rail's view switching follows.
+ * the rail's view switching follows. The panels are the exception: they are
+ * plain `hidden` markup a <button> toggles, so they work with the same JS and
+ * are simply closed without it.
  *
  * A PILL PER STATE THAT HAS ROWS, plus All. The design shows all five because
  * its sample data has every state in it; this app's real table is usually one
@@ -50,11 +83,6 @@
  * state pill prints only when something is in that state — which reproduces the
  * design's five pills exactly on the design's own data, and degrades quietly on
  * the data an agent actually has.
- *
- * NOTHING IS CLICKABLE YET. The design makes each row a disclosure that opens a
- * detail panel; that is step 2 of the handoff's working order, so this step
- * leaves the rows inert and holds back the parts that would advertise otherwise
- * — the caret, the hover surface, and the row's promotion to a <button>.
  *
  * PREVIEWING: /dashboard/?view=requests&slot=live shows the design's five-row
  * table; ?slot=quiet shows the four closed rows with no awaiting row above them.
@@ -101,6 +129,14 @@ $request_total    = count( $request_rows );
 foreach ( $request_rows as $row ) {
 	++$request_counts[ $row['status'] ];
 }
+
+/*
+ * The one request with detail behind it — see "READ FROM THE RESOLVER" above.
+ * Resolved once here rather than per row, because the loop below asks about it
+ * on every iteration and it is the same request every time.
+ */
+$request_live  = ensurance_dashboard_live_request();
+$request_facts = ! empty( $request_live['facts'] ) ? $request_live['facts'] : array();
 ?>
 
 <div class="dash-requests-controls" hidden>
@@ -159,18 +195,37 @@ foreach ( $request_rows as $row ) {
 
 <ul class="dash-requests">
 
-	<?php foreach ( $request_rows as $row ) : ?>
+	<?php
+	foreach ( $request_rows as $row_index => $row ) :
+
+		// See "ONLY A ROW WITH SOMETHING BEHIND IT OPENS" above. `live` is the
+		// key ensurance_dashboard_request_rows() gives the row it builds from
+		// ensurance_dashboard_live_request(), and the only tie between the two.
+		$row_opens = ( 'live' === $row['key'] && ! empty( $request_facts ) );
+		$row_panel = 'dash-request-panel-' . (int) $row_index;
+		?>
 
 		<li class="dash-requests__row" data-status="<?php echo esc_attr( $row['status'] ); ?>">
 
 			<?php
 			/*
-			 * The grid itself is this inner element, not the <li>: the <li> is
-			 * the ruled container, and step 2 of the handoff hangs the expanded
-			 * detail panel inside it, below this line.
+			 * THE LINE IS THE DISCLOSURE, and it is a real <button> rather than
+			 * the design's clickable <div> — the handoff's accessibility note,
+			 * and what gets it Enter/Space, a focus ring and an announced
+			 * expanded state for free. A row with nothing to open stays a <div>,
+			 * so the two branches below differ only in the element and its
+			 * attributes; the four columns between them are written once.
+			 *
+			 * Everything inside is phrasing content (<span>, <time>) because a
+			 * <button> may not contain a <div> — the columns get their block and
+			 * grid behaviour from CSS instead.
 			 */
 			?>
+			<?php if ( $row_opens ) : ?>
+			<button type="button" class="dash-requests__line" aria-expanded="false" aria-controls="<?php echo esc_attr( $row_panel ); ?>">
+			<?php else : ?>
 			<div class="dash-requests__line">
+			<?php endif; ?>
 
 				<?php
 				/*
@@ -184,47 +239,105 @@ foreach ( $request_rows as $row ) {
 				?>
 				<span class="dash-requests__dot" aria-hidden="true"></span>
 
-				<div class="dash-requests__who">
+				<span class="dash-requests__who">
 					<span class="dash-requests__title"><?php echo esc_html( $row['title'] ); ?></span>
-				</div>
+				</span>
 
-				<div class="dash-requests__what">
+				<span class="dash-requests__what">
 					<?php if ( '' !== $row['detail'] ) : ?>
 						<span class="dash-requests__detail"><?php echo esc_html( $row['detail'] ); ?></span>
 					<?php endif; ?>
-				</div>
+				</span>
 
-				<div class="dash-requests__state">
+				<span class="dash-requests__state">
 
-					<span class="dash-requests__status"><?php echo esc_html( $row['label'] ); ?></span>
+					<span class="dash-requests__state-text">
+
+						<span class="dash-requests__status"><?php echo esc_html( $row['label'] ); ?></span>
+
+						<?php
+						/*
+						 * Same treatment as the Recent column on Today: <time>
+						 * when the row carries the moment its stamp came from,
+						 * because "2h ago" is relative to this render and
+						 * "Aug 6" has no year in it, so the machine-readable
+						 * datetime is the only place the actual moment
+						 * survives. A row with no stamp prints no element
+						 * rather than an empty cell.
+						 */
+						if ( '' !== $row['when'] ) :
+							?>
+							<?php if ( $row['at'] ) : ?>
+								<time class="dash-requests__when" datetime="<?php echo esc_attr( wp_date( 'c', $row['at'] ) ); ?>"><?php echo esc_html( $row['when'] ); ?></time>
+							<?php else : ?>
+								<span class="dash-requests__when"><?php echo esc_html( $row['when'] ); ?></span>
+							<?php endif; ?>
+							<?php
+						endif;
+						?>
+
+					</span>
 
 					<?php
 					/*
-					 * Same treatment as the Recent column on Today: <time> when
-					 * the row carries the moment its stamp came from, because
-					 * "2h ago" is relative to this render and "Aug 6" has no
-					 * year in it, so the machine-readable datetime is the only
-					 * place the actual moment survives. A row with no stamp
-					 * prints no element rather than an empty cell.
+					 * The caret's 12px is printed on EVERY row, chevron or not.
+					 * Without it the rows that do not open would give their
+					 * status text the caret's width back and sit 24px further
+					 * right than the rows that do — which is the same column
+					 * misalignment the fixed 132px track exists to prevent.
 					 */
-					if ( '' !== $row['when'] ) :
-						?>
-						<?php if ( $row['at'] ) : ?>
-							<time class="dash-requests__when" datetime="<?php echo esc_attr( wp_date( 'c', $row['at'] ) ); ?>"><?php echo esc_html( $row['when'] ); ?></time>
-						<?php else : ?>
-							<span class="dash-requests__when"><?php echo esc_html( $row['when'] ); ?></span>
-						<?php endif; ?>
-						<?php
-					endif;
 					?>
+					<span class="dash-requests__caret" aria-hidden="true">
+						<?php if ( $row_opens ) : ?>
+							<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="m6 9 6 6 6-6"/></svg>
+						<?php endif; ?>
+					</span>
+
+				</span>
+
+			<?php if ( $row_opens ) : ?>
+			</button>
+			<?php else : ?>
+			</div>
+			<?php endif; ?>
+
+			<?php
+			/*
+			 * THE PANEL. Ships `hidden` so a JS-less browser gets a closed row
+			 * rather than every panel open at once, and so the button's
+			 * aria-expanded="false" is true of the DOM on first paint.
+			 *
+			 * The fields are the request's own `facts` — up to four label/value
+			 * pairs the resolver already validated (half-filled pairs are
+			 * dropped there, so nothing here has to check). The design's eight
+			 * named fields are its data model, not this one's; these are the
+			 * same object in the same grid.
+			 */
+			if ( $row_opens ) :
+				?>
+				<div class="dash-requests__panel" id="<?php echo esc_attr( $row_panel ); ?>" hidden>
+
+					<div class="dash-requests__fields">
+
+						<?php foreach ( $request_facts as $fact ) : ?>
+							<div class="dash-requests__field">
+								<div class="dash-requests__field-label"><?php echo esc_html( $fact['label'] ); ?></div>
+								<div class="dash-requests__field-value"><?php echo esc_html( $fact['value'] ); ?></div>
+							</div>
+						<?php endforeach; ?>
+
+					</div>
 
 				</div>
-
-			</div>
+				<?php
+			endif;
+			?>
 
 		</li>
 
-	<?php endforeach; ?>
+		<?php
+	endforeach;
+	?>
 
 </ul>
 

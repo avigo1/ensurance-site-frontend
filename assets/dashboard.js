@@ -404,3 +404,65 @@
   // Last: the controls only become visible once they work.
   controls.removeAttribute('hidden');
 })();
+
+/* ===================================================================
+   Requests — the expanded detail panel.
+
+   Step 2 of design_handoff_requests_page/README.md. Local UI state and
+   nothing else: opening a row fetches nothing, records nothing and
+   changes no URL. The panel is already in the document, rendered by
+   components/dashboard-view-requests.php and shipped `hidden`.
+
+   ONE OPEN AT A TIME, which is the prototype's behavior and the right
+   one here — the panels are tall, and two open at once puts the second
+   one's fields off the bottom of the screen with the row it belongs to
+   scrolled away above them.
+
+   WHY THE MARKUP CARRIES THE STATE. aria-expanded on the button and
+   `hidden` on the panel are the state; this file only flips them. So a
+   row is correctly closed before any JS runs, a row whose button never
+   gets a listener is still closed rather than stuck open, and there is
+   no second copy of "which row is open" to fall out of step with the DOM.
+
+   Only rows with something behind them are <button>s (see the component),
+   so the query below finds exactly the rows that open.
+   =================================================================== */
+(function () {
+  'use strict';
+
+  var list = document.querySelector('.dash-requests');
+  if (!list) {
+    return;
+  }
+
+  var lines = Array.prototype.slice.call(list.querySelectorAll('button.dash-requests__line'));
+  if (lines.length === 0) {
+    return;
+  }
+
+  /**
+   * Open or close one row. Closing is unconditional on every other row, which
+   * is what enforces one-at-a-time without tracking which one that is.
+   *
+   * @param {HTMLElement} line The row's toggle button.
+   * @param {boolean}     open Whether it should end up open.
+   */
+  function setOpen(line, open) {
+    line.setAttribute('aria-expanded', open ? 'true' : 'false');
+
+    var panel = document.getElementById(line.getAttribute('aria-controls'));
+    if (panel) {
+      panel.hidden = !open;
+    }
+  }
+
+  lines.forEach(function (line) {
+    line.addEventListener('click', function () {
+      var open = line.getAttribute('aria-expanded') !== 'true';
+
+      lines.forEach(function (other) {
+        setOpen(other, other === line && open);
+      });
+    });
+  });
+})();

@@ -1955,9 +1955,43 @@ html body:has(.dashboard-shell) .site-footer {
   align-items: center;
   gap: 18px;
   padding: 15px 10px 15px 8px;
-  /* Carried on the line rather than the row so the hover surface the rows
-     get in step 2 sits inside the hairline instead of straddling it. */
+  /* Carried on the line rather than the row so the hover surface sits inside
+     the hairline instead of straddling it. */
   border-radius: 10px;
+}
+
+/* THE LINE AS A DISCLOSURE. Only the rows that have a panel are <button>s
+   (see the component), so every rule that advertises "this opens" is scoped
+   to the element — a row with nothing behind it gets no hover surface, no
+   pointer and no caret, and reads as the record line it is.
+
+   The reset is the usual one for a bare <button> on this page, plus the two
+   a grid inside a button needs: full width, and text-align left so the
+   columns start where the UA's centering would not put them. */
+button.dash-requests__line {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  /* The handoff's 160ms, faster than --duration-fast: this is a surface
+     following the pointer down a list, and 200ms lags behind a scan. */
+  transition: background 160ms ease;
+}
+
+button.dash-requests__line:hover {
+  background: var(--gray-100);
+}
+
+/* Inset rather than outset, so the ring follows the row's own 10px radius
+   instead of drawing a rectangle over the hairlines above and below it. */
+button.dash-requests__line:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
 }
 
 /* THE ONE SIGNAL ON THE PAGE. Filled only while a request is waiting on the
@@ -2013,15 +2047,125 @@ html body:has(.dashboard-shell) .site-footer {
   text-overflow: ellipsis;
 }
 
-/* The fixed track's contents: label over stamp, right-aligned, so the two
-   read as one block hanging off the end of the row. */
+/* The fixed track's contents: the label-over-stamp block, then the caret,
+   the design's 12px apart. The caret's own 12px is reserved on every row
+   whether or not it draws a chevron — see the note in the component. */
 .dash-requests__state {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* Label over stamp, right-aligned, so the two read as one block hanging off
+   the end of the row. */
+.dash-requests__state-text {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 3px;
   min-width: 0;
   text-align: right;
+}
+
+/* Faint, and it stays faint on hover: the caret says a row opens, it is not
+   the thing being looked at. The rotation is the whole open/closed signal
+   besides the panel itself, so it is the one thing here that animates. */
+.dash-requests__caret {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  flex-shrink: 0;
+  color: var(--text-faint);
+}
+
+.dash-requests__caret svg {
+  display: block;
+  transition: transform 160ms ease;
+}
+
+button.dash-requests__line[aria-expanded="true"] .dash-requests__caret svg {
+  transform: rotate(180deg);
+}
+
+/* ── The expanded panel ──────────────────────────────────────────────
+   Step 2 of the handoff. Indented 40px so it hangs off the row's text
+   rather than the gutter, and padded 26px at the foot so the next row's
+   hairline is not sitting on the panel's edge. Values are the handoff's.
+
+   `hidden` is the closed state — plain markup a <button> toggles, so the
+   panel needs no JS to be correctly closed on first paint. */
+.dash-requests__panel {
+  padding: 4px 10px 26px 40px;
+  animation: dashRequestsPanel 220ms var(--ease-out) both;
+}
+
+.dash-requests__panel[hidden] {
+  display: none;
+}
+
+/* Opacity only. The design fades the panel in and does not slide or wipe it:
+   the rows below have already moved to make room, and animating that
+   movement twice reads as the list settling rather than a panel opening. */
+@keyframes dashRequestsPanel {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dash-requests__panel {
+    animation: none;
+  }
+
+  .dash-requests__caret svg,
+  button.dash-requests__line {
+    transition: none;
+  }
+}
+
+/* THE SUNKEN PANEL. auto-fit at a 210px minimum, so the fields reflow from
+   four across to one without a breakpoint — which is what lets the same
+   grid sit inside the content column at any width the rail leaves it.
+
+   home.css carries no --surface-sunken alias, so the fill is written as the
+   gray it is, the same way the Agency Profile chips below do it. */
+.dash-requests__fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 22px 28px;
+  padding: 20px 22px;
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+  background: var(--gray-100);
+}
+
+/* The mono label. 0.14em is the handoff's, a little tighter than the 0.2em
+   (--tracking-mono) the rest of this page sets its mono labels at — these
+   are read in a grid of eight rather than one at a time over a section, so
+   they are sized and tracked to be scanned down a column. */
+.dash-requests__field-label {
+  margin-bottom: 4px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  line-height: var(--leading-snug);
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.dash-requests__field-value {
+  font-family: var(--font-sans);
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--text-heading);
+  text-wrap: pretty;
 }
 
 /* THE STATUS IS THE WORD, NOT A CHIP. Three shades for four states, and the
@@ -2113,10 +2257,23 @@ html body:has(.dashboard-shell) .site-footer {
 
   .dash-requests__state {
     grid-column: 2;
+    justify-content: flex-start;
+    margin-top: 2px;
+  }
+
+  /* Label and stamp side by side rather than stacked: the status block is
+     now its own line with the full column to spread across, and two short
+     strings on one line cost a row less height than two. */
+  .dash-requests__state-text {
     flex-direction: row;
     align-items: baseline;
     gap: var(--space-2);
-    margin-top: 2px;
+  }
+
+  /* The 40px indent is off a 4-column row that no longer exists here, and
+     at this width it would cost the fields most of their room. */
+  .dash-requests__panel {
+    padding-left: 18px;
   }
 }
 
