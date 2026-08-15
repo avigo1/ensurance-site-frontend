@@ -2175,6 +2175,28 @@ button.dash-requests__line[aria-expanded="true"] .dash-requests__caret svg {
   text-wrap: pretty;
 }
 
+/* The handoff's sub-line — the qualifier under a value that is part of the
+   same fact rather than a fact of its own: the usage under a vehicle, the
+   carrier note under an insurer, the city under a street. Muted and 12.5px
+   so it reads as the tail of the value above it and never as a second
+   field, which is the whole reason it is not one. */
+.dash-requests__field-sub {
+  margin-top: 2px;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+/* A field the shopper left blank. It keeps its slot and says so in the
+   faint shade rather than being dropped: a missing answer is itself worth
+   knowing to an agent quoting the risk, and a grid that silently omits
+   fields makes two requests impossible to compare down the column. */
+.dash-requests__field-value--empty {
+  color: var(--text-faint);
+}
+
 /* THE LOCKED NOTE — the whole panel on a passed or expired row. Same sunken
    surface and radius as the field grid it stands in place of, so opening a
    closed row lands on an object the same size and shape as opening an open
