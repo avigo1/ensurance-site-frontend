@@ -2493,6 +2493,10 @@ button.dash-requests__line[aria-expanded="true"] .dash-requests__caret svg {
    token, and it has to break somewhere inside the chip instead of pushing
    the grid track wider than the column. */
 .dash-profile__value {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   margin: 0;
   padding: 11px 14px;
   border: 1px solid var(--border-soft);
@@ -2503,6 +2507,27 @@ button.dash-requests__line[aria-expanded="true"] .dash-requests__caret svg {
   line-height: var(--leading-snug);
   color: var(--text-heading);
   overflow-wrap: anywhere;
+}
+
+/* The lock inside the agent-name box, right-aligned against the value. Only
+   that one field carries it: it is the field with a REASON for being locked
+   (it comes off the verified license, which the helper under it states), and
+   putting the same glyph on all four would turn an explanation into
+   decoration. min-width: 0 on the value's text lets it shrink rather than
+   push the lock out of the box. */
+.dash-profile__lock {
+  flex-shrink: 0;
+  color: var(--text-faint);
+}
+
+/* The line under the agent-name box. 12px faint — it answers "why can I not
+   change this" and should sit below the value in every sense. */
+.dash-profile__helper {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--text-faint);
 }
 
 /* A promised field with nothing on file. It keeps its chip and says so in the
@@ -2516,8 +2541,8 @@ button.dash-requests__line[aria-expanded="true"] .dash-requests__caret svg {
   color: var(--text-faint);
 }
 
-/* 26px between the groups, and 32px under the last one before the notice —
-   both the design's. :last-of-type matches the last <section>, so the notice
+/* 26px between the groups, and 32px under the last one before the note —
+   both the design's. :last-of-type matches the last <section>, so the note
    below (a <p>) does not end up being what closes the gap. */
 .dash-profile__group {
   margin-bottom: 26px;
@@ -2529,13 +2554,206 @@ button.dash-requests__line[aria-expanded="true"] .dash-requests__caret svg {
 
 /* Same mono kicker as Today's section labels and the timeline's — one
    treatment for "this names the block under it" across the agent side. */
-.dash-profile__group-label {
-  margin: 0 0 12px;
+.dash-profile__eyebrow {
+  margin: 0;
   font-family: var(--font-mono);
   font-size: 10.5px;
   letter-spacing: var(--tracking-mono);
   text-transform: uppercase;
   color: var(--secondary);
+}
+
+/* ── States you serve ────────────────────────────────────────────────
+   The one region of this view that can be changed, and the reason the
+   Today setup card sends anyone here. */
+.dash-profile__states {
+  margin-bottom: 26px;
+}
+
+/* The eyebrow and the count share a baseline rather than a center: they are
+   two different sizes, and centering them would leave neither sitting on the
+   line the section reads from. */
+.dash-profile__section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+/* "3 states" / "1 state" / "none set" — the live count, faint because it
+   reports rather than labels. aria-live on the element announces it when a
+   chip is added or removed. */
+.dash-profile__count {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  line-height: var(--leading-snug);
+  color: var(--text-faint);
+}
+
+.dash-profile__section-note {
+  margin: 0 0 14px;
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  line-height: var(--leading-snug);
+  color: var(--text-muted);
+}
+
+/* The empty state, in place of the chips. It names the consequence ("to start
+   receiving requests") rather than just reporting the absence, because on this
+   view the absence IS the reason nothing is arriving. */
+.dash-profile__empty {
+  margin: 0 0 14px;
+  max-width: 560px;
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  line-height: var(--leading-body);
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+/* The script toggles [hidden] between the list and the empty line; the
+   display rules below would otherwise win over the UA's hidden default. */
+.dash-profile [hidden] {
+  display: none;
+}
+
+.dash-profile__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: 720px;
+  margin: 0 0 14px;
+  padding: 0;
+  list-style: none;
+}
+
+/* THE CHIP. Navy tint, navy hairline, navy text — the same tokens the coverage
+   badges take, because they are the same object: a fact about the agency,
+   stated. The asymmetric padding is the design's, and it is asymmetric for a
+   reason — the × on the right needs less room than the code on the left. */
+.dash-profile__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 9px 8px 14px;
+  border: 1px solid var(--navy-100);
+  border-radius: var(--radius-pill);
+  background: var(--navy-50);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  line-height: 1.3;
+  color: var(--primary);
+}
+
+/* The USPS code, in mono. It is the state's identifier where the name beside
+   it is the state's name — two registers, which is why the code is tracked
+   out and the name is not. */
+.dash-profile__chip-code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: var(--tracking-label);
+  color: var(--secondary);
+}
+
+.dash-profile__chip-name {
+  white-space: nowrap;
+}
+
+/* The × — a real button, sized to the design's 20px round target and carrying
+   its own hover so the chip does not appear to be pressable as a whole. It is
+   the only destructive control on the view, which is why it darkens rather
+   than reddens: removing a state is undone by adding it back. */
+.dash-profile__chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--secondary);
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
+}
+
+.dash-profile__chip-remove:hover {
+  background: var(--navy-100);
+  color: var(--primary);
+}
+
+.dash-profile__chip-remove:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* THE ADD ROW. The select takes the room and the button takes what it needs;
+   under ~640px they stack, because a 220px select beside a button is what
+   forces the horizontal scroll this column must never have. */
+.dash-profile__add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: 720px;
+  margin-bottom: 26px;
+}
+
+/* White, not sunken: this is the one control on the view that takes input,
+   and the read-only boxes above are deliberately the other thing. */
+.dash-profile__select {
+  flex: 1;
+  min-width: 220px;
+  padding: 10px 13px;
+  border: 1px solid var(--border-input);
+  border-radius: 9px;
+  background: var(--surface-card);
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  line-height: var(--leading-snug);
+  color: var(--text-heading);
+}
+
+/* The accent border on focus is the design's; the ring is IN ADDITION to it,
+   not instead of it — a border color change alone is not a focus indicator. */
+.dash-profile__select:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.dash-profile__select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Navy, not accent green. The green in this product means an affirmative
+   action on a live match; adding a state is administration, and spending the
+   match color on it would make the two read as the same kind of event. */
+.dash-profile__add-btn {
+  padding: 10px 20px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--navy-800);
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  line-height: var(--leading-snug);
+  color: var(--surface-card);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.dash-profile__add-btn:hover {
+  background: var(--primary);
+}
+
+.dash-profile__add-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .dash-profile__badges {
@@ -2578,7 +2796,7 @@ button.dash-requests__line[aria-expanded="true"] .dash-requests__caret svg {
 
    align-items: flex-start keeps the lock level with the FIRST line of the
    sentence once it wraps, rather than floating to the middle of the block. */
-.dash-profile__locked {
+.dash-profile__note {
   display: flex;
   align-items: flex-start;
   gap: 10px;
@@ -2598,7 +2816,7 @@ button.dash-requests__line[aria-expanded="true"] .dash-requests__caret svg {
 /* Stroke is currentColor, so the glyph follows this color rather than the
    sentence's. Nudged down onto the first line's optical center, and never
    shrunk when the text beside it wraps. */
-.dash-profile__locked-icon {
+.dash-profile__note-icon {
   flex-shrink: 0;
   margin-top: 3px;
   color: var(--secondary);
@@ -2608,14 +2826,14 @@ button.dash-requests__line[aria-expanded="true"] .dash-requests__caret svg {
    green against this sentence's muted gray is a difference in color alone —
    so it is underlined at rest rather than on hover, which is the treatment
    an inline link inside a paragraph needs to be findable at all. */
-.dash-profile__locked a {
+.dash-profile__note a {
   color: var(--accent);
   text-decoration: underline;
   text-underline-offset: 4px;
 }
 
-.dash-profile__locked a:hover,
-.dash-profile__locked a:focus-visible {
+.dash-profile__note a:hover,
+.dash-profile__note a:focus-visible {
   color: var(--accent-hover);
 }
 

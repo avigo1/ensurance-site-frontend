@@ -158,6 +158,19 @@ if ( ! in_array( $dashboard_view, $dashboard_views, true ) ) {
 
 foreach ( $dashboard_items as $dash_item ) :
 
+	/*
+	 * THE REGISTRY'S ONE SEAM. ensurance_dashboard_views() is an existing
+	 * function in functions.php and carries no filter of its own, so a view whose
+	 * header copy needs to follow a behaviour change has nowhere to say so. This
+	 * is that place: the entry is filtered on its way to the header only, which
+	 * keeps the rail's own labels (rendered from the same registry in
+	 * components/dashboard-sidebar.php) out of reach of it.
+	 *
+	 * Used today by ensurance_dashboard_profile_view_intro(), which rewrites the
+	 * Agency Profile intro now that states are set there rather than by support.
+	 */
+	$dash_item = apply_filters( 'ensurance_dashboard_view_item', $dash_item );
+
 	$dash_classes = array( 'dash-view' );
 
 	if ( '' !== $dash_item['modifier'] ) {

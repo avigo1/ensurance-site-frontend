@@ -2395,6 +2395,138 @@ function ensurance_dashboard_served_states( $user_id = 0 ) {
 }
 
 /**
+ * The states an agency can say it writes in — the 50 plus DC, code => name.
+ *
+ * THE LIST IS CLOSED, deliberately. The picker offers these and nothing else, so
+ * "CA", "Calif." and "california" can never land in the record as three different
+ * places: whatever eventually matches a request against a state is comparing
+ * against this list or it is comparing against typos.
+ *
+ * Keyed by USPS code because the profile shows both halves — the code in mono
+ * beside the full name on each chip — and because a code is the sane thing for
+ * storage to key on later. The stored value is the NAME (see
+ * ensurance_dashboard_served_states_csv), which is what the resolvers already
+ * return and what reads correctly in a sentence.
+ *
+ * @return array<string,string> USPS code => state name, in alphabetical order.
+ */
+function ensurance_dashboard_us_states() {
+    return array(
+        'AL' => 'Alabama',        'AK' => 'Alaska',         'AZ' => 'Arizona',
+        'AR' => 'Arkansas',       'CA' => 'California',     'CO' => 'Colorado',
+        'CT' => 'Connecticut',    'DE' => 'Delaware',       'DC' => 'District of Columbia',
+        'FL' => 'Florida',        'GA' => 'Georgia',        'HI' => 'Hawaii',
+        'ID' => 'Idaho',          'IL' => 'Illinois',       'IN' => 'Indiana',
+        'IA' => 'Iowa',           'KS' => 'Kansas',         'KY' => 'Kentucky',
+        'LA' => 'Louisiana',      'ME' => 'Maine',          'MD' => 'Maryland',
+        'MA' => 'Massachusetts',  'MI' => 'Michigan',       'MN' => 'Minnesota',
+        'MS' => 'Mississippi',    'MO' => 'Missouri',       'MT' => 'Montana',
+        'NE' => 'Nebraska',       'NV' => 'Nevada',         'NH' => 'New Hampshire',
+        'NJ' => 'New Jersey',     'NM' => 'New Mexico',     'NY' => 'New York',
+        'NC' => 'North Carolina', 'ND' => 'North Dakota',   'OH' => 'Ohio',
+        'OK' => 'Oklahoma',       'OR' => 'Oregon',         'PA' => 'Pennsylvania',
+        'RI' => 'Rhode Island',   'SC' => 'South Carolina', 'SD' => 'South Dakota',
+        'TN' => 'Tennessee',      'TX' => 'Texas',          'UT' => 'Utah',
+        'VT' => 'Vermont',        'VA' => 'Virginia',       'WA' => 'Washington',
+        'WV' => 'West Virginia',  'WI' => 'Wisconsin',      'WY' => 'Wyoming',
+    );
+}
+
+/**
+ * The USPS code for a state name, '' when the name is not one of ours.
+ *
+ * Case- and space-insensitive, because the stored value is a name and a name that
+ * arrives from storage with different capitalisation is still that state — but an
+ * unrecognised one gets '' rather than a guess, and the chip then shows the name
+ * alone instead of inventing a code for it.
+ *
+ * @param string $name State name.
+ * @return string Two-letter code, or ''.
+ */
+function ensurance_dashboard_state_code( $name ) {
+    $needle = strtolower( trim( (string) $name ) );
+
+    foreach ( ensurance_dashboard_us_states() as $code => $state ) {
+        if ( strtolower( $state ) === $needle ) {
+            return $code;
+        }
+    }
+
+    return '';
+}
+
+/**
+ * The states still available to add — every state the agent has not already got.
+ *
+ * The design's rule, and the reason the picker cannot produce a duplicate: an
+ * already-served state is not in the list to be chosen. That is a better guard
+ * than validating the choice afterwards, because there is no wrong choice to make
+ * and nothing to explain when one is made.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return array<string,string> code => name, already-served states removed.
+ */
+function ensurance_dashboard_state_choices( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+
+    $served = array_map( 'strtolower', ensurance_dashboard_served_states( $user_id ) );
+    $choices = array();
+
+    foreach ( ensurance_dashboard_us_states() as $code => $state ) {
+        if ( ! in_array( strtolower( $state ), $served, true ) ) {
+            $choices[ $code ] = $state;
+        }
+    }
+
+    return $choices;
+}
+
+/**
+ * The served states as ONE comma-separated line — the value storage will read.
+ *
+ * The profile posts nothing today: the field is built, the persistence behind it
+ * is not (it is being wired separately). This is the shape that was settled on for
+ * when it is — "California,Texas,Nevada", one meta value, no JSON and no separate
+ * table — and it is published into the page as a hidden input so the save, when it
+ * arrives, has a field to read rather than a DOM to reconstruct the list from.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return string Comma-separated state names, '' when none are set.
+ */
+function ensurance_dashboard_served_states_csv( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+
+    return implode( ',', ensurance_dashboard_served_states( $user_id ) );
+}
+
+/**
+ * Retitles the Agency Profile view's intro now that part of it is self-serve.
+ *
+ * The registry's sentence sends the agent to support for every change on the view
+ * ("To change anything here, message agent support and we will update it for
+ * you"). That was true of the whole record and is now wrong about the one thing
+ * the view exists for: states are set here, by the agent, without asking anyone.
+ *
+ * A FILTER, NOT AN EDIT. ensurance_dashboard_views() carries no seam of its own
+ * and is an existing function, so page-dashboard.php — a template, which CLAUDE.md
+ * lists as safe to edit — applies `ensurance_dashboard_view_item` to each entry on
+ * its way to the header, and this hooks that.
+ *
+ * @param array $item One entry from ensurance_dashboard_views().
+ * @return array
+ */
+function ensurance_dashboard_profile_view_intro( $item ) {
+    if ( ! isset( $item['view'] ) || 'profile' !== $item['view'] ) {
+        return $item;
+    }
+
+    $item['intro'] = 'These fields decide which requests reach you. Add the states you are licensed in — changes take effect on the next match.';
+
+    return $item;
+}
+add_filter( 'ensurance_dashboard_view_item', 'ensurance_dashboard_profile_view_intro' );
+
+/**
  * Cuts the setup checklist down to the one condition that actually gates matching.
  *
  * Step 1 of the setup flow settled the gate: an agent can receive leads when their

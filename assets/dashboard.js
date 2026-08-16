@@ -466,3 +466,183 @@
     });
   });
 })();
+
+/* ===================================================================
+   Agency Profile — the served-states picker.
+
+   The one interactive region on the dashboard's Agency Profile view
+   (components/dashboard-view-profile.php): add a state, remove a state, and
+   keep the count, the empty line and the hidden CSV field in step with the
+   chips.
+
+   NOTHING IS SAVED YET. Every change here is a change to the page and to the
+   hidden field, and stops there — persistence is being wired separately.
+   persistStates() below is the single marked seam where that request goes;
+   swapping its body is the whole of the change, because it is the only place
+   the rest of this file reports a change to.
+
+   NO DUPLICATES BY CONSTRUCTION. An added state is removed from the select and
+   a removed state is put back in alphabetical order, so the picker cannot
+   offer a state the agent already has and there is no wrong choice to guard
+   against after the fact — the same rule PHP applies on first render
+   (ensurance_dashboard_state_choices).
+
+   Degrades to nothing: with JS off the view still renders the record, the
+   chips and the picker; only the add/remove stops working, and nothing was
+   saved by it anyway.
+   =================================================================== */
+(function () {
+  'use strict';
+
+  var root = document.querySelector('[data-states]');
+
+  if (!root) {
+    return;
+  }
+
+  var select = root.querySelector('[data-state-select]');
+  var addBtn = root.querySelector('[data-state-add]');
+  var list = root.querySelector('[data-states-list]');
+  var empty = root.querySelector('[data-states-empty]');
+  var count = root.querySelector('[data-state-count]');
+  var value = root.querySelector('[data-states-value]');
+
+  if (!select || !addBtn || !list || !empty || !count || !value) {
+    return;
+  }
+
+  /* THE SEAM. Called after every add and remove with the full list as it now
+     stands. It deliberately does not post: the storage hook lands separately,
+     and a fetch to an endpoint that does not exist would fail silently on
+     every click. Replace this body — nothing else in this file needs to
+     change. */
+  function persistStates(csv) { // eslint-disable-line no-unused-vars
+    // Intentionally empty. The served states are in `csv` (comma-separated
+    // state names) and in the hidden input this function is called after.
+  }
+
+  function currentStates() {
+    return Array.prototype.map.call(list.querySelectorAll('[data-state]'), function (chip) {
+      return chip.getAttribute('data-state');
+    });
+  }
+
+  /* The count, the empty line and the hidden field all describe the same list,
+     so they are written in one place from one read of it — three separate
+     updaters is how they end up disagreeing. */
+  function sync() {
+    var states = currentStates();
+    var total = states.length;
+
+    count.textContent = total === 0 ? 'none set' : (total === 1 ? '1 state' : total + ' states');
+
+    if (total === 0) {
+      list.setAttribute('hidden', '');
+      empty.removeAttribute('hidden');
+    } else {
+      list.removeAttribute('hidden');
+      empty.setAttribute('hidden', '');
+    }
+
+    value.value = states.join(',');
+    persistStates(value.value);
+  }
+
+  /* Put an option back where it belongs rather than on the end: the list is
+     alphabetical, and a state that was removed and re-offered at the bottom
+     would be the one state nobody can find. */
+  function restoreOption(name, code) {
+    var option = document.createElement('option');
+    var before = null;
+    var options = select.querySelectorAll('option[data-code]');
+
+    option.value = name;
+    option.textContent = name;
+    option.setAttribute('data-code', code || '');
+
+    Array.prototype.some.call(options, function (existing) {
+      if (existing.textContent.localeCompare(name) > 0) {
+        before = existing;
+        return true;
+      }
+      return false;
+    });
+
+    select.insertBefore(option, before);
+  }
+
+  function removeChip(chip) {
+    var name = chip.getAttribute('data-state');
+    var codeEl = chip.querySelector('.dash-profile__chip-code');
+
+    chip.parentNode.removeChild(chip);
+    restoreOption(name, codeEl ? codeEl.textContent : '');
+    sync();
+  }
+
+  function addState() {
+    var name = select.value;
+    var option = select.options[select.selectedIndex];
+    var code = option ? option.getAttribute('data-code') : '';
+    var chip;
+
+    // A no-op when nothing is chosen, and — belt and braces, since the option
+    // is removed on add — when the state is somehow already listed.
+    if (!name || currentStates().indexOf(name) !== -1) {
+      return;
+    }
+
+    chip = document.createElement('li');
+    chip.className = 'dash-profile__chip';
+    chip.setAttribute('data-state', name);
+    chip.innerHTML =
+      (code ? '<span class="dash-profile__chip-code"></span>' : '') +
+      '<span class="dash-profile__chip-name"></span>' +
+      '<button type="button" class="dash-profile__chip-remove" data-state-remove>' +
+      '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>' +
+      '</button>';
+
+    // textContent rather than interpolation: the names come from our own
+    // select, but building markup out of values is how that stops being true
+    // the first time this list comes from storage.
+    if (code) {
+      chip.querySelector('.dash-profile__chip-code').textContent = code;
+    }
+    chip.querySelector('.dash-profile__chip-name').textContent = name;
+    chip.querySelector('[data-state-remove]').setAttribute('aria-label', 'Remove ' + name);
+
+    list.appendChild(chip);
+
+    if (option) {
+      option.parentNode.removeChild(option);
+    }
+
+    select.value = '';
+    sync();
+  }
+
+  addBtn.addEventListener('click', addState);
+
+  // Delegated, so chips added after load carry the behavior without being
+  // wired individually.
+  list.addEventListener('click', function (event) {
+    var button = event.target.closest ? event.target.closest('[data-state-remove]') : null;
+
+    if (button) {
+      removeChip(button.closest('[data-state]'));
+    }
+  });
+
+  /* ARRIVING WITH NOTHING SET, the picker is the only thing on the view worth
+     doing, so it takes focus. Only when the view is already the active one and
+     the list is empty: a profile that already has states is being read, not
+     filled in, and moving focus into a control the agent did not ask for
+     scrolls the page out from under them. */
+  if (!currentStates().length) {
+    var view = root.closest ? root.closest('.dash-view') : null;
+
+    if (view && view.classList.contains('is-active')) {
+      select.focus();
+    }
+  }
+})();
