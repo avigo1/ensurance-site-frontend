@@ -17,7 +17,7 @@
  *     blocks matching;
  *   - the three-item checklist, with done / current / upcoming each reading
  *     differently;
- *   - one button, to agent support.
+ *   - one button, to wherever the blocking step is actually resolved.
  *
  * ONE THING AT A TIME. The headline is about the current step alone. The other
  * two lines are there so the agent can see how much is left — not as work they
@@ -25,10 +25,13 @@
  * like they are. No links, no buttons, no per-step affordance of any kind. The
  * only control on the card is the single support button at the bottom.
  *
- * AND IT IS SUPPORT, NOT A FORM. v1's agency data is read-only (the scope note
- * at the top of build-steps.md), so the button opens the one path that can
- * actually change any of this. A button that opened an editable profile would be
- * promising something the product does not do.
+ * WHERE THE BUTTON GOES DEPENDS ON WHAT IS BLOCKING. States are the one thing an
+ * agent sets themselves, and Agency Profile is the only place they can — so when
+ * states are missing the button goes there
+ * (ensurance_dashboard_setup_cta_to_profile). Everything else on the agency record
+ * is still read-only and still changed by a human, so any other blocking step
+ * leaves the button on agent support (ensurance_dashboard_support_url), which is
+ * where the card pointed for all of them before states became self-serve.
  *
  * ARGS — the array ensurance_dashboard_setup_panel() returns; see its docblock
  * for the shape, and for how each step's status is derived from the resolver
@@ -132,9 +135,10 @@ if ( ! empty( $panel['steps'] ) ) :
 endif;
 
 /*
- * THE ONE BUTTON. A link, not a form: it navigates to agent support and changes
- * nothing on the way — the opposite of the live card's Accept / Pass and the
- * decided panel's Undo, all of which post because they record something.
+ * THE ONE BUTTON. A link, not a form: it navigates — to Agency Profile when
+ * states are what is missing, to agent support otherwise — and changes nothing on
+ * the way, the opposite of the live card's Accept / Pass and the decided panel's
+ * Undo, all of which post because they record something.
  *
  * It is the design's primary button because it is the only thing to do on this
  * card. There is no secondary action beside it and no "skip for now": the agent

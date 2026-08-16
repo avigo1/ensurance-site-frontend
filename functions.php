@@ -2527,6 +2527,89 @@ function ensurance_dashboard_can_receive_leads( $user_id = 0 ) {
 }
 
 /**
+ * The Agency Profile view's URL — where an agent goes to set their states.
+ *
+ * Resolved from the rail registry rather than written down, exactly the way
+ * ensurance_dashboard_support_url() resolves Account: the registry already owns
+ * every view's href (see ensurance_dashboard_views), so a link built here cannot
+ * drift from the row the agent would otherwise click.
+ *
+ * @return string Absolute URL to the Agency Profile view.
+ */
+function ensurance_dashboard_profile_url() {
+    $url = '';
+
+    foreach ( ensurance_dashboard_views() as $view ) {
+        if ( 'profile' === $view['view'] ) {
+            $url = (string) $view['href'];
+            break;
+        }
+    }
+
+    /**
+     * Filter the destination behind the product's "set up your agency" links.
+     *
+     * @param string $url Resolved Agency Profile URL.
+     */
+    $url = (string) apply_filters( 'ensurance_dashboard_profile_url', $url );
+
+    // The registry always carries a Profile row, so this is a guard rather than a
+    // branch anyone should hit.
+    return '' !== $url ? $url : add_query_arg( 'view', 'profile', home_url( '/dashboard/' ) );
+}
+
+/**
+ * Points the setup card's one button at Agency Profile when states are what is
+ * missing.
+ *
+ * Agency Profile is the ONLY place an agent can enter their states — not
+ * /create-account, not a separate wizard — so the single button on the card that
+ * exists to unblock them has to go there. It previously opened agent support
+ * (ensurance_dashboard_support_url), which was right while agency data was
+ * read-only and every change went through a human, and is now the one thing on
+ * the card pointing away from the only door.
+ *
+ * IT READS THE DERIVED VALUE, it does not re-ask the question.
+ * ensurance_dashboard_can_receive_leads() is the flow's single source for both
+ * "is this agent blocked" and "on what", so the card cannot end up promising a
+ * states form to an agent blocked on something else — if some other filter adds a
+ * condition and that condition is what is blocking, the button stays on support,
+ * which is still the path for everything this flow does not own.
+ *
+ * A FILTER, NOT AN EDIT, for the reason the two above it are: CLAUDE.md's
+ * standing rule is new functions rather than changes to existing ones.
+ * ensurance_dashboard_setup_panel() keeps writing the card, and this changes only
+ * where its button goes.
+ *
+ * @param array $panel   The card's copy.
+ * @param int   $user_id User the card is being rendered for.
+ * @return array
+ */
+function ensurance_dashboard_setup_cta_to_profile( $panel, $user_id ) {
+    $eligibility = ensurance_dashboard_can_receive_leads( $user_id );
+
+    // Nothing outstanding means no card at all; leave it entirely alone.
+    if ( ! empty( $eligibility['can'] ) ) {
+        return $panel;
+    }
+
+    $blocking = isset( $eligibility['missing'][0]['key'] ) ? $eligibility['missing'][0]['key'] : '';
+
+    if ( 'areas' !== $blocking ) {
+        return $panel;
+    }
+
+    // Named for what it does, not where it goes — the agent is being sent to
+    // finish one specific thing, and "Agency Profile" would describe the
+    // destination while saying nothing about why they are being sent there.
+    $panel['cta']     = 'Add your states';
+    $panel['cta_url'] = ensurance_dashboard_profile_url();
+
+    return $panel;
+}
+add_filter( 'ensurance_dashboard_setup_panel', 'ensurance_dashboard_setup_cta_to_profile', 10, 2 );
+
+/**
  * What the setup card says — its eyebrow, headline, sentence, checklist and the
  * one button under them.
  *
