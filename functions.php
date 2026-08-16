@@ -2363,6 +2363,170 @@ function ensurance_dashboard_matchable_slot( $state, $user_id ) {
 add_filter( 'ensurance_dashboard_priority_state', 'ensurance_dashboard_matchable_slot', 9, 2 );
 
 /**
+ * The states an agency writes in — the one thing standing between a new agent and
+ * matching.
+ *
+ * Step 1 of the setup flow (templates/agent-dashboard/setup-flow/build-steps.md)
+ * settled that STATES REPLACE COUNTIES: the product had modelled service areas as
+ * counties everywhere, nothing ever captured one, and the flow being built asks
+ * the agent for states. Rather than ship a second geography alongside the empty
+ * first, the existing resolver becomes the states resolver and this is its honest
+ * name.
+ *
+ * IT IS A NAME, NOT A SECOND SOURCE. Everything still resolves through
+ * ensurance_dashboard_service_areas() and its `ensurance_dashboard_service_areas`
+ * filter, so there is exactly one list and one seam to hook storage onto. What
+ * this buys is that the setup flow can say "states" throughout without the county
+ * vocabulary leaking into it, and that retiring the county naming later is a
+ * change to this function alone.
+ *
+ * NOTHING RESOLVES IT TODAY. No storage exists yet — that hook is being wired
+ * separately — so this returns an empty array for every real agent, which is
+ * exactly what keeps ensurance_dashboard_can_receive_leads() false and the setup
+ * card on screen.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return string[] State names, empty when none are set.
+ */
+function ensurance_dashboard_served_states( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+
+    return ensurance_dashboard_service_areas( $user_id );
+}
+
+/**
+ * Cuts the setup checklist down to the one condition that actually gates matching.
+ *
+ * Step 1 of the setup flow settled the gate: an agent can receive leads when their
+ * STATES ARE SET, and nothing else. Agency name and coverage types stay on the
+ * Agency Profile as part of the record, and support can still fill them, but
+ * neither blocks a lead any more.
+ *
+ * WHY THE OLD GATE HAD TO GO. ensurance_dashboard_setup_steps() requires all three
+ * of agency name, service areas and coverage types, and no funnel fills any of
+ * them — so no real agent could ever come back matchable. Worse, leaving coverage
+ * types in would have let an agent finish the one step the flow shows them, watch
+ * the card say done, and still receive nothing, blocked by a condition they were
+ * never shown.
+ *
+ * A FILTER, NOT AN EDIT, for the two reasons this file already does it elsewhere
+ * (see ensurance_dashboard_matchable_slot): CLAUDE.md's standing rule is new
+ * functions rather than changes to existing ones, and it keeps the checklist a
+ * single value with several inputs. Because ensurance_dashboard_matchable() is a
+ * reduction over this same filtered list, the old boolean follows the new gate on
+ * its own — there is no second definition of "matchable" to keep in step.
+ *
+ * DONE-NESS IS READ, NOT RECOMPUTED. The kept step's status comes off the step
+ * ensurance_dashboard_setup_steps() already resolved, so the test for "are there
+ * states" lives in exactly one place. Only the copy is restated, because the
+ * original names counties and this flow asks for states.
+ *
+ * @param array $steps   Resolved steps, in order.
+ * @param int   $user_id User the checklist is being resolved for.
+ * @return array The states step alone, or $steps untouched if it is not present.
+ */
+function ensurance_dashboard_states_only_checklist( $steps, $user_id ) {
+    foreach ( (array) $steps as $step ) {
+        if ( ! isset( $step['key'] ) || 'areas' !== $step['key'] ) {
+            continue;
+        }
+
+        $done = ( isset( $step['status'] ) && 'done' === $step['status'] );
+
+        return array(
+            array(
+                'key'    => 'areas',
+                // The only step left, so it is always the first one.
+                'number' => 1,
+                // `name` is this flow's addition to the documented shape: the bare
+                // noun, for ensurance_dashboard_can_receive_leads()'s missing list,
+                // where "States — not set" would read as its own sentence.
+                'name'   => 'States',
+                'label'  => $done ? 'States set' : 'States — not set',
+                // With one condition left there is no "upcoming": it is either
+                // done or it is the thing being asked for.
+                'status' => $done ? 'done' : 'current',
+                'title'  => 'Add the states you write in',
+                'body'   => 'Requests are matched to your states first. Until this is set, nothing can reach you.',
+            ),
+        );
+    }
+
+    // No states step to keep means someone has already filtered the checklist into
+    // a different shape; leave it alone rather than blanking it.
+    return $steps;
+}
+add_filter( 'ensurance_dashboard_setup_steps', 'ensurance_dashboard_states_only_checklist', 10, 2 );
+
+/**
+ * Whether this agent can receive leads, and what is missing if they cannot.
+ *
+ * Step 2 of the setup flow (templates/agent-dashboard/setup-flow/build-steps.md).
+ * THE one derived value the whole flow reads — the setup card, the Today slot, the
+ * Agency Profile and anything added later all ask this rather than re-deriving the
+ * condition. The gate is states-only (see
+ * ensurance_dashboard_states_only_checklist), and the point of naming it once is
+ * that changing the gate again is a change here and nowhere else.
+ *
+ * READ-ONLY. It resolves, and that is all: no writes, no redirects, no fetching.
+ * Callers decide what to do about a false — this never decides for them.
+ *
+ * `can` DELEGATES rather than re-testing. ensurance_dashboard_matchable() is
+ * already the app's boolean for this, so it stays the single answer and this
+ * function adds only the list beside it. The two therefore cannot disagree: both
+ * reduce over ensurance_dashboard_setup_steps().
+ *
+ * RETURN SHAPE:
+ *   can      bool   True when nothing is outstanding.
+ *   missing  array  One entry per outstanding item, in checklist order:
+ *                     key    string  Stable slug ('areas').
+ *                     name   string  The bare noun ('States').
+ *                     title  string  Headline asking for it.
+ *                     body   string  One sentence on why it blocks matching.
+ *                   Empty exactly when `can` is true.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return array{can:bool,missing:array<int,array{key:string,name:string,title:string,body:string}>}
+ */
+function ensurance_dashboard_can_receive_leads( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $missing = array();
+
+    foreach ( ensurance_dashboard_setup_steps( $user_id ) as $step ) {
+        if ( isset( $step['status'] ) && 'done' === $step['status'] ) {
+            continue;
+        }
+
+        $missing[] = array(
+            'key'   => isset( $step['key'] ) ? (string) $step['key'] : '',
+            // Falls back to the checklist label for a step added by some other
+            // filter, which has no reason to know about `name`.
+            'name'  => isset( $step['name'] ) ? (string) $step['name'] : ( isset( $step['label'] ) ? (string) $step['label'] : '' ),
+            'title' => isset( $step['title'] ) ? (string) $step['title'] : '',
+            'body'  => isset( $step['body'] ) ? (string) $step['body'] : '',
+        );
+    }
+
+    $eligibility = array(
+        'can'     => ensurance_dashboard_matchable( $user_id ),
+        'missing' => $missing,
+    );
+
+    /**
+     * Filter whether an agent can receive leads.
+     *
+     * The seam for a real eligibility record (a suspended agency, a lapsed
+     * subscription) to veto matching without touching the setup checklist. Keep
+     * `missing` empty whenever `can` is true — every consumer treats the two as
+     * describing one state.
+     *
+     * @param array $eligibility ['can' => bool, 'missing' => array].
+     * @param int   $user_id     User eligibility is being resolved for.
+     */
+    return (array) apply_filters( 'ensurance_dashboard_can_receive_leads', $eligibility, $user_id );
+}
+
+/**
  * What the setup card says — its eyebrow, headline, sentence, checklist and the
  * one button under them.
  *
