@@ -2446,8 +2446,12 @@ function ensurance_dashboard_states_only_checklist( $steps, $user_id ) {
                 // With one condition left there is no "upcoming": it is either
                 // done or it is the thing being asked for.
                 'status' => $done ? 'done' : 'current',
-                'title'  => 'Add the states you write in',
-                'body'   => 'Requests are matched to your states first. Until this is set, nothing can reach you.',
+                'title'  => 'Add your states before requests can reach you',
+                // One sentence, and it has to carry both halves: matching is off
+                // until the states are on the profile, AND nothing is being sent
+                // meanwhile. Without the second half an agent can reasonably read
+                // the first as "requests are queuing up somewhere".
+                'body'   => 'Matching stays off until your states are on your agency profile, and nothing is sent to you in the meantime.',
             ),
         );
     }
@@ -2559,55 +2563,112 @@ function ensurance_dashboard_profile_url() {
 }
 
 /**
- * Points the setup card's one button at Agency Profile when states are what is
- * missing.
+ * The two tiles under the setup card's checklist.
  *
- * Agency Profile is the ONLY place an agent can enter their states — not
- * /create-account, not a separate wizard — so the single button on the card that
- * exists to unblock them has to go there. It previously opened agent support
- * (ensurance_dashboard_support_url), which was right while agency data was
- * read-only and every change went through a human, and is now the one thing on
- * the card pointing away from the only door.
+ * Step 3 of the setup flow (templates/agent-dashboard/setup-flow/build-steps.md).
+ * They replace the card's single "message agent support" button, which was the
+ * right control while every agency field was changed by a human and is now the
+ * one thing on the card pointing away from the only door: states are entered on
+ * Agency Profile and nowhere else.
  *
- * IT READS THE DERIVED VALUE, it does not re-ask the question.
- * ensurance_dashboard_can_receive_leads() is the flow's single source for both
- * "is this agent blocked" and "on what", so the card cannot end up promising a
- * states form to an agent blocked on something else — if some other filter adds a
- * condition and that condition is what is blocking, the button stays on support,
- * which is still the path for everything this flow does not own.
+ * TWO, NOT ONE, because there are two things worth checking before matching turns
+ * on. The first is the blocking one — the states. The second is where a matched
+ * request would actually land, which is not blocking and is exactly the thing an
+ * agent discovers too late: matching switches on, a request is sent, and it goes
+ * to an address nobody reads.
  *
- * A FILTER, NOT AN EDIT, for the reason the two above it are: CLAUDE.md's
- * standing rule is new functions rather than changes to existing ones.
- * ensurance_dashboard_setup_panel() keeps writing the card, and this changes only
- * where its button goes.
+ * NEITHER IS A SUBMIT. Both are ordinary navigation to a view that already exists
+ * (see ensurance_dashboard_profile_url / ensurance_dashboard_support_url, which
+ * both resolve out of the rail registry) — the agent chooses to go, and nothing
+ * about this card writes, redirects or traps.
+ *
+ * RETURN SHAPE — one entry per tile, in the order shown:
+ *   key    string  Stable slug ('profile', 'account').
+ *   title  string  The tile's line.
+ *   sub    string  One line under it saying what is there.
+ *   url    string  Where it goes.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return array<int,array{key:string,title:string,sub:string,url:string}>
+ */
+function ensurance_dashboard_setup_tiles( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+
+    $tiles = array(
+        array(
+            'key'   => 'profile',
+            'title' => 'Review your agency profile',
+            'sub'   => 'Add the states you write in',
+            'url'   => ensurance_dashboard_profile_url(),
+        ),
+        array(
+            'key'   => 'account',
+            'title' => 'Confirm where requests are emailed',
+            'sub'   => 'Check the inbox matched requests are sent to',
+            'url'   => ensurance_dashboard_support_url(),
+        ),
+    );
+
+    /**
+     * Filter the setup card's tiles.
+     *
+     * @param array $tiles   Tiles in display order.
+     * @param int   $user_id User the card is being rendered for.
+     */
+    return (array) apply_filters( 'ensurance_dashboard_setup_tiles', $tiles, $user_id );
+}
+
+/**
+ * Hands the tiles to the setup card.
+ *
+ * A filter rather than an edit to ensurance_dashboard_setup_panel(), per
+ * CLAUDE.md's standing rule — the panel keeps writing the card's copy and this
+ * only adds the row of destinations under it.
  *
  * @param array $panel   The card's copy.
  * @param int   $user_id User the card is being rendered for.
  * @return array
  */
-function ensurance_dashboard_setup_cta_to_profile( $panel, $user_id ) {
-    $eligibility = ensurance_dashboard_can_receive_leads( $user_id );
-
-    // Nothing outstanding means no card at all; leave it entirely alone.
-    if ( ! empty( $eligibility['can'] ) ) {
+function ensurance_dashboard_setup_panel_tiles( $panel, $user_id ) {
+    // No headline means no card (see ensurance_dashboard_setup_panel), and tiles
+    // on a card that does not render would just be resolved and thrown away.
+    if ( empty( $panel['title'] ) ) {
         return $panel;
     }
 
-    $blocking = isset( $eligibility['missing'][0]['key'] ) ? $eligibility['missing'][0]['key'] : '';
-
-    if ( 'areas' !== $blocking ) {
-        return $panel;
-    }
-
-    // Named for what it does, not where it goes — the agent is being sent to
-    // finish one specific thing, and "Agency Profile" would describe the
-    // destination while saying nothing about why they are being sent there.
-    $panel['cta']     = 'Add your states';
-    $panel['cta_url'] = ensurance_dashboard_profile_url();
+    $panel['tiles'] = ensurance_dashboard_setup_tiles( $user_id );
 
     return $panel;
 }
-add_filter( 'ensurance_dashboard_setup_panel', 'ensurance_dashboard_setup_cta_to_profile', 10, 2 );
+add_filter( 'ensurance_dashboard_setup_panel', 'ensurance_dashboard_setup_panel_tiles', 10, 2 );
+
+/**
+ * Retitles the setup card's eyebrow to the state it is actually reporting.
+ *
+ * ensurance_dashboard_setup_panel() writes "Step N of M" — a position in a
+ * sequence, which was the right eyebrow for a three-step checklist worked through
+ * one item at a time. With the gate cut to states alone that sentence renders as
+ * "Step 1 of 1", which tells an agent nothing and reads like a bug.
+ *
+ * Step 3 asks for the matching-off state instead, and the words are the mirror of
+ * the quiet panel's "Matching is on" (components/dashboard-slot-quiet.php) —
+ * deliberately, because they are the same claim about the same machinery with the
+ * answer flipped. The pulsing dot beside it is drawn by the component.
+ *
+ * @param array $panel   The card's copy.
+ * @param int   $user_id User the card is being rendered for.
+ * @return array
+ */
+function ensurance_dashboard_setup_panel_eyebrow( $panel, $user_id ) {
+    if ( empty( $panel['title'] ) ) {
+        return $panel;
+    }
+
+    $panel['eyebrow'] = 'Matching is off';
+
+    return $panel;
+}
+add_filter( 'ensurance_dashboard_setup_panel', 'ensurance_dashboard_setup_panel_eyebrow', 10, 2 );
 
 /**
  * What the setup card says — its eyebrow, headline, sentence, checklist and the

@@ -11,27 +11,31 @@
  * the two things that can be waiting on an agent; nothing else on Today inverts.
  *
  * WHAT IT RENDERS, and nothing more:
- *   - a "Step N of 3" eyebrow — position in a sequence, not a count of what is
- *     missing;
+ *   - a pulsing dot and a mono uppercase "Matching is off" eyebrow — the state
+ *     the card is reporting, not a position in a sequence;
  *   - a headline naming the ONE blocking thing, and one sentence on why it
  *     blocks matching;
- *   - the three-item checklist, with done / current / upcoming each reading
- *     differently;
- *   - one button, to wherever the blocking step is actually resolved.
+ *   - the checklist, one row per item, with done / current / upcoming each
+ *     reading differently;
+ *   - two tiles, to the two views worth checking before matching turns on.
  *
- * ONE THING AT A TIME. The headline is about the current step alone. The other
- * two lines are there so the agent can see how much is left — not as work they
- * can pick up: FUTURE STEPS ARE NOT ACTIONABLE, and nothing here makes them look
- * like they are. No links, no buttons, no per-step affordance of any kind. The
- * only control on the card is the single support button at the bottom.
+ * ONE THING AT A TIME. The headline is about the current step alone, and the
+ * checklist rows are not work the agent can pick up: THE ROWS ARE NOT ACTIONABLE,
+ * and nothing here makes them look like they are. No links, no buttons, no
+ * per-step affordance of any kind. The only controls on the card are the two
+ * tiles at the bottom.
  *
- * WHERE THE BUTTON GOES DEPENDS ON WHAT IS BLOCKING. States are the one thing an
- * agent sets themselves, and Agency Profile is the only place they can — so when
- * states are missing the button goes there
- * (ensurance_dashboard_setup_cta_to_profile). Everything else on the agency record
- * is still read-only and still changed by a human, so any other blocking step
- * leaves the button on agent support (ensurance_dashboard_support_url), which is
- * where the card pointed for all of them before states became self-serve.
+ * THE CHECKLIST IS ONE ROW TODAY. The gate is states alone
+ * (ensurance_dashboard_states_only_checklist), so there is one condition to report
+ * and the done / upcoming styles below are the states this row takes on its way
+ * through rather than three rows shown at once. They are kept because the
+ * checklist is driven by whatever the resolver returns, not by a fixed list — a
+ * condition added later renders here with no change to this file.
+ *
+ * THE TILES GO WHERE THE WORK IS. States are the one thing an agent sets
+ * themselves and Agency Profile is the only place they can, so the first tile
+ * goes there; the second goes to Account, where the agent confirms the inbox a
+ * matched request would land in. See ensurance_dashboard_setup_tiles().
  *
  * ARGS — the array ensurance_dashboard_setup_panel() returns; see its docblock
  * for the shape, and for how each step's status is derived from the resolver
@@ -53,8 +57,7 @@ $panel = wp_parse_args(
 		'title'   => '',
 		'body'    => '',
 		'steps'   => array(),
-		'cta'     => '',
-		'cta_url' => '',
+		'tiles'   => array(),
 	)
 );
 
@@ -75,7 +78,17 @@ $status_words = array(
 	'upcoming' => 'Not started',
 );
 ?>
-<p class="dash-setup__eyebrow"><?php echo esc_html( $panel['eyebrow'] ); ?></p>
+<?php
+// THE STATUS LINE, and the mirror of the quiet panel's: same mono uppercase
+// kicker, same 8px dot, same slow pulse — the same claim about the same
+// machinery with the answer flipped (ensurance_dashboard_setup_panel_eyebrow).
+// The dot is decoration and the words beside it say the whole thing, so it is
+// hidden from assistive tech; the pulse is dropped under prefers-reduced-motion.
+?>
+<p class="dash-setup__eyebrow">
+	<span class="dash-setup__pulse" aria-hidden="true"></span>
+	<span><?php echo esc_html( $panel['eyebrow'] ); ?></span>
+</p>
 
 <?php
 // An <h2> for the same reason the other three states' headlines are: it sits
@@ -135,19 +148,46 @@ if ( ! empty( $panel['steps'] ) ) :
 endif;
 
 /*
- * THE ONE BUTTON. A link, not a form: it navigates — to Agency Profile when
- * states are what is missing, to agent support otherwise — and changes nothing on
- * the way, the opposite of the live card's Accept / Pass and the decided panel's
- * Undo, all of which post because they record something.
+ * THE TILES. Links, not a form: they navigate to views that already exist and
+ * change nothing on the way — the opposite of the live card's Accept / Pass and
+ * the decided panel's Undo, all of which post because they record something.
  *
- * It is the design's primary button because it is the only thing to do on this
- * card. There is no secondary action beside it and no "skip for now": the agent
- * cannot be matched until this is handled, and offering a way past it would be
- * offering a way to a dashboard that never does anything.
+ * REAL ANCHORS WITH REAL HREFS, which is the whole requirement: middle-click,
+ * cmd-click and "open in new tab" all have to work, so nothing here is a <div>
+ * with a click handler, and nothing redirects on its own — the agent chooses to
+ * go. Landing on Agency Profile traps them in nothing: the rail still works and
+ * the back button comes straight back to Today.
+ *
+ * There is still no "skip for now". The agent cannot be matched until states are
+ * set, and offering a way past that would be offering a way to a dashboard that
+ * never does anything.
+ *
+ * A <ul>, because it is a list of destinations and "list of 2 items" is most of
+ * what the row conveys visually — the same construction the checklist above uses.
  */
-if ( '' !== $panel['cta'] && '' !== $panel['cta_url'] ) :
+if ( ! empty( $panel['tiles'] ) ) :
 	?>
-	<?php // .btn / .btn-primary from assets/home.css — the site's own button, which is what the design's Button component renders at size md. ?>
-	<a class="btn btn-primary dash-setup__action" href="<?php echo esc_url( $panel['cta_url'] ); ?>"><?php echo esc_html( $panel['cta'] ); ?></a>
+	<ul class="dash-setup__tiles">
+		<?php
+		foreach ( $panel['tiles'] as $tile ) :
+			// A tile missing either half of its label, or its destination, is
+			// not a tile — the same rule the live card's fact tiles follow.
+			if ( empty( $tile['title'] ) || empty( $tile['url'] ) ) {
+				continue;
+			}
+			?>
+			<li class="dash-setup__tile-item">
+				<a class="dash-setup__tile" href="<?php echo esc_url( $tile['url'] ); ?>">
+
+					<span class="dash-setup__tile-title"><?php echo esc_html( $tile['title'] ); ?></span>
+
+					<?php if ( ! empty( $tile['sub'] ) ) : ?>
+						<span class="dash-setup__tile-sub"><?php echo esc_html( $tile['sub'] ); ?></span>
+					<?php endif; ?>
+
+				</a>
+			</li>
+		<?php endforeach; ?>
+	</ul>
 	<?php
 endif;

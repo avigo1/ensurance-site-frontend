@@ -1316,7 +1316,15 @@ html body:has(.dashboard-shell) .site-footer {
    counts — "Step 2 of 3" — which is the only thing on the card that says
    how much is left. 10.5px / 0.2em are the design's; --tracking-mono is
    that 0.2em. */
+/* THE STATUS LINE, and deliberately the quiet panel's in reverse: same mono
+   uppercase kicker, same 8px dot, same 9px between them. The two cards are
+   making the same claim about the same machinery with the answer flipped, so
+   they are drawn the same way — an agent who has seen one recognises the
+   other. */
 .dash-setup__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
   margin: 0 0 12px;
   font-family: var(--font-mono);
   font-size: 10.5px;
@@ -1325,21 +1333,40 @@ html body:has(.dashboard-shell) .site-footer {
   color: var(--req-accent);
 }
 
+/* The dot, on the quiet panel's keyframes rather than a second set of its own:
+   one heartbeat in the product, defined once. currentColor so it can never
+   drift from the label beside it. */
+.dash-setup__pulse {
+  display: block;
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: dash-quiet-pulse 2.4s ease-in-out infinite;
+}
+
+/* Decorative, and the words beside it say the same thing. */
+@media (prefers-reduced-motion: reduce) {
+  .dash-setup__pulse {
+    animation: none;
+  }
+}
+
 /* EXPLICITLY WHITE, with !important, for the same stacked reasons
    .dash-request__title carries it: home.css paints every h2 with
    --text-heading (navy on navy), and the parent theme prints inline global
    typography after our stylesheets that recolors bare headings again.
 
-   Design is 26px/-0.025em/900 — a point under the live card's 27px, since
-   this headline is an instruction and that one is the request itself. Same
-   clamp for the narrow column, and -0.025em is exactly --tracking-tight. */
+   15.5px/600, which is a long way under the live card's 27px and is the
+   point: this card is not the request, it is the housekeeping standing
+   between the agent and one. It states a task at the size of a task. No
+   clamp — at 15.5px there is nothing for the narrow column to reduce. */
 .dash-setup__title {
   margin: 0 0 10px;
-  font-family: var(--font-display);
-  font-size: clamp(21px, 2.8vw, 26px);
-  /* home.css's weight ramp stops at 800 (--weight-extrabold); the design's
-     900 is written out, as it is on the live card and the greeting. */
-  font-weight: 900;
+  font-family: var(--font-sans);
+  font-size: 15.5px;
+  font-weight: 600;
   line-height: var(--leading-snug);
   letter-spacing: var(--tracking-tight);
   color: var(--req-text) !important;
@@ -1352,11 +1379,11 @@ html body:has(.dashboard-shell) .site-footer {
    max-width holds its 520px measure. */
 .dash-setup__body {
   margin: 0 0 22px;
-  max-width: 520px;
+  max-width: 560px;
   font-family: var(--font-sans);
-  font-size: 15px;
+  font-size: 13.5px;
   line-height: var(--leading-body);
-  color: var(--req-text-soft);
+  color: var(--req-text-muted);
   text-wrap: pretty;
 }
 
@@ -1377,12 +1404,12 @@ html body:has(.dashboard-shell) .site-footer {
 .dash-setup__step {
   display: flex;
   align-items: center;
-  /* The design's 11px between the marker and the line, and its 11px of
-     vertical room per row. */
-  gap: 11px;
-  padding: 11px 0;
+  /* 9px between the marker and the line, and 9px of vertical room per row —
+     tightened with the headline, so the list stays subordinate to it. */
+  gap: 9px;
+  padding: 9px 0;
   font-family: var(--font-sans);
-  font-size: 14.5px;
+  font-size: 13.5px;
   line-height: var(--leading-snug);
 }
 
@@ -1445,21 +1472,77 @@ html body:has(.dashboard-shell) .site-footer {
   border-color: var(--req-accent);
 }
 
-/* THE ONE CONTROL. .btn / .btn-primary from home.css do all the work — it is
-   the site's own primary button, unmodified, because this is an ordinary
-   primary action and not a special case. Nothing below it competes with it:
-   there is no secondary button, no skip link, and no per-step affordance
-   anywhere above.
+/* THE TWO CONTROLS. A wrapping row rather than a two-column grid: on the
+   narrow column they should stack to full width rather than squeeze into two
+   half-width cards, and flex-wrap does that on its own at the basis below.
 
-   The only rule it needs of its own is the focus ring: .btn already sizes,
-   shapes and colors it, and it is an <a>, so there is no UA control chrome
-   to reset either.
+   list-style / padding reset the UA's bullets and indent, same as the
+   checklist above — the <ul> is here for the announcement, not the discs. */
+.dash-setup__tiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
 
-   --focus-ring is --accent, the CTA green mixed for white surfaces; on navy
+/* Grow into whatever room is left, but wrap rather than go under ~220px. */
+.dash-setup__tile-item {
+  flex: 1 1 220px;
+}
+
+/* FRAMED, NOT FILLED. A wash and a hairline on the card's own tokens, so the
+   two read as regions of this card rather than as a pair of primary buttons —
+   nothing here is the request, and a solid mint button on each would say it
+   was. Radius is --radius-input (12px), what the live card's fact tiles take.
+
+   height: 100% so a tile whose sub-line wraps does not leave its neighbour
+   short — they are a row, and a row of two different heights reads as a
+   mistake. */
+.dash-setup__tile {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  box-sizing: border-box;
+  height: 100%;
+  padding: 13px 15px;
+  border: 1px solid var(--req-border);
+  border-radius: var(--radius-input);
+  background: rgba(255, 255, 255, 0.04);
+  text-decoration: none;
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out);
+}
+
+.dash-setup__tile:hover {
+  border-color: var(--req-border-strong);
+  background: var(--req-wash);
+}
+
+/* --focus-ring is --accent, the CTA green mixed for white surfaces; on navy
    it all but disappears. Same substitution the live card's buttons make. */
-.dash-setup__action:focus-visible {
+.dash-setup__tile:focus-visible {
   outline: 2px solid var(--req-accent);
   outline-offset: 2px;
+}
+
+/* Explicit color on both halves: these sit inside an <a>, and home.css paints
+   link text with the site's link color, which on navy is unreadable. */
+.dash-setup__tile-title {
+  font-family: var(--font-sans);
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: var(--leading-snug);
+  color: var(--req-text);
+}
+
+.dash-setup__tile-sub {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: var(--leading-snug);
+  color: var(--req-text-muted);
 }
 
 /* ── Founding access timeline ─────────────────────────────────────────
