@@ -874,21 +874,63 @@ function ensurance_dashboard_views() {
 }
 
 /**
- * The agency name shown on the dashboard rail's user card.
+ * The agency's OWN name — what the business is called on the record.
  *
  * The design (templates/agent-dashboard/AgentDashboard.dc.html) takes this from
  * an `agencyName` prop — "Coastline Insurance Group". Nothing in the funnel
- * captures an agency name yet: /create-account collects first name, last name,
- * username and email only, and agents do not manage their own listings (see the
- * product note in plans/agent-onboarding-1-free-agent.md). So this resolves the
- * best name the user record actually carries, in that order:
+ * captures it: /create-account collects first name, last name, username and
+ * email only, and agents do not manage their own listings (see the product note
+ * in plans/agent-onboarding-1-free-agent.md). So this returns '' for a real
+ * agent, and the surfaces above it decide what to do about that —
+ * ensurance_dashboard_agency_name() falls back to the user record so the rail has
+ * something to greet, while the Agency Profile says "Not on file", because the
+ * profile is where the agent goes to CHECK the record and the honest answer there
+ * is that we do not hold one.
+ *
+ * THIS IS THE FIX FOR THE DUPLICATE. Before it existed, the profile's "Agency
+ * name" chip read from ensurance_dashboard_agency_name() and so printed the
+ * agent's own name straight back beside "Agent name" — one value, two labels,
+ * neither of them true of the other.
+ *
+ * The admin preview is the one exception, gated on `?slot=quiet` exactly like the
+ * license and phone, so one URL shows the whole agency record as the design draws
+ * it (ensurance_dashboard_sample_agency).
+ *
+ * Point the filter at the real agency record when it exists — every surface that
+ * names the agency reads from here, directly or through the fallback.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return string The recorded agency name, '' when there is none.
+ */
+function ensurance_dashboard_agency_record_name( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $sample  = ensurance_dashboard_sample_agency();
+    $name    = ( 'quiet' === ensurance_dashboard_priority_preview() ) ? $sample['name'] : '';
+
+    /**
+     * Filter the agency's recorded name.
+     *
+     * @param string $name    Agency name, '' when the record has none.
+     * @param int    $user_id User the agency is being resolved for.
+     */
+    return (string) apply_filters( 'ensurance_dashboard_agency_record_name', $name, $user_id );
+}
+
+/**
+ * The name shown wherever the dashboard has to GREET the agency — the rail's user
+ * card, its initials, the quiet panel's sentence, Today's "Displayed name" row.
+ *
+ * The recorded agency name when there is one
+ * (ensurance_dashboard_agency_record_name), and otherwise the best name the user
+ * record carries, in that order:
  *
  *   display_name → "First Last" → user_login
  *
- * When the Agency Profile view lands and the real agency record exists, point
- * this at it through the `ensurance_dashboard_agency_name` filter rather than
- * editing the rail — the card, its initials and anything else that greets the
- * agent all read from here.
+ * THE FALLBACK IS FOR GREETING, NOT FOR THE RECORD. A card that says "Welcome
+ * back" over a blank is worse than one that uses the agent's own name, so these
+ * surfaces take it. The Agency Profile deliberately does NOT: it reads the record
+ * resolver directly, so an agency we have no name for reads "Not on file" rather
+ * than the agent's name wearing an agency label.
  *
  * @param int $user_id Optional. Defaults to the current user.
  * @return string Agency name, '' if there is no user (logged-out callers).
@@ -900,7 +942,11 @@ function ensurance_dashboard_agency_name( $user_id = 0 ) {
         return '';
     }
 
-    $name = trim( (string) $user->display_name );
+    $name = trim( ensurance_dashboard_agency_record_name( $user->ID ) );
+
+    if ( '' === $name ) {
+        $name = trim( (string) $user->display_name );
+    }
 
     if ( '' === $name ) {
         $name = trim( $user->first_name . ' ' . $user->last_name );
@@ -3191,12 +3237,12 @@ function ensurance_dashboard_request_rows( $user_id = 0, $now = 0 ) {
 }
 
 /**
- * The design's own sample agency record — license number and phone.
+ * The design's own sample agency record — agency name, license number and phone.
  *
- * The two fields on the Agency Profile view that no other surface resolves, and
- * the only two the product has nowhere to read from at all: /create-account
- * collects first name, last name, username and email, and nothing since captures
- * a license or a phone number (the same gap behind
+ * The fields on the Agency Profile view that no other surface resolves, and the
+ * only ones the product has nowhere to read from at all: /create-account collects
+ * first name, last name, username and email, and nothing since captures an agency
+ * name, a license or a phone number (the same gap behind
  * ensurance_dashboard_service_areas).
  *
  * PREVIEW ONLY, like ensurance_dashboard_sample_request() and
@@ -3207,10 +3253,11 @@ function ensurance_dashboard_request_rows( $user_id = 0, $now = 0 ) {
  * Copied field for field from the `isProf` view of
  * templates/agent-dashboard/AgentDashboard.dc.html.
  *
- * @return array{license:string,phone:string}
+ * @return array{name:string,license:string,phone:string}
  */
 function ensurance_dashboard_sample_agency() {
     return array(
+        'name'    => 'Coastline Insurance Group',
         'license' => 'CA-0K48219',
         'phone'   => '(805) 555-0142',
     );
@@ -3299,10 +3346,11 @@ function ensurance_dashboard_agency_phone( $user_id = 0 ) {
  * and the chip reads "Not on file", which is the truth and is what the locked
  * notice sends them to support about.
  *
- * IT CAN MATCH THE AGENCY NAME, and that is the record rather than a bug: nothing
- * captures an agency name yet, so ensurance_dashboard_agency_name() falls back to
- * this same user record and both chips can print the person's name. The agency
- * filter is where a real agency record attaches.
+ * IT IS NOT THE AGENCY'S NAME, and the profile must never print it as though it
+ * were: the agency chip beside this one reads
+ * ensurance_dashboard_agency_record_name(), which holds nothing today and says so,
+ * rather than the greeting fallback that would echo this value back under the
+ * other label.
  *
  * @param int $user_id Optional. Defaults to the current user.
  * @return string "First Last", or '' when the user record carries neither.
@@ -3388,9 +3436,16 @@ function ensurance_dashboard_profile_fields( $user_id = 0 ) {
             'promise' => true,
         ),
         array(
-            'key'     => 'name',
-            'label'   => 'Agency name',
-            'value'   => ensurance_dashboard_agency_name( $user_id ),
+            'key'   => 'name',
+            'label' => 'Agency name',
+            /*
+             * The RECORD resolver, not the greeting one. The rail's card falls
+             * back to the user's own name so it has something to say hello to;
+             * doing that here printed the agent's name twice under two labels,
+             * with nothing to tell an agent that we hold no agency name at all.
+             * See ensurance_dashboard_agency_record_name().
+             */
+            'value'   => ensurance_dashboard_agency_record_name( $user_id ),
             'promise' => true,
         ),
         array(
