@@ -27,9 +27,10 @@
  * file" in the faint shade rather than being filled in or quietly dropped. Every
  * other chip and each badge group appears only when it has something to show (see
  * ensurance_dashboard_profile_fields, _service_areas, _coverage_types). Today
- * that means a real founding agent sees their name twice — nothing captures an
- * agency name separately from the account yet — their email, no phone, no license
- * chip at all, no badge groups, and the locked notice, which is the one thing on
+ * that means a real founding agent sees the first and last name on their account
+ * and, beside it, the same name again as the agency's — nothing captures an
+ * agency name separately yet — their email, no phone, no license chip at all,
+ * no badge groups, and the locked notice, which is the one thing on
  * this view that always renders, because it is the answer to everything the view
  * is missing.
  *

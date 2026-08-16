@@ -3290,19 +3290,22 @@ function ensurance_dashboard_agency_phone( $user_id = 0 ) {
  * file as the agent, and which agency they are matched as — and support needs to
  * be told which of the two is wrong when one of them is.
  *
- * WHAT IT READS. The user record is all the product has: /create-account collects
- * first name, last name, username and email, so "First Last" is the real answer
- * when both halves are there. It falls back to display_name and then user_login
- * so the chip is never blank for an account that has a name in some form.
+ * FIRST AND LAST NAME, AND NOTHING ELSE. Those are the two fields
+ * /create-account collects for the person, and they are the answer this chip is
+ * asked for. There is no fallback to display_name or user_login on purpose:
+ * display_name is a WordPress setting an agent never chose and user_login is a
+ * username — printing either under "Agent name" would state as the agent's name
+ * something that is not it. An account with neither half filled in resolves to ''
+ * and the chip reads "Not on file", which is the truth and is what the locked
+ * notice sends them to support about.
  *
- * THEY CAN COME BACK IDENTICAL, and that is the record rather than a bug: nothing
+ * IT CAN MATCH THE AGENCY NAME, and that is the record rather than a bug: nothing
  * captures an agency name yet, so ensurance_dashboard_agency_name() falls back to
- * this same user record and both chips print the person's name. The locked notice
- * at the bottom of the view is the path to fixing it, and the agency filter is
- * where a real agency record attaches.
+ * this same user record and both chips can print the person's name. The agency
+ * filter is where a real agency record attaches.
  *
  * @param int $user_id Optional. Defaults to the current user.
- * @return string Agent name, '' if there is no user (logged-out callers).
+ * @return string "First Last", or '' when the user record carries neither.
  */
 function ensurance_dashboard_agent_name( $user_id = 0 ) {
     $user = $user_id ? get_userdata( (int) $user_id ) : wp_get_current_user();
@@ -3311,15 +3314,9 @@ function ensurance_dashboard_agent_name( $user_id = 0 ) {
         return '';
     }
 
-    $name = trim( $user->first_name . ' ' . $user->last_name );
-
-    if ( '' === $name ) {
-        $name = trim( (string) $user->display_name );
-    }
-
-    if ( '' === $name ) {
-        $name = (string) $user->user_login;
-    }
+    // One half on its own is still the name we hold — the collapse keeps a
+    // missing first or last name from leaving a stray space in the chip.
+    $name = trim( preg_replace( '/\s+/', ' ', $user->first_name . ' ' . $user->last_name ) );
 
     /**
      * Filter the agent's own name on the Agency Profile view.
