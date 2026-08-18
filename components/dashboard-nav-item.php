@@ -100,7 +100,7 @@ $icon_tags = array(
 	href="<?php echo esc_url( $item['href'] ); ?>"
 	<?php echo $is_active ? ' aria-current="page"' : ''; ?>
 >
-	<?php // Icon and label are one group so the badge can sit opposite them; the design pairs them the same way on its Requests row. ?>
+	<?php // Icon and label are one group so the badge can sit opposite them; the design pairs them the same way on its History row. ?>
 	<span class="dash-nav__main">
 		<?php if ( '' !== $item['icon'] ) : ?>
 			<span class="dash-nav__icon" aria-hidden="true"><?php echo wp_kses( $item['icon'], $icon_tags ); ?></span>
@@ -112,7 +112,7 @@ $icon_tags = array(
 	<?php
 	/*
 	 * The count pill. The number alone is meaningless out of context — a
-	 * screen reader would announce "Requests 3" and leave three of what to
+	 * screen reader would announce "History 3" and leave three of what to
 	 * guess — so the visible digit is followed by text that only assistive
 	 * tech hears (.sr-only, assets/home.css). aria-label is deliberately not
 	 * used here: it is unreliable on a plain <span>, and it would also

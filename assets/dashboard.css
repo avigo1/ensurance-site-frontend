@@ -2130,13 +2130,6 @@ button.dash-requests__line:focus-visible {
   text-overflow: ellipsis;
 }
 
-/* "Detail closed" — the same slot at the same size, in the faint shade the
-   closed rows' status uses. It is standing in for a fact, not stating one,
-   so it must not read with the weight of the detail it replaced. */
-.dash-requests__detail--closed {
-  color: var(--text-faint);
-}
-
 /* The fixed track's contents: the label-over-stamp block, then the caret,
    the design's 12px apart. The caret's own 12px is reserved on every row
    whether or not it draws a chevron — see the note in the component. */
@@ -2280,58 +2273,67 @@ button.dash-requests__line[aria-expanded="true"] .dash-requests__caret svg {
   color: var(--text-faint);
 }
 
-/* THE LOCKED NOTE — the whole panel on a passed or expired row. Same sunken
-   surface and radius as the field grid it stands in place of, so opening a
-   closed row lands on an object the same size and shape as opening an open
-   one; only what is written in it differs. 18px 22px is the handoff's, a
-   little tighter than the grid's 20px because this is three lines rather
-   than four columns. */
-.dash-requests__closed {
+/* THE UNDECIDED NOTE — what an awaiting row opens onto instead of the
+   Accept / Pass the handoff put here. History is read-only: it says the
+   request is still waiting and links to the one surface that can answer it.
+
+   A ROW, WRAPPING TO TWO. The sentence and the link sit on one line while
+   there is room and stack when there is not, so the link is never orphaned
+   off the right edge of a narrow content column. 16px/14px and the hairline
+   above are the design's, and the border only appears when there is a field
+   grid above to be separated FROM — see the sibling selector below, without
+   which a row with no detail behind it opens onto a rule with nothing over
+   it. */
+.dash-requests__awaiting {
   display: flex;
-  align-items: flex-start;
-  gap: 13px;
-  padding: 18px 22px;
-  border: 1px solid var(--border-soft);
-  border-radius: 14px;
-  background: var(--gray-100);
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
 }
 
-/* Faint, and aligned to the title's cap-height rather than centered on the
-   block — the note is left-read from the title down, and a lock floating
-   beside the middle of the paragraph reads as decoration. */
-.dash-requests__closed-icon {
-  display: flex;
-  flex-shrink: 0;
-  margin-top: 1px;
-  color: var(--text-faint);
+.dash-requests__fields + .dash-requests__awaiting {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-soft);
 }
 
-.dash-requests__closed-title {
-  margin-bottom: 4px;
-  font-family: var(--font-sans);
-  font-size: 14.5px;
-  line-height: var(--leading-snug);
-  color: var(--text-heading);
-}
-
-/* Capped at 460px, the handoff's: this is a sentence to read once, and a
+/* Capped at 420px, the design's: this is a sentence to read once, and a
    line that runs the full width of the content column is harder to. */
-.dash-requests__closed-why {
+.dash-requests__awaiting-note {
   margin: 0;
-  max-width: 460px;
+  max-width: 420px;
   font-family: var(--font-sans);
   font-size: 13px;
-  line-height: 1.55;
+  line-height: 1.45;
   color: var(--text-muted);
   text-wrap: pretty;
 }
 
-/* THE STATUS IS THE WORD, NOT A CHIP. Three shades for four states, and the
-   shade is a second, coarser reading of the word — never the only one.
-   Accent marks the row still asking for an answer (the same green as its
-   dot); the faint shade retires the two closed states without judgment,
-   since passing is a legitimate answer and an expiry is a queue event, not
-   the agent's error. Nothing here is red. */
+/* The only link on the view, at the same 13px as the sentence beside it so
+   the pair reads as one line rather than as a note with a button after it.
+   Underlined at rest for the same reason the Agency Profile note's link is:
+   accent green against muted gray is a difference in color alone, which is
+   not enough to find a link by. */
+.dash-requests__awaiting-link {
+  flex-shrink: 0;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.dash-requests__awaiting-link:hover,
+.dash-requests__awaiting-link:focus-visible {
+  color: var(--accent-hover);
+}
+
+/* THE STATUS IS THE WORD, NOT A CHIP, and the shade is a second, coarser
+   reading of it — never the only one. Accent marks the row still asking for
+   an answer (the same green as its dot); everything else is the muted
+   default, which is every row History actually lists, since an accepted
+   request is a record rather than a task. Nothing here is red. */
 .dash-requests__status {
   font-family: var(--font-sans);
   font-size: 13px;
@@ -2344,8 +2346,11 @@ button.dash-requests__line[aria-expanded="true"] .dash-requests__caret svg {
   color: var(--accent);
 }
 
-.dash-requests__row[data-status="passed"] .dash-requests__status,
-.dash-requests__row[data-status="expired"] .dash-requests__status {
+/* Kept for the state rather than for this list: History never shows a passed
+   row (ensurance_dashboard_hide_passed_rows removes it), so this is what the
+   word looks like anywhere the state IS printed — retired into the faint
+   shade without judgment, because passing is a legitimate answer. */
+.dash-requests__row[data-status="passed"] .dash-requests__status {
   color: var(--text-faint);
 }
 

@@ -1,15 +1,18 @@
 <?php
 /**
- * Agent Dashboard — the Requests view's list.
+ * Agent Dashboard — the History view's list.
  *
  * STEP 12 of templates/agent-dashboard/build-steps.md, restyled to the
  * "Requests page" design handoff (design_handoff_requests_page/README.md).
  * The handoff is a VISUAL restyle: the data behind this file is unchanged —
  * ensurance_dashboard_request_rows() is still the whole input, still resolved
  * the same way, still newest-first — and only the markup and its styling move.
- * Steps 1 (row grid + list chrome), 2 (the expanded panel) and 3 (the closed
- * treatment for passed and expired rows) of its working order are in; step 4,
- * the in-row Accept / Pass, is not — see the note at the foot of this block.
+ *
+ * THE SECTION IS CALLED HISTORY. The rail row, the <h1> and the subhead all say
+ * so; the individual things in it are still "requests" in body copy, because
+ * that is what they are. The `requests` URL slug is unchanged, so every link
+ * ever shared or bookmarked still lands here — see the note on the registry
+ * entry in ensurance_dashboard_views().
  *
  * THE HEADER IS NOT HERE. The title and the one line of scope above this list
  * come from the view's registry entry in ensurance_dashboard_views() and are
@@ -40,30 +43,43 @@
  * have no field here, so they are simply not printed — the handoff already says
  * the cue only appears when there is one.
  *
- * WHICH ROWS OPEN. The design expands every row, because every row in its
- * sample data carries a full household / vehicle / coverage record. Here a row
- * opens for one of two quite different reasons:
+ * TWO STATES REACH THIS LIST, not four. `expired` is gone from the product
+ * (see ensurance_dashboard_request_statuses), and `passed` never arrives —
+ * ensurance_dashboard_hide_passed_rows() removes it, because History is what
+ * the agent KEPT and passing removes the request from it entirely rather than
+ * retiring it into a greyed-out row. So every row here is either "Awaiting you"
+ * or "Accepted", and the closed treatment the handoff's step 3 described (the
+ * "Detail closed" stand-in, the locked note) has nothing left to describe and is
+ * gone with it.
  *
+ * WHICH ROWS OPEN, and both reasons are about what is behind the row:
+ *
+ *   - it is AWAITING a decision, where the panel says so and points at Today.
+ *     This is the whole read-only rule in one place: History never decides
+ *     anything, so a row that still needs deciding sends the agent to the one
+ *     surface that can;
  *   - it is the live request, whose `facts` on
  *     ensurance_dashboard_live_request() are this app's only per-request
- *     detail — up to four label/value pairs, and no other row has any;
- *   - it is CLOSED, where the panel is a note about the request rather than
- *     the request, so it needs no request data at all.
+ *     detail — up to four label/value pairs, and no other row has any.
  *
- * Everything else — an accepted row with no facts behind it — stays the inert
- * <div> it was, with no caret and no hover surface. A row that looked
- * expandable and opened onto nothing would be worse than a row that does not
- * open.
+ * The two overlap on today's row and are separate everywhere else. An accepted
+ * row with no facts behind it stays the inert <div> it was, with no caret and no
+ * hover surface: a row that looked expandable and opened onto nothing would be
+ * worse than a row that does not open.
  *
- * CLOSED ROWS SAY LESS, NOT DIMMER. A passed or expired request's particulars
- * are no longer the agent's to read, so the row prints "Detail closed" in place
- * of its detail and its panel holds only the locked note — no field grid, no
- * contact. The withholding is real rather than cosmetic: the detail string is
- * never printed, so it is not in the page for anyone to read off. It is not
- * ENFORCEMENT, though — ensurance_dashboard_request_rows() still returns
- * `detail` to whatever calls it. Per the handoff, closing that off belongs
- * wherever the app enforces access, and is a question for the team rather than
- * a change to make from here.
+ * NO ACCEPT / PASS ANYWHERE ON THIS VIEW, which is step 4 of the handoff
+ * DELIBERATELY not built rather than merely unbuilt. Decisions live on Today and
+ * only on Today — one surface owns the queue, so an agent is never answering the
+ * same request from two places and the two can never disagree about what was
+ * answered. An awaiting row here says that in words and links across.
+ *
+ * (It also could not have been built as written. The handoff asks for the
+ * buttons to be wired to the EXISTING handler, and that is
+ * ensurance_dashboard_record_decision(), which stores one flag against the USER
+ * — update_user_meta( $user_id, ENSURANCE_DASHBOARD_DECISION_META, $decision ) —
+ * with no request identifier in it. "Accept row 3" is not expressible against
+ * it. Per-request decision state is a schema change rather than a restyle. But
+ * the reason the buttons are absent is the rule above, not the schema.)
  *
  * READ FROM THE RESOLVER, NOT THROUGH THE ROW. ensurance_dashboard_request_rows()
  * does not carry `facts`, and widening it would mean editing an existing
@@ -87,22 +103,6 @@
  * enforce masking with the app's existing rule, ask rather than guess — it waits
  * for the team. No strip, no mask, no fabricated phone number.
  *
- * NO IN-ROW ACCEPT / PASS EITHER, which is step 4 of the handoff and the one
- * step that cannot be done as written. It asks for the buttons to be wired to
- * the EXISTING handlers — same mutation, same payload — and the existing handler
- * is ensurance_dashboard_record_decision(), which stores one flag against the
- * USER:
- *
- *     update_user_meta( $user_id, ENSURANCE_DASHBOARD_DECISION_META, $decision )
- *
- * There is no request identifier in it, and ensurance_dashboard_request_rows()
- * maps that single flag onto the row keyed `live` and no other. So "accept row
- * 3" is not expressible against it: a decision posted from any row would be
- * recorded once for the agent and would surface on the top row. Per-request
- * decision state is a schema change rather than a restyle, so the buttons wait
- * on whoever owns the matching queue. Today's slot keeps its own Accept / Pass,
- * which is the one place the current handler is correct.
- *
  * THE CONTROLS ARE UI STATE, NOT A QUERY. The filter pills and the sort toggle
  * act on the rows this file has already rendered: no request, no `?` arg, no
  * change to what ensurance_dashboard_request_rows() returns or the order it
@@ -113,18 +113,22 @@
  * plain `hidden` markup a <button> toggles, so they work with the same JS and
  * are simply closed without it.
  *
- * A PILL PER STATE THAT HAS ROWS, plus All. The design shows all five because
- * its sample data has every state in it; this app's real table is usually one
- * row or none, where four pills reading "0" would be four dead controls. So a
- * state pill prints only when something is in that state — which reproduces the
- * design's five pills exactly on the design's own data, and degrades quietly on
- * the data an agent actually has.
+ * A PILL PER STATE THAT HAS ROWS, plus All — so All / Awaiting you / Accepted,
+ * which is now the design's own set. The zero-count skip below is what keeps it
+ * to that without naming the states twice: `passed` is still a state in
+ * ensurance_dashboard_request_statuses() (a request passes THROUGH it on its way
+ * out of the list), but no passed row can reach this file, so its count is
+ * always 0 and its pill can never print. The same rule also spares an agent a
+ * dead "Awaiting you 0" pill in the ordinary week where nothing is waiting.
  *
- * PREVIEWING: /dashboard/?view=requests&slot=live shows the design's five-row
- * table; ?slot=quiet shows the four closed rows with no awaiting row above them.
- * Nothing produces real rows yet, so an agent sees the empty line below.
+ * PREVIEWING: /dashboard/?view=requests&slot=live shows the awaiting row above
+ * the design's kept history; ?slot=quiet shows the history with no awaiting row
+ * above it. The sample's passed row is in neither — it is there to prove it is
+ * removed. Nothing produces real rows yet, so an agent sees the empty line
+ * below.
  *
- * Source: design_handoff_requests_page/ (Requests list view). Styling lives in
+ * Source: design_handoff_requests_page/ and the `isReq` view of
+ * templates/agent-dashboard/AgentDashboard.dc.html. Styling lives in
  * assets/dashboard.css (`.dash-requests*`).
  */
 
@@ -144,9 +148,16 @@ if ( empty( $request_rows ) ) {
 	 * It deliberately does NOT restate what the agent is matched on, when the
 	 * next request might land, or how to widen their reach — Today's quiet panel
 	 * owns all three, and Step 15 forbids saying them twice.
+	 *
+	 * IT NO LONGER SAYS NOTHING HAS BEEN MATCHED, which it used to. Now that a
+	 * passed request leaves the list entirely, an agent CAN empty this view by
+	 * answering — pass the only request that ever reached them and the old line
+	 * ("No requests have been matched to your service areas yet") would be
+	 * flatly untrue about a request they had just read. So it states what is
+	 * true in both cases and claims nothing about matching either way.
 	 */
 	?>
-	<p class="dash-requests__empty">No requests have been matched to your service areas yet.</p>
+	<p class="dash-requests__empty">No requests to show here yet.</p>
 	<?php
 	return;
 }
@@ -155,8 +166,8 @@ if ( empty( $request_rows ) ) {
  * The counts behind the pills, tallied off the rows above rather than queried.
  * Labels and order come from ensurance_dashboard_request_statuses() — the same
  * list the rows' own labels come from — so a pill can never name a state
- * differently from the rows it filters to, and a fifth state added there gets
- * its pill for free.
+ * differently from the rows it filters to, and a state added there gets its pill
+ * for free.
  */
 $request_statuses = ensurance_dashboard_request_statuses();
 $request_counts   = array_fill_keys( array_keys( $request_statuses ), 0 );
@@ -173,13 +184,17 @@ foreach ( $request_rows as $row ) {
  */
 $request_live  = ensurance_dashboard_live_request();
 $request_facts = ! empty( $request_live['facts'] ) ? $request_live['facts'] : array();
+
+// Where an awaiting row sends the agent to answer it. Resolved once, for the
+// same reason: it is the same destination on every row.
+$request_today = ensurance_dashboard_today_url();
 ?>
 
 <div class="dash-requests-controls" hidden>
 
 	<?php
 	/*
-	 * role="group" rather than a toolbar or a radio group: these are five
+	 * role="group" rather than a toolbar or a radio group: these are
 	 * independent toggles in the markup, and the one-at-a-time behavior is
 	 * dashboard.js's. aria-pressed on each is what reports which one is on.
 	 */
@@ -193,7 +208,8 @@ $request_facts = ! empty( $request_live['facts'] ) ? $request_live['facts'] : ar
 		<?php
 		foreach ( $request_statuses as $status_key => $status ) :
 
-			// A state nothing is in gets no pill — see the note at the top.
+			// A state nothing is in gets no pill — see the note at the top,
+			// and note this is what keeps `passed` off the control strip.
 			if ( 0 === $request_counts[ $status_key ] ) {
 				continue;
 			}
@@ -234,17 +250,20 @@ $request_facts = ! empty( $request_live['facts'] ) ? $request_live['facts'] : ar
 	<?php
 	foreach ( $request_rows as $row_index => $row ) :
 
-		// A closed request — see "CLOSED ROWS" above. Both states are closed in
-		// the same way and differ only in the words the panel uses, so the two
-		// are asked about together everywhere except there.
-		$row_closed = in_array( $row['status'], array( 'passed', 'expired' ), true );
+		// The row still asking for an answer. It gets the filled dot, the accent
+		// status, and a panel that sends the agent to Today rather than deciding
+		// anything here — see "NO ACCEPT / PASS" above.
+		$row_awaiting = ( 'awaiting' === $row['status'] );
 
-		// See "WHICH ROWS OPEN" above. `live` is the key
-		// ensurance_dashboard_request_rows() gives the row it builds from
-		// ensurance_dashboard_live_request(), and the only tie between the two;
-		// a closed row opens on its status alone, since its panel is a note
-		// about the request rather than the request.
-		$row_opens = $row_closed || ( 'live' === $row['key'] && ! empty( $request_facts ) );
+		// This row's per-request detail, which only the live request has. `live`
+		// is the key ensurance_dashboard_request_rows() gives the row it builds
+		// from ensurance_dashboard_live_request(), and the only tie between the
+		// two.
+		$row_facts = ( 'live' === $row['key'] ) ? $request_facts : array();
+
+		// See "WHICH ROWS OPEN" above. An awaiting row opens even with no facts
+		// behind it, because the note inside is itself the reason to open it.
+		$row_opens = $row_awaiting || ! empty( $row_facts );
 		$row_panel = 'dash-request-panel-' . (int) $row_index;
 		?>
 
@@ -274,8 +293,8 @@ $request_facts = ! empty( $request_live['facts'] ) ? $request_live['facts'] : ar
 				/*
 				 * THE PAGE'S ONLY "LOOK HERE" SIGNAL, and the reason the status
 				 * badges are gone: one filled dot on the one row still asking
-				 * for an answer says more than four colored chips saying what
-				 * every row already says in words. Decorative — the status
+				 * for an answer says more than a row of colored chips saying
+				 * what every row already says in words. Decorative — the status
 				 * column states the same thing in text — so it is hidden from
 				 * assistive tech rather than labeled twice.
 				 */
@@ -286,26 +305,8 @@ $request_facts = ! empty( $request_live['facts'] ) ? $request_live['facts'] : ar
 					<span class="dash-requests__title"><?php echo esc_html( $row['title'] ); ?></span>
 				</span>
 
-				<?php
-				/*
-				 * A CLOSED ROW DOES NOT SAY WHAT THE REQUEST WAS. Its detail is
-				 * replaced by "Detail closed" rather than dimmed or truncated —
-				 * a passed or expired request's particulars are no longer the
-				 * agent's to read, and the row still has to hold its column.
-				 *
-				 * This is a real withholding, not a visual one: the string is
-				 * never printed, so it is not in the HTML for anyone to read off
-				 * the page. What it is NOT is enforcement —
-				 * ensurance_dashboard_request_rows() still hands `detail` to
-				 * whatever calls it, and a second caller would still get it.
-				 * Closing that off belongs wherever the app enforces access,
-				 * which is the handoff's own instruction.
-				 */
-				?>
 				<span class="dash-requests__what">
-					<?php if ( $row_closed ) : ?>
-						<span class="dash-requests__detail dash-requests__detail--closed">Detail closed</span>
-					<?php elseif ( '' !== $row['detail'] ) : ?>
+					<?php if ( '' !== $row['detail'] ) : ?>
 						<span class="dash-requests__detail"><?php echo esc_html( $row['detail'] ); ?></span>
 					<?php endif; ?>
 				</span>
@@ -378,85 +379,11 @@ $request_facts = ! empty( $request_live['facts'] ) ? $request_live['facts'] : ar
 				?>
 				<div class="dash-requests__panel" id="<?php echo esc_attr( $row_panel ); ?>" hidden>
 
-					<?php if ( $row_closed ) : ?>
-
-						<?php
-						/*
-						 * THE LOCKED NOTE, and it is the WHOLE panel on a closed
-						 * row: no field grid, no contact. Opening a passed or
-						 * expired request says why it is closed and nothing
-						 * about what it was.
-						 *
-						 * The lock is the same glyph the rail's Account row
-						 * uses, at the design's 16px. Decorative — the title
-						 * beside it says "passed" / "expired" in words — so it
-						 * is hidden from assistive tech rather than labeled.
-						 */
-						?>
-						<div class="dash-requests__closed">
-
-							<span class="dash-requests__closed-icon" aria-hidden="true">
-								<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-							</span>
-
-							<div class="dash-requests__closed-body">
-
-								<?php
-								/*
-								 * TWO SENTENCES, and both are the design's with
-								 * one claim removed. The design's expired line
-								 * says the detail closed "within 24 hours";
-								 * nothing in this app sets a 24-hour window —
-								 * `expires_at` is a per-request moment supplied
-								 * by whatever produced the request — so the
-								 * window is described rather than numbered.
-								 *
-								 * "Offered to another agent" is this product's
-								 * own words for what passing does, not the
-								 * design's: it is what the decided panel on
-								 * Today already tells an agent (see
-								 * ensurance_dashboard_decided_panel()), and the
-								 * two surfaces must not describe the same event
-								 * differently.
-								 */
-								if ( 'passed' === $row['status'] ) :
-									?>
-									<div class="dash-requests__closed-title">You passed this request</div>
-									<p class="dash-requests__closed-why">The request detail is no longer available to you — it was removed from your queue and offered to another agent covering that area.</p>
-									<?php
-								else :
-									?>
-									<div class="dash-requests__closed-title">This request expired</div>
-									<p class="dash-requests__closed-why">No decision was made before it expired, so the detail closed and the request was offered to another agent covering that area.</p>
-									<?php
-								endif;
-								?>
-
-								<?php
-								/*
-								 * The design closes this note with a mono line
-								 * carrying the decision note and a request
-								 * reference. This app has neither: requests have
-								 * no reference number, and no decision note is
-								 * recorded (see
-								 * ensurance_dashboard_record_decision(), which
-								 * stores a flag). The row's own stamp is the
-								 * only other value that could go here and it is
-								 * already on the row, two columns to the right.
-								 * So the line is left out rather than filled
-								 * with something to fill it.
-								 */
-								?>
-
-							</div>
-
-						</div>
-
-					<?php else : ?>
+					<?php if ( ! empty( $row_facts ) ) : ?>
 
 						<div class="dash-requests__fields">
 
-							<?php foreach ( $request_facts as $fact ) : ?>
+							<?php foreach ( $row_facts as $fact ) : ?>
 								<div class="dash-requests__field">
 									<div class="dash-requests__field-label"><?php echo esc_html( $fact['label'] ); ?></div>
 									<div class="dash-requests__field-value"><?php echo esc_html( $fact['value'] ); ?></div>
@@ -466,6 +393,39 @@ $request_facts = ! empty( $request_live['facts'] ) ? $request_live['facts'] : ar
 						</div>
 
 					<?php endif; ?>
+
+					<?php
+					/*
+					 * THE UNDECIDED NOTE, and the only thing on this view that
+					 * points anywhere. It replaces the handoff's in-row Accept /
+					 * Pass with the sentence that explains why they are not
+					 * here, and the link that goes where they are.
+					 *
+					 * A REAL <a href>, not a button and not a scripted jump:
+					 * Today is a URL (ensurance_dashboard_today_url(), resolved
+					 * from the rail registry), so this works with JavaScript
+					 * off, opens in a new tab on a middle-click, and can be
+					 * copied like any other link. assets/dashboard.js sees the
+					 * `dash-view-link` class and swaps the view in place instead
+					 * of navigating — the same interception the rail's own rows
+					 * get — so with JS it behaves like the design's
+					 * setState({ view: 'desk' }) and without it, it is a page
+					 * load to the right place.
+					 *
+					 * No aria-label: the link's own text names the surface it
+					 * opens, which is what a screen reader needs out of context
+					 * and is already unambiguous. There is at most one of these
+					 * on the page — only one row can be awaiting a decision.
+					 */
+					if ( $row_awaiting ) :
+						?>
+						<div class="dash-requests__awaiting">
+							<p class="dash-requests__awaiting-note">This one is still waiting on your decision. Accept or pass it from Today.</p>
+							<a class="dash-requests__awaiting-link dash-view-link" href="<?php echo esc_url( $request_today ); ?>">Open in Today</a>
+						</div>
+						<?php
+					endif;
+					?>
 
 				</div>
 				<?php

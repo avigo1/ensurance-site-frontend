@@ -61,7 +61,7 @@
 // output (get_header) so the redirect headers are still sendable.
 if ( ! is_user_logged_in() ) {
 	// Carry the page's own query args through the login round-trip, so a deep
-	// link survives it: /dashboard/?view=requests comes back to Requests, and
+	// link survives it: /dashboard/?view=requests comes back to History, and
 	// /dashboard/?slot=live comes back to the state a reviewer was looking at.
 	// Sending everyone to the bare /dashboard/ instead made a shared link
 	// silently land on Today, which reads as the link having been ignored.
@@ -132,7 +132,7 @@ get_header( 'agent' );
  * A view whose content is more than eyebrow / title / intro names a `part`
  * in that array, which renders after the header — Today
  * (components/dashboard-view-today.php, where Phase 2 of
- * templates/agent-dashboard/build-steps.md landed), Requests
+ * templates/agent-dashboard/build-steps.md landed), History
  * (components/dashboard-view-requests.php, Step 12), Agency Profile
  * (components/dashboard-view-profile.php, Step 13) and Account
  * (components/dashboard-view-account.php, Step 14). All four are built; a new
@@ -207,7 +207,7 @@ foreach ( $dashboard_items as $dash_item ) :
 		<?php
 		/*
 		 * HEADER THEN PART, and a view may have either or both. The header is
-		 * the same object on Requests, Agency Profile and Account — a title
+		 * the same object on History, Agency Profile and Account — a title
 		 * over one line of scope — so it is described once in the registry and
 		 * rendered here, and each of those views' parts carries only the
 		 * content below it. Today is the view with a part and no header: its

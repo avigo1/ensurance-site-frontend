@@ -18,6 +18,16 @@
    exactly the behavior that shipped before this file existed. Nothing here
    is load-bearing for correctness, only for smoothness.
 
+   THE RAIL IS NOT THE ONLY WAY IN. A view may link to another view from
+   inside its own content — History's "Open in Today", on the row that is
+   still awaiting a decision. Those links carry `.dash-view-link` and are
+   intercepted exactly like a rail row, because they are the same act: same
+   `?view=` href, same in-place swap, same pushState. What they are NOT is
+   part of the rail — `items` below is still only `.dash-nav__item`, so a
+   content link never takes the rail's highlight; show() lights whichever
+   rail row points at the view that ends up on screen, which is the rail row
+   for Today either way.
+
    The fade itself is pure CSS (see .dash-view in assets/dashboard.css): a
    hidden view has `display: none`, and showing it restarts the animation
    for free. This file never touches style or timing.
@@ -36,6 +46,9 @@
   // file cannot drift from the rail's first row the way a hardcoded slug did.
   var DEFAULT_VIEW = shell.getAttribute('data-default-view') || '';
 
+  // The RAIL's rows — the things that carry the highlight. Links inside a
+  // view's content are intercepted too (see the note above) but are not in
+  // this list, because nothing about them is ever lit.
   var items = Array.prototype.slice.call(shell.querySelectorAll('.dash-nav__item'));
   var views = Array.prototype.slice.call(shell.querySelectorAll('.dash-view'));
 
@@ -139,7 +152,9 @@
   }
 
   shell.addEventListener('click', function (event) {
-    var link = event.target.closest ? event.target.closest('.dash-nav__item') : null;
+    var link = event.target.closest
+      ? event.target.closest('.dash-nav__item, .dash-view-link')
+      : null;
     if (!link || !shell.contains(link)) {
       return;
     }

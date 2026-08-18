@@ -684,9 +684,9 @@ function ensurance_dashboard_default_view() {
 /**
  * How many matched requests are waiting on the agent's decision.
  *
- * Drives the count badge on the rail's Requests row (`hasLive` / `liveCount` in
+ * Drives the count badge on the rail's History row (`hasLive` / `liveCount` in
  * the AgentDashboard design). NOTHING PRODUCES REQUESTS YET — matching is not
- * built, and the Requests view itself is Step 12 of
+ * built, and the History view itself is Step 12 of
  * templates/agent-dashboard/build-steps.md — so this returns 0 today and the
  * badge hides itself at zero exactly as the design specifies. That is the
  * honest state for a founding agent whose queue is empty, not a placeholder to
@@ -769,7 +769,7 @@ function ensurance_dashboard_request_count( $user_id = 0 ) {
  *                              card grid, status rows, an accordion and so on.
  *                              The two compose: a view that sets a title and a
  *                              part gets the shared header and then its own
- *                              markup (Requests), and one that sets only a
+ *                              markup (History), and one that sets only a
  *                              part renders the part alone (Today, whose <h1>
  *                              is the greeting). Ignored if the file does not
  *                              exist, so a view can be listed before it is
@@ -803,7 +803,12 @@ function ensurance_dashboard_views() {
         // returns 0 until the matching pipeline exists, hiding the pill.
         array(
             'view'  => 'requests',
-            'label' => 'Requests',
+            // The section is called History; the `requests` SLUG stays, so every
+            // /dashboard/?view=requests link ever shared, bookmarked or carried
+            // through the /login round-trip still lands here. Nothing an agent
+            // reads comes from the slug — the rail row, the <h1> and the
+            // container's aria-label are all the label and title below.
+            'label' => 'History',
             // Icon `file-text`.
             'icon'  => '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>',
             'badge' => ensurance_dashboard_request_count(),
@@ -811,8 +816,8 @@ function ensurance_dashboard_views() {
             // view header, and the part below adds only the table — the header
             // is the same object on all three of the non-Today views, so it is
             // described once here rather than rebuilt in each part.
-            'title' => 'Requests',
-            'intro' => 'Every request matched to your service areas since access started.',
+            'title' => 'History',
+            'intro' => 'Every request you have kept since access started. Open one for the full household, vehicle, and coverage detail.',
             'part'  => 'components/dashboard-view-requests',
         ),
         array(
@@ -1305,11 +1310,11 @@ function ensurance_dashboard_priority_preview() {
  * gated for exactly this reason. TWO preview states qualify, not one:
  * /dashboard/?slot=live because the card is what that state renders, and
  * ?slot=decided because the request still EXISTS after it is decided — Step 12's
- * Requests view lists it with an Accepted / Passed badge (see
- * ensurance_dashboard_request_rows), and a decided preview that dropped the row
- * out of the table would be showing a confirmation about a request no history
- * contains. Today itself is unaffected: the decided state renders its own panel
- * and never reads this.
+ * History view lists it as Accepted, or drops it entirely if it was passed on
+ * (see ensurance_dashboard_request_rows), and a decided preview that dropped an
+ * ACCEPTED row out of the list would be showing a confirmation about a request
+ * no history contains. Today itself is unaffected: the decided state renders
+ * its own panel and never reads this.
  *
  * When the real queue lands, return its awaiting request through the filter
  * below and the card, its countdown and its tiles all follow with no change to
@@ -1323,9 +1328,9 @@ function ensurance_dashboard_priority_preview() {
  *                      A moment rather than a written-down "21h 40m", so the
  *                      countdown cannot be stale on a cached render.
  *   matched_at int     Unix time the request was matched to this agent, 0 for
- *                      unknown. The card does not print it; the Requests row
+ *                      unknown. The card does not print it; the History row
  *                      for the same request stamps itself from it.
- *   detail     string  One-line summary of the request for the Requests row —
+ *   detail     string  One-line summary of the request for the History row —
  *                      the same facts the card spreads across tiles, written as
  *                      a sentence fragment. '' when there is nothing to add.
  *   facts      array   Up to four ['label' => …, 'value' => …] pairs, in the
@@ -1361,11 +1366,11 @@ function ensurance_dashboard_sample_request() {
         // so the preview exercises the countdown rather than hardcoding its
         // output.
         'expires_at' => time() + ( 21 * HOUR_IN_SECONDS ) + ( 40 * MINUTE_IN_SECONDS ),
-        // Same treatment in the other direction: the design's Requests row
+        // Same treatment in the other direction: the design's History row
         // stamps this request "2h ago" and its card calls it "2 hours ago", and
         // both are the one moment it was matched.
         'matched_at' => time() - ( 2 * HOUR_IN_SECONDS ),
-        // The Requests row's one line, from the design's own `reqRows`. It is
+        // The History row's one line, from the design's own `reqRows`. It is
         // the two tiles an agent scans first, not a summary of all four — the
         // carrier and the submitted time say nothing in a list where every row
         // carries a stamp of its own.
@@ -1552,7 +1557,7 @@ function ensurance_dashboard_decision( $user_id = 0 ) {
  * The seam the matching queue attaches to: everything that should happen when an
  * agent accepts or passes — releasing the shopper's contact details, telling the
  * shopper, handing the request to the next agent in that county, writing the
- * history row Step 12's Requests view lists — hangs off the action below. This
+ * history row Step 12's History view lists — hangs off the action below. This
  * function itself only remembers the decision well enough for the slot to show
  * it (see ENSURANCE_DASHBOARD_DECISION_META).
  *
@@ -2672,6 +2677,44 @@ function ensurance_dashboard_can_receive_leads( $user_id = 0 ) {
 }
 
 /**
+ * The Today view's URL — where every Accept and Pass lives.
+ *
+ * History is read-only: it lists the requests an agent has kept and never offers
+ * a decision on one, so the row that is still awaiting an answer points at Today
+ * instead ("Open in Today", in components/dashboard-view-requests.php). This is
+ * that destination.
+ *
+ * Resolved from the rail registry rather than written down, the same way
+ * ensurance_dashboard_profile_url() and ensurance_dashboard_support_url() are —
+ * the registry owns every view's href, so this link cannot drift from the rail
+ * row the agent would otherwise click, and Today's href is the bare /dashboard/
+ * rather than ?view=today, which is worth not duplicating.
+ *
+ * @return string Absolute URL to the Today view.
+ */
+function ensurance_dashboard_today_url() {
+    $url = '';
+
+    foreach ( ensurance_dashboard_views() as $view ) {
+        if ( 'today' === $view['view'] ) {
+            $url = (string) $view['href'];
+            break;
+        }
+    }
+
+    /**
+     * Filter the destination behind the product's "open it in Today" links.
+     *
+     * @param string $url Resolved Today URL.
+     */
+    $url = (string) apply_filters( 'ensurance_dashboard_today_url', $url );
+
+    // The registry always carries a Today row — it is the rail's first entry and
+    // the view everything falls back to — so this is a guard, not a branch.
+    return '' !== $url ? $url : home_url( '/dashboard/' );
+}
+
+/**
  * The Agency Profile view's URL — where an agent goes to set their states.
  *
  * Resolved from the rail registry rather than written down, exactly the way
@@ -3345,7 +3388,7 @@ function ensurance_dashboard_shopper_rows( $user_id = 0 ) {
  * column was breaking it twice over. A request ARRIVING is already stamped
  * everywhere it needs to be: the live card's "Submitted" tile carries the one
  * still waiting, the quiet panel's "Last match" stat carries the most recent one
- * when nothing is, and the Requests view stamps every one of them. A "request
+ * when nothing is, and the History view stamps every one of them. A "request
  * matched" row here put that same moment on Today a second time — beside the tile
  * saying it in the live state, and beside a stat that disagreed with it in the
  * quiet one. Decisions and record changes are what this column is for; the
@@ -3392,9 +3435,16 @@ function ensurance_dashboard_activity( $user_id = 0, $limit = 4, $now = 0 ) {
     // The design's newest row is "Auto request matched — Coastal County", stamped
     // the same 2h ago as the live card's Submitted tile. It is not here: see the
     // note above on why this column does not date a match. Its place is taken by
-    // the passed request from ensurance_dashboard_sample_history(), so the two
-    // decision rows on this column are the same two decisions the Requests view
-    // lists — one fabricated agency, described the same way on both views.
+    // the passed request from ensurance_dashboard_sample_history() — the same
+    // fabricated agency, described the same way, so the two surfaces agree.
+    //
+    // THE PASSED ROW BELONGS HERE EVEN THOUGH HISTORY NO LONGER LISTS IT, and
+    // the two are not in conflict. This column is a record of what the agent
+    // DID; History is a list of the requests they KEPT. Passing is something
+    // they did, so it is dated here — but the request itself is gone from
+    // History (see ensurance_dashboard_hide_passed_rows), which is the whole
+    // point of removing it: the decision is remembered, the request is not
+    // still sitting in the list looking like something to reconsider.
     if ( '' !== ensurance_dashboard_priority_preview() ) {
         $entries = array(
             array(
@@ -3466,26 +3516,36 @@ function ensurance_dashboard_activity( $user_id = 0, $limit = 4, $now = 0 ) {
 }
 
 /**
- * The four states a matched request can be in on the Requests view — THE list.
+ * The three states a matched request can be in — THE list.
  *
  * Step 12 of templates/agent-dashboard/build-steps.md: each row carries a status
  * badge, and its tone maps to the status. One array holds both halves of that
  * mapping, so a row can only ever be in a state that has a label and a tone, and
  * neither can be written down twice.
  *
- * THE TONES ARE THE DESIGN'S, and there are three of them for four states:
+ * THE TONES ARE THE DESIGN'S:
  *
  *   awaiting → info     the one row still asking something of the agent
  *   accepted → ok       a request they took
  *   passed   → neutral  a request they let go
- *   expired  → neutral  a request that timed out
  *
- * Passed and expired share a tone on purpose. Neither is an outcome to
- * congratulate or warn about — both are simply closed — and a distinct color for
- * each would put weight on a difference the badge's own word already states.
  * Nothing here is red: passing is a legitimate answer (Step 6 says not to
- * discourage it), and an expired request is a queue event, not the agent's
- * error.
+ * discourage it), so it is retired without judgment rather than warned about.
+ *
+ * TWO OF THE THREE REACH THE HISTORY VIEW. `passed` is a real state — it is what
+ * ensurance_dashboard_request_rows() records when the agent passes on Today, and
+ * what Undo reverses — but History does not list it: see
+ * ensurance_dashboard_hide_passed_rows(). It stays named here because the row
+ * still passes THROUGH this state on its way out, and a state with no label
+ * would be dropped as unknown rather than hidden deliberately.
+ *
+ * THERE IS NO `expired`. The state was removed with the rest of the expiry
+ * treatment (the Expired pill, the badge and the "This request expired" closed
+ * card). Because ensurance_dashboard_request_rows() drops any row whose status
+ * this list does not name, a queue that still emits `expired` does not error and
+ * does not render an unlabeled chip — the row simply does not appear, which is
+ * the same place a passed request ends up and the right one: History is what the
+ * agent KEPT, and an expired request is neither kept nor still actionable.
  *
  * @return array<string,array{label:string,tone:string}> Status slug => label and
  *                                                       badge tone.
@@ -3504,15 +3564,11 @@ function ensurance_dashboard_request_statuses() {
             'label' => 'Passed',
             'tone'  => 'neutral',
         ),
-        'expired'  => array(
-            'label' => 'Expired',
-            'tone'  => 'neutral',
-        ),
     );
 }
 
 /**
- * The design's own sample history — the closed requests behind the Requests
+ * The design's own sample history — the decided requests behind the History
  * preview.
  *
  * The counterpart of ensurance_dashboard_sample_request() and
@@ -3529,6 +3585,12 @@ function ensurance_dashboard_request_statuses() {
  * awaiting one, which comes from the live request instead), with the design's
  * fixed date strings expressed as real moments so the preview exercises
  * ensurance_dashboard_relative_time() rather than hardcoding its output.
+ *
+ * THE PASSED ROW IS KEPT ON PURPOSE, and the expired one is gone. The design
+ * dropped `expired` entirely, so its row went with the state. The passed row
+ * stays because History no longer lists it — it is the row that proves
+ * ensurance_dashboard_hide_passed_rows() is doing its job, and without it the
+ * preview would exercise only the path where there is nothing to hide.
  *
  * @param int $now Optional. Moment the sample's ages are measured back from.
  * @return array<int,array{key:string,title:string,detail:string,at:int,status:string}>
@@ -3558,22 +3620,20 @@ function ensurance_dashboard_sample_history( $now = 0 ) {
             'at'     => $now - ( 12 * DAY_IN_SECONDS ),
             'status' => 'accepted',
         ),
-        array(
-            'key'    => 'sample-home-coastal',
-            'title'  => 'Home — Coastal County',
-            'detail' => 'Condo · ZIP 93013',
-            'at'     => $now - ( 16 * DAY_IN_SECONDS ),
-            'status' => 'expired',
-        ),
     );
 }
 
 /**
- * Every request matched to this agent, newest first — the Requests view's table.
+ * Every request matched to this agent, newest first — the History view's list.
  *
  * Step 12 of templates/agent-dashboard/build-steps.md. The whole history in one
  * list: what the request was, the one line that describes it, when it arrived,
  * and where it ended up.
+ *
+ * MINUS THE ONES THE AGENT PASSED ON. They are removed by
+ * ensurance_dashboard_hide_passed_rows() on the filter below, so a caller of
+ * this function never sees them — see that function for why the removal lives
+ * there rather than in the shaping loop.
  *
  * THE TOP ROW IS TODAY'S SLOT, NOT A COPY OF IT. The step is explicit that the
  * awaiting row is the only row tied to Today, and the tie is real rather than
@@ -3588,8 +3648,8 @@ function ensurance_dashboard_sample_history( $now = 0 ) {
  * history row — ensurance_dashboard_record_decision() names that as the queue's
  * job — so the table holds at most the live row today, and usually nothing at
  * all. The admin preview is the one exception, for the same reason the live card
- * has one: /dashboard/?view=requests&slot=live is how the full five-row table
- * gets reviewed before a queue exists. (`?slot=` is the preview switch for the
+ * has one: /dashboard/?view=requests&slot=live is how the full list gets
+ * reviewed before a queue exists. (`?slot=` is the preview switch for the
  * whole dashboard, not just Today; the reference band on Today reads it the same
  * way.)
  *
@@ -3643,7 +3703,7 @@ function ensurance_dashboard_request_rows( $user_id = 0, $now = 0 ) {
     }
 
     /**
-     * Filter the rows of the dashboard's Requests table.
+     * Filter the rows of the dashboard's History list.
      *
      * The hook the real matching queue attaches to when it exists. Entries must
      * keep the shape documented above and arrive NEWEST FIRST — they are not
@@ -3684,6 +3744,61 @@ function ensurance_dashboard_request_rows( $user_id = 0, $now = 0 ) {
 
     return $clean;
 }
+
+/**
+ * Drop passed requests from the History view's list.
+ *
+ * HISTORY IS WHAT THE AGENT KEPT. The view's own subhead says so — "Every
+ * request you have kept since access started" — and a request the agent passed
+ * on is, by their own decision, not one of them. So passing on Today does not
+ * move a row into a "Passed" state further down the list; it removes the request
+ * from the list entirely, which is what the design does (`.filter(l => l.st !==
+ * 'passed')` in templates/agent-dashboard/AgentDashboard.dc.html) and what makes
+ * the Passed pill and its count unnecessary rather than merely unused.
+ *
+ * IT IS NOT A HIDDEN ROW. Nothing renders it with `hidden`, nothing counts it in
+ * "N of N requests shown", and its `detail` never reaches the page — the row is
+ * gone before ensurance_dashboard_request_rows() has finished assembling its
+ * return value, so there is no copy of it in the document for a filter pill, a
+ * find-in-page or a view-source to turn up.
+ *
+ * UNDO STILL WORKS, because this hides a ROW, not a decision.
+ * ensurance_dashboard_decision() is untouched, so the decided panel on Today
+ * still offers Undo and taking it puts the request back in the list as
+ * "Awaiting you" — the row is rebuilt from the live request on the next render,
+ * exactly as it was before it was passed on.
+ *
+ * ON THE `ensurance_dashboard_request_rows` FILTER, at priority 99 rather than
+ * inside the resolver: the resolver is where the real matching queue attaches,
+ * and running last means a passed row the queue supplies is removed too, not
+ * just the one this file builds from the live request. It also keeps the rule in
+ * one readable place instead of a `continue` buried in the shaping loop.
+ *
+ * Entries arrive UNVALIDATED here (the shape check runs after the filter), so a
+ * row with no `status` at all is passed through untouched rather than assumed —
+ * dropping it is the shaping loop's job, and for its own reason.
+ *
+ * @param array $rows Rows, newest first.
+ * @return array The same rows minus any in the `passed` state.
+ */
+function ensurance_dashboard_hide_passed_rows( $rows ) {
+    if ( ! is_array( $rows ) ) {
+        return $rows;
+    }
+
+    $kept = array();
+
+    foreach ( $rows as $row ) {
+        if ( is_array( $row ) && isset( $row['status'] ) && 'passed' === sanitize_key( $row['status'] ) ) {
+            continue;
+        }
+
+        $kept[] = $row;
+    }
+
+    return $kept;
+}
+add_filter( 'ensurance_dashboard_request_rows', 'ensurance_dashboard_hide_passed_rows', 99 );
 
 /**
  * The design's own sample agency record — agency name, license number and phone.

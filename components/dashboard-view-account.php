@@ -24,11 +24,11 @@
  * THE INTRO IS NOT HERE. The title and the line saying self-serve changes are
  * coming and support can do any of it today come from the view's registry entry
  * in ensurance_dashboard_views() and are rendered by page-dashboard.php — the same
- * shared header Requests and Agency Profile use. This file is only what sits
+ * shared header History and Agency Profile use. This file is only what sits
  * under it.
  *
  * ROWS, NOT A LIST OF FACTS. The rules are the design's, and they are doing the
- * same job here as on the Requests table: they group a title with the line
+ * same job here as on the History list: they group a title with the line
  * explaining it and keep the support row's button on the same baseline as the
  * three rows without one, so nothing on the view reads as a card asking to be
  * clicked.
