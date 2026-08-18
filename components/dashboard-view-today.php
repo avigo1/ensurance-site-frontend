@@ -145,7 +145,18 @@ $dash_has_slot = ( '' !== $dash_slot_label )
 
 if ( $dash_has_slot ) :
 	?>
-	<section class="dash-slot" data-slot="<?php echo esc_attr( $dash_slot ); ?>" aria-label="What needs your attention">
+	<?php
+	/*
+	 * data-depends-on-states marks this section as a rendering of the served
+	 * states — which is what it is: the slot is `setup` until they are set and
+	 * `quiet` (or `live`) once they are. assets/dashboard.js reads the marker
+	 * when a state is saved on Agency Profile, so the view holding it is known
+	 * to be out of date and is fetched from the server the next time the agent
+	 * goes there, rather than the script trying to work out what this slot
+	 * should now say. Nothing about the slot's copy leaves PHP.
+	 */
+	?>
+	<section class="dash-slot" data-slot="<?php echo esc_attr( $dash_slot ); ?>" data-depends-on-states aria-label="What needs your attention">
 		<?php if ( 'live' === $dash_slot ) : ?>
 
 			<?php get_template_part( 'components/dashboard-slot-live', null, $dash_request ); ?>

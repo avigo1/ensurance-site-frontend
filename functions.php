@@ -4341,6 +4341,67 @@ function ensurance_dashboard_handle_states() {
 add_action( 'template_redirect', 'ensurance_dashboard_handle_states' );
 
 /**
+ * Rewrites the quiet panel's sentence now that the areas it names are STATES.
+ *
+ * Step 8 of the setup flow (design_handoff_agency_profile/SETUP-FLOW.md): when
+ * matching turns on, the panel that reports it has to name what it turned on FOR
+ * — the states the agent just set, and the inbox a match will be emailed to.
+ * ensurance_dashboard_quiet_panel() writes that sentence with the county
+ * vocabulary the dashboard was built on ("from Coastal, Ventura and Santa Barbara
+ * counties"), which since Step 7 renders as "from California and Texas counties":
+ * the one sentence confirming that matching is on, describing places that do not
+ * exist.
+ *
+ * A FILTER, NOT AN EDIT, per CLAUDE.md's standing rule — and the sentence is
+ * rebuilt whole rather than patched, because it is one sentence: only the middle
+ * clause changes, but a str_replace on "counties" would leave this depending on
+ * the exact words of a string it does not own. The coverage clause and the inbox
+ * clause are therefore restated here, and both keep their fallbacks — nothing in
+ * the sentence is allowed to render as a blank.
+ *
+ * THE CLOSING LINE CHANGES TOO. It read "message agent support and we will update
+ * your counties or coverage types", which was true while the whole agency record
+ * was read-only and is now a misdirection: states are the one thing the agent
+ * sets themselves, on the profile. It still says support for coverage types,
+ * which they cannot. It stays PLAIN TEXT — the handoff's Step 8 rules out an
+ * add-a-state affordance in this panel, and naming where the door is does not
+ * open one here.
+ *
+ * @param array $panel   The panel's copy.
+ * @param int   $user_id User the panel is being rendered for.
+ * @return array
+ */
+function ensurance_dashboard_quiet_panel_states( $panel, $user_id ) {
+    $states    = ensurance_dashboard_served_states( $user_id );
+    $coverages = ensurance_dashboard_coverage_types( $user_id );
+    $inbox     = ensurance_dashboard_request_inbox( $user_id );
+
+    // WHAT is being matched — the design's own phrasing, lowercased because it
+    // runs mid-sentence (see ensurance_dashboard_quiet_panel).
+    $kinds = ! empty( $coverages )
+        ? sprintf( 'every %s request', wp_sprintf( '%l', array_map( 'strtolower', $coverages ) ) )
+        : 'every request';
+
+    // …and WHERE from. No trailing noun: a state's name is already the whole
+    // answer, which is exactly what "counties" had to be added for.
+    $where = ! empty( $states )
+        ? sprintf( 'from %s', wp_sprintf( '%l', $states ) )
+        : 'matched to your states';
+
+    // …and WHERE IT GOES. The panel promising an email is only useful if the
+    // agent knows which inbox to watch.
+    $lands = ( '' !== $inbox )
+        ? sprintf( 'Nothing is required of you until one lands — we email %s the moment it does.', $inbox )
+        : 'Nothing is required of you until one lands — we email you the moment it does.';
+
+    $panel['body'] = sprintf( 'You are in the running for %s %s. %s', $kinds, $where, $lands );
+    $panel['note'] = 'To widen what reaches you, add states on your agency profile — or message agent support to change your coverage types.';
+
+    return $panel;
+}
+add_filter( 'ensurance_dashboard_quiet_panel', 'ensurance_dashboard_quiet_panel_states', 10, 2 );
+
+/**
  * The design's own sample ACCOUNT values — a card and a password age.
  *
  * PREVIEW ONLY, and gated exactly like ensurance_dashboard_sample_agency(): the

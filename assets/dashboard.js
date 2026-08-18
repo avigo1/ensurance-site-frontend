@@ -69,6 +69,23 @@
   }
 
   /**
+   * Whether the copy of `view` in this document has been invalidated by
+   * something the agent did on another view — see markStale() in the states
+   * picker below, which is what sets the attribute.
+   *
+   * The rule this file follows either way is the same: what a view says is
+   * PHP's answer, not this file's. Every view is rendered once, at load, so a
+   * change made after that leaves one of them describing a record that no
+   * longer exists — and the fix is to stop intercepting the click and let the
+   * server render it again, not to patch the stale copy from here.
+   */
+  function isStale(view) {
+    var stale = (shell.getAttribute('data-stale-views') || '').split(/\s+/).filter(Boolean);
+
+    return stale.indexOf(view) !== -1;
+  }
+
+  /**
    * Show `view`, lighting its rail row. Mirrors exactly what
    * dashboard-nav-item.php and page-dashboard.php emit server-side, so the
    * DOM after a click is indistinguishable from a fresh page load.
@@ -149,6 +166,15 @@
       return;
     }
 
+    // …and neither is intercepted a view this session has invalidated. No
+    // preventDefault, so the link the agent clicked navigates the ordinary way
+    // and PHP re-renders it: the setup card disappears the first time they open
+    // Today after setting a state, and comes back the first time they open it
+    // after clearing them. One page load, on a click they were making anyway.
+    if (isStale(view)) {
+      return;
+    }
+
     event.preventDefault();
 
     // Re-clicking the current row is a no-op, but should not stack a
@@ -163,6 +189,15 @@
   // Back / forward through the views the user just clicked.
   window.addEventListener('popstate', function () {
     var view = viewFromLocation();
+
+    // Same rule as the click: a stale view is not shown from the DOM. There is
+    // no link to fall back on here, so the page reloads at the URL the history
+    // entry already put in the address bar.
+    if (isStale(view)) {
+      window.location.reload();
+      return;
+    }
+
     show(hasView(view) ? view : DEFAULT_VIEW, false);
   });
 
@@ -741,6 +776,44 @@
     error.setAttribute('hidden', '');
   }
 
+  /* A SAVED CHANGE DATES THE REST OF THE PAGE. Every view is in this document
+     already, rendered when it loaded, so Today is still showing the slot the
+     old list produced — the setup card an agent has just finished with, or the
+     quiet card they have just emptied out from under.
+
+     This does not fix that by re-rendering anything: it marks the views that
+     are a rendering of the served states, and the view switcher stops
+     intercepting the links to them (see isStale above), so the server draws
+     them again on the next click. What the slot should now say stays in PHP,
+     where the four states and their copy already live.
+
+     WHICH views is read from the markup, not decided here:
+     components/dashboard-view-today.php puts data-depends-on-states on the
+     priority slot. Anything else that comes to depend on the list says so the
+     same way and needs no change to this file. */
+  function markStale() {
+    var shell = document.querySelector('.dashboard-shell');
+    var dependents = document.querySelectorAll('[data-depends-on-states]');
+    var stale;
+
+    if (!shell) {
+      return;
+    }
+
+    stale = (shell.getAttribute('data-stale-views') || '').split(/\s+/).filter(Boolean);
+
+    Array.prototype.forEach.call(dependents, function (dependent) {
+      var view = dependent.closest ? dependent.closest('.dash-view') : null;
+      var slug = view ? view.getAttribute('data-view') : '';
+
+      if (slug && stale.indexOf(slug) === -1) {
+        stale.push(slug);
+      }
+    });
+
+    shell.setAttribute('data-stale-views', stale.join(' '));
+  }
+
   /* One request per change, carrying the state that changed and the form's own
      nonce. `undo` puts the list back if it does not land — it is passed rather
      than derived, because by the time the answer arrives the agent may have
@@ -770,6 +843,7 @@
     }).then(function (response) {
       if (response.ok) {
         hideError();
+        markStale();
         return;
       }
 
