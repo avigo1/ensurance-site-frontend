@@ -2752,6 +2752,14 @@ button.dash-requests__line[aria-expanded="true"] .dash-requests__caret svg {
   font-size: var(--text-sm);
   line-height: 1.3;
   color: var(--primary);
+  /* A CHIP IS A CONTROL, SO IT DOES NOT SELECT LIKE PROSE. Clicking the pill
+     anywhere but the × does nothing by design — but the two spans inside it
+     are ordinary text, so the click landed as a text selection and painted
+     the browser's selection wash across the state's name, which reads as the
+     chip whiting out under the cursor. The × is a <button> and was never
+     selectable; this gives the rest of the pill the same behaviour. */
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 /* The USPS code, in mono. It is the state's identifier where the name beside
