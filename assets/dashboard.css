@@ -2574,13 +2574,18 @@ button.dash-requests__line[aria-expanded="true"] .dash-requests__caret svg {
 }
 
 /* The accent border on focus is the design's; the ring is IN ADDITION to it,
-   not instead of it — the same pairing as the select. */
-.dash-profile__input:focus {
+   not instead of it — the same pairing as the select.
+
+   Scoped to .dashboard-page for the reason spelled out below: Kadence's
+   input[type=…]:focus rules are (0,2,1) and would outrank a bare
+   .dash-profile__input:focus (0,2,0), which is how a focus indicator ends up
+   silently missing on one page and present on another. */
+.dashboard-page .dash-profile__input:focus {
   border-color: var(--accent);
   outline: none;
 }
 
-.dash-profile__input:focus-visible {
+.dashboard-page .dash-profile__input:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
@@ -2711,6 +2716,24 @@ button.dash-requests__line[aria-expanded="true"] .dash-requests__caret svg {
   margin: 0 0 14px;
   padding: 0;
   list-style: none;
+}
+
+/* WHEN A SAVE DID NOT LAND. Sits with the list it is about, between the chips
+   and the picker, spaced like the empty line it takes the place of in the eye.
+   Red — the design system's --error-fg, written out because home.css carries no
+   token for it (same reason the sunken fill is) — and it is the only red on the
+   agent side: everything else that could have been an alarm here is a statement
+   about a record. No box, no icon: the script has already put the list back, so
+   this line explains a correction the agent can already see rather than
+   demanding an action. */
+.dash-profile__error {
+  margin: 0 0 14px;
+  max-width: 560px;
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  line-height: var(--leading-body);
+  color: #b42318;
+  text-wrap: pretty;
 }
 
 /* THE CHIP. Navy tint, navy hairline, navy text — the same tokens the coverage

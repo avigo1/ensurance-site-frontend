@@ -556,24 +556,34 @@
 
    The other interactive region on the dashboard's Agency Profile view — the
    agency-name field above is the first (components/dashboard-view-profile.php):
-   add a state, remove a state, and keep the count, the empty line and the
-   hidden CSV field in step with the chips.
+   add a state, remove a state, keep the count, the empty line and the hidden
+   CSV field in step with the chips, and save each change.
 
-   NOTHING IS SAVED YET. Every change here is a change to the page and to the
-   hidden field, and stops there — persistence is being wired separately.
-   persistStates() below is the single marked seam where that request goes;
-   swapping its body is the whole of the change, because it is the only place
-   the rest of this file reports a change to.
+   THE PAGE IS ALREADY A WORKING FORM before this file runs. "Add state" and
+   every chip's × are submit buttons carrying the state they act on, so with no
+   script at all the picker still works — one reload per change, through
+   ensurance_dashboard_handle_states(). What this adds is that it stops doing
+   that: the change is made in place and the same intent is posted with fetch,
+   so an agent adding four states reads the same page throughout.
+
+   IT POSTS AN INTENT, NOT THE LIST. "add California", never the whole CSV —
+   two changes in quick succession therefore both land, and a page left open in
+   another tab cannot write back a list that is no longer true. The hidden field
+   is still kept current; it is simply not what saves.
+
+   A CHANGE THAT DOES NOT LAND IS PUT BACK. On a refused or failed post the chip
+   is restored (or re-removed) and the error line appears, so the list on screen
+   is never a claim about the record that the record does not agree with.
 
    NO DUPLICATES BY CONSTRUCTION. An added state is removed from the select and
    a removed state is put back in alphabetical order, so the picker cannot
    offer a state the agent already has and there is no wrong choice to guard
    against after the fact — the same rule PHP applies on first render
-   (ensurance_dashboard_state_choices).
+   (ensurance_dashboard_state_choices) and again on save.
 
-   Degrades to nothing: with JS off the view still renders the record, the
-   chips and the picker; only the add/remove stops working, and nothing was
-   saved by it anyway.
+   LICENSING IS NOT THIS FILE'S BUSINESS. Nothing here blocks a state, checks
+   one, or marks one verified — that is server-side truth, and the closing note
+   on the view is what says so.
    =================================================================== */
 (function () {
   'use strict';
@@ -584,26 +594,34 @@
     return;
   }
 
+  var form = root.querySelector('[data-states-form]');
   var select = root.querySelector('[data-state-select]');
   var addBtn = root.querySelector('[data-state-add]');
   var list = root.querySelector('[data-states-list]');
   var empty = root.querySelector('[data-states-empty]');
   var count = root.querySelector('[data-state-count]');
   var value = root.querySelector('[data-states-value]');
+  var error = root.querySelector('[data-states-error]');
 
-  if (!select || !addBtn || !list || !empty || !count || !value) {
+  if (!form || !select || !addBtn || !list || !empty || !count || !value || !error) {
     return;
   }
 
-  /* THE SEAM. Called after every add and remove with the full list as it now
-     stands. It deliberately does not post: the storage hook lands separately,
-     and a fetch to an endpoint that does not exist would fail silently on
-     every click. Replace this body — nothing else in this file needs to
-     change. */
-  function persistStates(csv) { // eslint-disable-line no-unused-vars
-    // Intentionally empty. The served states are in `csv` (comma-separated
-    // state names) and in the hidden input this function is called after.
+  /* NO FETCH, NO INTERCEPTION. Everything below replaces a form that already
+     works with something nicer; a browser that cannot make the request must be
+     left with the working version rather than given a picker that changes the
+     page and saves nothing. */
+  if (!window.fetch || !window.URLSearchParams) {
+    return;
   }
+
+  var nonce = form.querySelector('[name="dash_states_nonce"]');
+
+  /* Present only under `?slot=quiet`, where the chips are the sample agency's.
+     A change to a sample is not a change to a record, so nothing is posted —
+     the same conclusion ensurance_dashboard_handle_states() reaches from the
+     same marker when the form posts the ordinary way. */
+  var preview = form.querySelector('[data-states-preview]');
 
   function currentStates() {
     return Array.prototype.map.call(list.querySelectorAll('[data-state]'), function (chip) {
@@ -629,7 +647,18 @@
     }
 
     value.value = states.join(',');
-    persistStates(value.value);
+  }
+
+  function chipFor(name) {
+    return Array.prototype.filter.call(list.querySelectorAll('[data-state]'), function (chip) {
+      return chip.getAttribute('data-state') === name;
+    })[0] || null;
+  }
+
+  function optionFor(name) {
+    return Array.prototype.filter.call(select.options, function (option) {
+      return option.value === name;
+    })[0] || null;
   }
 
   /* Put an option back where it belongs rather than on the end: the list is
@@ -655,44 +684,34 @@
     select.insertBefore(option, before);
   }
 
-  function removeChip(chip) {
-    var name = chip.getAttribute('data-state');
-    var codeEl = chip.querySelector('.dash-profile__chip-code');
+  /* ── The two DOM primitives. Neither posts: they are called both by the
+     agent's own action and by the undo that follows a failed save, and an undo
+     that posted would be a second change to report. ── */
 
-    chip.parentNode.removeChild(chip);
-    restoreOption(name, codeEl ? codeEl.textContent : '');
-    sync();
-  }
+  function addChip(name, code) {
+    var option = optionFor(name);
+    var chip = document.createElement('li');
 
-  function addState() {
-    var name = select.value;
-    var option = select.options[select.selectedIndex];
-    var code = option ? option.getAttribute('data-code') : '';
-    var chip;
-
-    // A no-op when nothing is chosen, and — belt and braces, since the option
-    // is removed on add — when the state is somehow already listed.
-    if (!name || currentStates().indexOf(name) !== -1) {
-      return;
-    }
-
-    chip = document.createElement('li');
     chip.className = 'dash-profile__chip';
     chip.setAttribute('data-state', name);
     chip.innerHTML =
       (code ? '<span class="dash-profile__chip-code"></span>' : '') +
       '<span class="dash-profile__chip-name"></span>' +
-      '<button type="button" class="dash-profile__chip-remove" data-state-remove>' +
+      '<button type="submit" class="dash-profile__chip-remove" name="dash_state_remove" data-state-remove>' +
       '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>' +
       '</button>';
 
-    // textContent rather than interpolation: the names come from our own
-    // select, but building markup out of values is how that stops being true
-    // the first time this list comes from storage.
+    // textContent and .value rather than interpolation: the names come from our
+    // own select, but building markup out of values is how that stops being
+    // true the first time this list comes from storage.
     if (code) {
       chip.querySelector('.dash-profile__chip-code').textContent = code;
     }
     chip.querySelector('.dash-profile__chip-name').textContent = name;
+
+    // The same submit value the server-rendered chips carry, so a chip added
+    // here removes itself the no-script way too if the script later fails.
+    chip.querySelector('[data-state-remove]').value = name;
     chip.querySelector('[data-state-remove]').setAttribute('aria-label', 'Remove ' + name);
 
     list.appendChild(chip);
@@ -701,11 +720,111 @@
       option.parentNode.removeChild(option);
     }
 
-    select.value = '';
     sync();
   }
 
-  addBtn.addEventListener('click', addState);
+  function removeChip(chip) {
+    var codeEl = chip.querySelector('.dash-profile__chip-code');
+
+    chip.parentNode.removeChild(chip);
+    restoreOption(chip.getAttribute('data-state'), codeEl ? codeEl.textContent : '');
+    sync();
+  }
+
+  /* ── Saving ── */
+
+  function showError() {
+    error.removeAttribute('hidden');
+  }
+
+  function hideError() {
+    error.setAttribute('hidden', '');
+  }
+
+  /* One request per change, carrying the state that changed and the form's own
+     nonce. `undo` puts the list back if it does not land — it is passed rather
+     than derived, because by the time the answer arrives the agent may have
+     changed something else. */
+  function post(field, name, undo) {
+    var body;
+
+    if (preview) {
+      return;
+    }
+
+    body = new window.URLSearchParams();
+    body.set(field, name);
+    body.set('dash_states_nonce', nonce ? nonce.value : '');
+    body.set('dash_states_async', '1');
+
+    function failed() {
+      undo();
+      showError();
+    }
+
+    window.fetch(form.action, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+      body: body.toString()
+    }).then(function (response) {
+      if (response.ok) {
+        hideError();
+        return;
+      }
+
+      failed();
+    }).catch(failed);
+  }
+
+  /* ── The two things an agent can do ── */
+
+  function addState() {
+    var name = select.value;
+    var option = select.options[select.selectedIndex];
+    var code = option ? option.getAttribute('data-code') : '';
+
+    // A no-op when nothing is chosen, and — belt and braces, since the option
+    // is removed on add — when the state is somehow already listed. Nothing is
+    // posted and nothing is said: there was no wrong choice to report.
+    if (!name || currentStates().indexOf(name) !== -1) {
+      return;
+    }
+
+    addChip(name, code);
+
+    // Back to the placeholder, so the control reads as ready for the next one
+    // rather than still showing what was just added.
+    select.value = '';
+
+    post('dash_state_add', name, function () {
+      var chip = chipFor(name);
+
+      if (chip) {
+        removeChip(chip);
+      }
+    });
+  }
+
+  function removeState(chip) {
+    var codeEl = chip.querySelector('.dash-profile__chip-code');
+    var name = chip.getAttribute('data-state');
+    var code = codeEl ? codeEl.textContent : '';
+
+    removeChip(chip);
+
+    post('dash_state_remove', name, function () {
+      addChip(name, code);
+    });
+  }
+
+  /* preventDefault on the click of a submit button is what stops the form
+     submitting — the post below replaces the navigation, it does not follow
+     it. */
+  addBtn.addEventListener('click', function (event) {
+    event.preventDefault();
+    addState();
+  });
 
   // Delegated, so chips added after load carry the behavior without being
   // wired individually.
@@ -713,8 +832,17 @@
     var button = event.target.closest ? event.target.closest('[data-state-remove]') : null;
 
     if (button) {
-      removeChip(button.closest('[data-state]'));
+      event.preventDefault();
+      removeState(button.closest('[data-state]'));
     }
+  });
+
+  /* Enter inside the select submits the form on its own, without going through
+     either handler above. The browser would use the first submit button — "Add
+     state" — so that is exactly what this does, minus the navigation. */
+  form.addEventListener('submit', function (event) {
+    event.preventDefault();
+    addState();
   });
 
   /* ARRIVING WITH NOTHING SET, the picker is the only thing on the view worth

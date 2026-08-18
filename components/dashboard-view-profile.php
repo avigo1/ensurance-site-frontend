@@ -30,12 +30,14 @@
  * real <label for>s; the name's label lives inside its <dt>, which keeps the grid
  * one list rather than splitting it into a form and a record.
  *
- * THE STATES DO NOT PERSIST YET. Adding and removing one updates the page and the
- * hidden CSV field (ensurance_dashboard_served_states_csv), and stops there — that
- * storage is Step 7 and is being wired separately. assets/dashboard.js holds the
- * one marked stub where that save goes. An agent's picks therefore do not survive
- * a refresh, which is why nothing here claims they are saved. The NAME does
- * survive one.
+ * THE STATES PERSIST TOO, as of Step 7. The picker is a real form: "Add state"
+ * and each chip's × are submit buttons carrying the state they act on, so it works
+ * with JavaScript off, one reload per change. With the script, the change is made
+ * in place and the same intent — "add California", never the whole list — is
+ * posted with fetch, so the page stays where it is; a change that does not land is
+ * put back and said so. Both paths end in ensurance_dashboard_handle_states(), and
+ * because the list resolves through ensurance_dashboard_service_areas(), setting a
+ * state here is what turns matching on.
  *
  * NOTHING IS INVENTED. The identity chips always render, and a value nothing
  * resolves says "Not on file" in the faint shade rather than being filled in — the
@@ -203,11 +205,19 @@ if ( 0 === $state_total ) {
 
 	<?php
 	/*
-	 * STEP 3 — States you serve. The only interactive region on the view.
+	 * STEP 3 — States you serve, and Step 7 of the setup flow: the list persists.
 	 *
 	 * data-states marks the root assets/dashboard.js works within, so the script
 	 * has one container to scope every query to rather than reaching across the
 	 * whole dashboard for chips that only exist here.
+	 *
+	 * IT IS A REAL FORM, and every control in it is a real submit button carrying
+	 * the state it acts on — "Add state" sends the select's choice, each chip's ×
+	 * sends its own name. So the picker works with JavaScript off, one reload per
+	 * change, through the same handler
+	 * (ensurance_dashboard_handle_states). With the script, nothing here submits:
+	 * it updates the list in place and posts the same intent with fetch, so the
+	 * page the agent is reading stays where it is.
 	 */
 	?>
 	<section class="dash-profile__states" data-states aria-labelledby="dash-profile-states">
@@ -223,6 +233,20 @@ if ( 0 === $state_total ) {
 		</div>
 
 		<p class="dash-profile__section-note">Requests from anywhere in these states reach you.</p>
+
+		<form method="post" action="<?php echo esc_url( ensurance_dashboard_profile_url() ); ?>" data-states-form>
+
+		<?php wp_nonce_field( 'ensurance_dashboard_states', 'dash_states_nonce' ); ?>
+
+		<?php
+		// Under `?slot=quiet` these chips are the sample agency's, so a change to
+		// them must not be filed against a real account — see
+		// ensurance_dashboard_handle_states(). The script reads the same marker and
+		// skips the request entirely.
+		if ( '' !== ensurance_dashboard_priority_preview() ) :
+			?>
+			<input type="hidden" name="dash_states_preview" value="1" data-states-preview />
+		<?php endif; ?>
 
 		<?php
 		// The empty line and the list are both always in the DOM — the script
@@ -243,14 +267,28 @@ if ( 0 === $state_total ) {
 
 					<span class="dash-profile__chip-name"><?php echo esc_html( $profile_state ); ?></span>
 
-					<?php // A real <button>, not a span: it is an action, it takes focus, and it says what it removes rather than announcing itself as an unlabelled ×. ?>
-					<button type="button" class="dash-profile__chip-remove" data-state-remove aria-label="<?php echo esc_attr( sprintf( 'Remove %s', $profile_state ) ); ?>">
+					<?php
+					// A real <button>, not a span: it is an action, it takes focus,
+					// and it says what it removes rather than announcing itself as
+					// an unlabelled ×. It SUBMITS, carrying the state as its value,
+					// so the removal works without the script; with the script the
+					// click is intercepted before the form ever submits.
+					?>
+					<button type="submit" class="dash-profile__chip-remove" name="dash_state_remove" value="<?php echo esc_attr( $profile_state ); ?>" data-state-remove aria-label="<?php echo esc_attr( sprintf( 'Remove %s', $profile_state ) ); ?>">
 						<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
 					</button>
 
 				</li>
 			<?php endforeach; ?>
 		</ul>
+
+		<?php
+		// WHEN A SAVE DOES NOT LAND. Hidden until it happens, and the script puts
+		// the list back the way the record has it before showing this — so the line
+		// and the chips above it never disagree. There is no retry button: a change
+		// the agent can simply make again does not need one.
+		?>
+		<p class="dash-profile__error" data-states-error hidden>That change was not saved — the list above is the record as we hold it. Try again.</p>
 
 		<div class="dash-profile__add">
 
@@ -263,23 +301,30 @@ if ( 0 === $state_total ) {
 			?>
 			<label class="sr-only" for="dash-profile-state-select">Add a state you are licensed in</label>
 
-			<select class="dash-profile__select" id="dash-profile-state-select" data-state-select>
+			<?php
+			// `name` is what makes the no-script path work: the select IS the add
+			// field, and "Add state" is the plain submit button beside it.
+			?>
+			<select class="dash-profile__select" id="dash-profile-state-select" name="dash_state_add" data-state-select>
 				<option value="">Add a state you are licensed in…</option>
 				<?php foreach ( $state_choices as $choice_code => $choice_name ) : ?>
 					<option value="<?php echo esc_attr( $choice_name ); ?>" data-code="<?php echo esc_attr( $choice_code ); ?>"><?php echo esc_html( $choice_name ); ?></option>
 				<?php endforeach; ?>
 			</select>
 
-			<button type="button" class="dash-profile__add-btn" data-state-add>Add state</button>
+			<button type="submit" class="dash-profile__add-btn" data-state-add>Add state</button>
 
 		</div>
 
 		<?php
-		// THE VALUE STORAGE WILL READ. One comma-separated line, kept in step with
-		// the chips by the script, so whatever eventually saves this reads a field
-		// instead of walking the DOM. It posts nowhere today.
+		// THE PUBLISHED LIST. One comma-separated line, kept in step with the chips
+		// by the script, so anything reading the current list reads a field instead
+		// of walking the DOM. It is not what saves — a change posts the state it
+		// changed, not this snapshot (ensurance_dashboard_handle_states).
 		?>
 		<input type="hidden" name="served_states" value="<?php echo esc_attr( ensurance_dashboard_served_states_csv() ); ?>" data-states-value />
+
+		</form>
 
 	</section>
 

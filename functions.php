@@ -1952,11 +1952,12 @@ function ensurance_dashboard_sample_matching() {
  * whose `county` names ONE county inline ("Auto coverage — Coastal County") and
  * therefore carries the word itself.
  *
- * THERE ARE NO SERVICE AREAS TO RETURN TODAY. No funnel captures them — it is
- * the same gap that keeps ensurance_dashboard_priority_state() in `setup` — so
- * this returns an empty array and the sentence falls back to naming no counties
- * rather than inventing some. The admin preview is the one exception, for the
- * same reason the live card has one.
+ * THIS RESOLVER ITSELF HOLDS NOTHING: it returns an empty array and leaves the
+ * list to its filter, which is where the agent's own states now attach
+ * (ensurance_dashboard_stored_service_areas, Step 7 of the setup flow — the
+ * profile's picker writes them). An agency that has set none comes back empty and
+ * the sentence names no areas rather than inventing some. The admin preview is the
+ * one exception, for the same reason the live card has one.
  *
  * @param int $user_id Optional. Defaults to the current user.
  * @return string[] County names without the word "County", '' entries dropped.
@@ -2351,9 +2352,9 @@ function ensurance_dashboard_matchable( $user_id = 0 ) {
  * value with several inputs. Priority 9 puts it BEFORE the decided check, which
  * must keep the last word — a decision the agent just made outranks both.
  *
- * Nothing reaches this today: no funnel captures service areas or coverage
- * types, so the checklist can never come back finished and `setup` still wins.
- * It is the branch the real profile lights up, with no change here.
+ * This is the branch the profile lights up, and since Step 7 of the setup flow it
+ * is reachable: an agent who adds a state on Agency Profile finishes the
+ * checklist, and the slot moves from `setup` to `quiet` with no change here.
  *
  * @param string $state   State resolved so far.
  * @param int    $user_id User the slot is being resolved for.
@@ -2382,10 +2383,12 @@ add_filter( 'ensurance_dashboard_priority_state', 'ensurance_dashboard_matchable
  * vocabulary leaking into it, and that retiring the county naming later is a
  * change to this function alone.
  *
- * NOTHING RESOLVES IT TODAY. No storage exists yet — that hook is being wired
- * separately — so this returns an empty array for every real agent, which is
- * exactly what keeps ensurance_dashboard_can_receive_leads() false and the setup
- * card on screen.
+ * WHAT RESOLVES IT. Storage landed with Step 7 of the setup flow:
+ * ensurance_dashboard_stored_service_areas() attaches the agent's own list to that
+ * filter, so this returns what they set on the Agency Profile and comes back empty
+ * only until they set it — which is exactly what keeps
+ * ensurance_dashboard_can_receive_leads() false and the setup card on screen until
+ * then.
  *
  * @param int $user_id Optional. Defaults to the current user.
  * @return string[] State names, empty when none are set.
@@ -2486,11 +2489,15 @@ function ensurance_dashboard_state_choices( $user_id = 0 ) {
 /**
  * The served states as ONE comma-separated line — the value storage will read.
  *
- * The profile posts nothing today: the field is built, the persistence behind it
- * is not (it is being wired separately). This is the shape that was settled on for
- * when it is — "California,Texas,Nevada", one meta value, no JSON and no separate
- * table — and it is published into the page as a hidden input so the save, when it
- * arrives, has a field to read rather than a DOM to reconstruct the list from.
+ * "California,Texas,Nevada" — the shape the record is stored in
+ * (ENSURANCE_DASHBOARD_STATES_META: one meta value, no JSON and no separate
+ * table). It is published into the page as a hidden input so anything reading the
+ * current list reads a field rather than reconstructing it from the DOM.
+ *
+ * IT IS NOT WHAT SAVES. Step 7 posts an intent — "add California", "remove Texas"
+ * — rather than this snapshot, so two quick changes cannot overwrite each other
+ * (see ensurance_dashboard_handle_states). This stays the published value and
+ * assets/dashboard.js keeps it in step with the chips.
  *
  * @param int $user_id Optional. Defaults to the current user.
  * @return string Comma-separated state names, '' when none are set.
@@ -4102,6 +4109,236 @@ function ensurance_dashboard_agency_name_saved() {
 
     return ( 'name' === sanitize_key( wp_unslash( $_GET['saved'] ) ) );
 }
+
+/**
+ * User-meta key holding the states an agency writes in.
+ *
+ * ONE COMMA-SEPARATED LINE — "California,Texas,Nevada" — which is the shape
+ * ensurance_dashboard_served_states_csv() published into the page as a hidden
+ * field while the storage behind it was still being written. No JSON, no
+ * separate table: the list is short, closed
+ * (ensurance_dashboard_us_states) and only ever read whole.
+ *
+ * INTERIM STORE, in the same sense as ENSURANCE_DASHBOARD_DECISION_META. The real
+ * home for served states is whatever eventually matches a request against an
+ * agency; when that exists it takes over through the
+ * `ensurance_dashboard_service_areas` filter and this can go, with no change to
+ * anything that reads it.
+ */
+if ( ! defined( 'ENSURANCE_DASHBOARD_STATES_META' ) ) {
+    define( 'ENSURANCE_DASHBOARD_STATES_META', '_ensurance_served_states' );
+}
+
+/**
+ * The canonical name for a state, '' when it is not one of the 50 plus DC.
+ *
+ * THE CLOSED LIST IS THE VALIDATION, and this is where a value meets it: whatever
+ * arrives — from the select, from a hand-built post, from a meta row written
+ * years ago — is either one of our states or it is nothing. "california" and
+ * " California " come back as "California"; "Califnoria" comes back as '' and is
+ * dropped rather than stored as a place that does not exist.
+ *
+ * The inverse of ensurance_dashboard_state_code(), and built on it, so there is
+ * one matcher and not two.
+ *
+ * @param string $name Name as it arrived.
+ * @return string The state's name as this product spells it, or ''.
+ */
+function ensurance_dashboard_state_name( $name ) {
+    $code   = ensurance_dashboard_state_code( $name );
+    $states = ensurance_dashboard_us_states();
+
+    return isset( $states[ $code ] ) ? $states[ $code ] : '';
+}
+
+/**
+ * The states this agent has stored, in the order they were added.
+ *
+ * Every name is put back through ensurance_dashboard_state_name(), so a row that
+ * predates the closed list — or one a human edited — cannot put a state on the
+ * profile that the picker would never have offered. Duplicates collapse for the
+ * same reason: the chips are a set, however the meta got written.
+ *
+ * ORDER IS INSERTION ORDER, not alphabetical. The chips are a record of what the
+ * agent did, and a list that reshuffles itself after every add makes the one that
+ * was just added the hardest to find.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return string[] State names, empty when none are stored.
+ */
+function ensurance_dashboard_stored_states( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $stored  = (string) get_user_meta( $user_id, ENSURANCE_DASHBOARD_STATES_META, true );
+    $states  = array();
+
+    if ( '' === trim( $stored ) ) {
+        return $states;
+    }
+
+    foreach ( explode( ',', $stored ) as $piece ) {
+        $name = ensurance_dashboard_state_name( $piece );
+
+        if ( '' !== $name && ! in_array( $name, $states, true ) ) {
+            $states[] = $name;
+        }
+    }
+
+    return $states;
+}
+
+/**
+ * Hands the stored states to the resolver the whole product already reads.
+ *
+ * Step 7 of the setup flow (design_handoff_agency_profile/SETUP-FLOW.md). THE ONE
+ * SEAM: ensurance_dashboard_service_areas() is what
+ * ensurance_dashboard_served_states(), the profile's chips, the picker's
+ * remaining choices, the setup checklist and therefore
+ * ensurance_dashboard_can_receive_leads() all reduce to. Attaching storage here
+ * means matching switches on and off with the list and nothing else had to be
+ * told about it — including Today's setup card, which reads the same value.
+ *
+ * A FILTER, NOT AN EDIT, per CLAUDE.md's standing rule and per that resolver's own
+ * docblock ("the hook the real agency profile attaches to when it exists").
+ *
+ * THE PREVIEW STILL WINS, exactly as it does for the agency name: a non-empty
+ * $areas means `?slot=quiet` resolved the sample, and the preview is there to show
+ * the view populated. Outside it $areas is always empty, so a real agent sees
+ * their own list.
+ *
+ * @param string[] $areas   Areas resolved so far (the sample, or empty).
+ * @param int      $user_id User the dashboard is being rendered for.
+ * @return string[]
+ */
+function ensurance_dashboard_stored_service_areas( $areas, $user_id ) {
+    if ( ! empty( $areas ) ) {
+        return $areas;
+    }
+
+    return ensurance_dashboard_stored_states( $user_id );
+}
+add_filter( 'ensurance_dashboard_service_areas', 'ensurance_dashboard_stored_service_areas', 10, 2 );
+
+/**
+ * Answers a states post — 204 to the script, a redirect to a browser.
+ *
+ * TWO CALLERS, ONE HANDLER. The picker sends its add and remove with fetch, so the
+ * page it is already on stays put and the chips do not blink; a browser with no
+ * fetch submits the same form the ordinary way and needs to be sent somewhere.
+ * The difference is one hidden field, and it changes nothing about what was
+ * written — this is not a second endpoint, it is the same post answered in the
+ * shape its sender can read.
+ *
+ * A REFUSAL IS A REFUSAL EITHER WAY. 403 tells the script the change did not
+ * land, which is what makes it put the chip back and say so. The form path
+ * returns without redirecting instead — the view renders again from the record,
+ * which is the same correction stated by simply showing the truth. That is the
+ * choice ensurance_dashboard_handle_decision() makes on a bad nonce, and for the
+ * same reason.
+ *
+ * ALWAYS EXITS on the fetch path, and on a successful form post.
+ *
+ * @param bool $ok Whether the change was accepted.
+ */
+function ensurance_dashboard_states_response( $ok ) {
+    if ( ! empty( $_POST['dash_states_async'] ) ) {
+        status_header( $ok ? 204 : 403 );
+        exit;
+    }
+
+    if ( ! $ok ) {
+        return;
+    }
+
+    wp_safe_redirect( ensurance_dashboard_profile_url() );
+    exit;
+}
+
+/**
+ * Adds or removes one served state.
+ *
+ * Step 7 of the setup flow. THE EXISTING MUTATION, in the sense the handoff means
+ * it: one update_user_meta() against the agency record, no endpoint and no REST
+ * route — the profile posts to the page it is on, the way Today's Accept / Pass
+ * buttons do (ensurance_dashboard_handle_decision).
+ *
+ * AN INTENT, NOT A SNAPSHOT. The post says "add California" or "remove Texas"; it
+ * never sends the whole list. Two changes made in quick succession therefore both
+ * land, in either order, and a stale page cannot overwrite the record with the
+ * list as it looked a minute ago. The hidden CSV field keeps its documented job —
+ * publishing the current list into the page — and is no longer what saves.
+ *
+ * REMOVE OUTRANKS ADD, because the no-script path posts both: a chip's × is a
+ * submit button inside the same form as the select, so pressing it sends whatever
+ * the select happens to be showing alongside it. One of the two has to win and it
+ * is the button the agent actually pressed.
+ *
+ * NO-OPS ARE SUCCESSES, not errors: nothing selected, a state already served, a
+ * state removed that was not there, a name that is not one of ours. The design's
+ * rule is that the picker cannot offer a wrong choice
+ * (ensurance_dashboard_state_choices removes what is already served), so a
+ * duplicate arriving here is a stale page or a hand-built post — and the record
+ * ends up in the state the agent asked for either way, which is the definition of
+ * nothing having gone wrong.
+ *
+ * LICENSING IS NOT CHECKED HERE, and must not be. Verification is server-side
+ * truth held elsewhere (see the closing note on the view): this never blocks a
+ * state, never marks one verified, and never says anything about one. It records
+ * what the agent claims to write in.
+ *
+ * A failed or expired nonce writes nothing and says so (403 / no redirect).
+ */
+function ensurance_dashboard_handle_states() {
+    $adding   = isset( $_POST['dash_state_add'] );
+    $removing = isset( $_POST['dash_state_remove'] );
+
+    // Cheapest test first — this runs on every front-end request.
+    if ( ( ! $adding && ! $removing ) || ! is_page( 'dashboard' ) || ! is_user_logged_in() ) {
+        return;
+    }
+
+    $nonce = isset( $_POST['dash_states_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['dash_states_nonce'] ) ) : '';
+
+    if ( ! wp_verify_nonce( $nonce, 'ensurance_dashboard_states' ) ) {
+        ensurance_dashboard_states_response( false );
+        return;
+    }
+
+    /*
+     * A CHANGE MADE IN THE PREVIEW WRITES NOTHING. Under `?slot=quiet` the chips
+     * are the sample agency's, not this account's, so adding to them would file
+     * the sample against a real user — the same rule the agency name follows
+     * (ensurance_dashboard_handle_agency_name). The script does not even send the
+     * request; this is the guard for the form path, which cannot know.
+     */
+    if ( ! empty( $_POST['dash_states_preview'] ) ) {
+        ensurance_dashboard_states_response( true );
+        return;
+    }
+
+    $user_id = get_current_user_id();
+    $states  = ensurance_dashboard_stored_states( $user_id );
+
+    if ( $removing ) {
+        $target = ensurance_dashboard_state_name( sanitize_text_field( wp_unslash( $_POST['dash_state_remove'] ) ) );
+        $states = array_values( array_diff( $states, array( $target ) ) );
+    } else {
+        $target = ensurance_dashboard_state_name( sanitize_text_field( wp_unslash( $_POST['dash_state_add'] ) ) );
+
+        // '' is the placeholder option, or a name that is not one of ours.
+        if ( '' !== $target && ! in_array( $target, $states, true ) ) {
+            $states[] = $target;
+        }
+    }
+
+    // Written even when the list did not change: the value stored is the value
+    // resolved, and a write of the same line costs nothing. Removing the last
+    // state stores '' — an empty list is a record, not a missing one, and it is
+    // what turns matching back off (ensurance_dashboard_can_receive_leads).
+    update_user_meta( $user_id, ENSURANCE_DASHBOARD_STATES_META, implode( ',', $states ) );
+
+    ensurance_dashboard_states_response( true );
+}
+add_action( 'template_redirect', 'ensurance_dashboard_handle_states' );
 
 /**
  * The design's own sample ACCOUNT values — a card and a password age.
