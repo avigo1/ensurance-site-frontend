@@ -3801,6 +3801,368 @@ function ensurance_dashboard_hide_passed_rows( $rows ) {
 add_filter( 'ensurance_dashboard_request_rows', 'ensurance_dashboard_hide_passed_rows', 99 );
 
 /**
+ * The Make webhook History reads an agent's purchased leads from.
+ *
+ * A CAPABILITY URL, so it lives in wp-config.php per environment and is never
+ * committed — anyone holding it can ask for any agent's leads. Same handling as
+ * ENSURANCE_AGENT_UPSERT_WEBHOOK_URL, which the activation webhook above reads
+ * the same way:
+ *
+ *     define( 'ENSURANCE_AGENT_LEADS_WEBHOOK_URL', 'https://hook.us2.make.com/…' );
+ *
+ * Unset returns '' and the whole integration no-ops — History falls back to
+ * whatever it resolved without it, which is the live row or the empty line. A
+ * dashboard that renders without its leads is a worse dashboard; one that fatals
+ * because a constant is missing is a broken site.
+ *
+ * @return string Configured webhook URL, or '' when there is none.
+ */
+function ensurance_dashboard_leads_webhook_url() {
+    $url = ( defined( 'ENSURANCE_AGENT_LEADS_WEBHOOK_URL' ) && ENSURANCE_AGENT_LEADS_WEBHOOK_URL )
+        ? (string) ENSURANCE_AGENT_LEADS_WEBHOOK_URL
+        : '';
+
+    /**
+     * Filter the purchased-leads webhook URL.
+     *
+     * @param string $url Configured URL, '' when unset.
+     */
+    return (string) apply_filters( 'ensurance_dashboard_leads_webhook_url', $url );
+}
+
+/**
+ * The tones a lead's signal chip may carry — THE list.
+ *
+ * A closed set for the same reason ensurance_dashboard_request_statuses() is one:
+ * a tone that arrives from outside and is not one of these has no styling behind
+ * it, and rendering it anyway produces an unstyled chip rather than an obvious
+ * error. Unknown tones are dropped in the normalizer.
+ *
+ * @return array<int,string>
+ */
+function ensurance_dashboard_signal_tones() {
+    return array( 'ok', 'warn', 'error', 'neutral' );
+}
+
+/**
+ * Every lead this agent has PURCHASED, newest first — read from the Make webhook.
+ *
+ * THE REQUEST. One POST, JSON body, flat — the same shape
+ * ensurance_notify_agent_row_on_activation() already sends the Agent Row Upsert
+ * scenario, so the two scenarios read alike:
+ *
+ *     { "event": "agent_leads_fetch", "wp_user_id": 42,
+ *       "first_name": "…", "last_name": "…", "company": "…" }
+ *
+ * `company` is ensurance_get_company_name() — ENSURANCE_COMPANY_META, the value
+ * Make already matches agent rows on (see ensurance_dashboard_recorded_agency_name),
+ * so this joins on a key that exists rather than opening a second one. It is sent
+ * as `company` rather than the upsert's `company_name` because that is the field
+ * the leads scenario reads; the two scenarios differ by that name, deliberately
+ * and knowingly. `wp_user_id` is diagnostic — Make does not match on it.
+ *
+ * THE RESPONSE. A JSON array of purchased leads, newest first. Every entry in it
+ * is by definition ACCEPTED — the scenario returns purchased leads and nothing
+ * else, so presence IS the status and no row carries one. An agent with none gets
+ * `[]`. A `{ "leads": [ … ] }` wrapper is unwrapped too, because that is the one
+ * shape a Make scenario slips into by accident; nothing else is guessed at.
+ *
+ * NO DATE IS EVER A DISPLAY STRING. The design's sample carries `mins: 'Aug 10 ·
+ * 5h ago'`, already rendered. This reads `purchased_at` as ISO-8601 and turns it
+ * into a real moment, because "5h ago" is relative to whoever rendered it and is
+ * wrong the moment the page is cached — and because the row's <time datetime="…">
+ * has nowhere to put a pre-rendered string.
+ *
+ * ONE CALL PER PAGE LOAD, memoized per user for the life of the request.
+ * page-dashboard.php renders every view into the DOM on every load, so the
+ * resolver runs even while the agent is looking at Today; the static below is
+ * what keeps a second caller from meaning a second round trip. There is no
+ * transient: a fetch on navigation is what the queue owner asked for, and a cache
+ * would mean a just-purchased lead missing from a deliberate refresh.
+ *
+ * IT FAILS QUIET, ON PURPOSE. No URL, a transport error, a non-200, or a body
+ * that is not a JSON array all return array() after an error_log(). History then
+ * renders whatever it had without the webhook, which is the live row or the empty
+ * line — a dashboard missing its history is worse than one that fatals only in
+ * the sense that it still works.
+ *
+ * NOT DURING THE ADMIN PREVIEW. `?slot=` is for reviewing the design against the
+ * design's own sample data; mixing a reviewer's real purchased leads into it
+ * would make the preview a different thing on every account.
+ *
+ * SHAPE — a list of ['ref' => …, 'first_name' => …, 'last_name' => …,
+ * 'location' => …, 'address' => …, 'purchased_at' => int, 'driver' => …,
+ * 'household' => …, 'vehicle' => …, 'vehicle_use' => …, 'record' => …,
+ * 'carrier' => …, 'carrier_note' => …, 'bundle' => …, 'phone' => …,
+ * 'email' => …, 'signals' => [['label' => …, 'tone' => …], …]]. Every string
+ * defaults to '' and every lead carries every key, so a consumer never has to
+ * check before printing. A lead with no name at all is dropped — there is nothing
+ * to label its row with.
+ *
+ * The full record is returned rather than the two strings the list renders today,
+ * so the panel can be built out against it without a second fetch or a second
+ * shape. ensurance_dashboard_purchased_lead_rows() is what reduces it to a row.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return array<int,array<string,mixed>> Purchased leads, newest first.
+ */
+function ensurance_dashboard_purchased_leads( $user_id = 0 ) {
+    static $cache = array();
+
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+
+    if ( ! $user_id ) {
+        return array();
+    }
+
+    if ( isset( $cache[ $user_id ] ) ) {
+        return $cache[ $user_id ];
+    }
+
+    // Reviewing the design, not an account — see the note above.
+    if ( '' !== ensurance_dashboard_priority_preview() ) {
+        $cache[ $user_id ] = array();
+
+        return $cache[ $user_id ];
+    }
+
+    $cache[ $user_id ] = array();
+
+    $url = ensurance_dashboard_leads_webhook_url();
+
+    if ( '' === $url ) {
+        return $cache[ $user_id ];
+    }
+
+    $user = get_userdata( $user_id );
+
+    if ( ! ( $user instanceof WP_User ) ) {
+        return $cache[ $user_id ];
+    }
+
+    $payload = array(
+        'event'      => 'agent_leads_fetch',
+        'wp_user_id' => $user_id,
+        'first_name' => (string) $user->first_name,
+        'last_name'  => (string) $user->last_name,
+        'company'    => ensurance_get_company_name( $user_id ),
+    );
+
+    // Blocking, unlike the activation webhook: this one's answer IS the view.
+    // The timeout is what bounds how long a dashboard can hang on Make being
+    // slow — past it the page renders without its history rather than not at all.
+    $response = wp_remote_post(
+        $url,
+        array(
+            'timeout' => 8,
+            'headers' => array( 'Content-Type' => 'application/json' ),
+            'body'    => wp_json_encode( $payload ),
+        )
+    );
+
+    if ( is_wp_error( $response ) ) {
+        error_log( 'Ensurance purchased-leads webhook: ' . $response->get_error_message() );
+
+        return $cache[ $user_id ];
+    }
+
+    $code = (int) wp_remote_retrieve_response_code( $response );
+
+    if ( 200 !== $code ) {
+        error_log( 'Ensurance purchased-leads webhook: HTTP ' . $code );
+
+        return $cache[ $user_id ];
+    }
+
+    $body = json_decode( wp_remote_retrieve_body( $response ), true );
+
+    // The one wrapper worth tolerating — see the note above.
+    if ( is_array( $body ) && isset( $body['leads'] ) && is_array( $body['leads'] ) ) {
+        $body = $body['leads'];
+    }
+
+    if ( ! is_array( $body ) ) {
+        error_log( 'Ensurance purchased-leads webhook: response was not a JSON array.' );
+
+        return $cache[ $user_id ];
+    }
+
+    $cache[ $user_id ] = ensurance_dashboard_normalize_leads( $body );
+
+    return $cache[ $user_id ];
+}
+
+/**
+ * Turn the webhook's decoded body into leads this product can print.
+ *
+ * SEPARATE FROM THE FETCH so the shape can be exercised without a round trip —
+ * hand it a decoded fixture and it returns exactly what the resolver would have.
+ *
+ * EVERY VALUE IS SANITIZED ON THE WAY IN, not on the way out. These strings come
+ * from outside WordPress and end up in the page; sanitizing once here means no
+ * consumer has to remember to, and a value that survives this is safe to hold.
+ * Escaping at output is still the template's job (esc_html), as everywhere else.
+ *
+ * WHAT IS DROPPED, and why each: a lead with neither name (nothing to title the
+ * row with), a signal with no label (an empty chip), and a signal whose tone is
+ * not one of ensurance_dashboard_signal_tones() (a chip with no styling behind
+ * it). Everything else is kept as '' rather than dropped, so the record's shape
+ * is the same on every lead and the panel's grid never loses a cell.
+ *
+ * @param array $body Decoded response body — a list of lead objects.
+ * @return array<int,array<string,mixed>> Normalized leads, newest first.
+ */
+function ensurance_dashboard_normalize_leads( $body ) {
+    $tones = ensurance_dashboard_signal_tones();
+    $text  = array(
+        'first_name',
+        'last_name',
+        'location',
+        'address',
+        'driver',
+        'household',
+        'vehicle',
+        'vehicle_use',
+        'record',
+        'carrier',
+        'carrier_note',
+        'bundle',
+        'phone',
+    );
+
+    $leads = array();
+
+    foreach ( (array) $body as $entry ) {
+        if ( ! is_array( $entry ) ) {
+            continue;
+        }
+
+        $lead = array( 'ref' => isset( $entry['ref'] ) ? sanitize_key( $entry['ref'] ) : '' );
+
+        foreach ( $text as $field ) {
+            $lead[ $field ] = isset( $entry[ $field ] )
+                ? sanitize_text_field( (string) $entry[ $field ] )
+                : '';
+        }
+
+        // Nothing to name the row with — see the note above.
+        if ( '' === $lead['first_name'] && '' === $lead['last_name'] ) {
+            continue;
+        }
+
+        $lead['email'] = isset( $entry['email'] ) ? sanitize_email( (string) $entry['email'] ) : '';
+
+        // ISO-8601 in, a real moment out. strtotime() returns false on anything
+        // it cannot read, which becomes 0 — the same "no stamp" the row shaper
+        // already handles by printing no <time> at all.
+        $at = isset( $entry['purchased_at'] ) ? strtotime( (string) $entry['purchased_at'] ) : false;
+
+        $lead['purchased_at'] = $at ? (int) $at : 0;
+
+        $lead['signals'] = array();
+
+        if ( ! empty( $entry['signals'] ) && is_array( $entry['signals'] ) ) {
+            foreach ( $entry['signals'] as $signal ) {
+                if ( ! is_array( $signal ) || empty( $signal['label'] ) ) {
+                    continue;
+                }
+
+                $tone = isset( $signal['tone'] ) ? sanitize_key( $signal['tone'] ) : '';
+
+                if ( ! in_array( $tone, $tones, true ) ) {
+                    continue;
+                }
+
+                $lead['signals'][] = array(
+                    'label' => sanitize_text_field( (string) $signal['label'] ),
+                    'tone'  => $tone,
+                );
+            }
+        }
+
+        $leads[] = $lead;
+    }
+
+    /*
+     * NEWEST FIRST, and sorting is safe HERE in a way it is not on the generic
+     * row contract. That contract preserves the caller's order precisely because
+     * a queue may know an order it cannot date, and re-sorting would drop every
+     * undated row to the bottom. A purchased lead always has a purchase moment,
+     * so ordering by it cannot lose anything — and a lead whose stamp did not
+     * parse sorts last, which is where an undated purchase belongs.
+     *
+     * The scenario is specified to return them newest first already. This is the
+     * guarantee rather than the expectation.
+     */
+    usort(
+        $leads,
+        static function ( $a, $b ) {
+            return $b['purchased_at'] <=> $a['purchased_at'];
+        }
+    );
+
+    return $leads;
+}
+
+/**
+ * Put this agent's purchased leads into the History list.
+ *
+ * THE ADAPTER, and the only place the lead record meets the row shape. The rows
+ * ensurance_dashboard_request_rows() renders carry two strings — a `title` that
+ * names the row and a `detail` that qualifies it — so a lead is reduced to:
+ *
+ *   title  → the shopper's full name. Not masked: the agent PURCHASED this lead,
+ *            so there is nothing left to withhold. (The awaiting row on Today is
+ *            the one that is still masked, and it does not come through here.)
+ *   detail → location and vehicle, the two facts the design puts on the row
+ *            itself. Joined with the same "·" the rest of the product uses, and
+ *            whichever half is missing simply does not print.
+ *
+ * Everything else the lead carries — household, driving record, carrier, bundle,
+ * contact — is deliberately NOT squeezed into `detail`. It belongs in the panel,
+ * which reads ensurance_dashboard_purchased_leads() directly when it is built;
+ * crushing eight fields into one truncated line would lose them all.
+ *
+ * APPENDED, NOT PREPENDED. The live request is the newest thing matched by
+ * definition and is already the first row; purchased leads are history and follow
+ * it. Within themselves they are newest-first, which the normalizer guarantees.
+ *
+ * PRIORITY 10, so ensurance_dashboard_hide_passed_rows() at 99 still runs last.
+ * Nothing here is ever `passed` — a purchased lead was accepted — but the
+ * ordering is what keeps that a fact about the data rather than a coincidence of
+ * hook priorities.
+ *
+ * @param array $rows    Rows so far, newest first.
+ * @param int   $user_id User the list is being resolved for.
+ * @return array
+ */
+function ensurance_dashboard_purchased_lead_rows( $rows, $user_id = 0 ) {
+    $leads = ensurance_dashboard_purchased_leads( $user_id );
+
+    if ( empty( $leads ) ) {
+        return $rows;
+    }
+
+    foreach ( $leads as $i => $lead ) {
+        $name = trim( preg_replace( '/\s+/', ' ', $lead['first_name'] . ' ' . $lead['last_name'] ) );
+
+        // The row's one qualifying line — whichever of the two facts we hold.
+        $detail = array_filter( array( $lead['location'], $lead['vehicle'] ), 'strlen' );
+
+        $rows[] = array(
+            'key'    => ( '' !== $lead['ref'] ) ? 'lead-' . $lead['ref'] : 'lead-' . (int) $i,
+            'title'  => $name,
+            'detail' => implode( ' · ', $detail ),
+            'at'     => $lead['purchased_at'],
+            'status' => 'accepted',
+        );
+    }
+
+    return $rows;
+}
+add_filter( 'ensurance_dashboard_request_rows', 'ensurance_dashboard_purchased_lead_rows', 10, 2 );
+
+/**
  * The design's own sample agency record — agency name, license number and phone.
  *
  * The fields on the Agency Profile view that no other surface resolves, and the
