@@ -3993,43 +3993,148 @@ function ensurance_dashboard_purchased_leads( $user_id = 0 ) {
 }
 
 /**
+ * The shopper's age, from the `month_and_year_dob` the record carries.
+ *
+ * MONTH/YEAR ONLY — "June/1967" — which is all the shopper is asked for, and all
+ * the design prints ("Age 38"). The first of the month stands in for the day, so
+ * the answer can be up to a month early; the design shows a whole number of
+ * years and nothing downstream does arithmetic on it.
+ *
+ * ANYTHING THAT IS NOT THAT SHAPE RETURNS 0, and the caller prints no age at all.
+ * The live data already contains at least one row whose DOB is a bare spreadsheet
+ * serial ("17807") rather than a month and a year, and guessing at the format
+ * would put a fabricated age on a real person's record. A missing age is a gap;
+ * a wrong one is a lie about a shopper an agent is about to call.
+ *
+ * @param string $dob The record's `month_and_year_dob`.
+ * @return int Age in whole years, or 0 when the value is not "Month/YYYY".
+ */
+function ensurance_dashboard_lead_age( $dob ) {
+    if ( ! preg_match( '~^\s*([A-Za-z]+)\s*/\s*(\d{4})\s*$~', (string) $dob, $m ) ) {
+        return 0;
+    }
+
+    $born = date_create_immutable( $m[1] . ' 1 ' . $m[2] );
+
+    if ( ! $born ) {
+        return 0;
+    }
+
+    $age = (int) $born->diff( date_create_immutable( 'now' ) )->y;
+
+    // A DOB in the future, or one implying an implausible age, is bad data rather
+    // than a very old shopper — print nothing instead.
+    return ( $age > 0 && $age < 120 ) ? $age : 0;
+}
+
+/**
+ * The adverse and favourable cues on a lead — the design's `signals`, derived.
+ *
+ * THE RECORD CARRIES NO SIGNALS ARRAY. The design's sample data does, because it
+ * was written by hand; the real table has the underlying columns instead. So the
+ * cues are computed here, once, from what the record actually holds — which is
+ * better than storing them, because a cue can never disagree with the field it
+ * was drawn from.
+ *
+ * Tones are ensurance_dashboard_signal_tones(): `error` for the one thing that
+ * changes whether an agent quotes at all, `warn` for what changes the price,
+ * `ok` for what makes the risk attractive. A clean record is only claimed when
+ * BOTH counts are zero — "no accidents" beside an unmentioned ticket would read
+ * as a clean record it is not.
+ *
+ * @param array $entry One raw lead record from the webhook.
+ * @return array<int,array{label:string,tone:string}>
+ */
+function ensurance_dashboard_lead_signals( $entry ) {
+    $get = static function ( $key ) use ( $entry ) {
+        return isset( $entry[ $key ] ) ? trim( (string) $entry[ $key ] ) : '';
+    };
+
+    $signals   = array();
+    $accidents = $get( 'num_of_accidents' );
+    $tickets   = $get( 'num_of_tickets' );
+
+    if ( 'No' === $get( 'is_insured' ) ) {
+        $signals[] = array( 'label' => 'Uninsured', 'tone' => 'warn' );
+    }
+
+    // "2+" is a real value in this column, so the count is compared as text
+    // before it is compared as a number.
+    if ( '2+' === $accidents ) {
+        $signals[] = array( 'label' => '2+ accidents', 'tone' => 'error' );
+    } elseif ( (int) $accidents > 0 ) {
+        $signals[] = array(
+            'label' => sprintf( _n( '%d accident', '%d accidents', (int) $accidents ), (int) $accidents ),
+            'tone'  => 'warn',
+        );
+    }
+
+    if ( '2+' === $tickets ) {
+        $signals[] = array( 'label' => '2+ tickets', 'tone' => 'warn' );
+    } elseif ( (int) $tickets > 0 ) {
+        $signals[] = array(
+            'label' => sprintf( _n( '%d ticket', '%d tickets', (int) $tickets ), (int) $tickets ),
+            'tone'  => 'warn',
+        );
+    }
+
+    if ( '0' === $accidents && '0' === $tickets ) {
+        $signals[] = array( 'label' => 'Clean record', 'tone' => 'ok' );
+    }
+
+    if ( 'Yes' === $get( 'bundle_and_save' ) ) {
+        $signals[] = array( 'label' => 'Bundle interest', 'tone' => 'ok' );
+    }
+
+    return $signals;
+}
+
+/**
  * Turn the webhook's decoded body into leads this product can print.
  *
- * SEPARATE FROM THE FETCH so the shape can be exercised without a round trip —
- * hand it a decoded fixture and it returns exactly what the resolver would have.
+ * SEPARATE FROM THE FETCH so the shape can be exercised against a fixture with no
+ * round trip — hand it a decoded response and it returns exactly what the
+ * resolver would have.
  *
- * EVERY VALUE IS SANITIZED ON THE WAY IN, not on the way out. These strings come
- * from outside WordPress and end up in the page; sanitizing once here means no
- * consumer has to remember to, and a value that survives this is safe to hold.
- * Escaping at output is still the template's job (esc_html), as everywhere else.
+ * THE RECORD IS THE DATABASE, NOT THE DESIGN. This was written first against the
+ * design's sample lead, whose fields are finished sentences ("Age 41 · Married",
+ * "2018 Toyota Tacoma"). The real webhook returns the columns those sentences
+ * were written FROM — city/state/zip, vehicle year/make/model, DOB and marital
+ * status, accident and ticket counts. So composing them is this function's main
+ * job, and it belongs here rather than in the template: the strings are the same
+ * on every surface that shows a lead, and a template that assembled them would
+ * have to be copied to assemble them again.
  *
- * WHAT IS DROPPED, and why each: a lead with neither name (nothing to title the
- * row with), a signal with no label (an empty chip), and a signal whose tone is
- * not one of ensurance_dashboard_signal_tones() (a chip with no styling behind
- * it). Everything else is kept as '' rather than dropped, so the record's shape
- * is the same on every lead and the panel's grid never loses a cell.
+ * WHAT IS NEVER PRINTED. `method_of_contact` and `per_month_insurance_cost` come
+ * back empty on every row in the live data, so they are not read at all — a
+ * labelled field with nothing in it is worse than an absent one. `purchased_by`
+ * is the agent's own email and identifies nothing about the shopper. `status` is
+ * read only as a guard: anything not `sold` is dropped, because this list is
+ * purchased leads and a row in another state arriving here is a scenario bug
+ * rather than a row to render.
  *
- * @param array $body Decoded response body — a list of lead objects.
+ * NAMES ARE READ AS LABELLED. The live data currently returns the given name in
+ * `last_name` and the surname in `first_name` — every row, confirmed against a
+ * lead that also appears in the design's sample. That is being corrected at the
+ * source, and this function deliberately does NOT compensate: a swap here would
+ * silently invert every name on the dashboard the day the columns are fixed, and
+ * the cause would be nowhere near the symptom.
+ *
+ * EVERY VALUE IS SANITIZED ON THE WAY IN, not on the way out — these strings come
+ * from outside WordPress and end up in the page, so sanitizing once here means no
+ * consumer has to remember to. Escaping at output is still the template's job.
+ *
+ * WHAT IS DROPPED, and why each: a row that is not `sold` (see above), a lead
+ * with neither name (nothing to title its row with), and a signal whose tone is
+ * not one of ensurance_dashboard_signal_tones(). Everything else is kept as ''
+ * rather than dropped, so every lead carries every key and the panel's grid never
+ * loses a cell.
+ *
+ * @param array $body Decoded response body — a list of lead records.
  * @return array<int,array<string,mixed>> Normalized leads, newest first.
  */
 function ensurance_dashboard_normalize_leads( $body ) {
     $tones = ensurance_dashboard_signal_tones();
-    $text  = array(
-        'first_name',
-        'last_name',
-        'location',
-        'address',
-        'driver',
-        'household',
-        'vehicle',
-        'vehicle_use',
-        'record',
-        'carrier',
-        'carrier_note',
-        'bundle',
-        'phone',
-    );
-
     $leads = array();
 
     foreach ( (array) $body as $entry ) {
@@ -4037,46 +4142,134 @@ function ensurance_dashboard_normalize_leads( $body ) {
             continue;
         }
 
-        $lead = array( 'ref' => isset( $entry['ref'] ) ? sanitize_key( $entry['ref'] ) : '' );
+        $get = static function ( $key ) use ( $entry ) {
+            return isset( $entry[ $key ] ) ? sanitize_text_field( (string) $entry[ $key ] ) : '';
+        };
 
-        foreach ( $text as $field ) {
-            $lead[ $field ] = isset( $entry[ $field ] )
-                ? sanitize_text_field( (string) $entry[ $field ] )
-                : '';
-        }
+        // Purchased leads only — see the note above.
+        $status = $get( 'status' );
 
-        // Nothing to name the row with — see the note above.
-        if ( '' === $lead['first_name'] && '' === $lead['last_name'] ) {
+        if ( '' !== $status && 'sold' !== strtolower( $status ) ) {
             continue;
         }
 
-        $lead['email'] = isset( $entry['email'] ) ? sanitize_email( (string) $entry['email'] ) : '';
+        $first = $get( 'first_name' );
+        $last  = $get( 'last_name' );
 
-        // ISO-8601 in, a real moment out. strtotime() returns false on anything
-        // it cannot read, which becomes 0 — the same "no stamp" the row shaper
-        // already handles by printing no <time> at all.
-        $at = isset( $entry['purchased_at'] ) ? strtotime( (string) $entry['purchased_at'] ) : false;
+        if ( '' === $first && '' === $last ) {
+            continue;
+        }
+
+        // "City, ST 92129" — the row's own second line and the design's `loc`.
+        $city_state = trim( implode( ' ', array_filter( array( $get( 'state' ), $get( 'zip_code' ) ), 'strlen' ) ) );
+        $location   = implode( ', ', array_filter( array( $get( 'city' ), $city_state ), 'strlen' ) );
+
+        // "2018 Chrysler Pacifica".
+        $vehicle = trim( implode(
+            ' ',
+            array_filter(
+                array( $get( 'primary_vehicle_year' ), $get( 'primary_vehicle_make' ), $get( 'primary_vehicle_model' ) ),
+                'strlen'
+            )
+        ) );
+
+        // The shopper answers ownership in the first person ("I own it
+        // outright"); the panel is read by an agent about someone else, so the
+        // answer is restated in the design's own terser third person. An answer
+        // this does not recognize is passed through as given rather than dropped.
+        $ownership = $get( 'primary_vehicle_ownership_type' );
+        $ownership = ( 0 === stripos( $ownership, 'I own' ) ) ? 'owned outright'
+            : ( ( 0 === stripos( $ownership, "I'm financing" ) || 0 === stripos( $ownership, 'I am financing' ) ) ? 'financing' : $ownership );
+
+        $age    = ensurance_dashboard_lead_age( $get( 'month_and_year_dob' ) );
+        $driver = implode(
+            ' · ',
+            array_filter( array( $age ? sprintf( 'Age %d', $age ) : '', $get( 'marital_status' ) ), 'strlen' )
+        );
+
+        // "Owns home · 1 vehicle · No military affiliation". `Other` housing is
+        // omitted rather than printed — it answers nothing an agent can use.
+        $home     = $get( 'own_or_rent_home' );
+        $housing  = ( 'Own' === $home ) ? 'Owns home' : ( ( 'Rent' === $home ) ? 'Rents' : '' );
+        $vehicles = (int) $get( 'num_of_vehicles' );
+        $military = $get( 'is_military_affiliated' );
+
+        $household = implode(
+            ' · ',
+            array_filter(
+                array(
+                    $housing,
+                    $vehicles ? sprintf( _n( '%d vehicle', '%d vehicles', $vehicles ), $vehicles ) : '',
+                    ( 'Yes' === $military ) ? 'Military affiliated' : ( ( 'No' === $military ) ? 'No military affiliation' : '' ),
+                ),
+                'strlen'
+            )
+        );
+
+        // "No accidents · no tickets", or the counts as given. Lower-cased on the
+        // second half because it continues the first rather than starting over.
+        $accidents = $get( 'num_of_accidents' );
+        $tickets   = $get( 'num_of_tickets' );
+        $record    = implode(
+            ' · ',
+            array_filter(
+                array(
+                    ( '' === $accidents ) ? '' : ( ( '0' === $accidents ) ? 'No accidents' : $accidents . ' accidents' ),
+                    ( '' === $tickets ) ? '' : ( ( '0' === $tickets ) ? 'no tickets' : $tickets . ' tickets' ),
+                ),
+                'strlen'
+            )
+        );
+
+        // The insurance block is filled only for shoppers who have insurance, so
+        // `is_insured` decides which pair of sentences this becomes rather than
+        // the emptiness of the columns.
+        if ( 'No' === $get( 'is_insured' ) ) {
+            $carrier      = 'Not currently insured';
+            $carrier_note = 'No prior carrier on file';
+        } else {
+            $carrier      = implode(
+                ' · ',
+                array_filter( array( $get( 'current_insurance_company' ), $get( 'continuous_insured_duration' ) ), 'strlen' )
+            );
+            $expires      = $get( 'current_insurance_expiration' );
+            $carrier_note = ( '' !== $expires ) ? sprintf( 'Renews %s', $expires ) : '';
+        }
+
+        $lead = array(
+            'ref'          => sanitize_key( $get( 'lead_id' ) ),
+            'first_name'   => $first,
+            'last_name'    => $last,
+            'location'     => $location,
+            'address'      => $get( 'address' ),
+            'driver'       => $driver,
+            'household'    => $household,
+            'vehicle'      => $vehicle,
+            'vehicle_use'  => implode(
+                ' · ',
+                array_filter( array( $get( 'primary_vehicle_use' ), $get( 'primary_vehicle_annual_miles' ), $ownership ), 'strlen' )
+            ),
+            'record'       => $record,
+            'carrier'      => $carrier,
+            'carrier_note' => $carrier_note,
+            'bundle'       => ( 'Yes' === $get( 'bundle_and_save' ) ) ? 'Open to bundling home + auto' : 'Auto only',
+            'phone'        => $get( 'phone_number' ),
+            'email'        => isset( $entry['email_address'] ) ? sanitize_email( (string) $entry['email_address'] ) : '',
+        );
+
+        // `reserved_at` is the moment the agent took the lead and is the only
+        // stamp filled on every row — `received_at` is null on more than half of
+        // them. ISO-8601 in, a real moment out; strtotime() returns false on
+        // anything it cannot read, which becomes the 0 the row shaper already
+        // handles by printing no <time> at all.
+        $at = strtotime( $get( 'reserved_at' ) );
 
         $lead['purchased_at'] = $at ? (int) $at : 0;
+        $lead['signals']      = array();
 
-        $lead['signals'] = array();
-
-        if ( ! empty( $entry['signals'] ) && is_array( $entry['signals'] ) ) {
-            foreach ( $entry['signals'] as $signal ) {
-                if ( ! is_array( $signal ) || empty( $signal['label'] ) ) {
-                    continue;
-                }
-
-                $tone = isset( $signal['tone'] ) ? sanitize_key( $signal['tone'] ) : '';
-
-                if ( ! in_array( $tone, $tones, true ) ) {
-                    continue;
-                }
-
-                $lead['signals'][] = array(
-                    'label' => sanitize_text_field( (string) $signal['label'] ),
-                    'tone'  => $tone,
-                );
+        foreach ( ensurance_dashboard_lead_signals( $entry ) as $signal ) {
+            if ( in_array( $signal['tone'], $tones, true ) && '' !== $signal['label'] ) {
+                $lead['signals'][] = $signal;
             }
         }
 
@@ -4090,9 +4283,6 @@ function ensurance_dashboard_normalize_leads( $body ) {
      * undated row to the bottom. A purchased lead always has a purchase moment,
      * so ordering by it cannot lose anything — and a lead whose stamp did not
      * parse sorts last, which is where an undated purchase belongs.
-     *
-     * The scenario is specified to return them newest first already. This is the
-     * guarantee rather than the expectation.
      */
     usort(
         $leads,
