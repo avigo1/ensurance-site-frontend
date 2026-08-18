@@ -877,15 +877,17 @@ function ensurance_dashboard_views() {
  * The agency's OWN name — what the business is called on the record.
  *
  * The design (templates/agent-dashboard/AgentDashboard.dc.html) takes this from
- * an `agencyName` prop — "Coastline Insurance Group". Nothing in the funnel
- * captures it: /create-account collects first name, last name, username and
- * email only, and agents do not manage their own listings (see the product note
- * in plans/agent-onboarding-1-free-agent.md). So this returns '' for a real
- * agent, and the surfaces above it decide what to do about that —
+ * an `agencyName` prop — "Coastline Insurance Group". This resolver itself holds
+ * nothing: it returns '' and leaves the record to its filter, which is where the
+ * company name now attaches (ensurance_dashboard_recorded_agency_name, Step 6 of
+ * the setup flow — the sign-up `company` field plus the Agency Profile's own name
+ * field, both in ENSURANCE_COMPANY_META). An agency with no name on file still
+ * resolves to '', and the surfaces above decide what to do about that —
  * ensurance_dashboard_agency_name() falls back to the user record so the rail has
- * something to greet, while the Agency Profile says "Not on file", because the
+ * something to greet, while the Agency Profile says so instead, because the
  * profile is where the agent goes to CHECK the record and the honest answer there
- * is that we do not hold one.
+ * is that we do not hold one — and, since Step 6, offers them the box to fix it
+ * in.
  *
  * THIS IS THE FIX FOR THE DUPLICATE. Before it existed, the profile's "Agency
  * name" chip read from ensurance_dashboard_agency_name() and so printed the
@@ -3829,19 +3831,21 @@ function ensurance_dashboard_agent_name( $user_id = 0 ) {
  * verified out of band and is not part of what the view promises, so it appears
  * only when it is known (see ensurance_dashboard_license_number).
  *
- * STATIC VALUES, NOT A FORM. The step is explicit — no inputs, no Save, and
- * emphatically not a disabled form, which would be a dead affordance on every
- * field. So this resolver returns strings to print, and the component that
- * renders them has no interactive element in it at all.
+ * STRINGS, NOT A FORM. This resolver returns values to print, and it says nothing
+ * about how they are rendered. Since Step 6 of the setup flow the component draws
+ * ONE of them — the agency name — as a real input, and every other field as the
+ * static box the step asks for: no Save, and emphatically not a disabled form,
+ * which would be a dead affordance on every field.
  *
  * NOTHING NEW IS RESOLVED HERE, the same rule Today's reference column follows
  * (see ensurance_dashboard_shopper_rows): the name and inbox come from the
  * resolvers that already own them, so the profile, the rail's user card and the
  * quiet panel's sentence can never disagree about the agency they describe.
  *
- * STATIC VALUES, NOT A FORM — see the note above; that is as true of the empty
- * chips as of the filled ones. "Not on file" is a statement about the record,
- * not a prompt: there is nothing to click on it and nothing to type into it.
+ * "NOT ON FILE" IS A STATEMENT, NOT A PROMPT — as true of the empty chips as of
+ * the filled ones: there is nothing to click on one and nothing to type into it.
+ * The agency-name field is the exception the component makes, and it makes it
+ * properly: an input with a placeholder, not a chip with placeholder text in it.
  *
  * SHAPE — a list of ['key' => …, 'label' => …, 'value' => …, 'empty' => bool] in
  * display order. A promised field with nothing to resolve carries the placeholder
@@ -3943,6 +3947,160 @@ function ensurance_dashboard_profile_fields( $user_id = 0 ) {
     }
 
     return $clean;
+}
+
+/**
+ * The agency name the RECORD holds — the company name given at sign-up, and the
+ * one the agent typed on the profile after it.
+ *
+ * Step 6 of the setup flow (design_handoff_agency_profile/SETUP-FLOW.md): the
+ * name has to survive a reload, which means it has to be read from somewhere.
+ * That somewhere already exists — ENSURANCE_COMPANY_META (`_ensurance_company_name`),
+ * written by ensurance_remember_company_name() from the `company` field on
+ * /create-account and read by ensurance_get_company_name(). It is the same value
+ * Make matches an agent row on, so the profile edits the record the rest of the
+ * funnel already uses rather than opening a second one beside it.
+ *
+ * A FILTER, NOT AN EDIT, per CLAUDE.md's standing rule and per the invitation in
+ * ensurance_dashboard_agency_record_name()'s own docblock ("point the filter at
+ * the real agency record when it exists"). This is that record.
+ *
+ * THE PREVIEW STILL WINS. A non-empty $name means `?slot=quiet` resolved the
+ * sample agency, and the admin preview is supposed to show the record as the
+ * design draws it — so the stored name fills the gap rather than overriding it.
+ * Outside the preview $name is always '', so a real agent sees their own.
+ *
+ * @param string $name    Name resolved so far ('' for a real agent).
+ * @param int    $user_id User the agency is being resolved for.
+ * @return string
+ */
+function ensurance_dashboard_recorded_agency_name( $name, $user_id ) {
+    if ( '' !== trim( (string) $name ) ) {
+        return $name;
+    }
+
+    return ensurance_get_company_name( $user_id );
+}
+add_filter( 'ensurance_dashboard_agency_record_name', 'ensurance_dashboard_recorded_agency_name', 10, 2 );
+
+/**
+ * Where the Agency Profile's name field posts (raw — esc_url at output).
+ *
+ * The profile view's own URL, so the save lands back on the view the agent was
+ * looking at rather than on Today. Resolved through
+ * ensurance_dashboard_profile_url() for the reason that function exists: the rail
+ * registry owns every view's href, and a second URL written by hand is a second
+ * thing to keep in step.
+ *
+ * `?slot=` is deliberately NOT carried, unlike the live card's
+ * ensurance_dashboard_decision_action(). A decision made under the preview is a
+ * previewed decision and has to stay one; a NAME is written to the real record
+ * whatever the page was previewing, so the post lands on the plain profile where
+ * the value that was just saved is the value on screen.
+ *
+ * @return string
+ */
+function ensurance_dashboard_agency_name_action() {
+    return ensurance_dashboard_profile_url();
+}
+
+/**
+ * Saves the agency name posted from the Agency Profile view.
+ *
+ * Step 6 of the setup flow. THE EXISTING MUTATION: update_user_meta() against
+ * ENSURANCE_COMPANY_META, the key ensurance_remember_company_name() already
+ * writes at sign-up — no endpoint, no REST route, no second store.
+ *
+ * AN ORDINARY FORM POST, modelled on ensurance_dashboard_handle_decision(): the
+ * design has no Save button, so assets/dashboard.js submits this form on blur and
+ * on Enter, and with JavaScript off Enter in the single-field form still submits
+ * it natively. Post-redirect-get, so a refresh cannot re-save and the confirmation
+ * arrives on a clean URL.
+ *
+ * WHAT IT DOES NOT DO, because the step is explicit that the app's rules win:
+ * there is no length rule, no character rule and no format rule here. The value
+ * gets sanitize_text_field() and trim() — exactly what the sign-up saver applies
+ * — and nothing else.
+ *
+ * EMPTY AFTER TRIM SAVES NOTHING. It is not a delete: a field cleared by accident
+ * (or by a browser restoring a blank) must not wipe a name support may have put
+ * there. The redirect re-renders the stored value, which is the revert. The script
+ * does the same thing without the round trip.
+ *
+ * UNCHANGED SAVES NOTHING EITHER, and reports nothing: blur fires every time focus
+ * leaves the field, and a "saved" line after a visit where nothing was typed would
+ * be a claim about a write that never happened.
+ *
+ * A failed or expired nonce returns WITHOUT saving and WITHOUT redirecting — the
+ * same choice the decision handler makes, and the same reason: the view renders
+ * again showing the stored name, which is the truth, instead of WordPress's "link
+ * expired" interstitial.
+ */
+function ensurance_dashboard_handle_agency_name() {
+    // Cheapest test first — this runs on every front-end request.
+    if ( ! isset( $_POST['dash_agency_name'] ) || ! is_page( 'dashboard' ) || ! is_user_logged_in() ) {
+        return;
+    }
+
+    $nonce = isset( $_POST['dash_agency_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['dash_agency_nonce'] ) ) : '';
+
+    if ( ! wp_verify_nonce( $nonce, 'ensurance_dashboard_agency_name' ) ) {
+        return;
+    }
+
+    $user_id = get_current_user_id();
+    $target  = ensurance_dashboard_agency_name_action();
+
+    /*
+     * A SAVE POSTED FROM THE PREVIEW WRITES NOTHING. Under `?slot=quiet` the field
+     * is showing the sample agency (ensurance_dashboard_sample_agency), not this
+     * account's record, and posting it would file "Coastline Insurance Group"
+     * against a real user. Same rule the decided slot follows: what a preview
+     * produces stays a preview. The redirect still lands on the plain profile, so
+     * what the reviewer sees next is their own record.
+     *
+     * The marker is a hidden field rather than a `?slot=` read, because the form's
+     * action deliberately drops the preview arg
+     * (ensurance_dashboard_agency_name_action) — by the time this runs there is
+     * nothing in the URL left to tell.
+     */
+    if ( ! empty( $_POST['dash_agency_preview'] ) ) {
+        wp_safe_redirect( $target );
+        exit;
+    }
+
+    $posted = trim( sanitize_text_field( wp_unslash( $_POST['dash_agency_name'] ) ) );
+    $stored = ensurance_get_company_name( $user_id );
+
+    if ( '' !== $posted && $posted !== $stored ) {
+        update_user_meta( $user_id, ENSURANCE_COMPANY_META, $posted );
+
+        // Carried in the URL rather than in a session flash, the way the decided
+        // slot carries its own outcome: the confirmation belongs to the page the
+        // redirect lands on, and nothing else has to be stored to show it.
+        $target = add_query_arg( 'saved', 'name', $target );
+    }
+
+    wp_safe_redirect( $target );
+    exit;
+}
+add_action( 'template_redirect', 'ensurance_dashboard_handle_agency_name' );
+
+/**
+ * Whether this request is the landing after a name was saved.
+ *
+ * Read-only presentation state — no side effects, so no nonce to verify. The
+ * value is compared against one known word, so an arbitrary `?saved=` cannot
+ * reach the page as anything but false.
+ *
+ * @return bool
+ */
+function ensurance_dashboard_agency_name_saved() {
+    if ( empty( $_GET['saved'] ) || ! is_string( $_GET['saved'] ) ) {
+        return false;
+    }
+
+    return ( 'name' === sanitize_key( wp_unslash( $_GET['saved'] ) ) );
 }
 
 /**

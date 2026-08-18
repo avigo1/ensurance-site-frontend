@@ -2439,13 +2439,14 @@ button.dash-requests__line[aria-expanded="true"] .dash-requests__caret svg {
    Step 13 of templates/agent-dashboard/build-steps.md, rendered by
    components/dashboard-view-profile.php under the shared view header.
 
-   CHIPS, NOT FIELDS. The step rules out inputs, a Save button and — in the
-   same breath — a disabled form, so nothing here is styled as a control an
-   agent could be forgiven for clicking. Each value sits in a sunken chip:
-   the field's frame without the field, which is what keeps the view reading
-   as an agency record rather than as a list of loose strings, while looking
-   nothing like something to type in. There is no hover state anywhere in
-   this block and no focus style but the browser's own on the one link. */
+   CHIPS, NOT FIELDS — with two exceptions, and they are the two things the
+   agent can change: the agency-name input in the grid and the state picker
+   below it. Everything else sits in a sunken chip: the field's frame without
+   the field, which keeps the view reading as an agency record rather than as
+   a list of loose strings, while looking nothing like something to type in.
+   The step rules out a disabled form, so no value is greyed out or carries a
+   crossed-out cursor. White fill and a real focus ring are what separate the
+   two controls from the boxes around them. */
 
 /* The design's four-across grid, wrapping to two and then one as the column
    narrows — auto-fit, so the row fills whatever it is given: the four promised
@@ -2539,6 +2540,90 @@ button.dash-requests__line[aria-expanded="true"] .dash-requests__caret svg {
    border, no icon, nothing that turns a missing value into an error. */
 .dash-profile__value--empty {
   color: var(--text-faint);
+}
+
+/* THE ONE EDITABLE FIELD IN THE GRID — the agency name (Step 6 of the setup
+   flow). White where the chips are sunken, because that difference is the
+   whole of how an agent can tell which of the four boxes takes typing: the
+   same reason the state select below is white. Padding, radius and type match
+   the chips exactly, so the row still reads as one grid rather than as a form
+   dropped into a record.
+
+   box-sizing is stated because a 100% width plus 14px of padding otherwise
+   overflows its grid track — this input is the only place on the view where
+   that combination occurs. */
+.dash-profile__input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 14px;
+  border: 1px solid var(--border-input);
+  border-radius: 10px;
+  background: var(--surface-card);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  color: var(--text-heading);
+}
+
+/* The same faint shade a "Not on file" chip uses. On an input it is the
+   prompt rather than the record, which is why the empty name is a
+   placeholder here and a printed value there. */
+.dash-profile__input::placeholder {
+  color: var(--text-faint);
+}
+
+/* The accent border on focus is the design's; the ring is IN ADDITION to it,
+   not instead of it — the same pairing as the select. */
+.dash-profile__input:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.dash-profile__input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Kadence's parent-theme input[type=…]:focus rules (specificity 0,2,1) outrank
+   a bare .dash-profile__input (0,1,0) and repaint focused fields from the
+   global palette — invisible text WHILE TYPING, readable again on blur. Pin
+   color + -webkit-text-fill-color (Safari/iOS follows text-fill, not color) +
+   background at .dashboard-page specificity for BOTH resting and :focus, with
+   an autofill safeguard. See CLAUDE.md "Input text invisible while typing".
+   Do not drop the :focus selector — that is the state that breaks. */
+.dashboard-page .dash-profile__input,
+.dashboard-page .dash-profile__input:focus {
+  color: var(--text-heading);
+  -webkit-text-fill-color: var(--text-heading);
+  background-color: var(--surface-card);
+  caret-color: var(--accent);
+}
+
+.dashboard-page .dash-profile__input:-webkit-autofill,
+.dashboard-page .dash-profile__input:-webkit-autofill:hover,
+.dashboard-page .dash-profile__input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text-heading);
+  box-shadow: 0 0 0 100px var(--surface-card) inset;
+}
+
+/* The name field's <dd>: the form and, after a save, the line confirming it.
+   margin: 0 clears the browser's 40px indent on <dd>, and the 6px gap is the
+   grid's own label-to-control spacing carried on to the line below. */
+.dash-profile__control {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+}
+
+/* The confirmation under the name field. Accent, because it reports something
+   that succeeded — the same green the support link at the foot of the view
+   uses, and the whole of the treatment: no banner, no icon, no box. It is a
+   rendered page state after the save's redirect, so it stays until the agent
+   navigates away, and nothing about it moves. */
+.dash-profile__helper--saved {
+  color: var(--accent);
 }
 
 /* 26px between the groups, and 32px under the last one before the note —

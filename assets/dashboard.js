@@ -468,12 +468,96 @@
 })();
 
 /* ===================================================================
+   Agency Profile — saving the agency name.
+
+   Step 6 of the setup flow (design_handoff_agency_profile/SETUP-FLOW.md). The
+   design has no Save button, so the field commits itself: on blur, and on
+   Enter. Both do the same thing — submit the one-input form the field sits in
+   — and PHP does the rest (ensurance_dashboard_handle_agency_name), so there
+   is no endpoint here, no fetch, and no second copy of the save rules.
+
+   WHAT IT REFUSES TO SEND, so the page does not reload for nothing:
+   a value that is empty after trimming, and a value that has not changed. Both
+   put the stored name back in the box, which is the revert the step asks for —
+   done here without a round trip, and again on the server for the JS-off path.
+
+   NO VALIDATION LIVES HERE. Trimming is not a rule about what a name may be,
+   it is what "the agent typed a space" means. Length and characters are the
+   app's business, and the app has nothing to say about them.
+
+   Degrades to Enter: with JS off, a form with a single text input still submits
+   on Enter, so the field still saves — only the blur commit is lost.
+   =================================================================== */
+(function () {
+  'use strict';
+
+  var form = document.querySelector('[data-agency-form]');
+
+  if (!form) {
+    return;
+  }
+
+  var input = form.querySelector('[data-agency-input]');
+
+  if (!input) {
+    return;
+  }
+
+  /* The value as the record holds it, read once at load: everything below is a
+     comparison against it, and re-reading the field would just be comparing a
+     value with itself. */
+  var stored = input.value;
+  var saving = false;
+
+  function commit() {
+    /* Submitting moves focus out of the field, which fires blur again. Without
+       this the form would be submitted twice — once for the Enter, once for
+       the blur behind it. */
+    if (saving) {
+      return;
+    }
+
+    var next = input.value.trim();
+
+    if (next === '' || next === stored) {
+      input.value = stored;
+      return;
+    }
+
+    /* Post what was compared, not what was typed: otherwise a trailing space
+       reaches the record and the next blur sees a change that is not one. */
+    input.value = next;
+    saving = true;
+    form.submit();
+  }
+
+  input.addEventListener('blur', commit);
+
+  input.addEventListener('keydown', function (event) {
+    if (event.key === 'Enter') {
+      /* The browser would submit this form on Enter by itself, untrimmed and
+         empty value included. Commit instead, on the same keystroke. */
+      event.preventDefault();
+      commit();
+      return;
+    }
+
+    /* Escape abandons the edit. The revert is the whole of it — the blur that
+       follows then finds nothing changed and sends nothing. */
+    if (event.key === 'Escape') {
+      input.value = stored;
+      input.blur();
+    }
+  });
+})();
+
+/* ===================================================================
    Agency Profile — the served-states picker.
 
-   The one interactive region on the dashboard's Agency Profile view
-   (components/dashboard-view-profile.php): add a state, remove a state, and
-   keep the count, the empty line and the hidden CSV field in step with the
-   chips.
+   The other interactive region on the dashboard's Agency Profile view — the
+   agency-name field above is the first (components/dashboard-view-profile.php):
+   add a state, remove a state, and keep the count, the empty line and the
+   hidden CSV field in step with the chips.
 
    NOTHING IS SAVED YET. Every change here is a change to the page and to the
    hidden field, and stops there — persistence is being wired separately.

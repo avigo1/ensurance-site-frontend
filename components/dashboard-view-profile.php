@@ -7,33 +7,43 @@
  * card sends a blocked agent to, and the ONE place in the product where states are
  * added.
  *
- * WHAT IS EDITABLE, AND WHY IT IS ONLY THIS. The handoff makes Agency name the one
- * editable control in the identity grid. It is not, here: agency name was taken
- * out of the matching gate entirely and is no longer something the agent fills in,
- * so it stays a read-only box alongside the others and STATES ARE THE ONLY THING
- * ON THIS PAGE THAT CAN BE CHANGED. That is a deliberate departure from the
- * handoff's Step 2, made because the gate it was written against
- * (ensurance_dashboard_can_receive_leads) no longer includes the name — shipping
- * an editable agency name would offer an edit that changes nothing about whether
- * requests arrive.
+ * WHAT IS EDITABLE, AND WHY IT IS ONLY THESE TWO. Agency name (Step 6 of the setup
+ * flow) and the served states (the handoff's Step 3). Everything else on the view
+ * is the record as support holds it. Agency name is editable even though the
+ * matching gate no longer includes it (ensurance_dashboard_can_receive_leads is
+ * states-only): the name is not what turns requests on, but it IS what an agency
+ * is called on every surface that greets it, and it is the one identity value the
+ * agent themselves supplied at sign-up.
  *
- * READ-ONLY IS A STYLE, NOT A DISABLED INPUT. Every identity value is a sunken box
- * — framed like a field so the view still reads as a record, but not typeable, not
- * greyed out, and not a control with its cursor crossed out. A <dl>, because a
- * label over a value it does not own is a term and its description; the one real
- * form control on the page (the state picker) gets a real <label for> instead.
+ * THE NAME SAVES WITH NO SAVE BUTTON, because the design has none: the field is a
+ * one-input form that assets/dashboard.js submits on blur and on Enter, and that
+ * with JavaScript off still submits on Enter by itself. It posts to the page and
+ * ensurance_dashboard_handle_agency_name() writes it to the company-name record
+ * the sign-up funnel already keeps, then redirects back here — so the confirmation
+ * under the field is a rendered page state, not a toast.
  *
- * NOTHING PERSISTS YET. Adding and removing a state updates the page and the
- * hidden CSV field (ensurance_dashboard_served_states_csv), and stops there — the
- * storage behind it is being wired separately. assets/dashboard.js holds the one
- * marked stub where that save goes. An agent's picks therefore do not survive a
- * refresh, which is why nothing here claims they are saved.
+ * READ-ONLY IS A STYLE, NOT A DISABLED INPUT. The values the agent cannot change
+ * are sunken boxes — framed like a field so the view still reads as a record, but
+ * not typeable, not greyed out, and not a control with its cursor crossed out. A
+ * <dl>, because a label over a value it does not own is a term and its
+ * description. The two real controls (the name field and the state picker) get
+ * real <label for>s; the name's label lives inside its <dt>, which keeps the grid
+ * one list rather than splitting it into a form and a record.
+ *
+ * THE STATES DO NOT PERSIST YET. Adding and removing one updates the page and the
+ * hidden CSV field (ensurance_dashboard_served_states_csv), and stops there — that
+ * storage is Step 7 and is being wired separately. assets/dashboard.js holds the
+ * one marked stub where that save goes. An agent's picks therefore do not survive
+ * a refresh, which is why nothing here claims they are saved. The NAME does
+ * survive one.
  *
  * NOTHING IS INVENTED. The identity chips always render, and a value nothing
- * resolves says "Not on file" in the faint shade rather than being filled in.
- * Coverage badges and the license chip appear only when they have something to
- * show. Today a real founding agent sees their name and email, no agency name, no
- * phone, no coverage badges — and the empty-state line under States you serve.
+ * resolves says "Not on file" in the faint shade rather than being filled in — the
+ * name field says it in its placeholder instead, because an input's job is to be
+ * filled in. Coverage badges and the license chip appear only when they have
+ * something to show. Today a real founding agent sees their name and email, the
+ * agency name they gave at sign-up if they gave one, no phone, no coverage badges
+ * — and the empty-state line under States you serve.
  *
  * PREVIEWING: /dashboard/?view=profile&slot=quiet resolves the whole agency
  * record — every chip, the license, the coverage badges and three served states.
@@ -46,6 +56,16 @@ $profile_fields = ensurance_dashboard_profile_fields();
 $profile_states = ensurance_dashboard_served_states();
 $profile_types  = ensurance_dashboard_coverage_types();
 $state_choices  = ensurance_dashboard_state_choices();
+
+/*
+ * The name field's own value, from the resolver the field list itself reads
+ * (ensurance_dashboard_agency_record_name) — so the input and the record can
+ * never disagree. It is taken raw rather than off $profile_fields because that
+ * list substitutes "Not on file" for an empty value, and a placeholder belongs in
+ * the placeholder attribute, not in the box as text the agent has to delete.
+ */
+$profile_name  = ensurance_dashboard_agency_record_name();
+$profile_saved = ensurance_dashboard_agency_name_saved();
 
 /*
  * The count beside the eyebrow, in the design's own three forms. It is the one
@@ -67,36 +87,111 @@ if ( 0 === $state_total ) {
 
 	<?php
 	/*
-	 * STEP 2 — the identity grid. Values the agent can read and support can
-	 * change; see the note at the top for why none of them is an input.
+	 * STEP 2 — the identity grid. The record as support holds it, with the one
+	 * value the agent supplied themselves — the agency name — editable in place.
+	 * See the note at the top for why that one and nothing else.
 	 */
 	if ( ! empty( $profile_fields ) ) :
 		?>
 		<dl class="dash-profile__fields">
 			<?php
 			foreach ( $profile_fields as $profile_field ) :
+				$field_key = isset( $profile_field['key'] ) ? $profile_field['key'] : '';
+
 				// The agent's own name is the one field with a stated reason for
 				// being locked — it comes off the verified license, so the lock
 				// and the helper under it are answering "why can't I fix this".
-				$is_agent = ( isset( $profile_field['key'] ) && 'agent' === $profile_field['key'] );
+				$is_agent = ( 'agent' === $field_key );
+
+				// The agency's name is the one field that is not a value at all
+				// but a control. `name` is the key ensurance_dashboard_profile_fields()
+				// gives it.
+				$is_name = ( 'name' === $field_key );
 				?>
 				<div class="dash-profile__field">
 
-					<dt class="dash-profile__label"><?php echo esc_html( $profile_field['label'] ); ?></dt>
+					<dt class="dash-profile__label">
+						<?php
+						// A real <label for> only on the field that has something to
+						// label. Wrapping the read-only terms in one would name a box
+						// that takes no input and no focus.
+						if ( $is_name ) :
+							?>
+							<label for="dash-profile-agency"><?php echo esc_html( $profile_field['label'] ); ?></label>
+						<?php else : ?>
+							<?php echo esc_html( $profile_field['label'] ); ?>
+						<?php endif; ?>
+					</dt>
 
-					<dd class="dash-profile__value<?php echo ! empty( $profile_field['empty'] ) ? ' dash-profile__value--empty' : ''; ?>">
+					<?php if ( $is_name ) : ?>
 
-						<span><?php echo esc_html( $profile_field['value'] ); ?></span>
+						<dd class="dash-profile__control">
+
+							<?php
+							/*
+							 * NO SUBMIT BUTTON, by design. dashboard.js commits this
+							 * on blur and on Enter; without it, Enter alone still
+							 * submits a form with a single text input. Either way it
+							 * is an ordinary post to the page, handled by
+							 * ensurance_dashboard_handle_agency_name().
+							 */
+							?>
+							<form method="post" action="<?php echo esc_url( ensurance_dashboard_agency_name_action() ); ?>" data-agency-form>
+
+								<?php wp_nonce_field( 'ensurance_dashboard_agency_name', 'dash_agency_nonce' ); ?>
+
+								<?php
+								// Under `?slot=quiet` this field is showing the sample
+								// agency, so a save from it must not file the sample
+								// against a real account — see
+								// ensurance_dashboard_handle_agency_name().
+								if ( '' !== ensurance_dashboard_priority_preview() ) :
+									?>
+									<input type="hidden" name="dash_agency_preview" value="1" />
+								<?php endif; ?>
+
+								<input
+									type="text"
+									class="dash-profile__input"
+									id="dash-profile-agency"
+									name="dash_agency_name"
+									value="<?php echo esc_attr( $profile_name ); ?>"
+									placeholder="Add your agency name"
+									autocomplete="organization"
+									data-agency-input
+								/>
+
+							</form>
+
+							<?php
+							// The confirmation. It is rendered by the page the save
+							// redirects to, so it is not a live region and carries no
+							// role="status": nothing here updates after load, and the
+							// value above it is the confirmation a reader gets first.
+							if ( $profile_saved ) :
+								?>
+								<p class="dash-profile__helper dash-profile__helper--saved">Agency name saved</p>
+							<?php endif; ?>
+
+						</dd>
+
+					<?php else : ?>
+
+						<dd class="dash-profile__value<?php echo ! empty( $profile_field['empty'] ) ? ' dash-profile__value--empty' : ''; ?>">
+
+							<span><?php echo esc_html( $profile_field['value'] ); ?></span>
+
+							<?php if ( $is_agent ) : ?>
+								<?php // Icon `lock`, from components/icons/Icon.jsx in the design system (Lucide, stroke 2, round caps/joins) at the design's 14px. The helper below says the same thing in words. ?>
+								<svg class="dash-profile__lock" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+							<?php endif; ?>
+
+						</dd>
 
 						<?php if ( $is_agent ) : ?>
-							<?php // Icon `lock`, from components/icons/Icon.jsx in the design system (Lucide, stroke 2, round caps/joins) at the design's 14px. The helper below says the same thing in words. ?>
-							<svg class="dash-profile__lock" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+							<p class="dash-profile__helper">From your verified license — support can change this</p>
 						<?php endif; ?>
 
-					</dd>
-
-					<?php if ( $is_agent ) : ?>
-						<p class="dash-profile__helper">From your verified license — support can change this</p>
 					<?php endif; ?>
 
 				</div>
