@@ -2803,6 +2803,22 @@ button.dash-requests__line[aria-expanded="true"] .dash-requests__caret svg {
   color: var(--primary);
 }
 
+/* The × is a <button> too, so Kadence's hover/focus/active rule reaches it as
+   well — and it keeps focus after a click, which on the last chip in the list
+   left a white circle with an orange × sitting in the row. Same treatment as
+   the add button: every state stated, hover last. */
+.dashboard-page .dash-profile__chip-remove,
+.dashboard-page .dash-profile__chip-remove:focus,
+.dashboard-page .dash-profile__chip-remove:active {
+  background: transparent;
+  color: var(--secondary);
+}
+
+.dashboard-page .dash-profile__chip-remove:hover {
+  background: var(--navy-100);
+  color: var(--primary);
+}
+
 .dash-profile__chip-remove:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
@@ -2846,6 +2862,26 @@ button.dash-requests__line[aria-expanded="true"] .dash-requests__caret svg {
   outline-offset: 2px;
 }
 
+/* THE SAME KADENCE TRAP AS THE TEXT INPUT, sprung by a different selector.
+   The parent theme ships `select:focus { color: var(--global-palette3);
+   background-color: var(--global-palette9) }` — on this site palette3 is
+   #ffffff and palette9 is transparent — at specificity (0,1,1), which outranks
+   a bare .dash-profile__select (0,1,0). The chosen state therefore turned
+   white-on-white the moment the picker took focus, while the OPEN list stayed
+   readable (Kadence sets `select:focus option { color:#333 }` separately) —
+   which is why it read as the state name vanishing when you clicked, and only
+   then.
+
+   Pinned at .dashboard-page (0,2,0 / 0,3,0) for both states, the same shape as
+   the CLAUDE.md fix for text inputs. -webkit-text-fill-color is here for the
+   same reason it is there: Safari follows it rather than `color`. */
+.dashboard-page .dash-profile__select,
+.dashboard-page .dash-profile__select:focus {
+  color: var(--text-heading);
+  -webkit-text-fill-color: var(--text-heading);
+  background-color: var(--surface-card);
+}
+
 /* Navy, not accent green. The green in this product means an affirmative
    action on a live match; adding a state is administration, and spending the
    match color on it would make the two read as the same kind of event. */
@@ -2870,6 +2906,28 @@ button.dash-requests__line[aria-expanded="true"] .dash-requests__caret svg {
 .dash-profile__add-btn:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+/* AND THE BUTTON HALF OF THE SAME TRAP. Kadence paints every <button> on
+   hover, focus AND active with its own button palette — on this site
+   `color:#ffa500; background:#ffffff` — at (0,1,1), which beats an unqualified
+   .dash-profile__add-btn (0,1,0). Hovering turned the label orange, and
+   because a clicked button KEEPS focus in Chrome, it then sat white-on-white
+   with an orange label until the agent clicked elsewhere.
+
+   So both halves are stated for every state this button can be in. The hover
+   rule is last so a hovered-and-focused button still darkens the way the
+   design draws it. */
+.dashboard-page .dash-profile__add-btn,
+.dashboard-page .dash-profile__add-btn:focus,
+.dashboard-page .dash-profile__add-btn:active {
+  background: var(--navy-800);
+  color: var(--surface-card);
+}
+
+.dashboard-page .dash-profile__add-btn:hover {
+  background: var(--primary);
+  color: var(--surface-card);
 }
 
 .dash-profile__badges {
