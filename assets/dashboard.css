@@ -2273,6 +2273,347 @@ button.dash-requests__line[aria-expanded="true"] .dash-requests__caret svg {
   color: var(--text-faint);
 }
 
+/* ── The purchased lead's contact strip ─────────────────────────────
+   The three ways out of the panel and into a conversation: call, email,
+   copy. They sit UNDER the field grid rather than beside the name,
+   because the record is what an agent reads first and the actions are
+   what they do about it — and because the strip wraps to as many lines as
+   it needs at narrow widths without disturbing the grid above.
+
+   Spaced and ruled exactly like the awaiting note below, which is the
+   other thing that hangs off the bottom of a panel: same 16/14px, same
+   hairline, and the rule only when there is a grid above it to separate
+   FROM. */
+.dash-requests__contact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.dash-requests__fields + .dash-requests__contact {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-soft);
+}
+
+/* WHITE PILLS ON THE PANEL'S GRAY, the same inversion the field grid uses
+   against the page — an action reads as a raised thing on a sunken one.
+   Accent text because each one leaves the page, and a hairline rather than
+   a fill because there is no primary among them: an agent picks the
+   channel, the product has no opinion.
+
+   The <a>s and the <button> are the same object and are drawn identically;
+   the button carries `all: unset`-style resets explicitly (font, border,
+   margin) because Kadence styles bare buttons and this one must not
+   inherit that. */
+.dash-requests__contact-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  padding: 8px 14px;
+  border: 1px solid var(--border-soft);
+  border-radius: 9px;
+  background: var(--surface-card);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: var(--leading-snug);
+  color: var(--accent);
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
+}
+
+.dash-requests__contact-action svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+.dash-requests__contact-action:hover,
+.dash-requests__contact-action:focus-visible {
+  border-color: var(--accent);
+  color: var(--accent-hover);
+}
+
+.dash-requests__contact-action:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* THE KADENCE BUTTON TRAP, the same one .dash-profile__add-btn documents:
+   the parent theme paints every <button> on hover, focus AND active from its
+   own button palette (white on orange here) at specificity (0,1,1), which
+   beats an unqualified class (0,1,0). A clicked button keeps focus in Chrome,
+   so without this the copy button sat orange-on-white until the agent clicked
+   away. Every state this button can be in is therefore stated at
+   .dashboard-page, with hover last so a hovered-and-focused button still
+   picks up the accent border. */
+.dashboard-page .dash-requests__contact-copy,
+.dashboard-page .dash-requests__contact-copy:focus,
+.dashboard-page .dash-requests__contact-copy:active {
+  background: var(--surface-card);
+  border-color: var(--border-soft);
+  color: var(--accent);
+}
+
+.dashboard-page .dash-requests__contact-copy:hover {
+  background: var(--surface-card);
+  border-color: var(--accent);
+  color: var(--accent-hover);
+}
+
+/* "Copied", after the fact. Accent because it reports something that worked,
+   and it is the whole of the treatment — no toast, no icon swap, nothing that
+   moves. It is also a live region, so it is what a screen reader hears; the
+   empty span holds no space when there is nothing to say. */
+.dash-requests__contact-said {
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  line-height: var(--leading-snug);
+  color: var(--accent);
+}
+
+/* A purchased lead with no phone and no email — a scenario fault rather than
+   a shopper who declined, so it says who fixes it. Full width of the strip so
+   it never sits beside an action as though it were one. */
+.dash-requests__contact-none {
+  flex-basis: 100%;
+  margin: 0;
+  max-width: 520px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+/* ── The agent's own status and note ────────────────────────────────
+   THE ONLY EDITABLE THING ON HISTORY, and the panel's last block: the
+   record above is the shopper's answers and this is the agent's work on
+   top of them. Ruled off from the strip above it the same way the strip is
+   ruled off from the grid, so the panel reads as three bands — what we
+   hold, what you can do, what you wrote.
+
+   The controls are the Agency Profile's, resized: this is a note inside a
+   row rather than a field on a form, so it is 13px where the profile is
+   13.5-14px, and the whole block is capped so a note does not run the full
+   width of a 1200px content column. */
+.dash-requests__log {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-soft);
+  max-width: 560px;
+}
+
+.dash-requests__log-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+/* The same mono kicker the field labels take, for the same reason: these
+   sit in the same panel and a second label treatment would read as a second
+   kind of thing. */
+.dash-requests__log-label {
+  display: block;
+  margin-bottom: 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  line-height: var(--leading-snug);
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+/* Inline in the head row, where the label sits BESIDE the select rather than
+   above it — there is one control on that line and a stacked label would
+   push the note field down for nothing. */
+.dash-requests__log-head .dash-requests__log-label {
+  margin-bottom: 0;
+}
+
+.dash-requests__log-select {
+  min-width: 180px;
+  padding: 8px 11px;
+  border: 1px solid var(--border-input);
+  border-radius: 9px;
+  background: var(--surface-card);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: var(--leading-snug);
+  color: var(--text-heading);
+}
+
+.dash-requests__log-note {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 13px;
+  border: 1px solid var(--border-input);
+  border-radius: 10px;
+  background: var(--surface-card);
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  line-height: var(--leading-body);
+  color: var(--text-heading);
+  /* Vertical only: a textarea an agent can drag wider breaks the panel's
+     grid, and one they can drag taller is exactly what a long call note
+     needs. */
+  resize: vertical;
+}
+
+.dash-requests__log-note::placeholder {
+  color: var(--text-faint);
+}
+
+.dash-requests__log-select:focus,
+.dash-requests__log-note:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.dash-requests__log-select:focus-visible,
+.dash-requests__log-note:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* THE KADENCE FOCUS TRAP, and this block is the one place on the dashboard
+   where a <textarea> is exposed to it. The parent theme ships
+   `input[type="…"]:focus, textarea:focus { color: var(--global-palette3) }`
+   at specificity (0,2,1) — palette3 is #ffffff on this site — which outranks
+   a bare class (0,1,0) and repaints the note white-on-white WHILE THE AGENT
+   IS TYPING, readable again only on blur. Both states are therefore pinned at
+   .dashboard-page, with -webkit-text-fill-color beside `color` because Safari
+   and iOS follow the fill rather than the color. See CLAUDE.md, "Input text
+   invisible while typing" — and do not drop the :focus selector, which is the
+   state that breaks. The select's own version of the trap is the same rule
+   the states picker documents. */
+.dashboard-page .dash-requests__log-note,
+.dashboard-page .dash-requests__log-note:focus,
+.dashboard-page .dash-requests__log-select,
+.dashboard-page .dash-requests__log-select:focus {
+  color: var(--text-heading);
+  -webkit-text-fill-color: var(--text-heading);
+  background-color: var(--surface-card);
+  caret-color: var(--accent);
+}
+
+.dashboard-page .dash-requests__log-note:-webkit-autofill,
+.dashboard-page .dash-requests__log-note:-webkit-autofill:hover,
+.dashboard-page .dash-requests__log-note:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text-heading);
+  box-shadow: 0 0 0 100px var(--surface-card) inset;
+}
+
+.dash-requests__log-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+/* Navy, not accent green — the same rule the profile's "Add state" button
+   follows. Green in this product means an affirmative answer to a live
+   match; filing a note is bookkeeping, and spending the match color on it
+   would make the two read as the same kind of event. */
+.dash-requests__log-save {
+  padding: 9px 18px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--navy-800);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: var(--leading-snug);
+  color: var(--surface-card);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+/* Both halves of the Kadence button trap again — see the copy button above,
+   and .dash-profile__add-btn, which documents it in full. */
+.dashboard-page .dash-requests__log-save,
+.dashboard-page .dash-requests__log-save:focus,
+.dashboard-page .dash-requests__log-save:active {
+  background: var(--navy-800);
+  color: var(--surface-card);
+}
+
+.dashboard-page .dash-requests__log-save:hover {
+  background: var(--primary);
+  color: var(--surface-card);
+}
+
+.dash-requests__log-save:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* While the post is in flight. Dimmed rather than restyled, and the cursor
+   says why — the button is the only thing on the panel that can be pressed
+   twice into the same write. */
+.dashboard-page .dash-requests__log-save[disabled],
+.dashboard-page .dash-requests__log-save[disabled]:hover {
+  background: var(--navy-800);
+  color: var(--surface-card);
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* Saved, and when. Accent, no box, no icon — the same treatment the profile's
+   own "Agency name saved" line gets, because it is the same statement. */
+.dash-requests__log-said {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--accent);
+}
+
+/* AND WHEN IT DID NOT LAND. The same red as the states picker's error line —
+   the design system's --error-fg, written out because home.css carries no
+   token for it — and it says where the truth is rather than demanding a
+   retry, because the agent's typing is still in the box in front of them. */
+.dash-requests__log-error {
+  margin: 0;
+  max-width: 420px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.45;
+  color: #b42318;
+  text-wrap: pretty;
+}
+
+/* A purchased lead that arrived with no reference to file against. Muted and
+   sized like the awaiting note, because it is the same kind of sentence: this
+   row cannot do the thing the others can, and here is why. */
+.dash-requests__log-none {
+  margin: 16px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-soft);
+  max-width: 520px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+/* `hidden` beats the display of everything inside a panel. Stated for the
+   same reason .dash-profile [hidden] is: the elements above set `display`
+   explicitly, and a bare [hidden] (display: block from the UA sheet) loses to
+   a class rule — so the saved and error lines would both be visible at once
+   the moment either of them was styled. */
+.dash-requests__panel [hidden] {
+  display: none;
+}
+
 /* THE UNDECIDED NOTE — what an awaiting row opens onto instead of the
    Accept / Pass the handoff put here. History is read-only: it says the
    request is still waiting and links to the one surface that can answer it.

@@ -947,3 +947,212 @@
     }
   }
 })();
+
+/* ===================================================================
+   History — "Copy details" on a purchased lead.
+
+   The third action in the panel's contact strip, beside the tel: and
+   mailto: links. Those two are real links and need nothing from this
+   file; the clipboard has no markup equivalent, so this is the one
+   contact action that is script-only — and it is therefore the one that
+   ships `hidden` and is revealed here.
+
+   REVEALED ONLY WHERE IT WORKS. navigator.clipboard is absent on
+   insecure origins and in older browsers, and a button that looks
+   pressable and silently copies nothing is worse than no button: the
+   agent pastes into their agency system and gets whatever was on the
+   clipboard before. So the check comes first and the reveal comes after.
+
+   THE TEXT IS THE SERVER'S. components/dashboard-view-requests.php
+   assembles the record into data-lead-copy at render time — this file
+   never reads the panel's DOM for it, so the paste cannot drift when the
+   layout does.
+   =================================================================== */
+(function () {
+  'use strict';
+
+  var list = document.querySelector('.dash-requests');
+  if (!list) {
+    return;
+  }
+
+  var buttons = Array.prototype.slice.call(list.querySelectorAll('[data-lead-copy]'));
+  if (buttons.length === 0) {
+    return;
+  }
+
+  // No clipboard, no button — see above. Every copy button on the view stays
+  // hidden, which is the state PHP already rendered.
+  if (!window.navigator || !window.navigator.clipboard || !window.navigator.clipboard.writeText) {
+    return;
+  }
+
+  // How long the confirmation stays up. Long enough to read, short enough that
+  // it is gone before the agent looks back at the row.
+  var SAID_MS = 2400;
+
+  buttons.forEach(function (button) {
+    var strip = button.parentNode;
+    var said = strip ? strip.querySelector('[data-lead-copied]') : null;
+    var timer = 0;
+
+    /* The line is a live region (role="status"), so writing to it is what
+       announces the copy — there is no other evidence on the page that
+       anything happened. */
+    function report(message) {
+      if (!said) {
+        return;
+      }
+
+      said.textContent = message;
+
+      window.clearTimeout(timer);
+      timer = window.setTimeout(function () {
+        said.textContent = '';
+      }, SAID_MS);
+    }
+
+    button.addEventListener('click', function () {
+      var text = button.getAttribute('data-lead-copy') || '';
+
+      window.navigator.clipboard.writeText(text).then(function () {
+        report('Copied');
+      }).catch(function () {
+        /* A permission prompt the agent dismissed, or a document that lost
+           focus mid-write. Nothing is retried and nothing is faked — the row
+           says the copy did not happen and the details are still on screen to
+           select by hand. */
+        report('Could not copy');
+      });
+    });
+
+    button.removeAttribute('hidden');
+  });
+})();
+
+/* ===================================================================
+   History — the status and private note on a purchased lead.
+
+   THE PAGE IS ALREADY A WORKING FORM before this file runs, the same way
+   the states picker is: Save note is a real submit, the form posts to the
+   History view, ensurance_dashboard_handle_lead_note() writes the entry
+   and the redirect comes back with that row reopened. With no script at
+   all an agent can file every note they want, at one reload each.
+
+   WHAT THIS ADDS is that the reload stops happening: the same body is
+   posted with fetch, so the panel the agent is reading stays open and the
+   record beside the note stays on screen while they write it.
+
+   IT POSTS THE WHOLE ENTRY, unlike the states picker's intent. Status and
+   note are one thought filed together — an agent marks "Quoted" and says
+   what they quoted in the same breath — and the handler replaces the
+   entry whole, which is what makes clearing a status expressible at all.
+
+   NOTHING IS OPTIMISTIC. The line under the button says "Saved" only
+   after the server said so; a post that does not land says so and leaves
+   the typed text exactly where it is, because the box is then the only
+   copy of it. The stamp itself is deliberately vague ("Saved just now")
+   rather than a clock reading — the record's own `at` is the truth, and
+   this file does not have it until the next render.
+   =================================================================== */
+(function () {
+  'use strict';
+
+  var forms = Array.prototype.slice.call(document.querySelectorAll('[data-lead-form]'));
+  if (forms.length === 0) {
+    return;
+  }
+
+  // No fetch, no interception — the form keeps its native submit, which works.
+  if (!window.fetch || !window.URLSearchParams) {
+    return;
+  }
+
+  forms.forEach(function (form) {
+    var ref = form.querySelector('[name="dash_lead_ref"]');
+    var nonce = form.querySelector('[name="dash_lead_nonce"]');
+    var status = form.querySelector('[name="dash_lead_status"]');
+    var note = form.querySelector('[name="dash_lead_note"]');
+    var save = form.querySelector('.dash-requests__log-save');
+    var said = form.querySelector('[data-lead-said]');
+    var error = form.querySelector('[data-lead-error]');
+
+    // A form missing any of its own parts is left to submit natively rather
+    // than posted half-built.
+    if (!ref || !nonce || !status || !note || !save) {
+      return;
+    }
+
+    var saving = false;
+
+    function show(el, visible) {
+      if (el) {
+        el.hidden = !visible;
+      }
+    }
+
+    function post() {
+      if (saving) {
+        return;
+      }
+
+      var body = new window.URLSearchParams();
+      body.set('dash_lead_ref', ref.value);
+      body.set('dash_lead_status', status.value);
+      body.set('dash_lead_note', note.value);
+      body.set('dash_lead_nonce', nonce.value);
+      body.set('dash_lead_async', '1');
+
+      saving = true;
+      save.disabled = true;
+
+      function failed() {
+        show(said, false);
+        show(error, true);
+      }
+
+      window.fetch(form.action, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+        body: body.toString()
+      }).then(function (response) {
+        if (response.ok) {
+          show(error, false);
+
+          if (said) {
+            said.textContent = 'Saved just now';
+            show(said, true);
+          }
+
+          return;
+        }
+
+        failed();
+      }).catch(failed).then(function () {
+        saving = false;
+        save.disabled = false;
+      });
+    }
+
+    /* preventDefault is what stops the navigation — the post replaces it. This
+       catches the button, Enter in the select, and anything else the browser
+       counts as a submit. */
+    form.addEventListener('submit', function (event) {
+      event.preventDefault();
+      post();
+    });
+
+    /* A note that has been edited since the last save has an unsaved copy in
+       the box and nowhere else, so the stamp under it would be describing an
+       older entry. Clearing it is the honest state: the agent has typed
+       something and not saved it yet. */
+    function stale() {
+      show(said, false);
+      show(error, false);
+    }
+
+    note.addEventListener('input', stale);
+    status.addEventListener('change', stale);
+  });
+})();

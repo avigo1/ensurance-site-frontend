@@ -4353,6 +4353,469 @@ function ensurance_dashboard_purchased_lead_rows( $rows, $user_id = 0 ) {
 add_filter( 'ensurance_dashboard_request_rows', 'ensurance_dashboard_purchased_lead_rows', 10, 2 );
 
 /**
+ * This agent's purchased leads, keyed by the History row each one produced.
+ *
+ * THE JOIN BETWEEN A ROW AND ITS RECORD. ensurance_dashboard_purchased_lead_rows()
+ * reduces a lead to the two strings a row prints and throws the rest away — which
+ * is right for the row and useless to the panel under it, which wants the whole
+ * record. This hands the panel that record back, indexed by the same `key` the
+ * adapter stamped on the row, so the tie is an exact string match rather than a
+ * guess at which lead a row was made from.
+ *
+ * THE KEY IS DERIVED THE SAME WAY, and deliberately in a second place rather than
+ * by widening the adapter — CLAUDE.md's standing rule is that existing functions
+ * in functions.php are added to, not edited. The expression is one line and the
+ * two are read together; if the adapter's keying ever changes, this changes with
+ * it and the panel simply stops matching in the meantime (a row with no record
+ * behind it renders as it did before purchased leads existed, rather than
+ * rendering the wrong shopper).
+ *
+ * NO SECOND FETCH. ensurance_dashboard_purchased_leads() is memoized per user for
+ * the life of the request, so calling it here after the row filter has already
+ * called it costs nothing.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return array<string,array<string,mixed>> Row key => the lead behind it.
+ */
+function ensurance_dashboard_lead_records( $user_id = 0 ) {
+    $records = array();
+
+    foreach ( ensurance_dashboard_purchased_leads( $user_id ) as $i => $lead ) {
+        $key = ( '' !== $lead['ref'] ) ? 'lead-' . $lead['ref'] : 'lead-' . (int) $i;
+
+        $records[ $key ] = $lead;
+    }
+
+    return $records;
+}
+
+/**
+ * What a purchased lead cost the agent.
+ *
+ * THE RECORD DOES NOT CARRY IT. The webhook returns the shopper's answers, not
+ * the transaction — there is no price column on a lead, and inventing one would
+ * put a number an agent was never charged next to a real purchase. So the amount
+ * is resolved rather than read, in the one order that can only ever be right:
+ *
+ *   1. the lead's own `charge`, if something upstream put one there. Nothing does
+ *      today; the key is honoured first so that the day the scenario returns an
+ *      amount per lead, wiring it through the filter below is the whole change.
+ *   2. the standing lead price, ENSURANCE_LEAD_PRICE — a per-environment constant
+ *      in wp-config.php, the same handling the webhook URLs get.
+ *   3. '' — and the panel prints "Not on file" rather than a figure.
+ *
+ * IT IS A DISPLAY STRING, not a number: "$25" or "$25.00" or "1 credit", whatever
+ * the product actually charges in. Nothing does arithmetic on it.
+ *
+ * @param array $lead One normalized lead.
+ * @return string What was charged, or '' when nothing is known.
+ */
+function ensurance_dashboard_lead_charge( $lead ) {
+    $charge = ( is_array( $lead ) && ! empty( $lead['charge'] ) ) ? (string) $lead['charge'] : '';
+
+    if ( '' === $charge && defined( 'ENSURANCE_LEAD_PRICE' ) && ENSURANCE_LEAD_PRICE ) {
+        $charge = (string) ENSURANCE_LEAD_PRICE;
+    }
+
+    /**
+     * Filter what a purchased lead is reported to have cost.
+     *
+     * Where a real per-lead amount attaches when the billing side has one.
+     *
+     * @param string $charge Resolved amount, '' when unknown.
+     * @param array  $lead   The lead it is being resolved for.
+     */
+    return (string) apply_filters( 'ensurance_dashboard_lead_charge', $charge, $lead );
+}
+
+/**
+ * User-meta key holding an agent's own working notes on the leads they bought.
+ *
+ * ONE ROW, ONE ARRAY — keyed by the lead's reference, each entry a status, a note
+ * and the moment it was written. WordPress serializes the array itself, so there
+ * is no JSON to parse and no second table: an agent's log is short, read whole
+ * every time the History view renders, and belongs to exactly one user.
+ *
+ * PRIVATE TO THE AGENT, and the key is underscored so it stays out of the custom
+ * fields box. Nothing else reads it, nothing syncs it outward, and no shopper-
+ * facing surface can reach it.
+ *
+ * INTERIM STORE, in the same sense as ENSURANCE_DASHBOARD_STATES_META: when the
+ * lead system owns a per-lead record of its own, that takes over through the
+ * filter on ensurance_dashboard_lead_log() and this can go.
+ */
+if ( ! defined( 'ENSURANCE_DASHBOARD_LEAD_LOG_META' ) ) {
+    define( 'ENSURANCE_DASHBOARD_LEAD_LOG_META', '_ensurance_lead_log' );
+}
+
+/**
+ * The statuses an agent may put on a lead they are working — THE list.
+ *
+ * A CLOSED SET, for the reason ensurance_dashboard_request_statuses() is one: a
+ * value that is not in here has no label behind it, and storing it anyway means a
+ * select that renders blank on the next load. The handler drops anything else.
+ *
+ * '' IS A REAL STATE and is not in this list, because it is the absence of one —
+ * it is the select's first option ("No status yet") and what an entry reverts to
+ * when the agent clears it.
+ *
+ * THESE FOUR describe where the agent got to with the shopper, which is what the
+ * agent asked to be able to record. They are deliberately NOT a pipeline the
+ * product enforces: nothing orders them, nothing blocks a jump, and nothing else
+ * in the dashboard reads them. It is the agent's own note-to-self, in a dropdown
+ * so two leads can be compared at a glance.
+ *
+ * @return array<string,string> Slug => label, in the order the select offers them.
+ */
+function ensurance_dashboard_lead_statuses() {
+    return array(
+        'contacted' => 'Contacted',
+        'quoted'    => 'Quoted',
+        'written'   => 'Written',
+        'no-answer' => 'No answer',
+    );
+}
+
+/**
+ * Everything this agent has written against their purchased leads.
+ *
+ * SHAPE — [ ref => ['status' => …, 'note' => …, 'at' => int] ]. Every entry
+ * carries all three keys, so a caller never has to check before printing, and a
+ * status the list above no longer names is dropped on the way out rather than
+ * rendered as an unlabelled value.
+ *
+ * READ-REPAIRING, NOT WRITE-REPAIRING: a malformed meta row (hand-edited, or
+ * written by an older shape) is cleaned as it is read and the stored row is left
+ * alone. Reading must never write.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return array<string,array{status:string,note:string,at:int}>
+ */
+function ensurance_dashboard_lead_log( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $log     = array();
+
+    if ( ! $user_id ) {
+        return $log;
+    }
+
+    $stored   = get_user_meta( $user_id, ENSURANCE_DASHBOARD_LEAD_LOG_META, true );
+    $statuses = ensurance_dashboard_lead_statuses();
+
+    foreach ( (array) $stored as $ref => $entry ) {
+        $ref = sanitize_key( $ref );
+
+        if ( '' === $ref || ! is_array( $entry ) ) {
+            continue;
+        }
+
+        $status = isset( $entry['status'] ) ? sanitize_key( $entry['status'] ) : '';
+
+        $log[ $ref ] = array(
+            'status' => isset( $statuses[ $status ] ) ? $status : '',
+            'note'   => isset( $entry['note'] ) ? (string) $entry['note'] : '',
+            'at'     => isset( $entry['at'] ) ? (int) $entry['at'] : 0,
+        );
+    }
+
+    /**
+     * Filter an agent's lead log.
+     *
+     * Where a real per-lead record takes over from the user-meta store.
+     *
+     * @param array $log     Entries keyed by lead reference.
+     * @param int   $user_id User the log was resolved for.
+     */
+    return (array) apply_filters( 'ensurance_dashboard_lead_log', $log, $user_id );
+}
+
+/**
+ * One lead's log entry, always fully formed.
+ *
+ * A lead nothing has been written about returns the same three keys empty, so the
+ * panel renders the same form whether or not there is anything in it.
+ *
+ * @param string $ref     The lead's reference.
+ * @param int    $user_id Optional. Defaults to the current user.
+ * @return array{status:string,note:string,at:int}
+ */
+function ensurance_dashboard_lead_entry( $ref, $user_id = 0 ) {
+    $ref   = sanitize_key( $ref );
+    $log   = ensurance_dashboard_lead_log( $user_id );
+    $empty = array(
+        'status' => '',
+        'note'   => '',
+        'at'     => 0,
+    );
+
+    return isset( $log[ $ref ] ) ? $log[ $ref ] : $empty;
+}
+
+/**
+ * The longest note the log will store, in characters.
+ *
+ * NOT A RULE ABOUT WHAT AN AGENT MAY WRITE — it is the bound on a single user-meta
+ * row that a free textarea would otherwise leave unbounded. 2000 characters is
+ * several times the longest call note anyone writes and small enough that a whole
+ * log stays one comfortable row.
+ */
+if ( ! defined( 'ENSURANCE_DASHBOARD_LEAD_NOTE_MAX' ) ) {
+    define( 'ENSURANCE_DASHBOARD_LEAD_NOTE_MAX', 2000 );
+}
+
+/**
+ * Write one lead's status and note into the agent's log.
+ *
+ * AN ENTRY IS REPLACED WHOLE, not merged: the form posts both fields together and
+ * always sends both, so what arrives IS the entry. That is what lets an agent
+ * clear a status by choosing "No status yet" — a merge would make clearing
+ * impossible to express.
+ *
+ * EMPTY ON BOTH SIDES DELETES. A cleared status and an emptied note is not an
+ * entry that says nothing, it is the absence of one, and storing it would leave
+ * the log growing a row for every lead an agent ever opened and thought better of.
+ *
+ * `at` IS THE MOMENT OF THE WRITE, stamped here rather than posted, so the "Saved"
+ * line under the form can never report a time the client made up.
+ *
+ * @param string $ref     The lead's reference.
+ * @param string $status  One of ensurance_dashboard_lead_statuses(), or '' for none.
+ * @param string $note    The agent's private note.
+ * @param int    $user_id Optional. Defaults to the current user.
+ * @return array{status:string,note:string,at:int}|false The stored entry, or false when nothing could be written.
+ */
+function ensurance_dashboard_save_lead_entry( $ref, $status, $note, $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $ref     = sanitize_key( $ref );
+
+    if ( ! $user_id || '' === $ref ) {
+        return false;
+    }
+
+    $statuses = ensurance_dashboard_lead_statuses();
+    $status   = sanitize_key( $status );
+    $status   = isset( $statuses[ $status ] ) ? $status : '';
+
+    // sanitize_textarea_field keeps the agent's line breaks and strips the markup
+    // — the value comes back out into the page, and the template escapes it
+    // again on the way.
+    $note = sanitize_textarea_field( $note );
+    $note = trim( mb_substr( $note, 0, ENSURANCE_DASHBOARD_LEAD_NOTE_MAX ) );
+
+    // Read through the resolver so a malformed row cannot survive a save.
+    $log = ensurance_dashboard_lead_log( $user_id );
+
+    if ( '' === $status && '' === $note ) {
+        unset( $log[ $ref ] );
+
+        update_user_meta( $user_id, ENSURANCE_DASHBOARD_LEAD_LOG_META, $log );
+
+        return array(
+            'status' => '',
+            'note'   => '',
+            'at'     => 0,
+        );
+    }
+
+    $entry = array(
+        'status' => $status,
+        'note'   => $note,
+        'at'     => time(),
+    );
+
+    $log[ $ref ] = $entry;
+
+    update_user_meta( $user_id, ENSURANCE_DASHBOARD_LEAD_LOG_META, $log );
+
+    /**
+     * Fires after an agent files a status or a note against a purchased lead.
+     *
+     * Where a CRM sync, an activity row or a notification attaches. Nothing
+     * listens today.
+     *
+     * @param string $ref     The lead's reference.
+     * @param array  $entry   The stored entry.
+     * @param int    $user_id Agent who wrote it.
+     */
+    do_action( 'ensurance_dashboard_lead_entry_saved', $ref, $entry, $user_id );
+
+    return $entry;
+}
+
+/**
+ * The History view's URL — where a lead note posts back to.
+ *
+ * Resolved out of the rail registry for the same reason
+ * ensurance_dashboard_profile_url() is: the registry owns every view's href, and
+ * a URL written by hand here is a second thing to keep in step. The slug is
+ * `requests`, which is the History view's — see the note on its registry entry.
+ *
+ * @return string Absolute URL to the History view.
+ */
+function ensurance_dashboard_requests_url() {
+    $url = '';
+
+    foreach ( ensurance_dashboard_views() as $view ) {
+        if ( 'requests' === $view['view'] ) {
+            $url = (string) $view['href'];
+            break;
+        }
+    }
+
+    /**
+     * Filter the destination behind the product's History links.
+     *
+     * @param string $url Resolved History URL.
+     */
+    $url = (string) apply_filters( 'ensurance_dashboard_requests_url', $url );
+
+    // The registry always carries a History row, so this is a guard rather than a
+    // branch anyone should hit.
+    return '' !== $url ? $url : add_query_arg( 'view', 'requests', home_url( '/dashboard/' ) );
+}
+
+/**
+ * How a lead-note save answers, on whichever path it arrived by.
+ *
+ * The shape ensurance_dashboard_states_response() established: the script's POST
+ * gets a status code and nothing else, the form's POST gets a redirect back to
+ * the view it came from. A rejected form post returns WITHOUT redirecting, so the
+ * page renders again showing the stored entry — which is the correction, stated
+ * by simply showing the truth, rather than WordPress's "link expired" screen.
+ *
+ * ALWAYS EXITS on the fetch path, and on an accepted form post.
+ *
+ * @param bool $ok Whether the write was accepted.
+ */
+function ensurance_dashboard_lead_note_response( $ok ) {
+    if ( ! empty( $_POST['dash_lead_async'] ) ) {
+        status_header( $ok ? 204 : 403 );
+        exit;
+    }
+
+    if ( ! $ok ) {
+        return;
+    }
+
+    // The reference rides along so the view can reopen the row that was just
+    // saved — see ensurance_dashboard_lead_note_saved(). Carried in the URL the
+    // way the decided slot carries its own outcome, rather than in a flash.
+    $ref = isset( $_POST['dash_lead_ref'] ) ? sanitize_key( wp_unslash( $_POST['dash_lead_ref'] ) ) : '';
+
+    wp_safe_redirect(
+        add_query_arg(
+            array(
+                'saved' => 'lead',
+                'lead'  => $ref,
+            ),
+            ensurance_dashboard_requests_url()
+        )
+    );
+    exit;
+}
+
+/**
+ * Saves the status and private note an agent files against a purchased lead.
+ *
+ * THE ONE EDITABLE THING ON HISTORY, and it is editable on accepted rows only —
+ * the view is otherwise a record of what happened, and the panel's own fields are
+ * the shopper's answers, which an agent may read and may not rewrite. What this
+ * stores is the agent's own work on top of them.
+ *
+ * AN ORDINARY FORM POST to the page it is on, exactly like
+ * ensurance_dashboard_handle_states(): no endpoint, no REST route, and a Save
+ * button that works with JavaScript off (one reload, landing back on History with
+ * the entry rendered). With the script it is the same post sent by fetch, so the
+ * panel stays open and the agent stays where they were.
+ *
+ * A SAVE BUTTON, unlike the agency name's blur-commit. A note is a paragraph an
+ * agent stops and starts in the middle of, often to look something up in the panel
+ * beside it; committing it on blur would file half a sentence and then file it
+ * again, and there would be no moment at which the agent decided they were done.
+ *
+ * NOTHING IS AUTHORIZED BEYOND "IS THIS THE AGENT". The entry is filed in the
+ * agent's own user meta under a reference only their own dashboard shows them, so
+ * a hand-built post with someone else's reference writes a note nobody but the
+ * poster can ever read. Checking the reference against the webhook would mean a
+ * round trip on every save, and losing an agent's note because Make was slow is
+ * the worse failure of the two.
+ *
+ * A SAVE POSTED FROM THE PREVIEW WRITES NOTHING, the rule every writer on this
+ * dashboard follows. `?slot=` suppresses purchased leads entirely
+ * (ensurance_dashboard_purchased_leads), so no note form renders under a preview
+ * and this is the guard for a post that arrives anyway.
+ *
+ * A failed or expired nonce writes nothing and says so (403 / no redirect).
+ */
+function ensurance_dashboard_handle_lead_note() {
+    // Cheapest test first — this runs on every front-end request.
+    if ( ! isset( $_POST['dash_lead_ref'] ) || ! is_page( 'dashboard' ) || ! is_user_logged_in() ) {
+        return;
+    }
+
+    $nonce = isset( $_POST['dash_lead_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['dash_lead_nonce'] ) ) : '';
+
+    if ( ! wp_verify_nonce( $nonce, 'ensurance_dashboard_lead_note' ) ) {
+        ensurance_dashboard_lead_note_response( false );
+        return;
+    }
+
+    if ( '' !== ensurance_dashboard_priority_preview() ) {
+        ensurance_dashboard_lead_note_response( true );
+        return;
+    }
+
+    $ref = sanitize_key( wp_unslash( $_POST['dash_lead_ref'] ) );
+
+    if ( '' === $ref ) {
+        ensurance_dashboard_lead_note_response( false );
+        return;
+    }
+
+    $status = isset( $_POST['dash_lead_status'] ) ? wp_unslash( $_POST['dash_lead_status'] ) : '';
+    $note   = isset( $_POST['dash_lead_note'] ) ? wp_unslash( $_POST['dash_lead_note'] ) : '';
+
+    $saved = ensurance_dashboard_save_lead_entry( $ref, $status, $note );
+
+    ensurance_dashboard_lead_note_response( false !== $saved );
+}
+add_action( 'template_redirect', 'ensurance_dashboard_handle_lead_note' );
+
+/**
+ * The lead whose note was just saved, when this request is that landing.
+ *
+ * Read-only presentation state, the same shape as
+ * ensurance_dashboard_agency_name_saved(): no side effects, so no nonce, and
+ * `saved` is compared against one known word so an arbitrary `?saved=` reaches
+ * the page as nothing at all.
+ *
+ * WHY IT RETURNS THE REFERENCE rather than a yes. Only the no-script path ever
+ * lands here — the fetch path never leaves the page — and on that path the row
+ * the agent was writing in has just closed itself, because a fresh render knows
+ * nothing about which panel was open. Naming the lead lets History reopen exactly
+ * that row with the stored note in it, which is both the confirmation and the
+ * place the agent was standing.
+ *
+ * The value is sanitize_key()'d and only ever compared against references the
+ * page itself resolved, so an invented `?lead=` opens nothing.
+ *
+ * @return string The saved lead's reference, or '' when this is not that landing.
+ */
+function ensurance_dashboard_lead_note_saved() {
+    if ( empty( $_GET['saved'] ) || ! is_string( $_GET['saved'] ) ) {
+        return '';
+    }
+
+    if ( 'lead' !== sanitize_key( wp_unslash( $_GET['saved'] ) ) ) {
+        return '';
+    }
+
+    return ( ! empty( $_GET['lead'] ) && is_string( $_GET['lead'] ) )
+        ? sanitize_key( wp_unslash( $_GET['lead'] ) )
+        : '';
+}
+
+/**
  * The design's own sample agency record — agency name, license number and phone.
  *
  * The fields on the Agency Profile view that no other surface resolves, and the

@@ -52,20 +52,21 @@
  * "Detail closed" stand-in, the locked note) has nothing left to describe and is
  * gone with it.
  *
- * WHICH ROWS OPEN, and both reasons are about what is behind the row:
+ * WHICH ROWS OPEN, and every reason is about what is behind the row:
  *
  *   - it is AWAITING a decision, where the panel says so and points at Today.
  *     This is the whole read-only rule in one place: History never decides
  *     anything, so a row that still needs deciding sends the agent to the one
  *     surface that can;
+ *   - it is a PURCHASED LEAD, where the panel is the whole record — see below;
  *   - it is the live request, whose `facts` on
- *     ensurance_dashboard_live_request() are this app's only per-request
- *     detail — up to four label/value pairs, and no other row has any.
+ *     ensurance_dashboard_live_request() are this app's only other per-request
+ *     detail — up to four label/value pairs.
  *
- * The two overlap on today's row and are separate everywhere else. An accepted
- * row with no facts behind it stays the inert <div> it was, with no caret and no
- * hover surface: a row that looked expandable and opened onto nothing would be
- * worse than a row that does not open.
+ * The first and last overlap on today's row and are separate everywhere else. An
+ * accepted row with nothing behind it stays the inert <div> it was, with no caret
+ * and no hover surface: a row that looked expandable and opened onto nothing
+ * would be worse than a row that does not open.
  *
  * NO ACCEPT / PASS ANYWHERE ON THIS VIEW, which is step 4 of the handoff
  * DELIBERATELY not built rather than merely unbuilt. Decisions live on Today and
@@ -88,20 +89,46 @@
  * built from it, which the row shaper keys `live`. Same resolver, same
  * capability gate, no new data and no change to what any of it returns.
  *
- * WHAT IS DELIBERATELY MISSING FROM THE PANEL. The handoff's panel also carries
- * a contact strip — masked phone and email on awaiting rows, real contact plus
- * Call / Email links on accepted ones. None of it is built here, and the reason
- * is not that this app masks contact details differently: it is that nothing in
- * the product holds a shopper's phone or email at all, there is no masking
- * helper to reuse, and nothing yet releases contact details on accept.
- * ensurance_dashboard_record_decision() writes one user-meta flag and fires
- * `ensurance_dashboard_decision_recorded`, which has no listener — releasing the
- * details is named there as the queue's job, unwritten.
+ * A PURCHASED ROW OPENS ONTO THE WHOLE RECORD, which is the one thing on this
+ * view that is not a summary. The agent accepted the lead and paid for it, so
+ * there is nothing left to withhold and no reason to make them go somewhere else
+ * to read what they bought: the panel prints every field
+ * ensurance_dashboard_purchased_leads() holds — driver, household, vehicle and
+ * its use, driving record, current carrier and renewal, bundle interest, the full
+ * address, the reference, when it was accepted and what it cost — in the SAME
+ * grid, at the same type scale, with the same tokens the four-fact panel above
+ * already uses. Nothing about the row, the list, the filters or the sort changes;
+ * only what is inside the panel does.
  *
- * So the strip is not a layout this file can adapt; it is a record, a permission
- * rule and a release step that do not exist. Per the handoff's own instruction —
- * enforce masking with the app's existing rule, ask rather than guess — it waits
- * for the team. No strip, no mask, no fabricated phone number.
+ * CONTACT IS LIVE ON THOSE ROWS AND ONLY THOSE ROWS. Phone and email are printed
+ * unmasked, as a `tel:` and a `mailto:`, beside a button that copies the record as
+ * plain text for pasting into an agency system. The copy button ships `hidden` and
+ * assets/dashboard.js reveals it only where the clipboard API exists — a button
+ * that silently does nothing is worse than no button.
+ *
+ * AWAITING ROWS ARE UNCHANGED, and that is the masking rule holding rather than a
+ * gap. Nothing in the product releases a shopper's contact details before a
+ * decision — the live request carries no phone or email at all — so an awaiting
+ * row opens onto exactly what it opened onto before: its four facts and the note
+ * pointing at Today. No contact strip, no fields to edit, nothing fabricated. A
+ * passed row never reaches this list at all.
+ *
+ * THE ONE EDITABLE THING ON THE VIEW, on purchased rows: a status
+ * (ensurance_dashboard_lead_statuses — contacted / quoted / written / no answer)
+ * and a private note, saved against the lead's reference in the agent's own
+ * record by ensurance_dashboard_handle_lead_note(). This does NOT break the
+ * read-only rule stated above, because that rule is about DECISIONS: accepting and
+ * passing still happen on Today and nowhere else, and nothing here can change a
+ * shopper's answers. What an agent writes here is their own work on top of a
+ * record they already own.
+ *
+ * It is a real form posting to the page, with a real Save button, so it works with
+ * JavaScript off — one reload, landing back on History with the row reopened
+ * (`?saved=lead&lead=…`, read by ensurance_dashboard_lead_note_saved). With the
+ * script it is the same post sent by fetch and the panel never closes. A Save
+ * button rather than the agency name's blur-commit: a note is a paragraph an agent
+ * stops in the middle of, and there has to be a moment where they decide they are
+ * done.
  *
  * THE CONTROLS ARE UI STATE, NOT A QUERY. The filter pills and the sort toggle
  * act on the rows this file has already rendered: no request, no `?` arg, no
@@ -188,6 +215,62 @@ $request_facts = ! empty( $request_live['facts'] ) ? $request_live['facts'] : ar
 // Where an awaiting row sends the agent to answer it. Resolved once, for the
 // same reason: it is the same destination on every row.
 $request_today = ensurance_dashboard_today_url();
+
+/*
+ * THE PURCHASED LEADS BEHIND THE ROWS, keyed by the row key the adapter stamped
+ * on each one (ensurance_dashboard_lead_records). Resolved once here rather than
+ * per row: the leads are one memoized fetch, and the loop below only ever needs
+ * to ask whether this row is one of them.
+ *
+ * The agent's own log is read the same way — one meta row for the whole list, so
+ * a panel does not query per lead.
+ */
+$request_leads  = ensurance_dashboard_lead_records();
+$request_log    = ensurance_dashboard_lead_log();
+$request_states = ensurance_dashboard_lead_statuses();
+
+// Where the note form posts. Same view, so a no-script save lands back on the
+// list it was written in.
+$request_action = ensurance_dashboard_requests_url();
+
+// The lead a no-script save just wrote, so its row can be reopened with the
+// stored note in it. '' on every other request, including every fetch save.
+$request_saved = ensurance_dashboard_lead_note_saved();
+
+/*
+ * ONE CELL OF THE PANEL'S GRID. A closure rather than a function because this is
+ * a template — a template that declared a function would fatal the second time
+ * anything included it.
+ *
+ * AN EMPTY VALUE KEEPS ITS SLOT and says "Not on file" in the faint shade, which
+ * is the rule the rest of the product follows (the Agency Profile's read-only
+ * boxes say the same words in the same shade): a missing answer is itself worth
+ * knowing to an agent about to quote the risk, and a grid that silently drops
+ * fields makes two leads impossible to compare down the column.
+ *
+ * `sub` is the qualifier that belongs TO the value above it — the usage under a
+ * vehicle, the renewal under a carrier, the city under a street — and prints
+ * nothing when there is none. It is never a field of its own.
+ */
+$request_field = static function ( $label, $value, $sub = '' ) {
+	$value = trim( (string) $value );
+	$sub   = trim( (string) $sub );
+	?>
+	<div class="dash-requests__field">
+		<div class="dash-requests__field-label"><?php echo esc_html( $label ); ?></div>
+
+		<?php if ( '' !== $value ) : ?>
+			<div class="dash-requests__field-value"><?php echo esc_html( $value ); ?></div>
+		<?php else : ?>
+			<div class="dash-requests__field-value dash-requests__field-value--empty">Not on file</div>
+		<?php endif; ?>
+
+		<?php if ( '' !== $sub ) : ?>
+			<div class="dash-requests__field-sub"><?php echo esc_html( $sub ); ?></div>
+		<?php endif; ?>
+	</div>
+	<?php
+};
 ?>
 
 <div class="dash-requests-controls" hidden>
@@ -261,10 +344,34 @@ $request_today = ensurance_dashboard_today_url();
 		// two.
 		$row_facts = ( 'live' === $row['key'] ) ? $request_facts : array();
 
+		// The purchased lead behind this row, when it is one. Matched on the row
+		// key the adapter stamped — see ensurance_dashboard_lead_records().
+		$row_lead = isset( $request_leads[ $row['key'] ] ) ? $request_leads[ $row['key'] ] : array();
+
+		/*
+		 * A NOTE IS FILED AGAINST A REFERENCE, so a lead that arrived without one
+		 * gets the record and the contact strip but no form. Its row key would be
+		 * its position in the list, which changes the next time a lead is bought —
+		 * and a note that silently re-attaches itself to a different shopper is
+		 * worse than no note at all.
+		 */
+		$row_ref   = ! empty( $row_lead['ref'] ) ? $row_lead['ref'] : '';
+		$row_entry = ( '' !== $row_ref && isset( $request_log[ $row_ref ] ) )
+			? $request_log[ $row_ref ]
+			: array( 'status' => '', 'note' => '', 'at' => 0 );
+
 		// See "WHICH ROWS OPEN" above. An awaiting row opens even with no facts
 		// behind it, because the note inside is itself the reason to open it.
-		$row_opens = $row_awaiting || ! empty( $row_facts );
+		$row_opens = $row_awaiting || ! empty( $row_facts ) || ! empty( $row_lead );
 		$row_panel = 'dash-request-panel-' . (int) $row_index;
+
+		/*
+		 * OPEN ON ARRIVAL, for exactly one row and only on the no-script save
+		 * path: the row whose note was just written. Rendered open server-side
+		 * rather than opened by script, so it is already open on first paint and
+		 * the toggle's aria-expanded is true of the DOM before any JS runs.
+		 */
+		$row_open = ( '' !== $row_ref && $row_ref === $request_saved );
 		?>
 
 		<li class="dash-requests__row" data-status="<?php echo esc_attr( $row['status'] ); ?>">
@@ -284,7 +391,7 @@ $request_today = ensurance_dashboard_today_url();
 			 */
 			?>
 			<?php if ( $row_opens ) : ?>
-			<button type="button" class="dash-requests__line" aria-expanded="false" aria-controls="<?php echo esc_attr( $row_panel ); ?>">
+			<button type="button" class="dash-requests__line" aria-expanded="<?php echo $row_open ? 'true' : 'false'; ?>" aria-controls="<?php echo esc_attr( $row_panel ); ?>">
 			<?php else : ?>
 			<div class="dash-requests__line">
 			<?php endif; ?>
@@ -367,19 +474,282 @@ $request_today = ensurance_dashboard_today_url();
 			/*
 			 * THE PANEL. Ships `hidden` so a JS-less browser gets a closed row
 			 * rather than every panel open at once, and so the button's
-			 * aria-expanded="false" is true of the DOM on first paint.
+			 * aria-expanded is true of the DOM on first paint. The one exception
+			 * is the row a no-script save just landed on, which renders open —
+			 * both halves of the pair move together ($row_open), so the button
+			 * and the panel can never disagree about which it is.
 			 *
-			 * The fields are the request's own `facts` — up to four label/value
-			 * pairs the resolver already validated (half-filled pairs are
-			 * dropped there, so nothing here has to check). The design's eight
-			 * named fields are its data model, not this one's; these are the
-			 * same object in the same grid.
+			 * TWO KINDS OF CONTENT, and a row is only ever one of them. A
+			 * purchased lead gets the whole record, the live contact strip and
+			 * the agent's own status and note. Everything else gets what it
+			 * always got: the request's `facts` — up to four label/value pairs
+			 * the resolver already validated, so nothing here has to check.
+			 *
+			 * The awaiting note below is common to both and is the last thing in
+			 * either, because it is the only thing in the panel that points
+			 * somewhere else.
 			 */
 			if ( $row_opens ) :
 				?>
-				<div class="dash-requests__panel" id="<?php echo esc_attr( $row_panel ); ?>" hidden>
+				<div class="dash-requests__panel" id="<?php echo esc_attr( $row_panel ); ?>"<?php echo $row_open ? '' : ' hidden'; ?>>
 
-					<?php if ( ! empty( $row_facts ) ) : ?>
+					<?php if ( ! empty( $row_lead ) ) : ?>
+
+						<?php
+						/*
+						 * THE WHOLE RECORD, in the panel's own grid. Every value
+						 * is composed once in
+						 * ensurance_dashboard_normalize_leads() and printed here
+						 * as it was composed — this file assembles no sentences
+						 * of its own, so the same lead reads identically on any
+						 * surface that ever shows it.
+						 *
+						 * THE ORDER IS THE ORDER AN AGENT WORKS IN: who they
+						 * are, then the risk, then where they live, then the
+						 * transaction. Contact is not in the grid — it is the
+						 * strip below, where it is something to act on rather
+						 * than something to read.
+						 */
+						$lead_at     = (int) $row_lead['purchased_at'];
+						$lead_charge = ensurance_dashboard_lead_charge( $row_lead );
+						?>
+
+						<div class="dash-requests__fields">
+
+							<?php
+							$request_field( 'Driver', $row_lead['driver'] );
+							$request_field( 'Household', $row_lead['household'] );
+
+							// The record holds the PRIMARY vehicle and a count of
+							// the rest (which is on the household line above), so
+							// this is every vehicle the webhook returns rather
+							// than every vehicle the shopper owns.
+							$request_field( 'Vehicle', $row_lead['vehicle'], $row_lead['vehicle_use'] );
+
+							$request_field( 'Driving record', $row_lead['record'] );
+							$request_field( 'Current carrier', $row_lead['carrier'], $row_lead['carrier_note'] );
+							$request_field( 'Bundle interest', $row_lead['bundle'] );
+
+							// Street over "City, ST ZIP" — the same pairing the
+							// row's own detail line splits across two columns.
+							$request_field( 'Address', $row_lead['address'], $row_lead['location'] );
+
+							$request_field( 'Reference', $row_ref );
+							?>
+
+							<?php
+							/*
+							 * WHEN IT WAS ACCEPTED, as <time> for the same reason
+							 * the row's stamp is one: the panel prints a date a
+							 * human reads and the attribute keeps the moment it
+							 * was. Written out here rather than through the field
+							 * closure, which prints text.
+							 */
+							?>
+							<div class="dash-requests__field">
+								<div class="dash-requests__field-label">Accepted</div>
+
+								<?php if ( $lead_at ) : ?>
+									<div class="dash-requests__field-value">
+										<time datetime="<?php echo esc_attr( wp_date( 'c', $lead_at ) ); ?>"><?php echo esc_html( wp_date( 'M j, Y', $lead_at ) ); ?></time>
+									</div>
+									<div class="dash-requests__field-sub"><?php echo esc_html( wp_date( 'g:i a', $lead_at ) ); ?></div>
+								<?php else : ?>
+									<div class="dash-requests__field-value dash-requests__field-value--empty">Not on file</div>
+								<?php endif; ?>
+							</div>
+
+							<?php
+							/*
+							 * WHAT IT COST. Resolved, not read — no price rides on
+							 * a lead record today, so this is the standing lead
+							 * price until the billing side supplies a real amount
+							 * (see ensurance_dashboard_lead_charge). Unconfigured,
+							 * it says so rather than showing a figure nobody was
+							 * charged.
+							 */
+							$request_field( 'Charged', $lead_charge );
+							?>
+
+						</div>
+
+						<?php
+						/*
+						 * THE CONTACT STRIP. Real links rather than buttons, so
+						 * they work with no JavaScript, open in whatever the
+						 * agent's machine uses for calls and mail, and can be
+						 * copied like any other link. The number and the address
+						 * are the link TEXT — an agent reading a record wants to
+						 * see them, not just be able to press them.
+						 */
+						$lead_name = trim( wp_strip_all_tags( $row['title'] ) );
+						$lead_tel  = preg_replace( '/[^0-9+]/', '', (string) $row_lead['phone'] );
+
+						/*
+						 * WHAT "COPY DETAILS" PUTS ON THE CLIPBOARD, assembled
+						 * here rather than in the script: the panel is where the
+						 * record's shape is already known, and a client that
+						 * scraped the DOM for it would produce something
+						 * different the moment the layout changed.
+						 */
+						$lead_copy = array( $lead_name );
+
+						/*
+						 * Pairs rather than a map, because the first few lines
+						 * carry no label at all — a name over an address over a
+						 * city is an address block, and labelling its parts would
+						 * be worse to paste than it is to read. Everything after
+						 * it is labelled, and a value the record does not hold
+						 * drops its line rather than pasting a blank one. The
+						 * carrier's note (the renewal) is unlabelled for the same
+						 * reason the panel makes it a sub-line: it is the tail of
+						 * the value above it, not a fact of its own.
+						 */
+						foreach ( array(
+							array( '', $row_lead['address'] ),
+							array( '', $row_lead['location'] ),
+							array( 'Phone', $row_lead['phone'] ),
+							array( 'Email', $row_lead['email'] ),
+							array( 'Driver', $row_lead['driver'] ),
+							array( 'Household', $row_lead['household'] ),
+							array( 'Vehicle', $row_lead['vehicle'] ),
+							array( 'Vehicle use', $row_lead['vehicle_use'] ),
+							array( 'Driving record', $row_lead['record'] ),
+							array( 'Current carrier', $row_lead['carrier'] ),
+							array( '', $row_lead['carrier_note'] ),
+							array( 'Bundle interest', $row_lead['bundle'] ),
+							array( 'Reference', $row_ref ),
+						) as $copy_line ) {
+							list( $copy_label, $copy_value ) = $copy_line;
+
+							$copy_value = trim( (string) $copy_value );
+
+							if ( '' === $copy_value ) {
+								continue;
+							}
+
+							$lead_copy[] = ( '' === $copy_label ) ? $copy_value : $copy_label . ': ' . $copy_value;
+						}
+
+						$lead_copy = implode( "\n", $lead_copy );
+						?>
+
+						<div class="dash-requests__contact">
+
+							<?php if ( '' !== $lead_tel ) : ?>
+								<a class="dash-requests__contact-action" href="tel:<?php echo esc_attr( $lead_tel ); ?>">
+									<?php // Icon `phone`, Lucide, stroke 2, round caps/joins — the set components/icons/Icon.jsx draws from. ?>
+									<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+									<?php echo esc_html( $row_lead['phone'] ); ?>
+								</a>
+							<?php endif; ?>
+
+							<?php if ( '' !== $row_lead['email'] ) : ?>
+								<a class="dash-requests__contact-action" href="mailto:<?php echo esc_attr( $row_lead['email'] ); ?>">
+									<?php // Icon `mail`, same set. ?>
+									<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+									<?php echo esc_html( $row_lead['email'] ); ?>
+								</a>
+							<?php endif; ?>
+
+							<?php
+							/*
+							 * SHIPS HIDDEN, revealed by assets/dashboard.js only
+							 * where navigator.clipboard exists. The live region is
+							 * the button's own confirmation line beside it.
+							 */
+							?>
+							<button
+								type="button"
+								class="dash-requests__contact-action dash-requests__contact-copy"
+								data-lead-copy="<?php echo esc_attr( $lead_copy ); ?>"
+								hidden
+							>
+								<?php // Icon `copy`, same set. ?>
+								<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+								Copy details
+							</button>
+
+							<?php
+							// Announced rather than merely shown: the copy leaves
+							// no visible trace on the page, so the confirmation is
+							// the only evidence it happened.
+							?>
+							<span class="dash-requests__contact-said" data-lead-copied role="status" aria-live="polite"></span>
+
+							<?php if ( '' === $lead_tel && '' === $row_lead['email'] ) : ?>
+								<p class="dash-requests__contact-none">No contact details came through on this lead — message support and we will chase them.</p>
+							<?php endif; ?>
+
+						</div>
+
+						<?php if ( '' !== $row_ref ) : ?>
+
+							<?php
+							/*
+							 * THE AGENT'S OWN LINE ON THE LEAD. A real form to the
+							 * page (ensurance_dashboard_handle_lead_note), so it
+							 * saves with JavaScript off; the script posts the same
+							 * body with fetch so the panel stays open.
+							 *
+							 * The stamp under it is the record's, not the
+							 * client's — `at` is written server-side, so this
+							 * line can never claim a save that did not happen.
+							 */
+							$log_id   = $row_panel . '-log';
+							$log_said = $row_entry['at'] ? ensurance_dashboard_relative_time( $row_entry['at'] ) : '';
+							$log_said = ( '' !== $log_said ) ? sprintf( 'Saved %s', lcfirst( $log_said ) ) : '';
+							?>
+
+							<form class="dash-requests__log" method="post" action="<?php echo esc_url( $request_action ); ?>" data-lead-form>
+
+								<?php wp_nonce_field( 'ensurance_dashboard_lead_note', 'dash_lead_nonce' ); ?>
+								<input type="hidden" name="dash_lead_ref" value="<?php echo esc_attr( $row_ref ); ?>" />
+
+								<div class="dash-requests__log-head">
+									<label class="dash-requests__log-label" for="<?php echo esc_attr( $log_id ); ?>-status">Status</label>
+
+									<select class="dash-requests__log-select" id="<?php echo esc_attr( $log_id ); ?>-status" name="dash_lead_status">
+										<?php
+										// '' is a real choice, not a placeholder:
+										// it is how a status is cleared again.
+										?>
+										<option value=""<?php selected( '', $row_entry['status'] ); ?>>No status yet</option>
+
+										<?php foreach ( $request_states as $state_key => $state_label ) : ?>
+											<option value="<?php echo esc_attr( $state_key ); ?>"<?php selected( $state_key, $row_entry['status'] ); ?>><?php echo esc_html( $state_label ); ?></option>
+										<?php endforeach; ?>
+									</select>
+								</div>
+
+								<label class="dash-requests__log-label" for="<?php echo esc_attr( $log_id ); ?>-note">Private note</label>
+
+								<textarea
+									class="dash-requests__log-note"
+									id="<?php echo esc_attr( $log_id ); ?>-note"
+									name="dash_lead_note"
+									rows="3"
+									maxlength="<?php echo esc_attr( ENSURANCE_DASHBOARD_LEAD_NOTE_MAX ); ?>"
+									placeholder="What happened when you called. Only you can see this."
+								><?php echo esc_textarea( $row_entry['note'] ); ?></textarea>
+
+								<div class="dash-requests__log-actions">
+									<button type="submit" class="dash-requests__log-save">Save note</button>
+
+									<p class="dash-requests__log-said" data-lead-said role="status" aria-live="polite"<?php echo ( '' !== $log_said ) ? '' : ' hidden'; ?>><?php echo esc_html( $log_said ); ?></p>
+
+									<p class="dash-requests__log-error" data-lead-error hidden>That note was not saved — the box above is what you typed, not what we hold. Try again.</p>
+								</div>
+
+							</form>
+
+						<?php else : ?>
+
+							<p class="dash-requests__log-none">This lead came through without a reference number, so there is nowhere to file a note against it yet. Message support and we will connect it.</p>
+
+						<?php endif; ?>
+
+					<?php elseif ( ! empty( $row_facts ) ) : ?>
 
 						<div class="dash-requests__fields">
 
