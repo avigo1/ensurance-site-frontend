@@ -1,0 +1,191 @@
+{
+    "flow": [
+        {
+            "id": 3,
+            "mapper": {},
+            "module": "gateway:CustomWebHook",
+            "version": 1,
+            "metadata": {
+                "restore": {
+                    "parameters": {
+                        "hook": {
+                            "data": {
+                                "editable": "true"
+                            },
+                            "label": "Agent Row Upsert → Save"
+                        }
+                    }
+                },
+                "designer": {
+                    "x": 0,
+                    "y": 0
+                },
+                "parameters": [
+                    {
+                        "name": "hook",
+                        "type": "hook:gateway-webhook",
+                        "label": "Webhook",
+                        "required": true
+                    },
+                    {
+                        "name": "maxResults",
+                        "type": "number",
+                        "label": "Maximum number of results"
+                    }
+                ]
+            },
+            "parameters": {
+                "hook": 2693718,
+                "maxResults": 1
+            }
+        },
+        {
+            "id": 4,
+            "mapper": {
+                "from": "drive",
+                "limit": "1",
+                "filter": [
+                    [
+                        {
+                            "a": "C",
+                            "b": "{{3.company_name}}",
+                            "o": "text:equal"
+                        },
+                        {
+                            "a": "E",
+                            "b": "{{3.first_name}}",
+                            "o": "text:equal"
+                        },
+                        {
+                            "a": "D",
+                            "b": "{{3.last_name}}",
+                            "o": "text:equal"
+                        }
+                    ]
+                ],
+                "sheetId": "auto_insurance_agents",
+                "sortOrder": "asc",
+                "spreadsheetId": "15lZHGmLN3uJUkLYxk4IY80G7LVPbAZYGMHo755OALeE",
+                "tableFirstRow": "A1:CZ1",
+                "includesHeaders": true,
+                "valueRenderOption": "FORMATTED_VALUE",
+                "dateTimeRenderOption": "FORMATTED_STRING"
+            },
+            "module": "google-sheets:filterRows",
+            "version": 2,
+            "metadata": {
+                "designer": {
+                    "x": 300,
+                    "y": 0,
+                    "name": "Search agent by company + name"
+                },
+                "parameters": [
+                    {
+                        "name": "__IMTCONN__",
+                        "type": "account:google",
+                        "label": "Connection",
+                        "required": true
+                    }
+                ]
+            },
+            "parameters": {
+                "__IMTCONN__": 8291026
+            }
+        },
+        {
+            "id": 5,
+            "mapper": null,
+            "module": "builtin:BasicRouter",
+            "routes": [
+                {
+                    "flow": [
+                        {
+                            "id": 7,
+                            "filter": {
+                                "name": "New agent",
+                                "conditions": [
+                                    [
+                                        {
+                                            "a": "{{4.__IMTLENGTH__}}",
+                                            "b": "0",
+                                            "o": "number:equal"
+                                        }
+                                    ]
+                                ]
+                            },
+                            "mapper": {
+                                "from": "drive",
+                                "mode": "select",
+                                "values": {
+                                    "1": "Starter",
+                                    "2": "{{3.company_name}}",
+                                    "3": "{{3.last_name}}",
+                                    "4": "{{3.first_name}}",
+                                    "11": "{{3.email}}"
+                                },
+                                "sheetId": "auto_insurance_agents",
+                                "spreadsheetId": "15lZHGmLN3uJUkLYxk4IY80G7LVPbAZYGMHo755OALeE",
+                                "includesHeaders": true,
+                                "insertDataOption": "INSERT_ROWS",
+                                "useColumnHeaders": false,
+                                "valueInputOption": "USER_ENTERED",
+                                "insertUnformatted": false,
+                                "useDomainAdminAccess": false
+                            },
+                            "module": "google-sheets:addRow",
+                            "version": 2,
+                            "metadata": {
+                                "designer": {
+                                    "x": 600,
+                                    "y": -150,
+                                    "name": "Create Starter row"
+                                },
+                                "parameters": [
+                                    {
+                                        "name": "__IMTCONN__",
+                                        "type": "account:google",
+                                        "label": "Connection",
+                                        "required": true
+                                    }
+                                ]
+                            },
+                            "parameters": {
+                                "__IMTCONN__": 8291026
+                            }
+                        }
+                    ]
+                },
+                {
+                    "flow": []
+                }
+            ],
+            "version": 1,
+            "metadata": {
+                "designer": {
+                    "x": 450,
+                    "y": 0
+                }
+            }
+        }
+    ],
+    "name": "Agent Row Upsert",
+    "metadata": {
+        "instant": true,
+        "version": 1,
+        "designer": {
+            "orphans": []
+        },
+        "scenario": {
+            "dlq": false,
+            "slots": null,
+            "dataloss": false,
+            "maxErrors": 3,
+            "autoCommit": true,
+            "roundtrips": 1,
+            "sequential": false,
+            "confidential": false,
+            "freshVariables": false,
+            "autoCommitTriggerLast": true
+        }
+    }
+}

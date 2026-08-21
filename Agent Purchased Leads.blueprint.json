@@ -1,0 +1,347 @@
+{
+    "flow": [
+        {
+            "id": 2,
+            "mapper": {},
+            "module": "gateway:CustomWebHook",
+            "version": 1,
+            "metadata": {
+                "restore": {
+                    "parameters": {
+                        "hook": {
+                            "data": {
+                                "editable": "true"
+                            },
+                            "label": "Agent Purchased Leads Webhook"
+                        }
+                    }
+                },
+                "designer": {
+                    "x": 0,
+                    "y": 0
+                },
+                "parameters": [
+                    {
+                        "name": "hook",
+                        "type": "hook:gateway-webhook",
+                        "label": "Webhook",
+                        "required": true
+                    },
+                    {
+                        "name": "maxResults",
+                        "type": "number",
+                        "label": "Maximum number of results"
+                    }
+                ]
+            },
+            "parameters": {
+                "hook": 2707414,
+                "maxResults": 1
+            }
+        },
+        {
+            "id": 3,
+            "mapper": {
+                "from": "drive",
+                "limit": "1",
+                "filter": [
+                    [
+                        {
+                            "a": "C",
+                            "b": "{{2.company}}",
+                            "o": "text:equal"
+                        },
+                        {
+                            "a": "E",
+                            "b": "{{2.first_name}}",
+                            "o": "text:equal"
+                        },
+                        {
+                            "a": "D",
+                            "b": "{{2.last_name}}",
+                            "o": "text:equal"
+                        }
+                    ]
+                ],
+                "sheetId": "auto_insurance_agents",
+                "sortOrder": "asc",
+                "spreadsheetId": "15lZHGmLN3uJUkLYxk4IY80G7LVPbAZYGMHo755OALeE",
+                "tableFirstRow": "A1:CZ1",
+                "includesHeaders": true,
+                "valueRenderOption": "FORMATTED_VALUE",
+                "dateTimeRenderOption": "FORMATTED_STRING"
+            },
+            "module": "google-sheets:filterRows",
+            "version": 2,
+            "metadata": {
+                "designer": {
+                    "x": 300,
+                    "y": 0,
+                    "name": "Resolve agent email (company + name)"
+                },
+                "parameters": [
+                    {
+                        "name": "__IMTCONN__",
+                        "type": "account:google",
+                        "label": "Connection",
+                        "required": true
+                    }
+                ]
+            },
+            "parameters": {
+                "__IMTCONN__": 8291026
+            }
+        },
+        {
+            "id": 4,
+            "mapper": null,
+            "module": "builtin:BasicRouter",
+            "routes": [
+                {
+                    "flow": [
+                        {
+                            "id": 5,
+                            "filter": {
+                                "name": "Agent found",
+                                "conditions": [
+                                    [
+                                        {
+                                            "a": "{{3.__IMTLENGTH__}}",
+                                            "b": "0",
+                                            "o": "number:greater"
+                                        }
+                                    ]
+                                ]
+                            },
+                            "mapper": {
+                                "from": "drive",
+                                "limit": "500",
+                                "filter": [
+                                    [
+                                        {
+                                            "a": "AG",
+                                            "b": "{{3.`11`}}",
+                                            "o": "text:equal"
+                                        }
+                                    ]
+                                ],
+                                "sheetId": "leads",
+                                "sortOrder": "desc",
+                                "spreadsheetId": "15lZHGmLN3uJUkLYxk4IY80G7LVPbAZYGMHo755OALeE",
+                                "tableFirstRow": "A1:CZ1",
+                                "includesHeaders": true,
+                                "valueRenderOption": "FORMATTED_VALUE",
+                                "dateTimeRenderOption": "FORMATTED_STRING"
+                            },
+                            "module": "google-sheets:filterRows",
+                            "version": 2,
+                            "metadata": {
+                                "designer": {
+                                    "x": 600,
+                                    "y": -150,
+                                    "name": "Search purchased leads (purchased_by = agent email)"
+                                },
+                                "parameters": [
+                                    {
+                                        "name": "__IMTCONN__",
+                                        "type": "account:google",
+                                        "label": "Connection",
+                                        "required": true
+                                    }
+                                ]
+                            },
+                            "parameters": {
+                                "__IMTCONN__": 8291026
+                            }
+                        },
+                        {
+                            "id": 6,
+                            "mapper": {
+                                "city": "{{5.`10`}}",
+                                "state": "{{5.`11`}}",
+                                "status": "{{5.`29`}}",
+                                "address": "{{5.`9`}}",
+                                "lead_id": "{{5.`0`}}",
+                                "zip_code": "{{5.`3`}}",
+                                "last_name": "{{5.`2`}}",
+                                "first_name": "{{5.`1`}}",
+                                "is_insured": "{{5.`4`}}",
+                                "received_at": "{{5.`33`}}",
+                                "reserved_at": "{{5.`31`}}",
+                                "phone_number": "{{5.`7`}}",
+                                "purchased_by": "{{5.`32`}}",
+                                "email_address": "{{5.`6`}}",
+                                "marital_status": "{{5.`13`}}",
+                                "num_of_tickets": "{{5.`24`}}",
+                                "bundle_and_save": "{{5.`5`}}",
+                                "num_of_vehicles": "{{5.`16`}}",
+                                "num_of_accidents": "{{5.`23`}}",
+                                "own_or_rent_home": "{{5.`14`}}",
+                                "method_of_contact": "{{5.`8`}}",
+                                "month_and_year_dob": "{{5.`12`}}",
+                                "primary_vehicle_use": "{{5.`20`}}",
+                                "primary_vehicle_make": "{{5.`18`}}",
+                                "primary_vehicle_year": "{{5.`17`}}",
+                                "primary_vehicle_model": "{{5.`19`}}",
+                                "is_military_affiliated": "{{5.`15`}}",
+                                "per_month_insurance_cost": "{{5.`28`}}",
+                                "current_insurance_company": "{{5.`25`}}",
+                                "continuous_insured_duration": "{{5.`26`}}",
+                                "current_insurance_expiration": "{{5.`27`}}",
+                                "primary_vehicle_annual_miles": "{{5.`21`}}",
+                                "primary_vehicle_ownership_type": "{{5.`22`}}"
+                            },
+                            "module": "builtin:BasicAggregator",
+                            "version": 1,
+                            "metadata": {
+                                "expect": [
+                                    {
+                                        "name": "aggregationStop",
+                                        "type": "boolean",
+                                        "label": "Stop processing after an empty aggregation"
+                                    }
+                                ],
+                                "restore": {
+                                    "extra": {
+                                        "feeder": {
+                                            "label": "Search purchased leads [5]"
+                                        }
+                                    }
+                                },
+                                "designer": {
+                                    "x": 900,
+                                    "y": -150,
+                                    "name": "Aggregate leads into array"
+                                }
+                            },
+                            "parameters": {
+                                "feeder": 5,
+                                "aggregationStop": false
+                            }
+                        },
+                        {
+                            "id": 7,
+                            "mapper": {
+                                "body": "{{6.array}}",
+                                "status": "200",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ]
+                            },
+                            "module": "gateway:WebhookRespond",
+                            "version": 1,
+                            "metadata": {
+                                "restore": {
+                                    "expect": {
+                                        "headers": {
+                                            "mode": "chose",
+                                            "items": [
+                                                null
+                                            ]
+                                        }
+                                    }
+                                },
+                                "advanced": true,
+                                "designer": {
+                                    "x": 1200,
+                                    "y": -150,
+                                    "name": "Respond with leads array"
+                                }
+                            },
+                            "parameters": {}
+                        }
+                    ]
+                },
+                {
+                    "flow": [
+                        {
+                            "id": 8,
+                            "filter": {
+                                "name": "Agent not found",
+                                "conditions": [
+                                    [
+                                        {
+                                            "a": "{{3.__IMTLENGTH__}}",
+                                            "b": "0",
+                                            "o": "number:equal"
+                                        }
+                                    ]
+                                ]
+                            },
+                            "mapper": {
+                                "body": "[]",
+                                "status": "200",
+                                "headers": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ]
+                            },
+                            "module": "gateway:WebhookRespond",
+                            "version": 1,
+                            "metadata": {
+                                "restore": {
+                                    "expect": {
+                                        "headers": {
+                                            "mode": "chose",
+                                            "items": [
+                                                null
+                                            ]
+                                        }
+                                    }
+                                },
+                                "advanced": true,
+                                "designer": {
+                                    "x": 600,
+                                    "y": 150,
+                                    "name": "Respond empty array (no agent match)"
+                                }
+                            },
+                            "parameters": {}
+                        }
+                    ]
+                }
+            ],
+            "version": 1,
+            "metadata": {
+                "designer": {
+                    "x": 450,
+                    "y": 0
+                }
+            }
+        }
+    ],
+    "name": "Agent Purchased Leads",
+    "metadata": {
+        "instant": true,
+        "version": 1,
+        "designer": {
+            "orphans": [],
+            "samples": {
+                "2": {
+                    "event": "agent_leads_fetch",
+                    "company": "Coastline Insurance Group",
+                    "last_name": "Le",
+                    "first_name": "Bryan",
+                    "wp_user_id": 42
+                }
+            }
+        },
+        "scenario": {
+            "dlq": false,
+            "slots": null,
+            "dataloss": false,
+            "maxErrors": 3,
+            "autoCommit": true,
+            "roundtrips": 1,
+            "sequential": false,
+            "confidential": false,
+            "freshVariables": false,
+            "autoCommitTriggerLast": true
+        }
+    }
+}

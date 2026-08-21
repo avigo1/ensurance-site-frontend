@@ -1,0 +1,741 @@
+{
+    "flow": [
+        {
+            "id": 1,
+            "mapper": {
+                "sort": [],
+                "filter": [
+                    [
+                        {
+                            "a": "status",
+                            "b": "pending",
+                            "o": "text:equal"
+                        }
+                    ]
+                ],
+                "mappAbleLimit": "4"
+            },
+            "module": "datastore:SearchRecord",
+            "version": 1,
+            "metadata": {
+                "advanced": true,
+                "designer": {
+                    "x": 0,
+                    "y": 0,
+                    "name": "Get pending jobs"
+                },
+                "parameters": [
+                    {
+                        "name": "datastore",
+                        "type": "datastore",
+                        "label": "Data store",
+                        "required": true
+                    },
+                    {
+                        "name": "continueWhenNoRes",
+                        "type": "boolean",
+                        "label": "Continue even if no results"
+                    },
+                    {
+                        "name": "limit",
+                        "type": "uinteger",
+                        "label": "Limit"
+                    }
+                ]
+            },
+            "parameters": {
+                "limit": 4,
+                "datastore": 129327,
+                "continueWhenNoRes": false
+            }
+        },
+        {
+            "id": 10,
+            "mapper": {
+                "from": "drive",
+                "filter": [
+                    [
+                        {
+                            "a": "A",
+                            "b": "{{1.data.lead_id}}",
+                            "o": "text:equal"
+                        }
+                    ]
+                ],
+                "sheetId": "leads",
+                "sortOrder": "asc",
+                "spreadsheetId": "15lZHGmLN3uJUkLYxk4IY80G7LVPbAZYGMHo755OALeE",
+                "tableFirstRow": "A1:CZ1",
+                "includesHeaders": true,
+                "valueRenderOption": "FORMATTED_VALUE",
+                "dateTimeRenderOption": "FORMATTED_STRING"
+            },
+            "module": "google-sheets:filterRows",
+            "version": 2,
+            "metadata": {
+                "designer": {
+                    "x": 300,
+                    "y": 0,
+                    "name": "Look up lead"
+                },
+                "parameters": [
+                    {
+                        "name": "__IMTCONN__",
+                        "type": "account:google",
+                        "label": "Connection",
+                        "required": true
+                    }
+                ]
+            },
+            "parameters": {
+                "__IMTCONN__": 8291026
+            }
+        },
+        {
+            "id": 20,
+            "mapper": null,
+            "module": "builtin:BasicRouter",
+            "routes": [
+                {
+                    "flow": [
+                        {
+                            "id": 30,
+                            "filter": {
+                                "name": "available & Starter",
+                                "conditions": [
+                                    [
+                                        {
+                                            "a": "{{10.`__IMTLENGTH__`}}",
+                                            "b": "0",
+                                            "o": "number:greater"
+                                        },
+                                        {
+                                            "a": "{{10.`29`}}",
+                                            "b": "available",
+                                            "o": "text:equal"
+                                        },
+                                        {
+                                            "a": "{{1.data.tier}}",
+                                            "b": "Starter",
+                                            "o": "text:equal"
+                                        }
+                                    ]
+                                ]
+                            },
+                            "mapper": {
+                                "cc": [],
+                                "to": [
+                                    "{{1.data.agent_email}}"
+                                ],
+                                "bcc": [],
+                                "from": "",
+                                "html": "<!DOCTYPE html>\n<html lang=\"en\" xmlns=\"http://www.w3.org/1999/xhtml\" xmlns:v=\"urn:schemas-microsoft-com:vml\" xmlns:o=\"urn:schemas-microsoft-com:office:office\">\n<head>\n<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n<meta name=\"x-apple-disable-message-reformatting\" />\n<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\" />\n<title>New Auto Shopper Available — Ensurance</title>\n<!-- Make: use this HTML when {{1.data.tier}} (subscription_tier) is starter -->\n<!--[if mso]>\n<noscript>\n<xml>\n<o:OfficeDocumentSettings>\n<o:PixelsPerInch>96</o:PixelsPerInch>\n</o:OfficeDocumentSettings>\n</xml>\n</noscript>\n<![endif]-->\n</head>\n<body style=\"margin:0;padding:0;min-width:100%;background-color:#f7f8fc;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;\">\n<div style=\"display:none;max-height:0;overflow:hidden;mso-hide:all;\">\n  A new active shopper is ready in your area. Review the snapshot in this message.\n</div>\n\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"background-color:#f7f8fc;border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;\">\n  <tr>\n    <td align=\"center\" style=\"padding:20px 12px 40px;\">\n\n      <!-- Outer card -->\n      <table role=\"presentation\" width=\"640\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"max-width:640px;width:100%;border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;background-color:#ffffff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;\">\n\n        <!-- Header -->\n        <tr>\n          <td style=\"background-color:#1F3A5F;padding:36px 32px;\">\n            <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;\">\n              <tr>\n                <td valign=\"top\" style=\"width:70%;padding:0 8px 0 0;\">\n                  <h1 style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:26px;font-weight:800;color:#ffffff;line-height:1.35;\">\n                    New <span style=\"color:#ffffff;\">auto insurance</span><br />request available.\n                  </h1>\n                  <p style=\"margin:10px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:rgba(255,255,255,0.75);line-height:1.5;\">\n                    Full contact details revealed after<br />acceptance &amp; payment.\n                  </p>\n                </td>\n                <td valign=\"top\" align=\"right\" style=\"width:30%;padding:0;\">\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:rgba(255,255,255,0.75);text-transform:uppercase;letter-spacing:1px;font-weight:600;\">ZIP Code</p>\n                  <p style=\"margin:4px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:38px;font-weight:800;color:#2B8673;line-height:1;\">{{10.`3`}}</p>\n                  <p style=\"margin:6px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:rgba(255,255,255,0.75);\">{{10.`10`}}, {{10.`11`}}</p>\n                </td>\n              </tr>\n            </table>\n          </td>\n        </tr>\n\n        <!-- Main -->\n        <tr>\n          <td style=\"padding:36px 32px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;\">\n\n            <p style=\"margin:0 0 6px;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:1.2px;font-weight:600;\">Hi {{1.data.agent_name}}</p>\n            <p style=\"margin:0 0 28px;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#64748b;line-height:1.75;padding-bottom:28px;border-bottom:1px solid #e2e8f0;\">\n              A new <strong style=\"color:#1e293b;\">Active Shopper</strong> has started an auto insurance request in your coverage area. Review the snapshot below. If it's a fit, you can accept and receive the shopper's full contact details immediately. No pressure. You decide when to engage.\n            </p>\n\n            <p style=\"margin:0 0 14px;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:700;\">Auto Snapshot</p>\n\n            <!-- Snapshot: grid table (borders on every cell for email clients) -->\n            <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;width:100%;border:1px solid #cbd5e1;border-radius:8px;overflow:hidden;\">\n              <tr>\n                <td width=\"50%\" valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Vehicle</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`17`}} {{10.`18`}} {{10.`19`}}</p>\n                </td>\n                <td width=\"50%\" valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Ownership</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`22`}}</p>\n                </td>\n              </tr>\n              <tr>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Usage</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`20`}}</p>\n                </td>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Mileage</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`21`}}</p>\n                </td>\n              </tr>\n              <tr>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Insured Status</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`4`}}</p>\n                </td>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Current Carrier</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`25`}}</p>\n                </td>\n              </tr>\n              <tr>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Continuous Insured Duration</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`26`}}</p>\n                </td>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Current Insurance Expiration</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`27`}}</p>\n                </td>\n              </tr>\n              <tr>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Number of Vehicles</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`16`}}</p>\n                </td>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Marital Status</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`13`}}</p>\n                </td>\n              </tr>\n              <tr>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Home Status</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`14`}}</p>\n                </td>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Bundle Interest</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`5`}}</p>\n                </td>\n              </tr>\n            </table>\n\n            <!-- Pricing block -->\n            <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;margin-top:26px;background-color:#5B7C99;border-radius:12px;\">\n              <tr>\n                <td style=\"padding:26px 24px;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:rgba(255,255,255,0.75);text-transform:uppercase;letter-spacing:1.2px;font-weight:600;\">Your member price for this lead</p>\n                  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;\">\n                    <tr>\n                      <td valign=\"top\" style=\"padding:0 12px 0 0;\">\n                        <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:52px;font-weight:800;color:#ffffff;line-height:1;\">$15</p>\n                        <p style=\"margin:6px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:rgba(255,255,255,0.75);\">Non-member price is $22</p>\n                      </td>\n                      <td valign=\"top\" align=\"right\" style=\"white-space:nowrap;\">\n                        <table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;background-color:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:10px;\">\n                          <tr>\n                            <td style=\"padding:12px 20px;\">\n                              <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:rgba(255,255,255,0.75);\">Your tier</p>\n                              <p style=\"margin:4px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:800;color:#ffffff;\">{{1.data.tier}}</p>\n                            </td>\n                          </tr>\n                        </table>\n                      </td>\n                    </tr>\n                  </table>\n                  <!-- Lightweight divider between top price/tier and other tier prices -->\n                  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;margin-top:18px;\">\n                    <tr>\n                      <td style=\"height:1px;line-height:1px;font-size:1px;background-color:rgba(230,240,248,0.35);\">&nbsp;</td>\n                    </tr>\n                  </table>\n                  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;margin-top:0;text-align:center;\">\n                    <tr>\n                      <td style=\"padding:8px;width:33%;\">\n                        <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#ffffff;font-weight:700;\">STARTER</p>\n                        <p style=\"margin:4px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:18px;color:#ffffff;font-weight:700;\">$15</p>\n                      </td>\n                      <td style=\"padding:8px;width:33%;border-left:1px solid rgba(230,240,248,0.35);\">\n                        <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#e6f0f8;\">GROWTH</p>\n                        <p style=\"margin:4px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:18px;color:#e6f0f8;\">$14</p>\n                      </td>\n                      <td style=\"padding:8px;width:33%;border-left:1px solid rgba(230,240,248,0.35);\">\n                        <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#e6f0f8;\">ELITE</p>\n                        <p style=\"margin:4px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:18px;color:#e6f0f8;\">$12</p>\n                      </td>\n                    </tr>\n                  </table>\n                </td>\n              </tr>\n            </table>\n\n            <!-- CTAs: bulletproof-style links -->\n            <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;margin-top:22px;\">\n              <tr>\n                <td style=\"padding:6px 8px 6px 0;width:50%;\">\n                  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;background-color:#2B8673;border-radius:50px;\">\n                    <tr>\n                      <td align=\"center\" style=\"padding:17px 16px;\">\n                        <a href=\"https://ensurance.com/20614-2?lead_id={{1.data.lead_id}}&email={{1.data.agent_email}}\" target=\"_blank\" style=\"font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;display:block;\">Accept Request &rarr;</a>\n                      </td>\n                    </tr>\n                  </table>\n                </td>\n              </tr>\n            </table>\n\n            <p style=\"margin:22px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#64748b;line-height:1.6;\">\n              Buttons not working? Reply <strong style=\"color:#1e293b;\">Confirmed</strong> to accept or <strong style=\"color:#1e293b;\">Pass</strong> to skip.\n            </p>\n\n          </td>\n        </tr>\n\n        <!-- Footer -->\n        <tr>\n          <td style=\"background-color:#1F3A5F;padding:24px 32px;\">\n            <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;\">\n              <tr>\n                <td valign=\"top\" style=\"padding:0 12px 0 0;\">\n                  <img src=\"https://ensurance.com/wp-content/uploads/2025/01/qtq_95-1-1024x121.png\" width=\"160\" alt=\"Ensurance\" border=\"0\" style=\"display:block;border:0;outline:none;text-decoration:none;max-width:160px;height:auto;\" />\n                  <p style=\"margin:10px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:rgba(255,255,255,0.75);\">Online first. Human when it matters.</p>\n                </td>\n                <td valign=\"top\" align=\"right\" style=\"white-space:nowrap;\">\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:rgba(255,255,255,0.55);line-height:1.5;\">The Ensurance Team<br />\n                    <a href=\"https://ensurance.com\" target=\"_blank\" style=\"color:#ffffff;text-decoration:underline;\">ensurance.com</a>\n                  </p>\n                </td>\n              </tr>\n            </table>\n          </td>\n        </tr>\n\n      </table>\n\n      <!-- Legal (outside colored footer for readability) -->\n      <table role=\"presentation\" width=\"640\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"max-width:640px;width:100%;border-collapse:collapse;\">\n        <tr>\n          <td style=\"padding:20px 8px 0;text-align:center;\">\n            <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#94a3b8;line-height:1.9;\">\n              Ensurance.com is an online-first marketplace for independent agencies.<br />\n              You stay in control — you only pay when you choose to accept an Active Shopper.<br />\n            </p>\n          </td>\n        </tr>\n      </table>\n\n    </td>\n  </tr>\n</table>\n\n</body>\n</html>\n",
+                                "sender": "",
+                                "headers": [],
+                                "replyTo": "",
+                                "subject": "Action required: New Auto insurance shopper in ZIP {{10.`3`}}",
+                                "priority": "normal",
+                                "inReplyTo": "",
+                                "references": [],
+                                "attachments": [],
+                                "contentType": "html"
+                            },
+                            "module": "email:ActionSendEmail",
+                            "version": 7,
+                            "metadata": {
+                                "designer": {
+                                    "x": 900,
+                                    "y": -300,
+                                    "name": "send Starter"
+                                },
+                                "parameters": [
+                                    {
+                                        "name": "account",
+                                        "type": "account:smtp,google-restricted,microsoft-smtp-imap",
+                                        "label": "Connection",
+                                        "required": true
+                                    },
+                                    {
+                                        "name": "saveAfterSent",
+                                        "type": "select",
+                                        "label": "Save message after sending",
+                                        "required": true,
+                                        "validate": {
+                                            "enum": [
+                                                true,
+                                                false
+                                            ]
+                                        }
+                                    }
+                                ]
+                            },
+                            "parameters": {
+                                "account": 8411941,
+                                "saveAfterSent": false
+                            }
+                        },
+                        {
+                            "id": 41,
+                            "mapper": {
+                                "key": "{{1.key}}",
+                                "data": {
+                                    "tier": "{{1.data.tier}}",
+                                    "status": "sent",
+                                    "lead_id": "{{1.data.lead_id}}",
+                                    "sent_at": "{{now}}",
+                                    "attempts": "{{1.data.attempts}}",
+                                    "agent_name": "{{1.data.agent_name}}",
+                                    "created_at": "{{1.data.created_at}}",
+                                    "agent_email": "{{1.data.agent_email}}"
+                                },
+                                "upsert": false,
+                                "overwriteArrays": false
+                            },
+                            "module": "datastore:UpdateRecord",
+                            "version": 1,
+                            "metadata": {
+                                "designer": {
+                                    "x": 1200,
+                                    "y": -300,
+                                    "name": "mark sent"
+                                },
+                                "parameters": [
+                                    {
+                                        "name": "datastore",
+                                        "type": "datastore",
+                                        "label": "Data store",
+                                        "required": true
+                                    }
+                                ]
+                            },
+                            "parameters": {
+                                "datastore": 129327
+                            }
+                        }
+                    ]
+                },
+                {
+                    "flow": [
+                        {
+                            "id": 31,
+                            "filter": {
+                                "name": "available & Growth",
+                                "conditions": [
+                                    [
+                                        {
+                                            "a": "{{10.`__IMTLENGTH__`}}",
+                                            "b": "0",
+                                            "o": "number:greater"
+                                        },
+                                        {
+                                            "a": "{{10.`29`}}",
+                                            "b": "available",
+                                            "o": "text:equal"
+                                        },
+                                        {
+                                            "a": "{{1.data.tier}}",
+                                            "b": "Growth",
+                                            "o": "text:equal"
+                                        }
+                                    ]
+                                ]
+                            },
+                            "mapper": {
+                                "cc": [],
+                                "to": [
+                                    "{{1.data.agent_email}}"
+                                ],
+                                "bcc": [],
+                                "from": "",
+                                "html": "<!DOCTYPE html>\n<html lang=\"en\" xmlns=\"http://www.w3.org/1999/xhtml\" xmlns:v=\"urn:schemas-microsoft-com:vml\" xmlns:o=\"urn:schemas-microsoft-com:office:office\">\n<head>\n<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n<meta name=\"x-apple-disable-message-reformatting\" />\n<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\" />\n<title>New Auto Shopper Available — Ensurance</title>\n<!-- Make: use this HTML when {{1.data.tier}} (subscription_tier) is growth -->\n<!--[if mso]>\n<noscript>\n<xml>\n<o:OfficeDocumentSettings>\n<o:PixelsPerInch>96</o:PixelsPerInch>\n</o:OfficeDocumentSettings>\n</xml>\n</noscript>\n<![endif]-->\n</head>\n<body style=\"margin:0;padding:0;min-width:100%;background-color:#f7f8fc;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;\">\n<div style=\"display:none;max-height:0;overflow:hidden;mso-hide:all;\">\n  A new active shopper is ready in your area. Review the snapshot in this message.\n</div>\n\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"background-color:#f7f8fc;border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;\">\n  <tr>\n    <td align=\"center\" style=\"padding:20px 12px 40px;\">\n\n      <!-- Outer card -->\n      <table role=\"presentation\" width=\"640\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"max-width:640px;width:100%;border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;background-color:#ffffff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;\">\n\n        <!-- Header -->\n        <tr>\n          <td style=\"background-color:#1F3A5F;padding:36px 32px;\">\n            <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;\">\n              <tr>\n                <td valign=\"top\" style=\"width:70%;padding:0 8px 0 0;\">\n                  <h1 style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:26px;font-weight:800;color:#ffffff;line-height:1.35;\">\n                    New <span style=\"color:#ffffff;\">auto insurance</span><br />request available.\n                  </h1>\n                  <p style=\"margin:10px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:rgba(255,255,255,0.75);line-height:1.5;\">\n                    Full contact details revealed after<br />acceptance &amp; payment.\n                  </p>\n                </td>\n                <td valign=\"top\" align=\"right\" style=\"width:30%;padding:0;\">\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:rgba(255,255,255,0.75);text-transform:uppercase;letter-spacing:1px;font-weight:600;\">ZIP Code</p>\n                  <p style=\"margin:4px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:38px;font-weight:800;color:#2B8673;line-height:1;\">{{10.`3`}}</p>\n                  <p style=\"margin:6px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:rgba(255,255,255,0.75);\">{{10.`10`}}, {{10.`11`}}</p>\n                </td>\n              </tr>\n            </table>\n          </td>\n        </tr>\n\n        <!-- Main -->\n        <tr>\n          <td style=\"padding:36px 32px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;\">\n\n            <p style=\"margin:0 0 6px;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:1.2px;font-weight:600;\">Hi {{1.data.agent_name}}</p>\n            <p style=\"margin:0 0 28px;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#64748b;line-height:1.75;padding-bottom:28px;border-bottom:1px solid #e2e8f0;\">\n              A new <strong style=\"color:#1e293b;\">Active Shopper</strong> has started an auto insurance request in your coverage area. Review the snapshot below. If it's a fit, you can accept and receive the shopper's full contact details immediately. No pressure. You decide when to engage.\n            </p>\n\n            <p style=\"margin:0 0 14px;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:700;\">Auto Snapshot</p>\n\n            <!-- Snapshot: grid table (borders on every cell for email clients) -->\n            <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;width:100%;border:1px solid #cbd5e1;border-radius:8px;overflow:hidden;\">\n              <tr>\n                <td width=\"50%\" valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Vehicle</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`17`}} {{10.`18`}} {{10.`19`}}</p>\n                </td>\n                <td width=\"50%\" valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Ownership</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`22`}}</p>\n                </td>\n              </tr>\n              <tr>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Usage</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`20`}}</p>\n                </td>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Mileage</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`21`}}</p>\n                </td>\n              </tr>\n              <tr>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Insured Status</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`4`}}</p>\n                </td>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Current Carrier</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`25`}}</p>\n                </td>\n              </tr>\n              <tr>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Continuous Insured Duration</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`26`}}</p>\n                </td>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Current Insurance Expiration</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`27`}}</p>\n                </td>\n              </tr>\n              <tr>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Number of Vehicles</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`16`}}</p>\n                </td>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Marital Status</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`13`}}</p>\n                </td>\n              </tr>\n              <tr>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Home Status</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`14`}}</p>\n                </td>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Bundle Interest</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`5`}}</p>\n                </td>\n              </tr>\n            </table>\n\n            <!-- Pricing block -->\n            <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;margin-top:26px;background-color:#5B7C99;border-radius:12px;\">\n              <tr>\n                <td style=\"padding:26px 24px;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:rgba(255,255,255,0.75);text-transform:uppercase;letter-spacing:1.2px;font-weight:600;\">Your member price for this lead</p>\n                  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;\">\n                    <tr>\n                      <td valign=\"top\" style=\"padding:0 12px 0 0;\">\n                        <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:52px;font-weight:800;color:#ffffff;line-height:1;\">$14</p>\n                        <p style=\"margin:6px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:rgba(255,255,255,0.75);\">Non-member price is $22</p>\n                      </td>\n                      <td valign=\"top\" align=\"right\" style=\"white-space:nowrap;\">\n                        <table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;background-color:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:10px;\">\n                          <tr>\n                            <td style=\"padding:12px 20px;\">\n                              <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:rgba(255,255,255,0.75);\">Your tier</p>\n                              <p style=\"margin:4px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:800;color:#ffffff;\">{{1.data.tier}}</p>\n                            </td>\n                          </tr>\n                        </table>\n                      </td>\n                    </tr>\n                  </table>\n                  <!-- Lightweight divider between top price/tier and other tier prices -->\n                  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;margin-top:18px;\">\n                    <tr>\n                      <td style=\"height:1px;line-height:1px;font-size:1px;background-color:rgba(230,240,248,0.35);\">&nbsp;</td>\n                    </tr>\n                  </table>\n                  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;margin-top:0;text-align:center;\">\n                    <tr>\n                      <td style=\"padding:8px;width:33%;\">\n                        <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#e6f0f8;\">STARTER</p>\n                        <p style=\"margin:4px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:18px;color:#e6f0f8;\">$15</p>\n                      </td>\n                      <td style=\"padding:8px;width:33%;border-left:1px solid rgba(230,240,248,0.35);\">\n                        <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#ffffff;font-weight:700;\">GROWTH</p>\n                        <p style=\"margin:4px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:18px;color:#ffffff;font-weight:700;\">$14</p>\n                      </td>\n                      <td style=\"padding:8px;width:33%;border-left:1px solid rgba(230,240,248,0.35);\">\n                        <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#e6f0f8;\">ELITE</p>\n                        <p style=\"margin:4px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:18px;color:#e6f0f8;\">$12</p>\n                      </td>\n                    </tr>\n                  </table>\n                </td>\n              </tr>\n            </table>\n\n            <!-- CTAs: bulletproof-style links -->\n            <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;margin-top:22px;\">\n              <tr>\n                <td style=\"padding:6px 8px 6px 0;width:50%;\">\n                  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;background-color:#2B8673;border-radius:50px;\">\n                    <tr>\n                      <td align=\"center\" style=\"padding:17px 16px;\">\n                        <a href=\"https://ensurance.com/20614-2?lead_id={{1.data.lead_id}}&email={{1.data.agent_email}}\" target=\"_blank\" style=\"font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;display:block;\">Accept Request &rarr;</a>\n                      </td>\n                    </tr>\n                  </table>\n                </td>\n              </tr>\n            </table>\n\n            <p style=\"margin:22px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#64748b;line-height:1.6;\">\n              Buttons not working? Reply <strong style=\"color:#1e293b;\">Confirmed</strong> to accept or <strong style=\"color:#1e293b;\">Pass</strong> to skip.\n            </p>\n\n          </td>\n        </tr>\n\n        <!-- Footer -->\n        <tr>\n          <td style=\"background-color:#1F3A5F;padding:24px 32px;\">\n            <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;\">\n              <tr>\n                <td valign=\"top\" style=\"padding:0 12px 0 0;\">\n                  <img src=\"https://ensurance.com/wp-content/uploads/2025/01/qtq_95-1-1024x121.png\" width=\"160\" alt=\"Ensurance\" border=\"0\" style=\"display:block;border:0;outline:none;text-decoration:none;max-width:160px;height:auto;\" />\n                  <p style=\"margin:10px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:rgba(255,255,255,0.75);\">Online first. Human when it matters.</p>\n                </td>\n                <td valign=\"top\" align=\"right\" style=\"white-space:nowrap;\">\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:rgba(255,255,255,0.55);line-height:1.5;\">The Ensurance Team<br />\n                    <a href=\"https://ensurance.com\" target=\"_blank\" style=\"color:#ffffff;text-decoration:underline;\">ensurance.com</a>\n                  </p>\n                </td>\n              </tr>\n            </table>\n          </td>\n        </tr>\n\n      </table>\n\n      <!-- Legal (outside colored footer for readability) -->\n      <table role=\"presentation\" width=\"640\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"max-width:640px;width:100%;border-collapse:collapse;\">\n        <tr>\n          <td style=\"padding:20px 8px 0;text-align:center;\">\n            <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#94a3b8;line-height:1.9;\">\n              Ensurance.com is an online-first marketplace for independent agencies.<br />\n              You stay in control — you only pay when you choose to accept an Active Shopper.<br />\n            </p>\n          </td>\n        </tr>\n      </table>\n\n    </td>\n  </tr>\n</table>\n\n</body>\n</html>\n",
+                                "sender": "",
+                                "headers": [],
+                                "replyTo": "",
+                                "subject": "Action required: New Auto insurance shopper in ZIP {{10.`3`}}",
+                                "priority": "normal",
+                                "inReplyTo": "",
+                                "references": [],
+                                "attachments": [],
+                                "contentType": "html"
+                            },
+                            "module": "email:ActionSendEmail",
+                            "version": 7,
+                            "metadata": {
+                                "designer": {
+                                    "x": 900,
+                                    "y": -100,
+                                    "name": "send Growth"
+                                },
+                                "parameters": [
+                                    {
+                                        "name": "account",
+                                        "type": "account:smtp,google-restricted,microsoft-smtp-imap",
+                                        "label": "Connection",
+                                        "required": true
+                                    },
+                                    {
+                                        "name": "saveAfterSent",
+                                        "type": "select",
+                                        "label": "Save message after sending",
+                                        "required": true,
+                                        "validate": {
+                                            "enum": [
+                                                true,
+                                                false
+                                            ]
+                                        }
+                                    }
+                                ]
+                            },
+                            "parameters": {
+                                "account": 8411941,
+                                "saveAfterSent": false
+                            }
+                        },
+                        {
+                            "id": 42,
+                            "mapper": {
+                                "key": "{{1.key}}",
+                                "data": {
+                                    "tier": "{{1.data.tier}}",
+                                    "status": "sent",
+                                    "lead_id": "{{1.data.lead_id}}",
+                                    "sent_at": "{{now}}",
+                                    "attempts": "{{1.data.attempts}}",
+                                    "agent_name": "{{1.data.agent_name}}",
+                                    "created_at": "{{1.data.created_at}}",
+                                    "agent_email": "{{1.data.agent_email}}"
+                                },
+                                "upsert": false,
+                                "overwriteArrays": false
+                            },
+                            "module": "datastore:UpdateRecord",
+                            "version": 1,
+                            "metadata": {
+                                "designer": {
+                                    "x": 1200,
+                                    "y": -100,
+                                    "name": "mark sent"
+                                },
+                                "parameters": [
+                                    {
+                                        "name": "datastore",
+                                        "type": "datastore",
+                                        "label": "Data store",
+                                        "required": true
+                                    }
+                                ]
+                            },
+                            "parameters": {
+                                "datastore": 129327
+                            }
+                        }
+                    ]
+                },
+                {
+                    "flow": [
+                        {
+                            "id": 33,
+                            "filter": {
+                                "name": "available & Elite",
+                                "conditions": [
+                                    [
+                                        {
+                                            "a": "{{10.`__IMTLENGTH__`}}",
+                                            "b": "0",
+                                            "o": "number:greater"
+                                        },
+                                        {
+                                            "a": "{{10.`29`}}",
+                                            "b": "available",
+                                            "o": "text:equal"
+                                        },
+                                        {
+                                            "a": "{{1.data.tier}}",
+                                            "b": "Elite",
+                                            "o": "text:equal"
+                                        }
+                                    ]
+                                ]
+                            },
+                            "mapper": {
+                                "cc": [],
+                                "to": [
+                                    "{{1.data.agent_email}}"
+                                ],
+                                "bcc": [],
+                                "from": "",
+                                "html": "<!DOCTYPE html>\n<html lang=\"en\" xmlns=\"http://www.w3.org/1999/xhtml\" xmlns:v=\"urn:schemas-microsoft-com:vml\" xmlns:o=\"urn:schemas-microsoft-com:office:office\">\n<head>\n<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n<meta name=\"x-apple-disable-message-reformatting\" />\n<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\" />\n<title>New Auto Shopper Available — Ensurance</title>\n<!-- Make: use this HTML when {{1.data.tier}} (subscription_tier) is elite -->\n<!--[if mso]>\n<noscript>\n<xml>\n<o:OfficeDocumentSettings>\n<o:PixelsPerInch>96</o:PixelsPerInch>\n</o:OfficeDocumentSettings>\n</xml>\n</noscript>\n<![endif]-->\n</head>\n<body style=\"margin:0;padding:0;min-width:100%;background-color:#f7f8fc;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;\">\n<div style=\"display:none;max-height:0;overflow:hidden;mso-hide:all;\">\n  A new active shopper is ready in your area. Review the snapshot in this message.\n</div>\n\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"background-color:#f7f8fc;border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;\">\n  <tr>\n    <td align=\"center\" style=\"padding:20px 12px 40px;\">\n\n      <!-- Outer card -->\n      <table role=\"presentation\" width=\"640\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"max-width:640px;width:100%;border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;background-color:#ffffff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;\">\n\n        <!-- Header -->\n        <tr>\n          <td style=\"background-color:#1F3A5F;padding:36px 32px;\">\n            <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;\">\n              <tr>\n                <td valign=\"top\" style=\"width:70%;padding:0 8px 0 0;\">\n                  <h1 style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:26px;font-weight:800;color:#ffffff;line-height:1.35;\">\n                    New <span style=\"color:#ffffff;\">auto insurance</span><br />request available.\n                  </h1>\n                  <p style=\"margin:10px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:rgba(255,255,255,0.75);line-height:1.5;\">\n                    Full contact details revealed after<br />acceptance &amp; payment.\n                  </p>\n                </td>\n                <td valign=\"top\" align=\"right\" style=\"width:30%;padding:0;\">\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:rgba(255,255,255,0.75);text-transform:uppercase;letter-spacing:1px;font-weight:600;\">ZIP Code</p>\n                  <p style=\"margin:4px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:38px;font-weight:800;color:#2B8673;line-height:1;\">{{10.`3`}}</p>\n                  <p style=\"margin:6px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:rgba(255,255,255,0.75);\">{{10.`10`}}, {{10.`11`}}</p>\n                </td>\n              </tr>\n            </table>\n          </td>\n        </tr>\n\n        <!-- Main -->\n        <tr>\n          <td style=\"padding:36px 32px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;\">\n\n            <p style=\"margin:0 0 6px;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:1.2px;font-weight:600;\">Hi {{1.data.agent_name}}</p>\n            <p style=\"margin:0 0 28px;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#64748b;line-height:1.75;padding-bottom:28px;border-bottom:1px solid #e2e8f0;\">\n              A new <strong style=\"color:#1e293b;\">Active Shopper</strong> has started an auto insurance request in your coverage area. Review the snapshot below. If it's a fit, you can accept and receive the shopper's full contact details immediately. No pressure. You decide when to engage.\n            </p>\n\n            <p style=\"margin:0 0 14px;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:700;\">Auto Snapshot</p>\n\n            <!-- Snapshot: grid table (borders on every cell for email clients) -->\n            <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;width:100%;border:1px solid #cbd5e1;border-radius:8px;overflow:hidden;\">\n              <tr>\n                <td width=\"50%\" valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Vehicle</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`17`}} {{10.`18`}} {{10.`19`}}</p>\n                </td>\n                <td width=\"50%\" valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Ownership</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`22`}}</p>\n                </td>\n              </tr>\n              <tr>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Usage</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`20`}}</p>\n                </td>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Mileage</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`21`}}</p>\n                </td>\n              </tr>\n              <tr>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Insured Status</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`4`}}</p>\n                </td>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Current Carrier</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`25`}}</p>\n                </td>\n              </tr>\n              <tr>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Continuous Insured Duration</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`26`}}</p>\n                </td>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Current Insurance Expiration</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`27`}}</p>\n                </td>\n              </tr>\n              <tr>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Number of Vehicles</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`16`}}</p>\n                </td>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Marital Status</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`13`}}</p>\n                </td>\n              </tr>\n              <tr>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Home Status</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`14`}}</p>\n                </td>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Bundle Interest</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`5`}}</p>\n                </td>\n              </tr>\n            </table>\n\n            <!-- Pricing block -->\n            <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;margin-top:26px;background-color:#5B7C99;border-radius:12px;\">\n              <tr>\n                <td style=\"padding:26px 24px;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:rgba(255,255,255,0.75);text-transform:uppercase;letter-spacing:1.2px;font-weight:600;\">Your member price for this lead</p>\n                  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;\">\n                    <tr>\n                      <td valign=\"top\" style=\"padding:0 12px 0 0;\">\n                        <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:52px;font-weight:800;color:#ffffff;line-height:1;\">$12</p>\n                        <p style=\"margin:6px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:rgba(255,255,255,0.75);\">Non-member price is $22</p>\n                      </td>\n                      <td valign=\"top\" align=\"right\" style=\"white-space:nowrap;\">\n                        <table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;background-color:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:10px;\">\n                          <tr>\n                            <td style=\"padding:12px 20px;\">\n                              <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:rgba(255,255,255,0.75);\">Your tier</p>\n                              <p style=\"margin:4px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:800;color:#ffffff;\">{{1.data.tier}}</p>\n                            </td>\n                          </tr>\n                        </table>\n                      </td>\n                    </tr>\n                  </table>\n                  <!-- Lightweight divider between top price/tier and other tier prices -->\n                  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;margin-top:18px;\">\n                    <tr>\n                      <td style=\"height:1px;line-height:1px;font-size:1px;background-color:rgba(230,240,248,0.35);\">&nbsp;</td>\n                    </tr>\n                  </table>\n                  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;margin-top:0;text-align:center;\">\n                    <tr>\n                      <td style=\"padding:8px;width:33%;\">\n                        <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#e6f0f8;\">STARTER</p>\n                        <p style=\"margin:4px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:18px;color:#e6f0f8;\">$15</p>\n                      </td>\n                      <td style=\"padding:8px;width:33%;border-left:1px solid rgba(230,240,248,0.35);\">\n                        <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#e6f0f8;\">GROWTH</p>\n                        <p style=\"margin:4px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:18px;color:#e6f0f8;\">$14</p>\n                      </td>\n                      <td style=\"padding:8px;width:33%;border-left:1px solid rgba(230,240,248,0.35);\">\n                        <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#ffffff;font-weight:700;\">ELITE</p>\n                        <p style=\"margin:4px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:18px;color:#ffffff;font-weight:700;\">$12</p>\n                      </td>\n                    </tr>\n                  </table>\n                </td>\n              </tr>\n            </table>\n\n            <!-- CTAs: bulletproof-style links -->\n            <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;margin-top:22px;\">\n              <tr>\n                <td style=\"padding:6px 8px 6px 0;width:50%;\">\n                  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;background-color:#2B8673;border-radius:50px;\">\n                    <tr>\n                      <td align=\"center\" style=\"padding:17px 16px;\">\n                        <a href=\"https://ensurance.com/20614-2?lead_id={{1.data.lead_id}}&email={{1.data.agent_email}}\" target=\"_blank\" style=\"font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;display:block;\">Accept Request &rarr;</a>\n                      </td>\n                    </tr>\n                  </table>\n                </td>\n              </tr>\n            </table>\n\n            <p style=\"margin:22px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#64748b;line-height:1.6;\">\n              Buttons not working? Reply <strong style=\"color:#1e293b;\">Confirmed</strong> to accept or <strong style=\"color:#1e293b;\">Pass</strong> to skip.\n            </p>\n\n          </td>\n        </tr>\n\n        <!-- Footer -->\n        <tr>\n          <td style=\"background-color:#1F3A5F;padding:24px 32px;\">\n            <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;\">\n              <tr>\n                <td valign=\"top\" style=\"padding:0 12px 0 0;\">\n                  <img src=\"https://ensurance.com/wp-content/uploads/2025/01/qtq_95-1-1024x121.png\" width=\"160\" alt=\"Ensurance\" border=\"0\" style=\"display:block;border:0;outline:none;text-decoration:none;max-width:160px;height:auto;\" />\n                  <p style=\"margin:10px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:rgba(255,255,255,0.75);\">Online first. Human when it matters.</p>\n                </td>\n                <td valign=\"top\" align=\"right\" style=\"white-space:nowrap;\">\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:rgba(255,255,255,0.55);line-height:1.5;\">The Ensurance Team<br />\n                    <a href=\"https://ensurance.com\" target=\"_blank\" style=\"color:#ffffff;text-decoration:underline;\">ensurance.com</a>\n                  </p>\n                </td>\n              </tr>\n            </table>\n          </td>\n        </tr>\n\n      </table>\n\n      <!-- Legal (outside colored footer for readability) -->\n      <table role=\"presentation\" width=\"640\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"max-width:640px;width:100%;border-collapse:collapse;\">\n        <tr>\n          <td style=\"padding:20px 8px 0;text-align:center;\">\n            <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#94a3b8;line-height:1.9;\">\n              Ensurance.com is an online-first marketplace for independent agencies.<br />\n              You stay in control — you only pay when you choose to accept an Active Shopper.<br />\n            </p>\n          </td>\n        </tr>\n      </table>\n\n    </td>\n  </tr>\n</table>\n\n</body>\n</html>\n",
+                                "sender": "",
+                                "headers": [],
+                                "replyTo": "",
+                                "subject": "Action required: New Auto insurance shopper in ZIP {{10.`3`}}",
+                                "priority": "normal",
+                                "inReplyTo": "",
+                                "references": [],
+                                "attachments": [],
+                                "contentType": "html"
+                            },
+                            "module": "email:ActionSendEmail",
+                            "version": 7,
+                            "metadata": {
+                                "designer": {
+                                    "x": 900,
+                                    "y": 100,
+                                    "name": "send Elite"
+                                },
+                                "parameters": [
+                                    {
+                                        "name": "account",
+                                        "type": "account:smtp,google-restricted,microsoft-smtp-imap",
+                                        "label": "Connection",
+                                        "required": true
+                                    },
+                                    {
+                                        "name": "saveAfterSent",
+                                        "type": "select",
+                                        "label": "Save message after sending",
+                                        "required": true,
+                                        "validate": {
+                                            "enum": [
+                                                true,
+                                                false
+                                            ]
+                                        }
+                                    }
+                                ]
+                            },
+                            "parameters": {
+                                "account": 8411941,
+                                "saveAfterSent": false
+                            }
+                        },
+                        {
+                            "id": 43,
+                            "mapper": {
+                                "key": "{{1.key}}",
+                                "data": {
+                                    "tier": "{{1.data.tier}}",
+                                    "status": "sent",
+                                    "lead_id": "{{1.data.lead_id}}",
+                                    "sent_at": "{{now}}",
+                                    "attempts": "{{1.data.attempts}}",
+                                    "agent_name": "{{1.data.agent_name}}",
+                                    "created_at": "{{1.data.created_at}}",
+                                    "agent_email": "{{1.data.agent_email}}"
+                                },
+                                "upsert": false,
+                                "overwriteArrays": false
+                            },
+                            "module": "datastore:UpdateRecord",
+                            "version": 1,
+                            "metadata": {
+                                "designer": {
+                                    "x": 1200,
+                                    "y": 100,
+                                    "name": "mark sent"
+                                },
+                                "parameters": [
+                                    {
+                                        "name": "datastore",
+                                        "type": "datastore",
+                                        "label": "Data store",
+                                        "required": true
+                                    }
+                                ]
+                            },
+                            "parameters": {
+                                "datastore": 129327
+                            }
+                        }
+                    ]
+                },
+                {
+                    "flow": [
+                        {
+                            "id": 34,
+                            "filter": {
+                                "name": "available & Test",
+                                "conditions": [
+                                    [
+                                        {
+                                            "a": "{{10.`__IMTLENGTH__`}}",
+                                            "b": "0",
+                                            "o": "number:greater"
+                                        },
+                                        {
+                                            "a": "{{10.`29`}}",
+                                            "b": "available",
+                                            "o": "text:equal"
+                                        },
+                                        {
+                                            "a": "{{1.data.tier}}",
+                                            "b": "Test",
+                                            "o": "text:equal"
+                                        }
+                                    ]
+                                ]
+                            },
+                            "mapper": {
+                                "cc": [],
+                                "to": [
+                                    "{{1.data.agent_email}}"
+                                ],
+                                "bcc": [],
+                                "from": "",
+                                "html": "<!DOCTYPE html>\n<html lang=\"en\" xmlns=\"http://www.w3.org/1999/xhtml\" xmlns:v=\"urn:schemas-microsoft-com:vml\" xmlns:o=\"urn:schemas-microsoft-com:office:office\">\n<head>\n<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n<meta name=\"x-apple-disable-message-reformatting\" />\n<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\" />\n<title>New Auto Shopper Available — Ensurance</title>\n<!-- Make: use this HTML when {{1.data.tier}} (subscription_tier) is elite -->\n<!--[if mso]>\n<noscript>\n<xml>\n<o:OfficeDocumentSettings>\n<o:PixelsPerInch>96</o:PixelsPerInch>\n</o:OfficeDocumentSettings>\n</xml>\n</noscript>\n<![endif]-->\n</head>\n<body style=\"margin:0;padding:0;min-width:100%;background-color:#f7f8fc;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;\">\n<div style=\"display:none;max-height:0;overflow:hidden;mso-hide:all;\">\n  [DEBUG TEMPLATE TEST - 2026-04-16] A new active shopper is ready in your area. Review the snapshot in this message.\n</div>\n\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"background-color:#f7f8fc;border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;\">\n  <tr>\n    <td align=\"center\" style=\"padding:20px 12px 40px;\">\n\n      <!-- Outer card -->\n      <table role=\"presentation\" width=\"640\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"max-width:640px;width:100%;border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;background-color:#ffffff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;\">\n\n        <!-- Header -->\n        <tr>\n          <td style=\"background-color:#1F3A5F;padding:36px 32px;\">\n            <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;\">\n              <tr>\n                <td valign=\"top\" style=\"width:70%;padding:0 8px 0 0;\">\n                  <h1 style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:26px;font-weight:800;color:#ffffff;line-height:1.35;\">\n                    New <span style=\"color:#ffffff;\">auto insurance</span><br />request available.\n                  </h1>\n                  <p style=\"margin:10px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:rgba(255,255,255,0.75);line-height:1.5;\">\n                    Full contact details revealed after<br />acceptance &amp; payment.\n                  </p>\n                </td>\n                <td valign=\"top\" align=\"right\" style=\"width:30%;padding:0;\">\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:rgba(255,255,255,0.75);text-transform:uppercase;letter-spacing:1px;font-weight:600;\">ZIP Code</p>\n                  <p style=\"margin:4px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:38px;font-weight:800;color:#2B8673;line-height:1;\">{{10.`3`}}</p>\n                  <p style=\"margin:6px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:rgba(255,255,255,0.75);\">{{10.`10`}}, {{10.`11`}}</p>\n                </td>\n              </tr>\n            </table>\n          </td>\n        </tr>\n\n        <!-- Main -->\n        <tr>\n          <td style=\"padding:36px 32px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;\">\n\n            <p style=\"margin:0 0 6px;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:1.2px;font-weight:600;\">Hi {{1.data.agent_name}}</p>\n            <p style=\"margin:0 0 28px;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#64748b;line-height:1.75;padding-bottom:28px;border-bottom:1px solid #e2e8f0;\">\n              [DEBUG VISUAL TEST] A new <strong style=\"color:#1e293b;\">Active Shopper</strong> has started an auto insurance request in your coverage area. Review the snapshot below. If it's a fit, you can accept and receive the shopper's full contact details immediately. No pressure. You decide when to engage.\n            </p>\n\n            <p style=\"margin:0 0 14px;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:700;\">Auto Snapshot</p>\n\n            <!-- Snapshot: grid table (borders on every cell for email clients) -->\n            <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;width:100%;border:1px solid #cbd5e1;border-radius:8px;overflow:hidden;\">\n              <tr>\n                <td width=\"50%\" valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Vehicle</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`17`}} {{10.`18`}} {{10.`19`}}</p>\n                </td>\n                <td width=\"50%\" valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Ownership</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`22`}}</p>\n                </td>\n              </tr>\n              <tr>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Usage</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`20`}}</p>\n                </td>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Mileage</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`21`}}</p>\n                </td>\n              </tr>\n              <tr>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Insured Status</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`4`}}</p>\n                </td>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Current Carrier</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`25`}}</p>\n                </td>\n              </tr>\n              <tr>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Continuous Insured Duration</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`26`}}</p>\n                </td>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Current Insurance Expiration</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`27`}}</p>\n                </td>\n              </tr>\n              <tr>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Number of Vehicles</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`16`}}</p>\n                </td>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Marital Status</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`13`}}</p>\n                </td>\n              </tr>\n              <tr>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Home Status</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`14`}}</p>\n                </td>\n                <td valign=\"top\" style=\"border:1px solid #cbd5e1;padding:16px 18px;vertical-align:top;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;line-height:1.3;\">Bundle Interest</p>\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1e293b;font-weight:700;line-height:1.45;\">{{10.`5`}}</p>\n                </td>\n              </tr>\n            </table>\n\n            <!-- Pricing block -->\n            <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;margin-top:26px;background-color:#5B7C99;border-radius:12px;\">\n              <tr>\n                <td style=\"padding:26px 24px;\">\n                  <p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:rgba(255,255,255,0.75);text-transform:uppercase;letter-spacing:1.2px;font-weight:600;\">Your member price for this lead</p>\n                  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;\">\n                    <tr>\n                      <td valign=\"top\" style=\"padding:0 12px 0 0;\">\n                        <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:52px;font-weight:800;color:#ffffff;line-height:1;\">$12</p>\n                        <p style=\"margin:6px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:rgba(255,255,255,0.75);\">Non-member price is $22</p>\n                      </td>\n                      <td valign=\"top\" align=\"right\" style=\"white-space:nowrap;\">\n                        <table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;background-color:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:10px;\">\n                          <tr>\n                            <td style=\"padding:12px 20px;\">\n                              <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:rgba(255,255,255,0.75);\">Your tier</p>\n                              <p style=\"margin:4px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:800;color:#ffffff;\">{{1.data.tier}}</p>\n                            </td>\n                          </tr>\n                        </table>\n                      </td>\n                    </tr>\n                  </table>\n                  <!-- Lightweight divider between top price/tier and other tier prices -->\n                  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;margin-top:18px;\">\n                    <tr>\n                      <td style=\"height:1px;line-height:1px;font-size:1px;background-color:rgba(230,240,248,0.35);\">&nbsp;</td>\n                    </tr>\n                  </table>\n                  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;margin-top:0;text-align:center;\">\n                    <tr>\n                      <td style=\"padding:8px;width:33%;\">\n                        <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#e6f0f8;\">STARTER</p>\n                        <p style=\"margin:4px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:18px;color:#e6f0f8;\">$15</p>\n                      </td>\n                      <td style=\"padding:8px;width:33%;border-left:1px solid rgba(230,240,248,0.35);\">\n                        <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#e6f0f8;\">GROWTH</p>\n                        <p style=\"margin:4px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:18px;color:#e6f0f8;\">$14</p>\n                      </td>\n                      <td style=\"padding:8px;width:33%;border-left:1px solid rgba(230,240,248,0.35);\">\n                        <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#ffffff;font-weight:700;\">ELITE</p>\n                        <p style=\"margin:4px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:18px;color:#ffffff;font-weight:700;\">$12</p>\n                      </td>\n                    </tr>\n                  </table>\n                </td>\n              </tr>\n            </table>\n\n            <!-- CTAs: bulletproof-style links -->\n            <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;margin-top:22px;\">\n              <tr>\n                <td style=\"padding:6px 8px 6px 0;width:50%;\">\n                  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;background-color:#2B8673;border-radius:50px;\">\n                    <tr>\n                      <td align=\"center\" style=\"padding:17px 16px;\">\n                        <a href=\"https://ensurance.com/20614-2?lead_id={{1.data.lead_id}}&email={{1.data.agent_email}}\" target=\"_blank\" style=\"font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;display:block;\">Accept Request &rarr;</a>\n                      </td>\n                    </tr>\n                  </table>\n                </td>\n              </tr>\n            </table>\n\n            <p style=\"margin:22px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#64748b;line-height:1.6;\">\n              Buttons not working? Reply <strong style=\"color:#1e293b;\">Confirmed</strong> to accept or <strong style=\"color:#1e293b;\">Pass</strong> to skip.\n            </p>\n\n          </td>\n        </tr>\n\n        <!-- Footer -->\n        <tr>\n          <td style=\"background-color:#1F3A5F;padding:24px 32px;\">\n            <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;\">\n              <tr>\n                <td valign=\"top\" style=\"padding:0 12px 0 0;\">\n                  <img src=\"https://ensurance.com/wp-content/uploads/2025/01/qtq_95-1-1024x121.png\" width=\"160\" alt=\"Ensurance\" border=\"0\" style=\"display:block;border:0;outline:none;text-decoration:none;max-width:160px;height:auto;\" />\n                  <p style=\"margin:10px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:rgba(255,255,255,0.75);\">Online first. Human when it matters.</p>\n                </td>\n                <td valign=\"top\" align=\"right\" style=\"white-space:nowrap;\">\n                  <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:rgba(255,255,255,0.55);line-height:1.5;\">The Ensurance Team<br />\n                    <a href=\"https://ensurance.com\" target=\"_blank\" style=\"color:#ffffff;text-decoration:underline;\">ensurance.com</a>\n                  </p>\n                </td>\n              </tr>\n            </table>\n          </td>\n        </tr>\n\n      </table>\n\n      <!-- Legal (outside colored footer for readability) -->\n      <table role=\"presentation\" width=\"640\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"max-width:640px;width:100%;border-collapse:collapse;\">\n        <tr>\n          <td style=\"padding:20px 8px 0;text-align:center;\">\n            <p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#94a3b8;line-height:1.9;\">\n              Ensurance.com is an online-first marketplace for independent agencies.<br />\n              You stay in control — you only pay when you choose to accept an Active Shopper.<br />\n            </p>\n          </td>\n        </tr>\n      </table>\n\n    </td>\n  </tr>\n</table>\n\n</body>\n</html>\n",
+                                "sender": "",
+                                "headers": [],
+                                "replyTo": "",
+                                "subject": "Action required: New Auto insurance shopper in ZIP {{10.`3`}}",
+                                "priority": "normal",
+                                "inReplyTo": "",
+                                "references": [],
+                                "attachments": [],
+                                "contentType": "html"
+                            },
+                            "module": "email:ActionSendEmail",
+                            "version": 7,
+                            "metadata": {
+                                "designer": {
+                                    "x": 900,
+                                    "y": 300,
+                                    "name": "send Debug"
+                                },
+                                "parameters": [
+                                    {
+                                        "name": "account",
+                                        "type": "account:smtp,google-restricted,microsoft-smtp-imap",
+                                        "label": "Connection",
+                                        "required": true
+                                    },
+                                    {
+                                        "name": "saveAfterSent",
+                                        "type": "select",
+                                        "label": "Save message after sending",
+                                        "required": true,
+                                        "validate": {
+                                            "enum": [
+                                                true,
+                                                false
+                                            ]
+                                        }
+                                    }
+                                ]
+                            },
+                            "parameters": {
+                                "account": 8411941,
+                                "saveAfterSent": false
+                            }
+                        },
+                        {
+                            "id": 44,
+                            "mapper": {
+                                "key": "{{1.key}}",
+                                "data": {
+                                    "tier": "{{1.data.tier}}",
+                                    "status": "sent",
+                                    "lead_id": "{{1.data.lead_id}}",
+                                    "sent_at": "{{now}}",
+                                    "attempts": "{{1.data.attempts}}",
+                                    "agent_name": "{{1.data.agent_name}}",
+                                    "created_at": "{{1.data.created_at}}",
+                                    "agent_email": "{{1.data.agent_email}}"
+                                },
+                                "upsert": false,
+                                "overwriteArrays": false
+                            },
+                            "module": "datastore:UpdateRecord",
+                            "version": 1,
+                            "metadata": {
+                                "designer": {
+                                    "x": 1200,
+                                    "y": 300,
+                                    "name": "mark sent"
+                                },
+                                "parameters": [
+                                    {
+                                        "name": "datastore",
+                                        "type": "datastore",
+                                        "label": "Data store",
+                                        "required": true
+                                    }
+                                ]
+                            },
+                            "parameters": {
+                                "datastore": 129327
+                            }
+                        }
+                    ]
+                },
+                {
+                    "flow": [
+                        {
+                            "id": 45,
+                            "filter": {
+                                "name": "available & unknown tier",
+                                "conditions": [
+                                    [
+                                        {
+                                            "a": "{{10.`__IMTLENGTH__`}}",
+                                            "b": "0",
+                                            "o": "number:greater"
+                                        },
+                                        {
+                                            "a": "{{10.`29`}}",
+                                            "b": "available",
+                                            "o": "text:equal"
+                                        },
+                                        {
+                                            "a": "{{1.data.tier}}",
+                                            "b": "Starter",
+                                            "o": "text:notequal"
+                                        },
+                                        {
+                                            "a": "{{1.data.tier}}",
+                                            "b": "Growth",
+                                            "o": "text:notequal"
+                                        },
+                                        {
+                                            "a": "{{1.data.tier}}",
+                                            "b": "Elite",
+                                            "o": "text:notequal"
+                                        },
+                                        {
+                                            "a": "{{1.data.tier}}",
+                                            "b": "Test",
+                                            "o": "text:notequal"
+                                        }
+                                    ]
+                                ]
+                            },
+                            "mapper": {
+                                "key": "{{1.key}}",
+                                "data": {
+                                    "tier": "{{1.data.tier}}",
+                                    "status": "unroutable",
+                                    "lead_id": "{{1.data.lead_id}}",
+                                    "sent_at": "{{1.data.sent_at}}",
+                                    "attempts": "{{1.data.attempts}}",
+                                    "agent_name": "{{1.data.agent_name}}",
+                                    "created_at": "{{1.data.created_at}}",
+                                    "agent_email": "{{1.data.agent_email}}"
+                                },
+                                "upsert": false,
+                                "overwriteArrays": false
+                            },
+                            "module": "datastore:UpdateRecord",
+                            "version": 1,
+                            "metadata": {
+                                "designer": {
+                                    "x": 900,
+                                    "y": 500,
+                                    "name": "mark unroutable"
+                                },
+                                "parameters": [
+                                    {
+                                        "name": "datastore",
+                                        "type": "datastore",
+                                        "label": "Data store",
+                                        "required": true
+                                    }
+                                ]
+                            },
+                            "parameters": {
+                                "datastore": 129327
+                            }
+                        }
+                    ]
+                },
+                {
+                    "flow": [
+                        {
+                            "id": 40,
+                            "filter": {
+                                "name": "lead not available",
+                                "conditions": [
+                                    [
+                                        {
+                                            "a": "{{10.`__IMTLENGTH__`}}",
+                                            "b": "0",
+                                            "o": "number:equal"
+                                        }
+                                    ],
+                                    [
+                                        {
+                                            "a": "{{10.`29`}}",
+                                            "b": "available",
+                                            "o": "text:notequal"
+                                        }
+                                    ]
+                                ]
+                            },
+                            "mapper": {
+                                "key": "{{1.key}}",
+                                "data": {
+                                    "tier": "{{1.data.tier}}",
+                                    "status": "skipped",
+                                    "lead_id": "{{1.data.lead_id}}",
+                                    "sent_at": "{{1.data.sent_at}}",
+                                    "attempts": "{{1.data.attempts}}",
+                                    "agent_name": "{{1.data.agent_name}}",
+                                    "created_at": "{{1.data.created_at}}",
+                                    "agent_email": "{{1.data.agent_email}}"
+                                },
+                                "upsert": false,
+                                "overwriteArrays": false
+                            },
+                            "module": "datastore:UpdateRecord",
+                            "version": 1,
+                            "metadata": {
+                                "designer": {
+                                    "x": 900,
+                                    "y": 700,
+                                    "name": "mark skipped (lead gone)"
+                                },
+                                "parameters": [
+                                    {
+                                        "name": "datastore",
+                                        "type": "datastore",
+                                        "label": "Data store",
+                                        "required": true
+                                    }
+                                ]
+                            },
+                            "parameters": {
+                                "datastore": 129327
+                            }
+                        }
+                    ]
+                }
+            ],
+            "version": 1,
+            "metadata": {
+                "designer": {
+                    "x": 600,
+                    "y": 0
+                }
+            }
+        }
+    ],
+    "name": "Email Queue Drainer",
+    "metadata": {
+        "instant": false,
+        "version": 1,
+        "designer": {
+            "orphans": []
+        },
+        "scenario": {
+            "dlq": false,
+            "slots": null,
+            "dataloss": false,
+            "maxErrors": 3,
+            "autoCommit": true,
+            "roundtrips": 1,
+            "sequential": true,
+            "confidential": false,
+            "freshVariables": false,
+            "autoCommitTriggerLast": true
+        }
+    }
+}

@@ -1,0 +1,1619 @@
+{
+    "flow": [
+        {
+            "id": 1,
+            "mapper": {},
+            "module": "gateway:CustomWebHook",
+            "version": 1,
+            "metadata": {
+                "restore": {
+                    "parameters": {
+                        "hook": {
+                            "data": {
+                                "editable": "true"
+                            },
+                            "label": "stripe-payment"
+                        }
+                    }
+                },
+                "designer": {
+                    "x": 0,
+                    "y": 0
+                },
+                "parameters": [
+                    {
+                        "name": "hook",
+                        "type": "hook:gateway-webhook",
+                        "label": "Webhook",
+                        "required": true
+                    },
+                    {
+                        "name": "maxResults",
+                        "type": "number",
+                        "label": "Maximum number of results"
+                    }
+                ]
+            },
+            "parameters": {
+                "hook": 2070291,
+                "maxResults": 1
+            }
+        },
+        {
+            "id": 8,
+            "mapper": {
+                "from": "drive",
+                "limit": "1",
+                "filter": [
+                    [
+                        {
+                            "a": "A",
+                            "b": "{{1.data.object.metadata.lead_id}}",
+                            "o": "text:equal"
+                        }
+                    ]
+                ],
+                "sheetId": "leads",
+                "sortOrder": "asc",
+                "spreadsheetId": "15lZHGmLN3uJUkLYxk4IY80G7LVPbAZYGMHo755OALeE",
+                "tableFirstRow": "A1:CZ1",
+                "includesHeaders": true,
+                "valueRenderOption": "FORMATTED_VALUE",
+                "dateTimeRenderOption": "FORMATTED_STRING"
+            },
+            "module": "google-sheets:filterRows",
+            "version": 2,
+            "metadata": {
+                "expect": [
+                    {
+                        "name": "from",
+                        "type": "select",
+                        "label": "Search Method",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "drive",
+                                "share"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "valueRenderOption",
+                        "type": "select",
+                        "label": "Value render option",
+                        "validate": {
+                            "enum": [
+                                "FORMATTED_VALUE",
+                                "UNFORMATTED_VALUE",
+                                "FORMULA"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "dateTimeRenderOption",
+                        "type": "select",
+                        "label": "Date and time render option",
+                        "validate": {
+                            "enum": [
+                                "SERIAL_NUMBER",
+                                "FORMATTED_STRING"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "type": "uinteger",
+                        "label": "Limit"
+                    },
+                    {
+                        "name": "spreadsheetId",
+                        "type": "select",
+                        "label": "Spreadsheet Name",
+                        "required": true
+                    },
+                    {
+                        "name": "sheetId",
+                        "type": "select",
+                        "label": "Sheet Name",
+                        "required": true
+                    },
+                    {
+                        "name": "includesHeaders",
+                        "type": "select",
+                        "label": "Table contains headers",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                true,
+                                false
+                            ]
+                        }
+                    },
+                    {
+                        "name": "tableFirstRow",
+                        "type": "select",
+                        "label": "Column range",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "A1:Z1",
+                                "A1:BZ1",
+                                "A1:CZ1",
+                                "A1:DZ1",
+                                "A1:MZ1",
+                                "A1:ZZ1",
+                                "A1:AZZ1",
+                                "A1:BZZ1",
+                                "A1:CZZ1",
+                                "A1:DZZ1",
+                                "A1:MZZ1",
+                                "A1:ZZZ1"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "filter",
+                        "type": "filter",
+                        "label": "Filter",
+                        "options": "rpc://google-sheets/2/rpcGetFilterKeys?includesHeaders=true"
+                    },
+                    {
+                        "name": "orderBy",
+                        "type": "select",
+                        "label": "Order by"
+                    },
+                    {
+                        "name": "sortOrder",
+                        "type": "select",
+                        "label": "Sort order",
+                        "validate": {
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
+                    }
+                ],
+                "restore": {
+                    "expect": {
+                        "from": {
+                            "label": "Select from My Drive"
+                        },
+                        "orderBy": {
+                            "mode": "chose"
+                        },
+                        "sheetId": {
+                            "mode": "chose",
+                            "label": "leads"
+                        },
+                        "sortOrder": {
+                            "mode": "chose",
+                            "label": "Ascending"
+                        },
+                        "spreadsheetId": {
+                            "mode": "chose",
+                            "label": "Ensurance Database"
+                        },
+                        "tableFirstRow": {
+                            "label": "A-CZ"
+                        },
+                        "includesHeaders": {
+                            "mode": "chose",
+                            "label": "Yes"
+                        },
+                        "valueRenderOption": {
+                            "mode": "chose",
+                            "label": "Formatted value"
+                        },
+                        "dateTimeRenderOption": {
+                            "mode": "chose",
+                            "label": "Formatted string"
+                        }
+                    },
+                    "parameters": {
+                        "__IMTCONN__": {
+                            "data": {
+                                "scoped": "true",
+                                "connection": "google"
+                            },
+                            "label": "My Google connection (austinvigo@gmail.com)"
+                        }
+                    }
+                },
+                "designer": {
+                    "x": 300,
+                    "y": 0
+                },
+                "interface": [
+                    {
+                        "name": "__IMTLENGTH__",
+                        "type": "uinteger",
+                        "label": "Total number of bundles"
+                    },
+                    {
+                        "name": "__IMTINDEX__",
+                        "type": "uinteger",
+                        "label": "Bundle order position"
+                    },
+                    {
+                        "name": "__ROW_NUMBER__",
+                        "type": "number",
+                        "label": "Row number"
+                    },
+                    {
+                        "name": "__SPREADSHEET_ID__",
+                        "type": "text",
+                        "label": "Spreadsheet ID"
+                    },
+                    {
+                        "name": "__SHEET__",
+                        "type": "text",
+                        "label": "Sheet"
+                    },
+                    {
+                        "name": "0",
+                        "type": "text",
+                        "label": "lead_id (A)"
+                    },
+                    {
+                        "name": "1",
+                        "type": "text",
+                        "label": "first_name (B)"
+                    },
+                    {
+                        "name": "2",
+                        "type": "text",
+                        "label": "last_name (C)"
+                    },
+                    {
+                        "name": "3",
+                        "type": "text",
+                        "label": "zip_code (D)"
+                    },
+                    {
+                        "name": "4",
+                        "type": "text",
+                        "label": "is_insured (E)"
+                    },
+                    {
+                        "name": "5",
+                        "type": "text",
+                        "label": "bundle_and_save (F)"
+                    },
+                    {
+                        "name": "6",
+                        "type": "text",
+                        "label": "email_address (G)"
+                    },
+                    {
+                        "name": "7",
+                        "type": "text",
+                        "label": "phone_number (H)"
+                    },
+                    {
+                        "name": "8",
+                        "type": "text",
+                        "label": "method_of_contact (I)"
+                    },
+                    {
+                        "name": "9",
+                        "type": "text",
+                        "label": "address (J)"
+                    },
+                    {
+                        "name": "10",
+                        "type": "text",
+                        "label": "city (K)"
+                    },
+                    {
+                        "name": "11",
+                        "type": "text",
+                        "label": "state (L)"
+                    },
+                    {
+                        "name": "12",
+                        "type": "text",
+                        "label": "month_and_year_dob (M)"
+                    },
+                    {
+                        "name": "13",
+                        "type": "text",
+                        "label": "marital_status (N)"
+                    },
+                    {
+                        "name": "14",
+                        "type": "text",
+                        "label": "own_or_rent_home (O)"
+                    },
+                    {
+                        "name": "15",
+                        "type": "text",
+                        "label": "is_military_affiliated (P)"
+                    },
+                    {
+                        "name": "16",
+                        "type": "text",
+                        "label": "num_of_vehicles (Q)"
+                    },
+                    {
+                        "name": "17",
+                        "type": "text",
+                        "label": "primary_vehicle_year (R)"
+                    },
+                    {
+                        "name": "18",
+                        "type": "text",
+                        "label": "primary_vehicle_make (S)"
+                    },
+                    {
+                        "name": "19",
+                        "type": "text",
+                        "label": "primary_vehicle_model (T)"
+                    },
+                    {
+                        "name": "20",
+                        "type": "text",
+                        "label": "primary_vehicle_use (U)"
+                    },
+                    {
+                        "name": "21",
+                        "type": "text",
+                        "label": "primary_vehicle_annual_miles (V)"
+                    },
+                    {
+                        "name": "22",
+                        "type": "text",
+                        "label": "primary_vehicle_ownership_type (W)"
+                    },
+                    {
+                        "name": "23",
+                        "type": "text",
+                        "label": "num_of_accidents (X)"
+                    },
+                    {
+                        "name": "24",
+                        "type": "text",
+                        "label": "num_of_tickets (Y)"
+                    },
+                    {
+                        "name": "25",
+                        "type": "text",
+                        "label": "current_insurance_company (Z)"
+                    },
+                    {
+                        "name": "26",
+                        "type": "text",
+                        "label": "continuous_insured_duration (AA)"
+                    },
+                    {
+                        "name": "27",
+                        "type": "text",
+                        "label": "current_insurance_expiration (AB)"
+                    },
+                    {
+                        "name": "28",
+                        "type": "text",
+                        "label": "per_month_insurance_cost (AC)"
+                    },
+                    {
+                        "name": "29",
+                        "type": "text",
+                        "label": "status (AD)"
+                    },
+                    {
+                        "name": "30",
+                        "type": "text",
+                        "label": "reserved_by (AE)"
+                    },
+                    {
+                        "name": "31",
+                        "type": "text",
+                        "label": "reserved_at (AF)"
+                    },
+                    {
+                        "name": "32",
+                        "type": "text",
+                        "label": "purchased_by (AG)"
+                    },
+                    {
+                        "name": "33",
+                        "type": "text",
+                        "label": "(AH)"
+                    },
+                    {
+                        "name": "34",
+                        "type": "text",
+                        "label": "(AI)"
+                    },
+                    {
+                        "name": "35",
+                        "type": "text",
+                        "label": "(AJ)"
+                    },
+                    {
+                        "name": "36",
+                        "type": "text",
+                        "label": "(AK)"
+                    },
+                    {
+                        "name": "37",
+                        "type": "text",
+                        "label": "(AL)"
+                    },
+                    {
+                        "name": "38",
+                        "type": "text",
+                        "label": "(AM)"
+                    },
+                    {
+                        "name": "39",
+                        "type": "text",
+                        "label": "(AN)"
+                    },
+                    {
+                        "name": "40",
+                        "type": "text",
+                        "label": "(AO)"
+                    },
+                    {
+                        "name": "41",
+                        "type": "text",
+                        "label": "(AP)"
+                    },
+                    {
+                        "name": "42",
+                        "type": "text",
+                        "label": "(AQ)"
+                    },
+                    {
+                        "name": "43",
+                        "type": "text",
+                        "label": "(AR)"
+                    },
+                    {
+                        "name": "44",
+                        "type": "text",
+                        "label": "(AS)"
+                    },
+                    {
+                        "name": "45",
+                        "type": "text",
+                        "label": "(AT)"
+                    },
+                    {
+                        "name": "46",
+                        "type": "text",
+                        "label": "(AU)"
+                    },
+                    {
+                        "name": "47",
+                        "type": "text",
+                        "label": "(AV)"
+                    },
+                    {
+                        "name": "48",
+                        "type": "text",
+                        "label": "(AW)"
+                    },
+                    {
+                        "name": "49",
+                        "type": "text",
+                        "label": "(AX)"
+                    },
+                    {
+                        "name": "50",
+                        "type": "text",
+                        "label": "(AY)"
+                    },
+                    {
+                        "name": "51",
+                        "type": "text",
+                        "label": "(AZ)"
+                    },
+                    {
+                        "name": "52",
+                        "type": "text",
+                        "label": "(BA)"
+                    },
+                    {
+                        "name": "53",
+                        "type": "text",
+                        "label": "(BB)"
+                    },
+                    {
+                        "name": "54",
+                        "type": "text",
+                        "label": "(BC)"
+                    },
+                    {
+                        "name": "55",
+                        "type": "text",
+                        "label": "(BD)"
+                    },
+                    {
+                        "name": "56",
+                        "type": "text",
+                        "label": "(BE)"
+                    },
+                    {
+                        "name": "57",
+                        "type": "text",
+                        "label": "(BF)"
+                    },
+                    {
+                        "name": "58",
+                        "type": "text",
+                        "label": "(BG)"
+                    },
+                    {
+                        "name": "59",
+                        "type": "text",
+                        "label": "(BH)"
+                    },
+                    {
+                        "name": "60",
+                        "type": "text",
+                        "label": "(BI)"
+                    },
+                    {
+                        "name": "61",
+                        "type": "text",
+                        "label": "(BJ)"
+                    },
+                    {
+                        "name": "62",
+                        "type": "text",
+                        "label": "(BK)"
+                    },
+                    {
+                        "name": "63",
+                        "type": "text",
+                        "label": "(BL)"
+                    },
+                    {
+                        "name": "64",
+                        "type": "text",
+                        "label": "(BM)"
+                    },
+                    {
+                        "name": "65",
+                        "type": "text",
+                        "label": "(BN)"
+                    },
+                    {
+                        "name": "66",
+                        "type": "text",
+                        "label": "(BO)"
+                    },
+                    {
+                        "name": "67",
+                        "type": "text",
+                        "label": "(BP)"
+                    },
+                    {
+                        "name": "68",
+                        "type": "text",
+                        "label": "(BQ)"
+                    },
+                    {
+                        "name": "69",
+                        "type": "text",
+                        "label": "(BR)"
+                    },
+                    {
+                        "name": "70",
+                        "type": "text",
+                        "label": "(BS)"
+                    },
+                    {
+                        "name": "71",
+                        "type": "text",
+                        "label": "(BT)"
+                    },
+                    {
+                        "name": "72",
+                        "type": "text",
+                        "label": "(BU)"
+                    },
+                    {
+                        "name": "73",
+                        "type": "text",
+                        "label": "(BV)"
+                    },
+                    {
+                        "name": "74",
+                        "type": "text",
+                        "label": "(BW)"
+                    },
+                    {
+                        "name": "75",
+                        "type": "text",
+                        "label": "(BX)"
+                    },
+                    {
+                        "name": "76",
+                        "type": "text",
+                        "label": "(BY)"
+                    },
+                    {
+                        "name": "77",
+                        "type": "text",
+                        "label": "(BZ)"
+                    },
+                    {
+                        "name": "78",
+                        "type": "text",
+                        "label": "(CA)"
+                    },
+                    {
+                        "name": "79",
+                        "type": "text",
+                        "label": "(CB)"
+                    },
+                    {
+                        "name": "80",
+                        "type": "text",
+                        "label": "(CC)"
+                    },
+                    {
+                        "name": "81",
+                        "type": "text",
+                        "label": "(CD)"
+                    },
+                    {
+                        "name": "82",
+                        "type": "text",
+                        "label": "(CE)"
+                    },
+                    {
+                        "name": "83",
+                        "type": "text",
+                        "label": "(CF)"
+                    },
+                    {
+                        "name": "84",
+                        "type": "text",
+                        "label": "(CG)"
+                    },
+                    {
+                        "name": "85",
+                        "type": "text",
+                        "label": "(CH)"
+                    },
+                    {
+                        "name": "86",
+                        "type": "text",
+                        "label": "(CI)"
+                    },
+                    {
+                        "name": "87",
+                        "type": "text",
+                        "label": "(CJ)"
+                    },
+                    {
+                        "name": "88",
+                        "type": "text",
+                        "label": "(CK)"
+                    },
+                    {
+                        "name": "89",
+                        "type": "text",
+                        "label": "(CL)"
+                    },
+                    {
+                        "name": "90",
+                        "type": "text",
+                        "label": "(CM)"
+                    },
+                    {
+                        "name": "91",
+                        "type": "text",
+                        "label": "(CN)"
+                    },
+                    {
+                        "name": "92",
+                        "type": "text",
+                        "label": "(CO)"
+                    },
+                    {
+                        "name": "93",
+                        "type": "text",
+                        "label": "(CP)"
+                    },
+                    {
+                        "name": "94",
+                        "type": "text",
+                        "label": "(CQ)"
+                    },
+                    {
+                        "name": "95",
+                        "type": "text",
+                        "label": "(CR)"
+                    },
+                    {
+                        "name": "96",
+                        "type": "text",
+                        "label": "(CS)"
+                    },
+                    {
+                        "name": "97",
+                        "type": "text",
+                        "label": "(CT)"
+                    },
+                    {
+                        "name": "98",
+                        "type": "text",
+                        "label": "(CU)"
+                    },
+                    {
+                        "name": "99",
+                        "type": "text",
+                        "label": "(CV)"
+                    },
+                    {
+                        "name": "100",
+                        "type": "text",
+                        "label": "(CW)"
+                    },
+                    {
+                        "name": "101",
+                        "type": "text",
+                        "label": "(CX)"
+                    },
+                    {
+                        "name": "102",
+                        "type": "text",
+                        "label": "(CY)"
+                    },
+                    {
+                        "name": "103",
+                        "type": "text",
+                        "label": "(CZ)"
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "__IMTCONN__",
+                        "type": "account:google",
+                        "label": "Connection",
+                        "required": true
+                    }
+                ]
+            },
+            "parameters": {
+                "__IMTCONN__": 8020577
+            }
+        },
+        {
+            "id": 10,
+            "filter": {
+                "name": "found lead",
+                "conditions": [
+                    [
+                        {
+                            "a": "{{8.`__IMTLENGTH__`}}",
+                            "b": "0",
+                            "o": "number:greater"
+                        }
+                    ]
+                ]
+            },
+            "mapper": {
+                "from": "drive",
+                "mode": "select",
+                "values": {
+                    "0": "{{8.`0`}}",
+                    "1": "{{8.`1`}}",
+                    "2": "{{8.`2`}}",
+                    "3": "{{8.`3`}}",
+                    "4": "{{8.`4`}}",
+                    "5": "{{8.`5`}}",
+                    "6": "{{8.`6`}}",
+                    "7": "{{8.`7`}}",
+                    "8": "{{8.`8`}}",
+                    "9": "{{8.`9`}}",
+                    "10": "{{8.`10`}}",
+                    "11": "{{8.`11`}}",
+                    "12": "{{8.`12`}}",
+                    "13": "{{8.`13`}}",
+                    "14": "{{8.`14`}}",
+                    "15": "{{8.`15`}}",
+                    "16": "{{8.`16`}}",
+                    "17": "{{8.`17`}}",
+                    "18": "{{8.`18`}}",
+                    "19": "{{8.`19`}}",
+                    "20": "{{8.`20`}}",
+                    "21": "{{8.`21`}}",
+                    "22": "{{8.`22`}}",
+                    "23": "{{8.`23`}}",
+                    "24": "{{8.`24`}}",
+                    "25": "{{8.`25`}}",
+                    "26": "{{8.`26`}}",
+                    "27": "{{8.`27`}}",
+                    "28": "{{8.`28`}}",
+                    "29": "sold",
+                    "32": "{{8.`30`}}"
+                },
+                "sheetId": "leads",
+                "rowNumber": "{{8.`__ROW_NUMBER__`}}",
+                "spreadsheetId": "/1TlWfv8jtbTlyuyC4-kGQHAbawj3A4CHX/16zwG-H0KZhJqZUNSFJPciX-WXJsLzUOk/15lZHGmLN3uJUkLYxk4IY80G7LVPbAZYGMHo755OALeE",
+                "includesHeaders": true,
+                "useColumnHeaders": false,
+                "valueInputOption": "USER_ENTERED"
+            },
+            "module": "google-sheets:updateRow",
+            "version": 2,
+            "metadata": {
+                "expect": [
+                    {
+                        "name": "mode",
+                        "type": "select",
+                        "label": "Search Method",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "select",
+                                "fromAll",
+                                "map"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "valueInputOption",
+                        "type": "select",
+                        "label": "Value input option",
+                        "validate": {
+                            "enum": [
+                                "USER_ENTERED",
+                                "RAW"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "type": "select",
+                        "label": "Drive",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "drive",
+                                "share",
+                                "team"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "spreadsheetId",
+                        "type": "file",
+                        "label": "Spreadsheet Name",
+                        "required": true
+                    },
+                    {
+                        "name": "sheetId",
+                        "type": "select",
+                        "label": "Sheet Name",
+                        "required": true
+                    },
+                    {
+                        "name": "rowNumber",
+                        "type": "uinteger",
+                        "label": "Row number",
+                        "required": true
+                    },
+                    {
+                        "name": "includesHeaders",
+                        "type": "select",
+                        "label": "Table contains headers",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                true,
+                                false
+                            ]
+                        }
+                    },
+                    {
+                        "name": "useColumnHeaders",
+                        "type": "select",
+                        "label": "Use column headers as IDs of the columns",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                true,
+                                false
+                            ]
+                        }
+                    },
+                    {
+                        "name": "values",
+                        "spec": [
+                            {
+                                "name": "0",
+                                "type": "text",
+                                "label": "lead_id (A)"
+                            },
+                            {
+                                "name": "1",
+                                "type": "text",
+                                "label": "first_name (B)"
+                            },
+                            {
+                                "name": "2",
+                                "type": "text",
+                                "label": "last_name (C)"
+                            },
+                            {
+                                "name": "3",
+                                "type": "text",
+                                "label": "zip_code (D)"
+                            },
+                            {
+                                "name": "4",
+                                "type": "text",
+                                "label": "is_insured (E)"
+                            },
+                            {
+                                "name": "5",
+                                "type": "text",
+                                "label": "bundle_and_save (F)"
+                            },
+                            {
+                                "name": "6",
+                                "type": "text",
+                                "label": "email_address (G)"
+                            },
+                            {
+                                "name": "7",
+                                "type": "text",
+                                "label": "phone_number (H)"
+                            },
+                            {
+                                "name": "8",
+                                "type": "text",
+                                "label": "method_of_contact (I)"
+                            },
+                            {
+                                "name": "9",
+                                "type": "text",
+                                "label": "address (J)"
+                            },
+                            {
+                                "name": "10",
+                                "type": "text",
+                                "label": "city (K)"
+                            },
+                            {
+                                "name": "11",
+                                "type": "text",
+                                "label": "state (L)"
+                            },
+                            {
+                                "name": "12",
+                                "type": "text",
+                                "label": "month_and_year_dob (M)"
+                            },
+                            {
+                                "name": "13",
+                                "type": "text",
+                                "label": "marital_status (N)"
+                            },
+                            {
+                                "name": "14",
+                                "type": "text",
+                                "label": "own_or_rent_home (O)"
+                            },
+                            {
+                                "name": "15",
+                                "type": "text",
+                                "label": "is_military_affiliated (P)"
+                            },
+                            {
+                                "name": "16",
+                                "type": "text",
+                                "label": "num_of_vehicles (Q)"
+                            },
+                            {
+                                "name": "17",
+                                "type": "text",
+                                "label": "primary_vehicle_year (R)"
+                            },
+                            {
+                                "name": "18",
+                                "type": "text",
+                                "label": "primary_vehicle_make (S)"
+                            },
+                            {
+                                "name": "19",
+                                "type": "text",
+                                "label": "primary_vehicle_model (T)"
+                            },
+                            {
+                                "name": "20",
+                                "type": "text",
+                                "label": "primary_vehicle_use (U)"
+                            },
+                            {
+                                "name": "21",
+                                "type": "text",
+                                "label": "primary_vehicle_annual_miles (V)"
+                            },
+                            {
+                                "name": "22",
+                                "type": "text",
+                                "label": "primary_vehicle_ownership_type (W)"
+                            },
+                            {
+                                "name": "23",
+                                "type": "text",
+                                "label": "num_of_accidents (X)"
+                            },
+                            {
+                                "name": "24",
+                                "type": "text",
+                                "label": "num_of_tickets (Y)"
+                            },
+                            {
+                                "name": "25",
+                                "type": "text",
+                                "label": "current_insurance_company (Z)"
+                            },
+                            {
+                                "name": "26",
+                                "type": "text",
+                                "label": "continuous_insured_duration (AA)"
+                            },
+                            {
+                                "name": "27",
+                                "type": "text",
+                                "label": "current_insurance_expiration (AB)"
+                            },
+                            {
+                                "name": "28",
+                                "type": "text",
+                                "label": "per_month_insurance_cost (AC)"
+                            },
+                            {
+                                "name": "29",
+                                "type": "text",
+                                "label": "status (AD)"
+                            },
+                            {
+                                "name": "30",
+                                "type": "text",
+                                "label": "reserved_by (AE)"
+                            },
+                            {
+                                "name": "31",
+                                "type": "text",
+                                "label": "reserved_at (AF)"
+                            },
+                            {
+                                "name": "32",
+                                "type": "text",
+                                "label": "purchased_by (AG)"
+                            }
+                        ],
+                        "type": "collection",
+                        "label": "Values in columns",
+                        "metadata": [
+                            [
+                                [
+                                    "lead_id",
+                                    "first_name",
+                                    "last_name",
+                                    "zip_code",
+                                    "is_insured",
+                                    "bundle_and_save",
+                                    "email_address",
+                                    "phone_number",
+                                    "method_of_contact",
+                                    "address",
+                                    "city",
+                                    "state",
+                                    "month_and_year_dob",
+                                    "marital_status",
+                                    "own_or_rent_home",
+                                    "is_military_affiliated",
+                                    "num_of_vehicles",
+                                    "primary_vehicle_year",
+                                    "primary_vehicle_make",
+                                    "primary_vehicle_model",
+                                    "primary_vehicle_use",
+                                    "primary_vehicle_annual_miles",
+                                    "primary_vehicle_ownership_type",
+                                    "num_of_accidents",
+                                    "num_of_tickets",
+                                    "current_insurance_company",
+                                    "continuous_insured_duration",
+                                    "current_insurance_expiration",
+                                    "per_month_insurance_cost",
+                                    "status",
+                                    "reserved_by",
+                                    "reserved_at",
+                                    "purchased_by"
+                                ]
+                            ]
+                        ]
+                    }
+                ],
+                "restore": {
+                    "expect": {
+                        "from": {
+                            "label": "My Drive"
+                        },
+                        "mode": {
+                            "label": "Search by path"
+                        },
+                        "sheetId": {
+                            "label": "leads"
+                        },
+                        "spreadsheetId": {
+                            "path": [
+                                "Tech Department ",
+                                "Ensurance Database",
+                                "Ensurance Database"
+                            ]
+                        },
+                        "includesHeaders": {
+                            "label": "Yes"
+                        },
+                        "useColumnHeaders": {
+                            "label": "No",
+                            "nested": [
+                                {
+                                    "name": "values",
+                                    "spec": [
+                                        {
+                                            "name": "0",
+                                            "type": "text",
+                                            "label": "lead_id (A)"
+                                        },
+                                        {
+                                            "name": "1",
+                                            "type": "text",
+                                            "label": "first_name (B)"
+                                        },
+                                        {
+                                            "name": "2",
+                                            "type": "text",
+                                            "label": "last_name (C)"
+                                        },
+                                        {
+                                            "name": "3",
+                                            "type": "text",
+                                            "label": "zip_code (D)"
+                                        },
+                                        {
+                                            "name": "4",
+                                            "type": "text",
+                                            "label": "is_insured (E)"
+                                        },
+                                        {
+                                            "name": "5",
+                                            "type": "text",
+                                            "label": "bundle_and_save (F)"
+                                        },
+                                        {
+                                            "name": "6",
+                                            "type": "text",
+                                            "label": "email_address (G)"
+                                        },
+                                        {
+                                            "name": "7",
+                                            "type": "text",
+                                            "label": "phone_number (H)"
+                                        },
+                                        {
+                                            "name": "8",
+                                            "type": "text",
+                                            "label": "method_of_contact (I)"
+                                        },
+                                        {
+                                            "name": "9",
+                                            "type": "text",
+                                            "label": "address (J)"
+                                        },
+                                        {
+                                            "name": "10",
+                                            "type": "text",
+                                            "label": "city (K)"
+                                        },
+                                        {
+                                            "name": "11",
+                                            "type": "text",
+                                            "label": "state (L)"
+                                        },
+                                        {
+                                            "name": "12",
+                                            "type": "text",
+                                            "label": "month_and_year_dob (M)"
+                                        },
+                                        {
+                                            "name": "13",
+                                            "type": "text",
+                                            "label": "marital_status (N)"
+                                        },
+                                        {
+                                            "name": "14",
+                                            "type": "text",
+                                            "label": "own_or_rent_home (O)"
+                                        },
+                                        {
+                                            "name": "15",
+                                            "type": "text",
+                                            "label": "is_military_affiliated (P)"
+                                        },
+                                        {
+                                            "name": "16",
+                                            "type": "text",
+                                            "label": "num_of_vehicles (Q)"
+                                        },
+                                        {
+                                            "name": "17",
+                                            "type": "text",
+                                            "label": "primary_vehicle_year (R)"
+                                        },
+                                        {
+                                            "name": "18",
+                                            "type": "text",
+                                            "label": "primary_vehicle_make (S)"
+                                        },
+                                        {
+                                            "name": "19",
+                                            "type": "text",
+                                            "label": "primary_vehicle_model (T)"
+                                        },
+                                        {
+                                            "name": "20",
+                                            "type": "text",
+                                            "label": "primary_vehicle_use (U)"
+                                        },
+                                        {
+                                            "name": "21",
+                                            "type": "text",
+                                            "label": "primary_vehicle_annual_miles (V)"
+                                        },
+                                        {
+                                            "name": "22",
+                                            "type": "text",
+                                            "label": "primary_vehicle_ownership_type (W)"
+                                        },
+                                        {
+                                            "name": "23",
+                                            "type": "text",
+                                            "label": "num_of_accidents (X)"
+                                        },
+                                        {
+                                            "name": "24",
+                                            "type": "text",
+                                            "label": "num_of_tickets (Y)"
+                                        },
+                                        {
+                                            "name": "25",
+                                            "type": "text",
+                                            "label": "current_insurance_company (Z)"
+                                        },
+                                        {
+                                            "name": "26",
+                                            "type": "text",
+                                            "label": "continuous_insured_duration (AA)"
+                                        },
+                                        {
+                                            "name": "27",
+                                            "type": "text",
+                                            "label": "current_insurance_expiration (AB)"
+                                        },
+                                        {
+                                            "name": "28",
+                                            "type": "text",
+                                            "label": "per_month_insurance_cost (AC)"
+                                        },
+                                        {
+                                            "name": "29",
+                                            "type": "text",
+                                            "label": "status (AD)"
+                                        },
+                                        {
+                                            "name": "30",
+                                            "type": "text",
+                                            "label": "reserved_by (AE)"
+                                        },
+                                        {
+                                            "name": "31",
+                                            "type": "text",
+                                            "label": "reserved_at (AF)"
+                                        },
+                                        {
+                                            "name": "32",
+                                            "type": "text",
+                                            "label": "purchased_by (AG)"
+                                        }
+                                    ],
+                                    "type": "collection",
+                                    "label": "Values in columns",
+                                    "metadata": [
+                                        [
+                                            [
+                                                "lead_id",
+                                                "first_name",
+                                                "last_name",
+                                                "zip_code",
+                                                "is_insured",
+                                                "bundle_and_save",
+                                                "email_address",
+                                                "phone_number",
+                                                "method_of_contact",
+                                                "address",
+                                                "city",
+                                                "state",
+                                                "month_and_year_dob",
+                                                "marital_status",
+                                                "own_or_rent_home",
+                                                "is_military_affiliated",
+                                                "num_of_vehicles",
+                                                "primary_vehicle_year",
+                                                "primary_vehicle_make",
+                                                "primary_vehicle_model",
+                                                "primary_vehicle_use",
+                                                "primary_vehicle_annual_miles",
+                                                "primary_vehicle_ownership_type",
+                                                "num_of_accidents",
+                                                "num_of_tickets",
+                                                "current_insurance_company",
+                                                "continuous_insured_duration",
+                                                "current_insurance_expiration",
+                                                "per_month_insurance_cost",
+                                                "status",
+                                                "reserved_by",
+                                                "reserved_at",
+                                                "purchased_by"
+                                            ]
+                                        ]
+                                    ]
+                                }
+                            ]
+                        },
+                        "valueInputOption": {
+                            "mode": "chose",
+                            "label": "User entered"
+                        }
+                    },
+                    "parameters": {
+                        "__IMTCONN__": {
+                            "data": {
+                                "scoped": "true",
+                                "connection": "google"
+                            },
+                            "label": "My Google connection (ecohen@ensurance.com)"
+                        }
+                    }
+                },
+                "designer": {
+                    "x": 600,
+                    "y": 0
+                },
+                "parameters": [
+                    {
+                        "name": "__IMTCONN__",
+                        "type": "account:google",
+                        "label": "Connection",
+                        "required": true
+                    }
+                ]
+            },
+            "parameters": {
+                "__IMTCONN__": 8291026
+            }
+        }
+    ],
+    "name": "Mark Lead Sold",
+    "metadata": {
+        "instant": true,
+        "version": 1,
+        "designer": {
+            "orphans": [],
+            "samples": {
+                "1": {
+                    "id": "evt_1TLzkVBlSC3gMvWP5sNHfrQV",
+                    "data": {
+                        "object": {
+                            "id": "cs_live_a1amn48Nap01q4FZEpTjOKU6cm0NsOYVJkIZDoyiTDJV4F2mJB6FWv4NEp",
+                            "url": null,
+                            "mode": "payment",
+                            "locale": null,
+                            "object": "checkout.session",
+                            "status": "complete",
+                            "consent": null,
+                            "created": 1776145366,
+                            "invoice": null,
+                            "ui_mode": "hosted",
+                            "currency": "usd",
+                            "customer": null,
+                            "livemode": true,
+                            "metadata": {
+                                "lead_id": "lead_69ddd39008fc61.03223362"
+                            },
+                            "discounts": [],
+                            "cancel_url": null,
+                            "expires_at": 1776231766,
+                            "custom_text": {
+                                "submit": null,
+                                "after_submit": null,
+                                "shipping_address": null,
+                                "terms_of_service_acceptance": null
+                            },
+                            "permissions": null,
+                            "submit_type": null,
+                            "success_url": "https://ensurance.com/lead-page/?id=lead_69ddd39008fc61.03223362",
+                            "amount_total": 1500,
+                            "payment_link": null,
+                            "setup_intent": null,
+                            "subscription": null,
+                            "automatic_tax": {
+                                "status": null,
+                                "enabled": false,
+                                "provider": null,
+                                "liability": null
+                            },
+                            "client_secret": null,
+                            "custom_fields": [],
+                            "shipping_cost": null,
+                            "total_details": {
+                                "amount_tax": 0,
+                                "amount_discount": 0,
+                                "amount_shipping": 0
+                            },
+                            "customer_email": null,
+                            "origin_context": null,
+                            "payment_intent": "pi_3TLzkSBlSC3gMvWP39vTlPWb",
+                            "payment_status": "paid",
+                            "recovered_from": null,
+                            "wallet_options": null,
+                            "amount_subtotal": 1500,
+                            "adaptive_pricing": {
+                                "enabled": true
+                            },
+                            "after_expiration": null,
+                            "customer_account": null,
+                            "customer_details": {
+                                "name": "Austin Vigo",
+                                "email": "austinvigo@gmail.com",
+                                "phone": null,
+                                "address": {
+                                    "city": "Santa Ana",
+                                    "line1": "2701 W Juniper ST",
+                                    "line2": "Apt 2",
+                                    "state": "CA",
+                                    "country": "US",
+                                    "postal_code": "92704"
+                                },
+                                "tax_ids": [],
+                                "tax_exempt": "none",
+                                "business_name": null,
+                                "individual_name": null
+                            },
+                            "invoice_creation": {
+                                "enabled": false,
+                                "invoice_data": {
+                                    "footer": null,
+                                    "issuer": null,
+                                    "metadata": {},
+                                    "description": null,
+                                    "custom_fields": null,
+                                    "account_tax_ids": null,
+                                    "rendering_options": null
+                                }
+                            },
+                            "managed_payments": {
+                                "enabled": false
+                            },
+                            "shipping_options": [],
+                            "branding_settings": {
+                                "icon": null,
+                                "logo": {
+                                    "file": "file_1SrPTWBlSC3gMvWPfo7WB8ES",
+                                    "type": "file"
+                                },
+                                "font_family": "default",
+                                "border_style": "rounded",
+                                "button_color": "#0074d4",
+                                "display_name": "Ensurance Incorporated",
+                                "background_color": "#ffffff"
+                            },
+                            "customer_creation": "if_required",
+                            "consent_collection": null,
+                            "client_reference_id": null,
+                            "currency_conversion": null,
+                            "payment_method_types": [
+                                "card"
+                            ],
+                            "allow_promotion_codes": null,
+                            "collected_information": null,
+                            "integration_identifier": null,
+                            "payment_method_options": {},
+                            "phone_number_collection": {
+                                "enabled": false
+                            },
+                            "payment_method_collection": "if_required",
+                            "billing_address_collection": null,
+                            "shipping_address_collection": null,
+                            "saved_payment_method_options": null,
+                            "payment_method_configuration_details": {
+                                "id": "pmc_1RWkE9BlSC3gMvWPlgxa1Nz3",
+                                "parent": null
+                            }
+                        }
+                    },
+                    "type": "checkout.session.completed",
+                    "object": "event",
+                    "created": 1776145379,
+                    "request": {
+                        "id": null,
+                        "idempotency_key": null
+                    },
+                    "livemode": true,
+                    "api_version": "2025-05-28.basil",
+                    "pending_webhooks": 2
+                },
+                "8": {
+                    "0": "lead_69ddd39008fc61.03223362",
+                    "1": "Vigo",
+                    "2": "Austin",
+                    "3": "92704",
+                    "4": "yes",
+                    "5": "yes",
+                    "6": "austinvigo@gmail.com",
+                    "7": "(619) 794-4411",
+                    "8": "",
+                    "9": "",
+                    "10": "",
+                    "11": "CA",
+                    "12": "10/2997",
+                    "13": "single",
+                    "14": "own",
+                    "15": "yes",
+                    "16": "1",
+                    "17": "2025",
+                    "18": "acura",
+                    "19": "",
+                    "20": "commute",
+                    "21": "under-7500",
+                    "22": "own",
+                    "23": "0",
+                    "24": "0",
+                    "25": "allstate",
+                    "26": "less-than-6-months",
+                    "27": "less-than-6-months0-30-days",
+                    "28": "",
+                    "29": "pending",
+                    "30": "austinvigo@gmail.com",
+                    "31": "2026-04-14T05:42:45.324Z",
+                    "__SHEET__": "leads",
+                    "__IMTINDEX__": 1,
+                    "__IMTLENGTH__": 1,
+                    "__ROW_NUMBER__": 25,
+                    "__SPREADSHEET_ID__": "15lZHGmLN3uJUkLYxk4IY80G7LVPbAZYGMHo755OALeE"
+                },
+                "10": {
+                    "updatedRows": 1,
+                    "updatedCells": 31,
+                    "updatedRange": "leads!A25:AG25",
+                    "spreadsheetId": "15lZHGmLN3uJUkLYxk4IY80G7LVPbAZYGMHo755OALeE",
+                    "updatedColumns": 31
+                }
+            }
+        },
+        "scenario": {
+            "dlq": false,
+            "slots": null,
+            "dataloss": false,
+            "maxErrors": 3,
+            "autoCommit": true,
+            "roundtrips": 1,
+            "sequential": false,
+            "confidential": false,
+            "freshVariables": false,
+            "autoCommitTriggerLast": true
+        }
+    }
+}
