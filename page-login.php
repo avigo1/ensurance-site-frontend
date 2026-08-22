@@ -88,7 +88,6 @@ $al_agents_url   = esc_url( home_url( '/for-agents' ) );
 $al_contact_url  = esc_url( home_url( '/contact' ) );
 
 // Current Stripe destinations.
-$al_stripe_portal_url = esc_url( 'https://checkout.ensurance.com/p/login/bJe4gycqD6Vw1uW16M63K00' );
 $al_cta_60day         = esc_url( 'https://checkout.ensurance.com/b/9B66oG3U7fs26Pg7va63K09' );
 $al_cta_monthly       = esc_url( 'https://checkout.ensurance.com/b/7sY7sK8an93E2z04iY63K08' );
 
@@ -190,15 +189,6 @@ get_header( 'home' );
         </form>
 
         <p class="al-card__foot">Forgot your password? <a href="<?php echo $al_forgot_url; ?>">Reset your password here.</a></p>
-
-        <?php // Billing lives in Stripe, not in the dashboard — keep it reachable from here. ?>
-        <div class="al-billing">
-          <p class="al-billing__lead">Managing your membership instead?</p>
-          <a href="<?php echo $al_stripe_portal_url; ?>" class="al-btn al-btn--outline al-billing__btn" data-event="login_manage_billing_click">
-            Manage Membership &amp; Billing <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 17 ), $ensurance_svg_allowed ); ?>
-          </a>
-          <p class="al-billing__note">Billing, payment method, invoices and cancellation are handled securely through Stripe.</p>
-        </div>
       </div>
 
       <!-- New agent -->
