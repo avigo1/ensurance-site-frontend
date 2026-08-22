@@ -476,3 +476,27 @@ body { background: var(--bg-page) !important; }
   .al-btn, .al-btn svg { transition: none !important; }
   .al-btn:hover, .al-btn:hover svg { transform: none !important; }
 }
+
+/* --------------------------------------------------------------------------
+   Stripe billing portal — secondary action under the sign-in form.
+   The dashboard handles the agency profile; membership and billing live in
+   Stripe, so the portal stays reachable from the login card without competing
+   with the primary Log In action.
+   -------------------------------------------------------------------------- */
+.al-billing {
+  margin-top: var(--space-5);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--border-soft);
+  text-align: center;
+}
+.al-billing__lead {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+.al-billing__btn { width: 100%; justify-content: center; }
+.al-billing__note {
+  margin: var(--space-3) 0 0;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
