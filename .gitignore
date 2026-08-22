@@ -33,3 +33,7 @@ plans/
 # style.css contains legacy GeoDirectory CSS - edit only via SiteGround directly
 style.css
 kadence-style-child-min.css
+
+# Make.com scenario exports - contain live lead PII and Stripe session URLs.
+# Kept outside the repo (~/Documents/ensurance-blueprints/); the theme never reads them.
+*.blueprint.json

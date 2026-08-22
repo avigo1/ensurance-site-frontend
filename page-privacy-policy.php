@@ -118,7 +118,7 @@ get_header( 'home' );
         <p class="pp-hero__sub">Welcome to Ensurance.com (the &ldquo;Site&rdquo;), owned and operated by Ensurance Incorporated (&ldquo;Ensurance.com,&rdquo; &ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;). Ensurance.com provides a structured insurance request platform designed to help Consumers organize insurance information and, when appropriate, connect with licensed insurance professionals or agencies.</p>
         <div class="pp-hero__meta">
           <span class="pp-meta-pill">Effective date: Aug 18, 2025</span>
-          <span class="pp-meta-pill">Last updated: May 07, 2019</span>
+          <span class="pp-meta-pill">Last updated: Aug 08, 2026</span>
         </div>
         <p class="pp-hero__fine">Prefer the plain-English overview first? <a href="<?php echo $pp_trust_url; ?>">Visit the Trust Center</a>.</p>
       </div>
@@ -199,8 +199,8 @@ get_header( 'home' );
         <p class="pp-p">Ensurance.com provides a structured insurance request platform that helps <strong>Consumers</strong> organize insurance information and when appropriate, makes those requests available to <strong>Agents</strong> for review and potential engagement. This controlled request-access process is a core function of our platform.</p>
         <p class="pp-p">When you submit your information through our website, you authorize us to use and share that information in the following ways:</p>
         <ul class="pp-list pp-list--titled">
-          <li><strong>Connecting You With Agents</strong> We share the information you provide with one or more licensed insurance agents who may be able to assist you. This may include independent agents, agencies, or representatives of insurance carriers. The purpose of this sharing is to respond to your inquiry and help you explore coverage options &mdash; not for unrelated marketing.</li>
-          <li><strong>Multiple Agent Referrals</strong> If the first agent we connect you with does not respond, or if we determine your needs may be better served by additional options, we may share your information with other qualified agents so you still receive assistance.</li>
+          <li><strong>Connecting You With Agents</strong> Information you provide may be made available to eligible licensed agents, agencies, or approved partners when needed to review or respond to your insurance request. Ensurance does not broadly distribute your request for unrelated marketing purposes.</li>
+          <li><strong>Additional Request Review</strong> If an initial eligible professional is unable to assist, Ensurance may make the request available to another eligible licensed agent, agency, or approved partner so the shopper can continue toward an appropriate next step.</li>
           <li><strong>Independent Third Parties</strong> Agents are independent businesses with their own privacy policies and legal obligations. Once we share your information with an agent, their handling of your information is governed by their own privacy practices. Ensurance.com does not control and is not responsible for how any independent agent uses, stores, or shares your information once it has been provided to them.</li>
           <li><strong>Service Providers</strong> We may share your information with trusted vendors who help us operate our website, verify licensing, process requests, store data, provide analytics, or deliver communications. These vendors are only permitted to use your information for the specific services they provide to us.</li>
           <li><strong>Legal and Compliance Requirements</strong> We may disclose your information if required by law, regulation, legal process, or to protect our rights, property, or safety, or that of our users, agents, or the public.</li>

@@ -599,6 +599,5299 @@ function ensurance_dashboard_assets() {
 }
 add_action('wp_enqueue_scripts', 'ensurance_dashboard_assets', 20);
 
+/**
+ * Agent Dashboard view-switching script.
+ *
+ * assets/dashboard.js swaps the dashboard's view containers in place on a
+ * rail click — the behavior the AgentDashboard design specifies (setState +
+ * the `.ens-view` fade) — instead of letting the browser navigate. It is a
+ * pure enhancement: without it the rail's links still navigate and PHP
+ * renders the requested view, so nothing here is load-bearing.
+ *
+ * Added as its OWN function rather than a line inside
+ * ensurance_dashboard_assets() to respect the standing rule in CLAUDE.md —
+ * new functions only, never edits to existing ones. Priority 21 keeps it
+ * ordered after that function; the script has no dependencies and is
+ * footer-loaded, so the ordering is for readability, not correctness.
+ *
+ * @return void
+ */
+function ensurance_dashboard_view_script() {
+    if ( ! is_page( 'dashboard' ) ) {
+        return;
+    }
+
+    wp_enqueue_script(
+        'ensurance-dashboard',
+        get_stylesheet_directory_uri() . '/assets/dashboard.js',
+        array(),
+        filemtime( get_stylesheet_directory() . '/assets/dashboard.js' ),
+        true
+    );
+}
+add_action('wp_enqueue_scripts', 'ensurance_dashboard_view_script', 21);
+
+/**
+ * Which dashboard view is currently showing.
+ *
+ * The AgentDashboard design (templates/agent-dashboard/AgentDashboard.dc.html in
+ * the Ensurance Design System) is a single shell whose left rail switches an
+ * in-page view; the prototype holds that in client state. Server-side the same
+ * idea is a `?view=` slug on /dashboard/, which keeps every view linkable,
+ * bookmarkable and back-button-friendly — and lets the rail render its active
+ * item in the initial HTML rather than after a paint.
+ *
+ * Deliberately NOT validated against a list of views: it sanitizes, it does not
+ * check membership, so an unrecognized slug simply matches no rail item
+ * (nothing highlights) rather than erroring. page-dashboard.php and
+ * assets/dashboard.js each fall back to the default view when they get one.
+ *
+ * Used by components/dashboard-nav-item.php to decide the `is-active` state.
+ *
+ * @return string Sanitized view slug, e.g. 'today', 'requests', 'profile'.
+ */
+function ensurance_dashboard_current_view() {
+    // Read-only presentation state — no side effects, so no nonce to verify.
+    if ( empty( $_GET['view'] ) ) {
+        return ensurance_dashboard_default_view();
+    }
+
+    $view = sanitize_key( wp_unslash( $_GET['view'] ) );
+
+    return '' !== $view ? $view : ensurance_dashboard_default_view();
+}
+
+/**
+ * The view /dashboard/ shows when the URL names none, or names one that does
+ * not exist.
+ *
+ * Derived from ensurance_dashboard_views() rather than written out, so the
+ * default is always the rail's first row — the design's own reading of "where
+ * an agent lands". Renaming or reordering that first entry cannot leave a
+ * stale slug behind in the three places that need this value
+ * (ensurance_dashboard_current_view(), page-dashboard.php's `?view=` fallback,
+ * and assets/dashboard.js, which reads it off `data-default-view`).
+ *
+ * @return string View slug, '' if the registry is somehow empty.
+ */
+function ensurance_dashboard_default_view() {
+    $views = ensurance_dashboard_views();
+    $first = reset( $views );
+
+    return is_array( $first ) ? (string) $first['view'] : '';
+}
+
+/**
+ * How many matched requests are waiting on the agent's decision.
+ *
+ * Drives the count badge on the rail's History row (`hasLive` / `liveCount` in
+ * the AgentDashboard design). NOTHING PRODUCES REQUESTS YET — matching is not
+ * built, and the History view itself is Step 12 of
+ * templates/agent-dashboard/build-steps.md — so this returns 0 today and the
+ * badge hides itself at zero exactly as the design specifies. That is the
+ * honest state for a founding agent whose queue is empty, not a placeholder to
+ * be dressed up with a fake number.
+ *
+ * When the real queue exists, return its count through the filter below (or
+ * repoint this function at it) and the badge lights up with no change to the
+ * rail, the registry or the nav-item component.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return int Count of awaiting requests, never negative.
+ */
+function ensurance_dashboard_request_count( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+
+    /**
+     * Filter the awaiting-request count shown on the dashboard rail.
+     *
+     * @param int $count   Number of requests awaiting a decision.
+     * @param int $user_id User the count is for.
+     */
+    $count = (int) apply_filters( 'ensurance_dashboard_request_count', 0, $user_id );
+
+    return max( 0, $count );
+}
+
+/**
+ * The Agent Dashboard's rail and views — THE single source of truth.
+ *
+ * One entry per row of the left rail in the AgentDashboard design
+ * (templates/agent-dashboard/AgentDashboard.dc.html in the Ensurance Design
+ * System), in the design's order. Everything the dashboard needs is derived
+ * from this array:
+ *
+ *   - components/dashboard-sidebar.php loops it into nav items.
+ *   - page-dashboard.php loops it into the matching .dash-view containers,
+ *     and plucks `view` for the list of slugs it accepts in `?view=`.
+ *
+ * ADDING A ROW: append ONE entry here. The nav item, the view container, the
+ * `?view=` deep link, the active highlight and the in-place fade in
+ * assets/dashboard.js all come with it — there is nothing else to edit and no
+ * second list to keep in step. (Before this array existed, those were three
+ * hand-maintained lists in two files; a row whose container was missing
+ * silently fell back to a full page load and the Dashboard view.)
+ *
+ * FIELDS
+ *   view     string  required  Slug. Used in `?view=`, as the container's
+ *                              data-view, and matched against
+ *                              ensurance_dashboard_current_view() for the
+ *                              active state.
+ *   label    string  required  Rail row text.
+ *   icon     string  optional  Inline SVG for the rail glyph. THEME-AUTHORED
+ *                              markup only — components/dashboard-nav-item.php
+ *                              runs it through wp_kses regardless. Use
+ *                              `currentColor` so it inherits the row's color.
+ *                              Glyphs are the design's own, copied path-for-
+ *                              path from components/icons/Icon.jsx in the
+ *                              design system (Lucide, stroke 2, round caps/
+ *                              joins) at the rail's 17px.
+ *   badge    int     optional  Count shown in a pill at the right of the row.
+ *                              0 (the default) renders no pill — the design
+ *                              hides the badge at zero rather than showing a
+ *                              "0". Resolve it from a function, not a literal,
+ *                              so the row cannot go stale.
+ *   title    string  optional  <h1> of the view. Also becomes the container's
+ *                              aria-label; falls back to `label`. A view with
+ *                              no title and no `part` renders an EMPTY
+ *                              container — which is Account alone as of Step 13
+ *                              of templates/agent-dashboard/build-steps.md,
+ *                              and nothing once Step 14 lands.
+ *   eyebrow  string  optional  Kicker above the title. Empty by default: the
+ *                              current design has no per-view eyebrow.
+ *   intro    string  optional  Lead paragraph.
+ *   href     string  optional  Destination. Defaults to `?view=<view>` on
+ *                              /dashboard/.
+ *   modifier string  optional  Extra class on the container.
+ *   part     string  optional  Template part rendered INSIDE the container,
+ *                              AFTER the generic eyebrow/title/intro — the
+ *                              escape hatch for views whose real content is a
+ *                              card grid, status rows, an accordion and so on.
+ *                              The two compose: a view that sets a title and a
+ *                              part gets the shared header and then its own
+ *                              markup (History), and one that sets only a
+ *                              part renders the part alone (Today, whose <h1>
+ *                              is the greeting). Ignored if the file does not
+ *                              exist, so a view can be listed before it is
+ *                              built.
+ *
+ * @return array[] Ordered rail items, defaults applied.
+ */
+function ensurance_dashboard_views() {
+    $items = array(
+        // The rail's first row, and the view the page falls back to. Its href
+        // is the bare /dashboard/ URL rather than ?view=today:
+        // ensurance_dashboard_current_view() defaults to this entry (via
+        // ensurance_dashboard_default_view()), so the clean URL lands here and
+        // keeps the row lit.
+        array(
+            'view'  => 'today',
+            'label' => 'Today',
+            // Icon `home`.
+            'icon'  => '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>',
+            'href'  => home_url( '/dashboard/' ),
+            // Today's <h1> is the greeting itself, not a view name, and the
+            // design gives it no eyebrow or intro — so it renders through its
+            // own part instead of the generic header the other three use.
+            // Everything Phase 2 of build-steps.md adds (priority slot,
+            // timeline, reference columns) appends inside that file.
+            'part'  => 'components/dashboard-view-today',
+        ),
+        // The only row in the design that carries a count. It is resolved here
+        // on every render rather than stored, so the pill can never disagree
+        // with the queue — see ensurance_dashboard_request_count(), which
+        // returns 0 until the matching pipeline exists, hiding the pill.
+        array(
+            'view'  => 'requests',
+            // The section is called History; the `requests` SLUG stays, so every
+            // /dashboard/?view=requests link ever shared, bookmarked or carried
+            // through the /login round-trip still lands here. Nothing an agent
+            // reads comes from the slug — the rail row, the <h1> and the
+            // container's aria-label are all the label and title below.
+            'label' => 'History',
+            // Icon `file-text`.
+            'icon'  => '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>',
+            'badge' => ensurance_dashboard_request_count(),
+            // The design's own title and scope line. Both go through the shared
+            // view header, and the part below adds only the table — the header
+            // is the same object on all three of the non-Today views, so it is
+            // described once here rather than rebuilt in each part.
+            'title' => 'History',
+            'intro' => 'Every request you have kept since access started. Open one for the full household, vehicle, and coverage detail.',
+            'part'  => 'components/dashboard-view-requests',
+        ),
+        array(
+            'view'  => 'profile',
+            'label' => 'Agency Profile',
+            // Icon `user`.
+            'icon'  => '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>',
+            // The design's own title and intro, through the shared view header.
+            // The intro is the whole reason this view is not a form: it says
+            // what these fields DO (decide which requests reach the agent) and
+            // who changes them (support), which is Step 13's first requirement
+            // and the scope note at the top of build-steps.md restated for the
+            // one view an agent would otherwise expect to edit.
+            'title' => 'Agency Profile',
+            'intro' => 'These fields decide which requests reach you. To change anything here, message agent support and we will update it for you.',
+            'part'  => 'components/dashboard-view-profile',
+        ),
+        array(
+            'view'  => 'account',
+            'label' => 'Account',
+            // Icon `lock`.
+            'icon'  => '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
+            // The design's own title and intro, through the shared view header.
+            // The intro is what makes the rows below legible as rows rather than
+            // as settings with their controls missing: nothing here is self-serve
+            // YET, and support can do all of it today. It is also the promise the
+            // support row at the bottom has to keep, which is why that row is the
+            // one action on the view.
+            'title' => 'Account',
+            'intro' => 'Self-serve account changes are coming soon. Agent support can update any of this for you today.',
+            'part'  => 'components/dashboard-view-account',
+        ),
+    );
+
+    $defaults = array(
+        'view'     => '',
+        'label'    => '',
+        'icon'     => '',
+        'badge'    => 0,
+        'title'    => '',
+        'eyebrow'  => '',
+        'intro'    => '',
+        'href'     => '',
+        'modifier' => '',
+        'part'     => '',
+    );
+
+    foreach ( $items as $i => $item ) {
+        $item = array_merge( $defaults, $item );
+
+        if ( '' === $item['href'] ) {
+            $item['href'] = add_query_arg( 'view', $item['view'], home_url( '/dashboard/' ) );
+        }
+
+        $items[ $i ] = $item;
+    }
+
+    return $items;
+}
+
+/**
+ * The agency's OWN name — what the business is called on the record.
+ *
+ * The design (templates/agent-dashboard/AgentDashboard.dc.html) takes this from
+ * an `agencyName` prop — "Coastline Insurance Group". This resolver itself holds
+ * nothing: it returns '' and leaves the record to its filter, which is where the
+ * company name now attaches (ensurance_dashboard_recorded_agency_name, Step 6 of
+ * the setup flow — the sign-up `company` field plus the Agency Profile's own name
+ * field, both in ENSURANCE_COMPANY_META). An agency with no name on file still
+ * resolves to '', and the surfaces above decide what to do about that —
+ * ensurance_dashboard_agency_name() falls back to the user record so the rail has
+ * something to greet, while the Agency Profile says so instead, because the
+ * profile is where the agent goes to CHECK the record and the honest answer there
+ * is that we do not hold one — and, since Step 6, offers them the box to fix it
+ * in.
+ *
+ * THIS IS THE FIX FOR THE DUPLICATE. Before it existed, the profile's "Agency
+ * name" chip read from ensurance_dashboard_agency_name() and so printed the
+ * agent's own name straight back beside "Agent name" — one value, two labels,
+ * neither of them true of the other.
+ *
+ * The admin preview is the one exception, gated on `?slot=quiet` exactly like the
+ * license and phone, so one URL shows the whole agency record as the design draws
+ * it (ensurance_dashboard_sample_agency).
+ *
+ * Point the filter at the real agency record when it exists — every surface that
+ * names the agency reads from here, directly or through the fallback.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return string The recorded agency name, '' when there is none.
+ */
+function ensurance_dashboard_agency_record_name( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $sample  = ensurance_dashboard_sample_agency();
+    $name    = ( 'quiet' === ensurance_dashboard_priority_preview() ) ? $sample['name'] : '';
+
+    /**
+     * Filter the agency's recorded name.
+     *
+     * @param string $name    Agency name, '' when the record has none.
+     * @param int    $user_id User the agency is being resolved for.
+     */
+    return (string) apply_filters( 'ensurance_dashboard_agency_record_name', $name, $user_id );
+}
+
+/**
+ * The name shown wherever the dashboard has to GREET the agency — the rail's user
+ * card, its initials, the quiet panel's sentence, Today's "Displayed name" row.
+ *
+ * The recorded agency name when there is one
+ * (ensurance_dashboard_agency_record_name), and otherwise the best name the user
+ * record carries, in that order:
+ *
+ *   display_name → "First Last" → user_login
+ *
+ * THE FALLBACK IS FOR GREETING, NOT FOR THE RECORD. A card that says "Welcome
+ * back" over a blank is worse than one that uses the agent's own name, so these
+ * surfaces take it. The Agency Profile deliberately does NOT: it reads the record
+ * resolver directly, so an agency we have no name for reads "Not on file" rather
+ * than the agent's name wearing an agency label.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return string Agency name, '' if there is no user (logged-out callers).
+ */
+function ensurance_dashboard_agency_name( $user_id = 0 ) {
+    $user = $user_id ? get_userdata( (int) $user_id ) : wp_get_current_user();
+
+    if ( ! ( $user instanceof WP_User ) || empty( $user->ID ) ) {
+        return '';
+    }
+
+    $name = trim( ensurance_dashboard_agency_record_name( $user->ID ) );
+
+    if ( '' === $name ) {
+        $name = trim( (string) $user->display_name );
+    }
+
+    if ( '' === $name ) {
+        $name = trim( $user->first_name . ' ' . $user->last_name );
+    }
+
+    if ( '' === $name ) {
+        $name = (string) $user->user_login;
+    }
+
+    /**
+     * Filter the agency name on the dashboard rail's user card.
+     *
+     * @param string  $name The resolved name.
+     * @param WP_User $user The user it was resolved from.
+     */
+    return (string) apply_filters( 'ensurance_dashboard_agency_name', $name, $user );
+}
+
+/**
+ * Initials for the user card's avatar circle.
+ *
+ * Same rule as the design's `initials`: the first letter of each of the first
+ * two words, uppercased — "Coastline Insurance Group" → "CI". Falls back to the
+ * design's own fallback, "A", when the name yields no letters, so the circle is
+ * never empty.
+ *
+ * @param string $name Name to reduce. Defaults to ensurance_dashboard_agency_name().
+ * @return string One or two uppercase characters.
+ */
+function ensurance_dashboard_agency_initials( $name = '' ) {
+    if ( '' === $name ) {
+        $name = ensurance_dashboard_agency_name();
+    }
+
+    $words    = preg_split( '/\s+/', trim( $name ), -1, PREG_SPLIT_NO_EMPTY );
+    $initials = '';
+
+    foreach ( array_slice( (array) $words, 0, 2 ) as $word ) {
+        $initials .= mb_substr( $word, 0, 1 );
+    }
+
+    // mb_strtoupper is not part of WordPress's mbstring polyfill set, unlike
+    // mb_substr above — so only use it when the extension is really loaded.
+    $initials = function_exists( 'mb_strtoupper' ) ? mb_strtoupper( $initials ) : strtoupper( $initials );
+
+    return '' !== $initials ? $initials : 'A';
+}
+
+/**
+ * The agent's first name, for the dashboard's "Welcome back, {firstName}" line.
+ *
+ * The design takes this from an `agentName` prop and splits on whitespace
+ * (`agentName.split(/\s+/)[0]`). Here it comes off the user record, in the
+ * order that gives the friendliest name actually available:
+ *
+ *   first_name → first word of display_name → user_login
+ *
+ * /create-account collects a first name, so the first branch is what a
+ * funnel-created agent normally hits; the rest cover users created another way
+ * (wp-admin, an import) whose first_name is empty.
+ *
+ * Returns '' when there is no name to greet — the greeting line is then skipped
+ * entirely rather than rendering a bare "Welcome back,".
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return string First name, or '' if there is no user.
+ */
+function ensurance_dashboard_first_name( $user_id = 0 ) {
+    $user = $user_id ? get_userdata( (int) $user_id ) : wp_get_current_user();
+
+    if ( ! ( $user instanceof WP_User ) || empty( $user->ID ) ) {
+        return '';
+    }
+
+    $name = trim( (string) $user->first_name );
+
+    if ( '' === $name ) {
+        $name = trim( (string) $user->display_name );
+    }
+
+    if ( '' === $name ) {
+        $name = (string) $user->user_login;
+    }
+
+    // Only the first word — display_name is often "First Last", and greeting
+    // someone by their full name reads like a form letter.
+    $words = preg_split( '/\s+/', $name, -1, PREG_SPLIT_NO_EMPTY );
+    $first = ( is_array( $words ) && isset( $words[0] ) ) ? $words[0] : '';
+
+    /**
+     * Filter the first name used in the dashboard's welcome line.
+     *
+     * @param string  $first The resolved first name.
+     * @param WP_User $user  The user it was resolved from.
+     */
+    return (string) apply_filters( 'ensurance_dashboard_first_name', $first, $user );
+}
+
+/**
+ * The Today view's greeting — "Good morning, Marcus".
+ *
+ * Step 3 of templates/agent-dashboard/build-steps.md. The design hardcodes
+ * `greeting: 'Good morning, ' + first`; the requirement is that it be
+ * TIME-AWARE, so the salutation is picked from the hour here:
+ *
+ *   before 12:00 → morning, before 17:00 → afternoon, otherwise evening.
+ *
+ * WHICH clock: the SITE's timezone (wp_date), not the agent's. There is no
+ * server-side way to know the visitor's, and the design's own timestamp is
+ * stamped "PT" — one business clock for everyone. The stamp beside the
+ * greeting names that timezone (ensurance_dashboard_timestamp), so an agent
+ * reading "Good evening" at their 4pm can see which clock it is on. /dashboard
+ * is a signed-in surface and therefore uncached, so the hour is the real one at
+ * render time.
+ *
+ * The name is whatever ensurance_dashboard_first_name() resolves, and the
+ * comma comes with it: a user record with no name at all greets with a bare
+ * "Good morning" rather than "Good morning, ".
+ *
+ * @param int $user_id   Optional. Defaults to the current user.
+ * @param int $timestamp Optional. Unix time to read the hour from. Defaults to
+ *                       now. Pass the same value used for the stamp so the two
+ *                       cannot straddle a minute (or an hour) boundary.
+ * @return string Greeting line, never empty.
+ */
+function ensurance_dashboard_greeting( $user_id = 0, $timestamp = 0 ) {
+    $timestamp = $timestamp ? (int) $timestamp : time();
+    $first     = ensurance_dashboard_first_name( $user_id );
+
+    // 'G' is the 24-hour hour without a leading zero, in the site's timezone.
+    $hour = (int) wp_date( 'G', $timestamp );
+
+    if ( $hour < 12 ) {
+        $greeting = 'Good morning';
+    } elseif ( $hour < 17 ) {
+        $greeting = 'Good afternoon';
+    } else {
+        $greeting = 'Good evening';
+    }
+
+    if ( '' !== $first ) {
+        $greeting .= ', ' . $first;
+    }
+
+    /**
+     * Filter the dashboard's greeting line.
+     *
+     * @param string $greeting The assembled greeting.
+     * @param string $first    First name it was built with, '' if none.
+     * @param int    $hour     Site-local hour the salutation was picked from.
+     */
+    return (string) apply_filters( 'ensurance_dashboard_greeting', $greeting, $first, $hour );
+}
+
+/**
+ * The timestamp shown opposite the greeting — "Tue Aug 11 · 9:42 AM PDT".
+ *
+ * The design's `stamp` is the fixed string "Tue Aug 11 · 9:42 AM PT"; this is
+ * the live equivalent, formatted the same way and in the same site timezone the
+ * greeting reads its hour from.
+ *
+ * The zone comes from wp_date's 'T' rather than a literal "PT", so the label
+ * cannot go stale: it follows the site's timezone setting and says PDT/PST
+ * rather than claiming one of them year-round. A site configured with a manual
+ * UTC offset instead of a named zone gets that offset ("+05:30") — correct, if
+ * less friendly, and the fix is to set a real timezone in Settings → General.
+ *
+ * Built from three wp_date() calls on ONE timestamp rather than a single format
+ * string, because the "·" separator is multibyte and PHP's date() escape
+ * (a backslash) only covers one byte of it.
+ *
+ * @param int $timestamp Optional. Unix time to format. Defaults to now.
+ * @return string Formatted stamp. The CSS uppercases it for display.
+ */
+function ensurance_dashboard_timestamp( $timestamp = 0 ) {
+    $timestamp = $timestamp ? (int) $timestamp : time();
+
+    $stamp = wp_date( 'D M j', $timestamp )
+        . ' · '
+        . wp_date( 'g:i A', $timestamp )
+        . ' ' . wp_date( 'T', $timestamp );
+
+    /**
+     * Filter the dashboard's greeting-row timestamp.
+     *
+     * @param string $stamp     The formatted stamp.
+     * @param int    $timestamp Unix time it was formatted from.
+     */
+    return (string) apply_filters( 'ensurance_dashboard_timestamp', $stamp, $timestamp );
+}
+
+/**
+ * The four states Today's priority slot can be in — THE list.
+ *
+ * Step 4 of templates/agent-dashboard/build-steps.md. The slot is the one
+ * surface under the greeting that shows the single thing needing the agent's
+ * attention, and it shows exactly ONE of these at a time — the design's
+ * `deskState` enum plus the decided state its Accept/Pass buttons produce:
+ *
+ *   live     A matched request is waiting on a decision (Steps 5–6).
+ *   setup    The agent is not matchable yet — something blocks matching (Step 9).
+ *   quiet    Matching is on and nothing is waiting (Step 8).
+ *   decided  The agent just accepted or passed (Step 7).
+ *
+ * In the design's own order of appearance in the template. Keys are the values
+ * the slot is driven by (and the ones `?slot=` accepts); values are the plain
+ * labels the placeholder box shows until each state's real surface is built.
+ *
+ * Three things read this one array: ensurance_dashboard_priority_state()
+ * validates against it, the preview toggle accepts only its keys, and
+ * components/dashboard-view-today.php looks up the label to render. A state
+ * therefore cannot exist in one place and not another.
+ *
+ * @return array<string,string> State slug => placeholder label, in design order.
+ */
+function ensurance_dashboard_priority_states() {
+    return array(
+        'live'    => 'Live request',
+        'setup'   => 'Setup',
+        'quiet'   => 'Quiet',
+        'decided' => 'Decided',
+    );
+}
+
+/**
+ * Which of those four states Today's priority slot is showing.
+ *
+ * THE single value the slot is driven by — the server-side equivalent of the
+ * design's `deskState` prop. components/dashboard-view-today.php renders the one
+ * state this returns and nothing else: no stacking, and no fallback branch that
+ * paints when none of the four match.
+ *
+ * WHAT IT RESOLVES TO TODAY. Nothing in the product produces requests or records
+ * decisions yet (see ensurance_dashboard_request_count), and an agent cannot be
+ * matched until their service areas and coverage types exist — which no funnel
+ * captures. So a founding agent is genuinely in `setup`, and that is what this
+ * returns; `live` only when a request really is waiting, which is where the real
+ * queue will light it up with no change here. `decided` follows a decision the
+ * agent actually made (ensurance_dashboard_decided_slot), so it is reachable
+ * today wherever `live` is; `quiet` is still only reachable through the filter
+ * and the preview toggle below. That is the honest reading of the current
+ * product, not a placeholder chosen to look good.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return string One of the keys of ensurance_dashboard_priority_states().
+ */
+function ensurance_dashboard_priority_state( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $states  = ensurance_dashboard_priority_states();
+
+    $state = ( ensurance_dashboard_request_count( $user_id ) > 0 ) ? 'live' : 'setup';
+
+    /**
+     * Filter the state of the dashboard's priority slot.
+     *
+     * The hook the real queue / onboarding checks attach to when they exist.
+     * Values outside ensurance_dashboard_priority_states() are ignored.
+     *
+     * @param string $state   Resolved state slug.
+     * @param int    $user_id User the slot is being resolved for.
+     */
+    $filtered = (string) apply_filters( 'ensurance_dashboard_priority_state', $state, $user_id );
+
+    if ( isset( $states[ $filtered ] ) ) {
+        $state = $filtered;
+    }
+
+    // The dev toggle wins over everything above — it exists to look at a state
+    // the product cannot currently produce.
+    $preview = ensurance_dashboard_priority_preview();
+
+    return '' !== $preview ? $preview : $state;
+}
+
+/**
+ * The priority slot's dev/preview override — `?slot=quiet` on /dashboard/.
+ *
+ * Step 4 asks for the slot's driving value to be exposed as a tweak toggle, the
+ * way the design's props panel exposes `deskState`. There is no props panel on a
+ * WordPress page, so the equivalent is a query arg: /dashboard/?slot=setup shows
+ * the setup state, ?slot=decided the decided one, and so on through
+ * ensurance_dashboard_priority_states(). Anything else is ignored.
+ *
+ * WHO GETS IT: on PRODUCTION, administrators only. The states carry real-
+ * sounding request, billing and contact copy as they are built out (Steps 5–9),
+ * and an agent stumbling onto ?slot=live would be looking at a fabricated
+ * request.
+ *
+ * On STAGING (and any other non-production environment) that drops to any
+ * signed-in user, because the whole point of staging19 is reviewing surfaces the
+ * product cannot produce yet — and every reviewer there is a teammate, on a site
+ * whose data is not real. wp_get_environment_type() is what tells the two apart:
+ * SiteGround's staging system defines WP_ENVIRONMENT_TYPE = 'staging' in that
+ * site's wp-config.php, and production reports the 'production' default.
+ *
+ * Either way the capability stays filterable, so a single reviewer can be
+ * granted or denied it without touching this function:
+ *
+ *     add_filter( 'ensurance_dashboard_priority_preview_cap', fn() => 'read' );
+ *
+ * The override lives in the URL rather than in state, so it is display-only,
+ * shareable, and gone the moment it is dropped from the address bar. Note the
+ * rail's links do not carry it: switching views and coming back to Today returns
+ * the slot to its resolved state.
+ *
+ * @return string A valid state slug, or '' when no preview is in effect.
+ */
+function ensurance_dashboard_priority_preview() {
+    // Read-only presentation state — no side effects, so no nonce to verify.
+    // Same reasoning as ensurance_dashboard_current_view().
+    if ( empty( $_GET['slot'] ) ) {
+        return '';
+    }
+
+    // 'read' is "any signed-in user" — /dashboard/ has already bounced everyone
+    // else to /login by the time this runs.
+    $default_cap = ( 'production' === wp_get_environment_type() ) ? 'manage_options' : 'read';
+
+    /**
+     * Filter the capability required to preview a priority-slot state.
+     *
+     * @param string $capability Capability checked before honoring `?slot=`.
+     */
+    $capability = (string) apply_filters( 'ensurance_dashboard_priority_preview_cap', $default_cap );
+
+    if ( ! current_user_can( $capability ) ) {
+        return '';
+    }
+
+    $slot   = sanitize_key( wp_unslash( $_GET['slot'] ) );
+    $states = ensurance_dashboard_priority_states();
+
+    return isset( $states[ $slot ] ) ? $slot : '';
+}
+
+/**
+ * The matched request Today's `live` slot is asking a decision about.
+ *
+ * Step 5 of templates/agent-dashboard/build-steps.md. The live card names ONE
+ * request — its coverage type and county, when it expires, and the handful of
+ * facts the agent decides on — so this is where that request comes from, and the
+ * only place it does. components/dashboard-slot-live.php renders what this
+ * returns and never fills in a field it is missing.
+ *
+ * THERE IS NO REQUEST TO RETURN TODAY. Nothing in the product produces matched
+ * requests yet — the same reason ensurance_dashboard_request_count() returns 0
+ * and ensurance_dashboard_priority_state() therefore resolves to `setup` — so
+ * this returns an empty array, and a live slot with no request renders NOTHING
+ * rather than a dark card of invented facts.
+ *
+ * The exception is the admin-only preview toggle, which returns the design's own
+ * sample request — the way this card gets reviewed before a queue exists. An
+ * agent cannot reach it: ensurance_dashboard_priority_preview() is capability-
+ * gated for exactly this reason. TWO preview states qualify, not one:
+ * /dashboard/?slot=live because the card is what that state renders, and
+ * ?slot=decided because the request still EXISTS after it is decided — Step 12's
+ * History view lists it as Accepted, or drops it entirely if it was passed on
+ * (see ensurance_dashboard_request_rows), and a decided preview that dropped an
+ * ACCEPTED row out of the list would be showing a confirmation about a request
+ * no history contains. Today itself is unaffected: the decided state renders
+ * its own panel and never reads this.
+ *
+ * When the real queue lands, return its awaiting request through the filter
+ * below and the card, its countdown and its tiles all follow with no change to
+ * the markup.
+ *
+ * RETURN SHAPE
+ *   coverage   string  Coverage type, as it reads before the word "coverage"
+ *                      in the headline ("Auto" → "Auto coverage — …").
+ *   county     string  County the request came from.
+ *   expires_at int     Unix time the request stops being decidable, 0 for none.
+ *                      A moment rather than a written-down "21h 40m", so the
+ *                      countdown cannot be stale on a cached render.
+ *   matched_at int     Unix time the request was matched to this agent, 0 for
+ *                      unknown. The card does not print it; the History row
+ *                      for the same request stamps itself from it.
+ *   detail     string  One-line summary of the request for the History row —
+ *                      the same facts the card spreads across tiles, written as
+ *                      a sentence fragment. '' when there is nothing to add.
+ *   facts      array   Up to four ['label' => …, 'value' => …] pairs, in the
+ *                      order they should be shown.
+ *
+ * Coverage and county are BOTH required — the headline names both, so a request
+ * missing either is not renderable and comes back as no request at all.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return array The request, or an empty array when nothing is waiting.
+ */
+/**
+ * The design's own sample request — the ONE fabricated request on this page.
+ *
+ * Kept in a single function because two preview surfaces are about the same
+ * request and must not disagree about it: the live card
+ * (ensurance_dashboard_live_request) and the confirmation panel that follows a
+ * decision on it (ensurance_dashboard_decided_county), which names the county
+ * a passed request moved on to.
+ *
+ * PREVIEW ONLY. Nothing reaches this except through
+ * ensurance_dashboard_priority_preview(), which is capability-gated — an agent
+ * can never be shown these values. Copied field for field from the live card in
+ * templates/agent-dashboard/AgentDashboard.dc.html.
+ *
+ * @return array A request in ensurance_dashboard_live_request()'s shape.
+ */
+function ensurance_dashboard_sample_request() {
+    return array(
+        'coverage'   => 'Auto',
+        'county'     => 'Coastal County',
+        // The design's fixed "Expires in 21h 40m" expressed as a real moment,
+        // so the preview exercises the countdown rather than hardcoding its
+        // output.
+        'expires_at' => time() + ( 21 * HOUR_IN_SECONDS ) + ( 40 * MINUTE_IN_SECONDS ),
+        // Same treatment in the other direction: the design's History row
+        // stamps this request "2h ago" and its card calls it "2 hours ago", and
+        // both are the one moment it was matched.
+        'matched_at' => time() - ( 2 * HOUR_IN_SECONDS ),
+        // The History row's one line, from the design's own `reqRows`. It is
+        // the two tiles an agent scans first, not a summary of all four — the
+        // carrier and the submitted time say nothing in a list where every row
+        // carries a stamp of its own.
+        'detail'     => '2 drivers, 2 vehicles · ZIP 93013',
+        'facts'      => array(
+            array( 'label' => 'Shopper ZIP', 'value' => '93013' ),
+            array( 'label' => 'Household', 'value' => '2 drivers, 2 vehicles' ),
+            array( 'label' => 'Current carrier', 'value' => 'Renews in 6 weeks' ),
+            array( 'label' => 'Submitted', 'value' => '2 hours ago' ),
+        ),
+    );
+}
+
+function ensurance_dashboard_live_request( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+
+    $request = array();
+
+    // Admin preview only — see the note above for why `decided` counts too.
+    if ( in_array( ensurance_dashboard_priority_preview(), array( 'live', 'decided' ), true ) ) {
+        $request = ensurance_dashboard_sample_request();
+    }
+
+    /**
+     * Filter the request shown in the dashboard's live priority slot.
+     *
+     * The hook the real matching queue attaches to when it exists. Return an
+     * array in the shape documented above, or an empty array for "nothing is
+     * waiting" — anything without a coverage type and a county is ignored.
+     *
+     * @param array $request Request data, empty when there is none.
+     * @param int   $user_id User the slot is being resolved for.
+     */
+    $request = apply_filters( 'ensurance_dashboard_live_request', $request, $user_id );
+
+    if ( ! is_array( $request ) || empty( $request['coverage'] ) || empty( $request['county'] ) ) {
+        return array();
+    }
+
+    // Drop half-filled tiles rather than rendering a labeled empty box.
+    $facts = array();
+
+    if ( ! empty( $request['facts'] ) && is_array( $request['facts'] ) ) {
+        foreach ( $request['facts'] as $fact ) {
+            if ( empty( $fact['label'] ) || empty( $fact['value'] ) ) {
+                continue;
+            }
+
+            $facts[] = array(
+                'label' => (string) $fact['label'],
+                'value' => (string) $fact['value'],
+            );
+        }
+    }
+
+    return array(
+        'coverage'   => (string) $request['coverage'],
+        'county'     => (string) $request['county'],
+        'expires_at' => isset( $request['expires_at'] ) ? (int) $request['expires_at'] : 0,
+        'matched_at' => isset( $request['matched_at'] ) ? (int) $request['matched_at'] : 0,
+        'detail'     => isset( $request['detail'] ) ? (string) $request['detail'] : '',
+        // The design's row is four tiles wide; a fifth would wrap to a lone
+        // tile on a row of its own, so extras are dropped rather than allowed
+        // to reshape the card.
+        'facts'      => array_slice( $facts, 0, 4 ),
+    );
+}
+
+/**
+ * How long is left on a request — the "21h 40m" in the live card's countdown.
+ *
+ * The design writes that string out; here it is computed from the request's
+ * expiry so it is right on every render. Deliberately COARSE and clock-styled
+ * rather than WordPress's own human_time_diff(), which rounds to a single unit
+ * ("22 hours") and loses the minutes the design shows as the deadline closes in.
+ *
+ * Returns '' for an expired or unset deadline, which is the caller's signal to
+ * render no countdown at all — an "Expires in 0m" line would be worse than
+ * none, and an expired request is a queue problem, not a display one.
+ *
+ * @param int $expires_at Unix time the request expires.
+ * @param int $now        Optional. Moment to measure from. Defaults to now.
+ * @return string Countdown like "1d 4h", "21h 40m" or "9m"; '' if none is due.
+ */
+function ensurance_dashboard_countdown( $expires_at, $now = 0 ) {
+    $expires_at = (int) $expires_at;
+    $now        = $now ? (int) $now : time();
+    $left       = $expires_at - $now;
+
+    if ( $expires_at <= 0 || $left <= 0 ) {
+        return '';
+    }
+
+    $days    = (int) floor( $left / DAY_IN_SECONDS );
+    $hours   = (int) floor( ( $left % DAY_IN_SECONDS ) / HOUR_IN_SECONDS );
+    $minutes = (int) floor( ( $left % HOUR_IN_SECONDS ) / MINUTE_IN_SECONDS );
+
+    // Two units at most, largest first — the smaller one stops mattering once
+    // the larger is big enough to say.
+    if ( $days > 0 ) {
+        return sprintf( '%dd %dh', $days, $hours );
+    }
+
+    if ( $hours > 0 ) {
+        return sprintf( '%dh %dm', $hours, $minutes );
+    }
+
+    // Under a minute still reads as "1m" — there IS time left, and rounding it
+    // to zero would say otherwise.
+    return sprintf( '%dm', max( 1, $minutes ) );
+}
+
+/**
+ * The two decisions an agent can make about a live request — THE list.
+ *
+ * Step 6 of templates/agent-dashboard/build-steps.md. Accept and Pass are peers
+ * in the design and peers here: one list, one handler, one outcome for the slot
+ * (both leave it `decided`). Nothing in this file treats one as the expected
+ * answer and the other as an escape hatch — no confirmation step on Pass, no
+ * extra hoop, no second thought.
+ *
+ * The slugs are what the card's two buttons submit, what the handler validates
+ * against, and what `?decision=` accepts when a previewed card is decided.
+ *
+ * @return string[] Decision slugs, in the order the card offers them.
+ */
+function ensurance_dashboard_decisions() {
+    return array( 'accept', 'pass' );
+}
+
+/**
+ * User-meta key holding the decision an agent has just made on Today's slot.
+ *
+ * INTERIM STORE. The real home for a decision is the matching queue — a row
+ * against the request that was decided, by whom and when — and none of that
+ * exists yet (see ensurance_dashboard_live_request). Until it does, this one
+ * value is what keeps the slot in `decided` across the redirect that follows the
+ * POST, and it is deliberately the smallest thing that can: which way the agent
+ * decided, and nothing else. The queue takes over through the
+ * `ensurance_dashboard_decision_recorded` action and the
+ * `ensurance_dashboard_priority_state` filter, at which point this can go.
+ */
+if ( ! defined( 'ENSURANCE_DASHBOARD_DECISION_META' ) ) {
+    define( 'ENSURANCE_DASHBOARD_DECISION_META', '_ensurance_dashboard_decision' );
+}
+
+/**
+ * The decision an agent has just made, or '' when they have not made one.
+ *
+ * Read by ensurance_dashboard_decided_slot() to put the slot in `decided`, and
+ * by components/dashboard-slot-decided.php to say which way it went.
+ *
+ * TWO SOURCES, and they do not mix. A decision made on a PREVIEWED request
+ * (`/dashboard/?slot=live` — see ensurance_dashboard_priority_preview) rides
+ * back in the URL as `?decision=accept`, exactly like the slot toggle it arrived
+ * with: the request was a sample, so the decision about it is display state and
+ * never touches the user record. A decision made on a REAL request is read from
+ * user meta, where the handler recorded it.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return string 'accept', 'pass', or '' when nothing has been decided.
+ */
+function ensurance_dashboard_decision( $user_id = 0 ) {
+    $decisions = ensurance_dashboard_decisions();
+
+    // Display-only preview state, same as `?slot=` — no side effects, so no
+    // nonce to verify. The capability check lives in the preview function, so a
+    // `?decision=` with no preview in effect is ignored here.
+    if ( '' !== ensurance_dashboard_priority_preview() && ! empty( $_GET['decision'] ) ) {
+        $previewed = sanitize_key( wp_unslash( $_GET['decision'] ) );
+
+        return in_array( $previewed, $decisions, true ) ? $previewed : '';
+    }
+
+    $user_id  = $user_id ? (int) $user_id : get_current_user_id();
+    $decision = (string) get_user_meta( $user_id, ENSURANCE_DASHBOARD_DECISION_META, true );
+
+    return in_array( $decision, $decisions, true ) ? $decision : '';
+}
+
+/**
+ * Record a decision against a real request.
+ *
+ * The seam the matching queue attaches to: everything that should happen when an
+ * agent accepts or passes — releasing the shopper's contact details, telling the
+ * shopper, handing the request to the next agent in that county, writing the
+ * history row Step 12's History view lists — hangs off the action below. This
+ * function itself only remembers the decision well enough for the slot to show
+ * it (see ENSURANCE_DASHBOARD_DECISION_META).
+ *
+ * Not called for previewed requests. See ensurance_dashboard_decision().
+ *
+ * @param string $decision One of ensurance_dashboard_decisions().
+ * @param int    $user_id  Optional. Defaults to the current user.
+ * @return bool Whether the decision was valid and recorded.
+ */
+function ensurance_dashboard_record_decision( $decision, $user_id = 0 ) {
+    $decision = sanitize_key( $decision );
+    $user_id  = $user_id ? (int) $user_id : get_current_user_id();
+
+    if ( ! $user_id || ! in_array( $decision, ensurance_dashboard_decisions(), true ) ) {
+        return false;
+    }
+
+    update_user_meta( $user_id, ENSURANCE_DASHBOARD_DECISION_META, $decision );
+
+    /**
+     * Fires when an agent accepts or passes the request in Today's slot.
+     *
+     * @param string $decision 'accept' or 'pass'.
+     * @param int    $user_id  Agent who decided.
+     */
+    do_action( 'ensurance_dashboard_decision_recorded', $decision, $user_id );
+
+    return true;
+}
+
+/**
+ * Puts the priority slot in `decided` once the agent has decided.
+ *
+ * The other half of "both buttons set the slot to `decided`" — the buttons post,
+ * this is what the slot resolves to afterwards. Hooked onto the resolver's own
+ * filter rather than written into ensurance_dashboard_priority_state(), so the
+ * decision is one more input to that single value and not a second thing driving
+ * the slot.
+ *
+ * It wins over `live`: a request the agent has already answered is not still
+ * waiting on them. The decided panel's Undo is what clears the decision and
+ * hands the slot back — see ensurance_dashboard_clear_decision().
+ *
+ * @param string $state   State resolved so far.
+ * @param int    $user_id User the slot is being resolved for.
+ * @return string
+ */
+function ensurance_dashboard_decided_slot( $state, $user_id ) {
+    return ( '' !== ensurance_dashboard_decision( $user_id ) ) ? 'decided' : $state;
+}
+add_filter( 'ensurance_dashboard_priority_state', 'ensurance_dashboard_decided_slot', 10, 2 );
+
+/**
+ * Handles the Accept / Pass post from Today's live request card.
+ *
+ * Step 6 of templates/agent-dashboard/build-steps.md. The design's buttons flip a
+ * component's state; there is no component here, so the decision is an ordinary
+ * form post — which means it works with JavaScript off, is announced as a button
+ * either way, and cannot be triggered by a link a shopper or a crawler follows.
+ *
+ * POST-REDIRECT-GET: the handler redirects rather than rendering, so the decided
+ * slot lands on a clean URL and a refresh cannot decide the same request twice.
+ *
+ * WHERE THE DECISION GOES depends on where the request came from, and the rule is
+ * that they match: a previewed request (`?slot=live`) produces a previewed
+ * decision, carried in the URL and written nowhere, because the request it is
+ * about was a sample. A real request — one the `ensurance_dashboard_live_request`
+ * filter supplied — is recorded (ensurance_dashboard_record_decision).
+ *
+ * A failed or expired nonce returns WITHOUT deciding and WITHOUT redirecting:
+ * the card renders again, still awaiting a decision, which is the truth. That is
+ * better than WordPress's "link expired" interstitial for a control an agent
+ * pressed deliberately.
+ */
+function ensurance_dashboard_handle_decision() {
+    // Cheapest test first — this runs on every front-end request.
+    if ( ! isset( $_POST['dash_decision'] ) || ! is_page( 'dashboard' ) || ! is_user_logged_in() ) {
+        return;
+    }
+
+    $decision = sanitize_key( wp_unslash( $_POST['dash_decision'] ) );
+
+    if ( ! in_array( $decision, ensurance_dashboard_decisions(), true ) ) {
+        return;
+    }
+
+    $nonce = isset( $_POST['dash_decide_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['dash_decide_nonce'] ) ) : '';
+
+    if ( ! wp_verify_nonce( $nonce, 'ensurance_dashboard_decide' ) ) {
+        return;
+    }
+
+    // The card's form posts to its own URL, so `?slot=live` is still readable
+    // here — which is how a previewed decision is told from a real one.
+    if ( 'live' === ensurance_dashboard_priority_preview() ) {
+        $target = add_query_arg(
+            array(
+                'slot'     => 'decided',
+                'decision' => $decision,
+            ),
+            home_url( '/dashboard/' )
+        );
+    } else {
+        ensurance_dashboard_record_decision( $decision );
+        $target = home_url( '/dashboard/' );
+    }
+
+    wp_safe_redirect( $target );
+    exit;
+}
+add_action( 'template_redirect', 'ensurance_dashboard_handle_decision' );
+
+/**
+ * Where the live card's Accept / Pass form posts (raw — esc_url at output).
+ *
+ * Its own URL, preview arg and all: the handler reads `?slot=live` back off the
+ * post to tell a previewed decision from a real one. Nothing else is carried —
+ * `?view=` is not, because Today is where the card is and where the decision
+ * lands.
+ *
+ * @return string
+ */
+function ensurance_dashboard_decision_action() {
+    $action = home_url( '/dashboard/' );
+
+    if ( 'live' === ensurance_dashboard_priority_preview() ) {
+        $action = add_query_arg( 'slot', 'live', $action );
+    }
+
+    return $action;
+}
+
+/**
+ * Where an accepted request's contact details are sent.
+ *
+ * Step 7 of templates/agent-dashboard/build-steps.md: the accepted panel names
+ * this address, because "we sent you the shopper's name, phone and email" is
+ * only useful if the agent knows WHICH inbox to go and look in.
+ *
+ * The account's own email today — the address the agent signs in with is the
+ * only one the product actually has. The design calls this the agency's
+ * "request inbox" and shows it separately from sign-in (Steps 11 and 13), so
+ * when that field exists it attaches here and every surface naming the inbox
+ * follows.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return string An email address, or '' when there is none to name.
+ */
+function ensurance_dashboard_request_inbox( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $user    = $user_id ? get_userdata( $user_id ) : false;
+    $inbox   = ( $user && ! empty( $user->user_email ) ) ? $user->user_email : '';
+
+    /**
+     * Filter the inbox an accepted request's contact details are sent to.
+     *
+     * @param string $inbox   Email address, '' when unknown.
+     * @param int    $user_id User the dashboard is being rendered for.
+     */
+    $inbox = (string) apply_filters( 'ensurance_dashboard_request_inbox', $inbox, $user_id );
+
+    return is_email( $inbox ) ? $inbox : '';
+}
+
+/**
+ * The county a just-passed request moved on to.
+ *
+ * Step 7 needs exactly one field of the decided request — the county, so the
+ * passed panel can say which county the request went back out to rather than
+ * gesturing at "another agent" with no place attached. Everything else about
+ * the request is gone from the panel by design: the fact tiles do not reappear.
+ *
+ * A previewed decision is about the sample request, so it reports that request's
+ * county (ensurance_dashboard_sample_request). A real one has nowhere to read it
+ * from yet — the interim store keeps the decision and nothing else (see
+ * ENSURANCE_DASHBOARD_DECISION_META) — so this returns '' and the panel falls
+ * back to a sentence that names no county. The queue supplies it through the
+ * filter when it exists.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return string County name, or '' when it is not known.
+ */
+function ensurance_dashboard_decided_county( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $sample  = ensurance_dashboard_sample_request();
+    $county  = ( 'decided' === ensurance_dashboard_priority_preview() ) ? $sample['county'] : '';
+
+    /**
+     * Filter the county named in the passed-request confirmation.
+     *
+     * @param string $county  County name, '' when unknown.
+     * @param int    $user_id User the slot is being resolved for.
+     */
+    return (string) apply_filters( 'ensurance_dashboard_decided_county', $county, $user_id );
+}
+
+/**
+ * What the decided panel says — its headline and its one sentence.
+ *
+ * Step 7 of templates/agent-dashboard/build-steps.md. The panel confirms a
+ * decision the agent has just made, so both halves of it are about what
+ * ALREADY HAPPENED, not about what they should do next: accepting names the
+ * inbox the contact details went to and what the shopper was told to expect;
+ * passing says the request left the queue and went to another agent in that
+ * county. Neither line asks for anything, and neither hedges — the decision is
+ * done, and Undo is right there for the one case where it was a misclick.
+ *
+ * Copy is the design's own (`decidedTitle` / `decidedBody` in
+ * templates/agent-dashboard/AgentDashboard.dc.html), with its hardcoded inbox
+ * and county replaced by the resolvers above. Each has a fallback that simply
+ * drops the detail rather than printing a blank or a placeholder, because a
+ * sentence that names no inbox is still true and "sent to ." is not.
+ *
+ * @param string $decision One of ensurance_dashboard_decisions().
+ * @param int    $user_id  Optional. Defaults to the current user.
+ * @return array{title:string,body:string} Empty strings for an unknown decision.
+ */
+function ensurance_dashboard_decided_panel( $decision, $user_id = 0 ) {
+    $decision = sanitize_key( $decision );
+    $user_id  = $user_id ? (int) $user_id : get_current_user_id();
+    $panel    = array(
+        'title' => '',
+        'body'  => '',
+    );
+
+    if ( 'accept' === $decision ) {
+        $inbox = ensurance_dashboard_request_inbox( $user_id );
+
+        $panel['title'] = 'Request accepted';
+        $panel['body']  = ( '' !== $inbox )
+            ? sprintf( 'Contact details were sent to %s. The shopper was told to expect you within one business day.', $inbox )
+            : 'Contact details were sent to your request inbox. The shopper was told to expect you within one business day.';
+    } elseif ( 'pass' === $decision ) {
+        $county = ensurance_dashboard_decided_county( $user_id );
+
+        $panel['title'] = 'Request passed';
+        $panel['body']  = ( '' !== $county )
+            ? sprintf( 'It has been removed from your queue and offered to another agent in %s.', $county )
+            : 'It has been removed from your queue and offered to another agent covering that area.';
+    }
+
+    /**
+     * Filter the decided panel's headline and sentence.
+     *
+     * @param array  $panel    ['title' => …, 'body' => …].
+     * @param string $decision 'accept' or 'pass'.
+     * @param int    $user_id  User the panel is being rendered for.
+     */
+    return (array) apply_filters( 'ensurance_dashboard_decided_panel', $panel, $decision, $user_id );
+}
+
+/**
+ * Undo a recorded decision — the other half of the panel's one control.
+ *
+ * Forgets the decision, which is all it takes to hand the slot back: the state
+ * resolver reads that value (ensurance_dashboard_decided_slot), so with nothing
+ * recorded Today returns to whatever it was before — `live` while the request is
+ * still waiting.
+ *
+ * Fires its own action rather than reusing the recorded one with an "undone"
+ * flag, so the queue can unwind an accept (re-lock the contact details, tell the
+ * shopper nothing) without having to tell two meanings of one hook apart.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return bool Whether a decision was there to undo.
+ */
+function ensurance_dashboard_clear_decision( $user_id = 0 ) {
+    $user_id  = $user_id ? (int) $user_id : get_current_user_id();
+    $decision = $user_id ? ensurance_dashboard_decision( $user_id ) : '';
+
+    if ( '' === $decision ) {
+        return false;
+    }
+
+    delete_user_meta( $user_id, ENSURANCE_DASHBOARD_DECISION_META );
+
+    /**
+     * Fires when an agent undoes the decision they just made.
+     *
+     * @param string $decision Decision that was undone — 'accept' or 'pass'.
+     * @param int    $user_id  Agent who undid it.
+     */
+    do_action( 'ensurance_dashboard_decision_undone', $decision, $user_id );
+
+    return true;
+}
+
+/**
+ * Handles the Undo post from the decided panel.
+ *
+ * The mirror of ensurance_dashboard_handle_decision(), and deliberately built
+ * the same way: a form post rather than a link, so undoing works with
+ * JavaScript off, is announced as a button, and cannot be triggered by anything
+ * following a URL. It redirects rather than rendering, so the slot lands back on
+ * a clean address.
+ *
+ * A previewed decision was never written down, so undoing it only drops the
+ * `?decision=` from the URL and puts the preview back on `?slot=live` — the
+ * state the previewed card was decided from.
+ *
+ * A failed nonce returns without undoing and without redirecting: the panel
+ * renders again, still decided, which is the truth.
+ */
+function ensurance_dashboard_handle_undo() {
+    // Cheapest test first — this runs on every front-end request.
+    if ( ! isset( $_POST['dash_undo'] ) || ! is_page( 'dashboard' ) || ! is_user_logged_in() ) {
+        return;
+    }
+
+    $nonce = isset( $_POST['dash_undo_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['dash_undo_nonce'] ) ) : '';
+
+    if ( ! wp_verify_nonce( $nonce, 'ensurance_dashboard_undo' ) ) {
+        return;
+    }
+
+    // The panel's form posts to its own URL, so the preview args are still
+    // readable here — which is how a previewed decision is told from a real one.
+    if ( 'decided' === ensurance_dashboard_priority_preview() ) {
+        $target = add_query_arg( 'slot', 'live', home_url( '/dashboard/' ) );
+    } else {
+        ensurance_dashboard_clear_decision();
+        $target = home_url( '/dashboard/' );
+    }
+
+    wp_safe_redirect( $target );
+    exit;
+}
+add_action( 'template_redirect', 'ensurance_dashboard_handle_undo' );
+
+/**
+ * Where the decided panel's Undo form posts (raw — esc_url at output).
+ *
+ * Its own URL, preview args and all, for the same reason
+ * ensurance_dashboard_decision_action() carries them: the handler reads them
+ * back off the post to tell a previewed decision from a recorded one.
+ *
+ * @return string
+ */
+function ensurance_dashboard_undo_action() {
+    $action = home_url( '/dashboard/' );
+
+    if ( 'decided' !== ensurance_dashboard_priority_preview() ) {
+        return $action;
+    }
+
+    return add_query_arg(
+        array(
+            'slot'     => 'decided',
+            'decision' => ensurance_dashboard_decision(),
+        ),
+        $action
+    );
+}
+
+/**
+ * The design's own sample matching profile — the fabricated counties, coverage
+ * types and match stats behind the `quiet` preview.
+ *
+ * The counterpart of ensurance_dashboard_sample_request(), and kept in one
+ * function for the same reason: the quiet panel's sentence and its stat row are
+ * about the same agency, and must not disagree about it.
+ *
+ * PREVIEW ONLY. Nothing reaches this except through
+ * ensurance_dashboard_priority_preview(), which is capability-gated — an agent
+ * can never be shown these values. Copied field for field from the `isQuiet`
+ * branch of templates/agent-dashboard/AgentDashboard.dc.html, with one change:
+ * the design's fixed "Matched in August" label is built from the current month
+ * here, so the preview cannot read as stale in September.
+ *
+ * @return array{areas:string[],coverages:string[],stats:array<int,array{label:string,value:string}>}
+ */
+function ensurance_dashboard_sample_matching() {
+    return array(
+        // Bare county names — see ensurance_dashboard_service_areas().
+        'areas'     => array( 'Coastal', 'Ventura', 'Santa Barbara' ),
+        'coverages' => array( 'Auto', 'Home', 'Life' ),
+        'stats'     => array(
+            array( 'label' => 'Last match', 'value' => '2 days ago' ),
+            array( 'label' => sprintf( 'Matched in %s', wp_date( 'F' ) ), 'value' => '4 requests' ),
+            array( 'label' => 'Typical pace here', 'value' => '1–3 per week' ),
+        ),
+    );
+}
+
+/**
+ * The counties an agent's requests are matched from.
+ *
+ * Step 8 of templates/agent-dashboard/build-steps.md: the quiet panel's one
+ * sentence names them, because "matching is on" means nothing without saying
+ * matching on WHAT — and the counties are half of that answer
+ * (ensurance_dashboard_coverage_types is the other half).
+ *
+ * NAMES CARRY NO "COUNTY". The list is 'Coastal', not 'Coastal County', because
+ * the surfaces that name the whole list say the word once for all of them
+ * ("Coastal, Ventura, and Santa Barbara counties") — pluralized by whoever is
+ * printing it. That is the opposite of ensurance_dashboard_sample_request(),
+ * whose `county` names ONE county inline ("Auto coverage — Coastal County") and
+ * therefore carries the word itself.
+ *
+ * THIS RESOLVER ITSELF HOLDS NOTHING: it returns an empty array and leaves the
+ * list to its filter, which is where the agent's own states now attach
+ * (ensurance_dashboard_stored_service_areas, Step 7 of the setup flow — the
+ * profile's picker writes them). An agency that has set none comes back empty and
+ * the sentence names no areas rather than inventing some. The admin preview is the
+ * one exception, for the same reason the live card has one.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return string[] County names without the word "County", '' entries dropped.
+ */
+function ensurance_dashboard_service_areas( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $sample  = ensurance_dashboard_sample_matching();
+    $areas   = ( 'quiet' === ensurance_dashboard_priority_preview() ) ? $sample['areas'] : array();
+
+    /**
+     * Filter the counties an agent is matched in.
+     *
+     * The hook the real agency profile attaches to when it exists.
+     *
+     * @param string[] $areas   County names, empty when none are set.
+     * @param int      $user_id User the dashboard is being rendered for.
+     */
+    $areas = apply_filters( 'ensurance_dashboard_service_areas', $areas, $user_id );
+
+    return is_array( $areas ) ? array_values( array_filter( array_map( 'strval', $areas ) ) ) : array();
+}
+
+/**
+ * The coverage types an agent's requests are matched on.
+ *
+ * The other half of what the quiet panel's sentence names (see
+ * ensurance_dashboard_service_areas, which this mirrors in every respect —
+ * including having nothing to return today outside the admin preview).
+ *
+ * Stored as they are DISPLAYED — 'Auto', not 'auto'. The quiet sentence runs
+ * them mid-sentence and lowercases them there; a badge or a label wants them as
+ * written.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return string[] Coverage type names, '' entries dropped.
+ */
+function ensurance_dashboard_coverage_types( $user_id = 0 ) {
+    $user_id   = $user_id ? (int) $user_id : get_current_user_id();
+    $sample    = ensurance_dashboard_sample_matching();
+    $coverages = ( 'quiet' === ensurance_dashboard_priority_preview() ) ? $sample['coverages'] : array();
+
+    /**
+     * Filter the coverage types an agent is matched on.
+     *
+     * @param string[] $coverages Coverage type names, empty when none are set.
+     * @param int      $user_id   User the dashboard is being rendered for.
+     */
+    $coverages = apply_filters( 'ensurance_dashboard_coverage_types', $coverages, $user_id );
+
+    return is_array( $coverages ) ? array_values( array_filter( array_map( 'strval', $coverages ) ) ) : array();
+}
+
+/**
+ * The quiet panel's stat row — what matching has actually done lately.
+ *
+ * Step 8 asks for three: last match, matched this month, typical pace. They are
+ * the evidence behind the pulsing "Matching is on" — an agent with nothing
+ * waiting is being asked to believe the system is working, and three numbers is
+ * how the panel earns that instead of asserting it.
+ *
+ * NONE OF THEM EXIST YET. Matches are not recorded (the same gap behind
+ * ensurance_dashboard_request_count), so this returns an empty array outside the
+ * admin preview and components/dashboard-slot-quiet.php drops the whole ruled
+ * row — an empty band of hairlines, or a "last match: never", would both be
+ * worse than the panel simply not making the claim.
+ *
+ * SHAPE — a list of ['label' => …, 'value' => …] pairs, in the order shown. Any
+ * pair missing either half is dropped, the same rule the live card's fact tiles
+ * follow: a labeled blank is not a stat.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return array<int,array{label:string,value:string}>
+ */
+function ensurance_dashboard_match_stats( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $sample  = ensurance_dashboard_sample_matching();
+    $stats   = ( 'quiet' === ensurance_dashboard_priority_preview() ) ? $sample['stats'] : array();
+
+    /**
+     * Filter the stats shown on Today's quiet panel.
+     *
+     * The hook the real match history attaches to when it exists.
+     *
+     * @param array $stats   List of ['label' => …, 'value' => …] pairs.
+     * @param int   $user_id User the dashboard is being rendered for.
+     */
+    $stats = apply_filters( 'ensurance_dashboard_match_stats', $stats, $user_id );
+
+    if ( ! is_array( $stats ) ) {
+        return array();
+    }
+
+    $clean = array();
+
+    foreach ( $stats as $stat ) {
+        if ( empty( $stat['label'] ) || empty( $stat['value'] ) ) {
+            continue;
+        }
+
+        $clean[] = array(
+            'label' => (string) $stat['label'],
+            'value' => (string) $stat['value'],
+        );
+    }
+
+    return $clean;
+}
+
+/**
+ * What the quiet panel says — its status label, headline, sentence, stats and
+ * closing line.
+ *
+ * Step 8 of templates/agent-dashboard/build-steps.md. Nothing is waiting on the
+ * agent, and the panel's whole job is to make that read as a NORMAL condition
+ * rather than as a dead end: matching is on, here is exactly what it is watching
+ * for, here is what it has done lately, and here is who to talk to if the volume
+ * is wrong. There is deliberately no "check back later" — nothing about this
+ * state asks the agent to come back, because the email does that.
+ *
+ * THE SENTENCE IS ASSEMBLED, NOT WRITTEN DOWN. It names the counties, the
+ * coverage types and the inbox, and each of the three can be missing today (see
+ * the resolvers above), so each has a fallback that drops the detail and leaves a
+ * sentence that is still true — never a blank, never a placeholder. With nothing
+ * known at all it degrades to "You are in the running for every request matched
+ * to your service areas. Nothing is required of you until one lands — we email
+ * you the moment it does."
+ *
+ * The closing line is PLAIN TEXT, not a link: v1's agency profile is read-only,
+ * and Step 8 is explicit that no add-a-county or add-a-coverage affordance may
+ * appear here. It routes volume changes to agent support, which is where every
+ * "change this" path in the product ends.
+ *
+ * Copy is the design's own (the `isQuiet` branch of
+ * templates/agent-dashboard/AgentDashboard.dc.html).
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return array{status:string,title:string,body:string,stats:array,note:string}
+ */
+function ensurance_dashboard_quiet_panel( $user_id = 0 ) {
+    $user_id   = $user_id ? (int) $user_id : get_current_user_id();
+    $areas     = ensurance_dashboard_service_areas( $user_id );
+    $coverages = ensurance_dashboard_coverage_types( $user_id );
+    $inbox     = ensurance_dashboard_request_inbox( $user_id );
+
+    // WHAT is being matched. Lowercased because these run mid-sentence — the
+    // design writes "every auto, home, and life request", and "every Auto,
+    // Home, and Life request" reads like a form label dropped into prose.
+    // wp_sprintf's %l is the list join: "a", "a and b", "a, b, and c".
+    $kinds = ! empty( $coverages )
+        ? sprintf( 'every %s request', wp_sprintf( '%l', array_map( 'strtolower', $coverages ) ) )
+        : 'every request';
+
+    // …and WHERE from. The word "county" is added once for the whole list, which
+    // is why the names themselves do not carry it.
+    $where = ! empty( $areas )
+        ? sprintf( 'from %s %s', wp_sprintf( '%l', $areas ), ( 1 === count( $areas ) ) ? 'county' : 'counties' )
+        : 'matched to your service areas';
+
+    $lands = ( '' !== $inbox )
+        ? sprintf( 'Nothing is required of you until one lands — we email %s the moment it does.', $inbox )
+        : 'Nothing is required of you until one lands — we email you the moment it does.';
+
+    $panel = array(
+        'status' => 'Matching is on',
+        'title'  => 'No request is waiting on you',
+        'body'   => sprintf( 'You are in the running for %s %s. %s', $kinds, $where, $lands ),
+        'stats'  => ensurance_dashboard_match_stats( $user_id ),
+        'note'   => 'To widen what reaches you, message agent support and we will update your counties or coverage types.',
+    );
+
+    /**
+     * Filter the quiet panel's copy.
+     *
+     * @param array $panel   ['status' => …, 'title' => …, 'body' => …, 'stats' => …, 'note' => …].
+     * @param int   $user_id User the panel is being rendered for.
+     */
+    return (array) apply_filters( 'ensurance_dashboard_quiet_panel', $panel, $user_id );
+}
+
+/**
+ * Where "message agent support" goes, from every surface that says it.
+ *
+ * Step 9 of templates/agent-dashboard/build-steps.md gives the setup card
+ * exactly ONE button, and it routes to agent support rather than to a form the
+ * agent fills in themselves. That is not a v1 shortcut — the scope note at the
+ * top of build-steps.md makes it the rule for the whole product: agency data is
+ * read-only, and every "change this" path ends at support (Steps 8, 13, 14 and
+ * the Step 15 pass all restate it). So the destination lives here, once, and
+ * those surfaces link to it rather than each deciding for themselves.
+ *
+ * IT IS THE ACCOUNT VIEW, which is what the design does — its `finishSetup`
+ * switches the view to `account`, the same place the profile view's locked
+ * notice sends people. That view's agent-support row (reply time, and the one
+ * action on the page) is the end of the chain, and its button is the link that
+ * finally reaches a human: see ensurance_dashboard_support_contact_url().
+ *
+ * Read off ensurance_dashboard_views() rather than written out, so the URL
+ * cannot drift from the rail's own Account row. If support ever gets a real
+ * destination — a help desk, a mailto, a contact form — filter it here and every
+ * surface follows.
+ *
+ * @return string Absolute URL.
+ */
+function ensurance_dashboard_support_url() {
+    $url = '';
+
+    foreach ( ensurance_dashboard_views() as $view ) {
+        if ( 'account' === $view['view'] ) {
+            $url = (string) $view['href'];
+            break;
+        }
+    }
+
+    /**
+     * Filter the destination behind the product's "message agent support" links.
+     *
+     * @param string $url Resolved support URL.
+     */
+    $url = (string) apply_filters( 'ensurance_dashboard_support_url', $url );
+
+    // The registry always carries an Account row, so this is a guard rather than
+    // a branch anyone should hit — /contact is the one page that reaches a human
+    // without going through the dashboard at all.
+    return '' !== $url ? $url : home_url( '/contact/' );
+}
+
+/**
+ * The three things that have to be true before an agent can be matched.
+ *
+ * Step 9 of templates/agent-dashboard/build-steps.md — the checklist on the
+ * setup card, and the definition of "not yet matchable" that puts the slot in
+ * `setup` to begin with (see ensurance_dashboard_matchable_slot below). One
+ * list, read by both, so the card can never show a blocking step the state
+ * resolver disagrees about.
+ *
+ * IN THE DESIGN'S ORDER, which is also the order matching applies them: an
+ * agency has to exist before it has service areas, and requests are filtered by
+ * county before coverage type. That order is what makes "Step N of 3" mean
+ * anything — N is a position in a sequence, not a count of what is missing.
+ *
+ * STATUS IS DERIVED, NEVER STORED. Each step has a `done` test against the
+ * resolver that owns the data, and exactly one not-done step becomes `current`:
+ * the FIRST one. Everything after it is `upcoming` and, per the step, not
+ * actionable — the card asks for one thing at a time because support handles
+ * them one at a time. A step that is done stays done wherever it sits in the
+ * list; the sequence orders the work, it does not gate the record.
+ *
+ * WHAT IS ACTUALLY KNOWN TODAY. Service areas and coverage types have no funnel
+ * capturing them (see ensurance_dashboard_service_areas), so both come back
+ * empty and a founding agent is genuinely blocked on the first of them — which
+ * is exactly the "Step 2 of 3" the design draws. The identity step reads as done
+ * for anyone signed in: /create-account plus the manual approval that follows is
+ * how a founding agency gets an account at all, so the account existing IS the
+ * verification record until a real one exists to point the filter at.
+ *
+ * RETURN SHAPE — one entry per step, in order:
+ *   key     string  Stable slug ('identity', 'areas', 'coverages').
+ *   number  int     1-based position, for the "Step N of 3" eyebrow.
+ *   label   string  The checklist line, phrased for the status it came back in.
+ *   status  string  'done' | 'current' | 'upcoming'.
+ *   title   string  Headline naming this step, used when it is the current one.
+ *   body    string  One sentence on why it blocks matching.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return array<int,array{key:string,number:int,label:string,status:string,title:string,body:string}>
+ */
+function ensurance_dashboard_setup_steps( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+
+    // `label` is how the line reads while it is still outstanding; `done_label`
+    // once it is not. The design writes the finished identity step as "Agency
+    // name and license verified" and the outstanding one as "Service areas —
+    // not set", so the phrasing genuinely differs per state rather than a single
+    // string being recolored.
+    $steps = array(
+        array(
+            'key'        => 'identity',
+            'label'      => 'Agency name and license',
+            'done_label' => 'Agency name and license verified',
+            'title'      => 'Confirm your agency name and license',
+            'body'       => 'Every founding agency is verified before matching starts. Until that is on file, nothing can reach you — message agent support and we will finish it with you.',
+            'done'       => ( '' !== ensurance_dashboard_agency_name( $user_id ) ),
+        ),
+        array(
+            'key'        => 'areas',
+            'label'      => 'Service areas',
+            'done_label' => 'Service areas set',
+            'title'      => 'Add the counties you write in',
+            // The design's own sentence, verbatim.
+            'body'       => 'Requests are matched to service area first. Until this is set, nothing can reach you — message agent support and we will add them for you.',
+            'done'       => ( array() !== ensurance_dashboard_service_areas( $user_id ) ),
+        ),
+        array(
+            'key'        => 'coverages',
+            'label'      => 'Coverage types',
+            'done_label' => 'Coverage types set',
+            // Written to the pattern of the one above — the design only draws
+            // the service-areas card, but the same slot has to speak when
+            // coverage types are the thing standing in the way.
+            'title'      => 'Add the coverage types you write',
+            'body'       => 'After service area, requests are matched on coverage type. Until this is set, nothing can reach you — message agent support and we will add them for you.',
+            'done'       => ( array() !== ensurance_dashboard_coverage_types( $user_id ) ),
+        ),
+    );
+
+    // The first outstanding step, and only the first: the card names one
+    // blocking thing, so exactly one line can be current.
+    $current = -1;
+
+    foreach ( $steps as $i => $step ) {
+        if ( ! $step['done'] ) {
+            $current = $i;
+            break;
+        }
+    }
+
+    $resolved = array();
+
+    foreach ( $steps as $i => $step ) {
+        if ( $step['done'] ) {
+            $status = 'done';
+        } elseif ( $i === $current ) {
+            $status = 'current';
+        } else {
+            $status = 'upcoming';
+        }
+
+        // "Service areas — not set". The suffix is on the current line only:
+        // it is the one the card is about, and an upcoming step is not missing
+        // yet — its turn has not come.
+        $label = ( 'done' === $status ) ? $step['done_label'] : $step['label'];
+
+        if ( 'current' === $status ) {
+            $label .= ' — not set';
+        }
+
+        $resolved[] = array(
+            'key'    => $step['key'],
+            'number' => $i + 1,
+            'label'  => $label,
+            'status' => $status,
+            'title'  => $step['title'],
+            'body'   => $step['body'],
+        );
+    }
+
+    /**
+     * Filter the dashboard's setup checklist.
+     *
+     * The hook real onboarding attaches to when it exists. Entries must keep
+     * the shape documented above; a `status` outside done / current / upcoming
+     * is treated as outstanding by everything that reads this.
+     *
+     * @param array $resolved Resolved steps, in order.
+     * @param int   $user_id  User the checklist is being resolved for.
+     */
+    return (array) apply_filters( 'ensurance_dashboard_setup_steps', $resolved, $user_id );
+}
+
+/**
+ * Whether the agent can be matched at all — nothing on the setup checklist is
+ * outstanding.
+ *
+ * The one question the `setup` state answers, asked in one place so the card and
+ * the state resolver cannot disagree.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return bool
+ */
+function ensurance_dashboard_matchable( $user_id = 0 ) {
+    foreach ( ensurance_dashboard_setup_steps( $user_id ) as $step ) {
+        if ( 'done' !== $step['status'] ) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Sends a matchable agent with nothing waiting to `quiet` instead of `setup`.
+ *
+ * ensurance_dashboard_priority_state() falls back to `setup` whenever no request
+ * is waiting, which was right while setup was a labeled box and is now too
+ * blunt: Step 9 defines `setup` as "not yet matchable", and an agent whose
+ * checklist is finished is matchable — they are simply having a quiet day
+ * (Step 8). Without this, a fully set-up agency would be shown a setup card with
+ * nothing left to set up.
+ *
+ * A FILTER, not an edit to the resolver, for the same reason
+ * ensurance_dashboard_decided_slot is one: the slot stays driven by a single
+ * value with several inputs. Priority 9 puts it BEFORE the decided check, which
+ * must keep the last word — a decision the agent just made outranks both.
+ *
+ * This is the branch the profile lights up, and since Step 7 of the setup flow it
+ * is reachable: an agent who adds a state on Agency Profile finishes the
+ * checklist, and the slot moves from `setup` to `quiet` with no change here.
+ *
+ * @param string $state   State resolved so far.
+ * @param int    $user_id User the slot is being resolved for.
+ * @return string
+ */
+function ensurance_dashboard_matchable_slot( $state, $user_id ) {
+    return ( 'setup' === $state && ensurance_dashboard_matchable( $user_id ) ) ? 'quiet' : $state;
+}
+add_filter( 'ensurance_dashboard_priority_state', 'ensurance_dashboard_matchable_slot', 9, 2 );
+
+/**
+ * The states an agency writes in — the one thing standing between a new agent and
+ * matching.
+ *
+ * Step 1 of the setup flow (templates/agent-dashboard/setup-flow/build-steps.md)
+ * settled that STATES REPLACE COUNTIES: the product had modelled service areas as
+ * counties everywhere, nothing ever captured one, and the flow being built asks
+ * the agent for states. Rather than ship a second geography alongside the empty
+ * first, the existing resolver becomes the states resolver and this is its honest
+ * name.
+ *
+ * IT IS A NAME, NOT A SECOND SOURCE. Everything still resolves through
+ * ensurance_dashboard_service_areas() and its `ensurance_dashboard_service_areas`
+ * filter, so there is exactly one list and one seam to hook storage onto. What
+ * this buys is that the setup flow can say "states" throughout without the county
+ * vocabulary leaking into it, and that retiring the county naming later is a
+ * change to this function alone.
+ *
+ * WHAT RESOLVES IT. Storage landed with Step 7 of the setup flow:
+ * ensurance_dashboard_stored_service_areas() attaches the agent's own list to that
+ * filter, so this returns what they set on the Agency Profile and comes back empty
+ * only until they set it — which is exactly what keeps
+ * ensurance_dashboard_can_receive_leads() false and the setup card on screen until
+ * then.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return string[] State names, empty when none are set.
+ */
+function ensurance_dashboard_served_states( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+
+    return ensurance_dashboard_service_areas( $user_id );
+}
+
+/**
+ * The states an agency can say it writes in — the 50 plus DC, code => name.
+ *
+ * THE LIST IS CLOSED, deliberately. The picker offers these and nothing else, so
+ * "CA", "Calif." and "california" can never land in the record as three different
+ * places: whatever eventually matches a request against a state is comparing
+ * against this list or it is comparing against typos.
+ *
+ * Keyed by USPS code because the profile shows both halves — the code in mono
+ * beside the full name on each chip — and because a code is the sane thing for
+ * storage to key on later. The stored value is the NAME (see
+ * ensurance_dashboard_served_states_csv), which is what the resolvers already
+ * return and what reads correctly in a sentence.
+ *
+ * @return array<string,string> USPS code => state name, in alphabetical order.
+ */
+function ensurance_dashboard_us_states() {
+    return array(
+        'AL' => 'Alabama',        'AK' => 'Alaska',         'AZ' => 'Arizona',
+        'AR' => 'Arkansas',       'CA' => 'California',     'CO' => 'Colorado',
+        'CT' => 'Connecticut',    'DE' => 'Delaware',       'DC' => 'District of Columbia',
+        'FL' => 'Florida',        'GA' => 'Georgia',        'HI' => 'Hawaii',
+        'ID' => 'Idaho',          'IL' => 'Illinois',       'IN' => 'Indiana',
+        'IA' => 'Iowa',           'KS' => 'Kansas',         'KY' => 'Kentucky',
+        'LA' => 'Louisiana',      'ME' => 'Maine',          'MD' => 'Maryland',
+        'MA' => 'Massachusetts',  'MI' => 'Michigan',       'MN' => 'Minnesota',
+        'MS' => 'Mississippi',    'MO' => 'Missouri',       'MT' => 'Montana',
+        'NE' => 'Nebraska',       'NV' => 'Nevada',         'NH' => 'New Hampshire',
+        'NJ' => 'New Jersey',     'NM' => 'New Mexico',     'NY' => 'New York',
+        'NC' => 'North Carolina', 'ND' => 'North Dakota',   'OH' => 'Ohio',
+        'OK' => 'Oklahoma',       'OR' => 'Oregon',         'PA' => 'Pennsylvania',
+        'RI' => 'Rhode Island',   'SC' => 'South Carolina', 'SD' => 'South Dakota',
+        'TN' => 'Tennessee',      'TX' => 'Texas',          'UT' => 'Utah',
+        'VT' => 'Vermont',        'VA' => 'Virginia',       'WA' => 'Washington',
+        'WV' => 'West Virginia',  'WI' => 'Wisconsin',      'WY' => 'Wyoming',
+    );
+}
+
+/**
+ * The USPS code for a state name, '' when the name is not one of ours.
+ *
+ * Case- and space-insensitive, because the stored value is a name and a name that
+ * arrives from storage with different capitalisation is still that state — but an
+ * unrecognised one gets '' rather than a guess, and the chip then shows the name
+ * alone instead of inventing a code for it.
+ *
+ * @param string $name State name.
+ * @return string Two-letter code, or ''.
+ */
+function ensurance_dashboard_state_code( $name ) {
+    $needle = strtolower( trim( (string) $name ) );
+
+    foreach ( ensurance_dashboard_us_states() as $code => $state ) {
+        if ( strtolower( $state ) === $needle ) {
+            return $code;
+        }
+    }
+
+    return '';
+}
+
+/**
+ * The states still available to add — every state the agent has not already got.
+ *
+ * The design's rule, and the reason the picker cannot produce a duplicate: an
+ * already-served state is not in the list to be chosen. That is a better guard
+ * than validating the choice afterwards, because there is no wrong choice to make
+ * and nothing to explain when one is made.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return array<string,string> code => name, already-served states removed.
+ */
+function ensurance_dashboard_state_choices( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+
+    $served = array_map( 'strtolower', ensurance_dashboard_served_states( $user_id ) );
+    $choices = array();
+
+    foreach ( ensurance_dashboard_us_states() as $code => $state ) {
+        if ( ! in_array( strtolower( $state ), $served, true ) ) {
+            $choices[ $code ] = $state;
+        }
+    }
+
+    return $choices;
+}
+
+/**
+ * The served states as ONE comma-separated line — the value storage will read.
+ *
+ * "California,Texas,Nevada" — the shape the record is stored in
+ * (ENSURANCE_DASHBOARD_STATES_META: one meta value, no JSON and no separate
+ * table). It is published into the page as a hidden input so anything reading the
+ * current list reads a field rather than reconstructing it from the DOM.
+ *
+ * IT IS NOT WHAT SAVES. Step 7 posts an intent — "add California", "remove Texas"
+ * — rather than this snapshot, so two quick changes cannot overwrite each other
+ * (see ensurance_dashboard_handle_states). This stays the published value and
+ * assets/dashboard.js keeps it in step with the chips.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return string Comma-separated state names, '' when none are set.
+ */
+function ensurance_dashboard_served_states_csv( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+
+    return implode( ',', ensurance_dashboard_served_states( $user_id ) );
+}
+
+/**
+ * Retitles the Agency Profile view's intro now that part of it is self-serve.
+ *
+ * The registry's sentence sends the agent to support for every change on the view
+ * ("To change anything here, message agent support and we will update it for
+ * you"). That was true of the whole record and is now wrong about the one thing
+ * the view exists for: states are set here, by the agent, without asking anyone.
+ *
+ * A FILTER, NOT AN EDIT. ensurance_dashboard_views() carries no seam of its own
+ * and is an existing function, so page-dashboard.php — a template, which CLAUDE.md
+ * lists as safe to edit — applies `ensurance_dashboard_view_item` to each entry on
+ * its way to the header, and this hooks that.
+ *
+ * @param array $item One entry from ensurance_dashboard_views().
+ * @return array
+ */
+function ensurance_dashboard_profile_view_intro( $item ) {
+    if ( ! isset( $item['view'] ) || 'profile' !== $item['view'] ) {
+        return $item;
+    }
+
+    $item['intro'] = 'These fields decide which requests reach you. Add the states you are licensed in — changes take effect on the next match.';
+
+    return $item;
+}
+add_filter( 'ensurance_dashboard_view_item', 'ensurance_dashboard_profile_view_intro' );
+
+/**
+ * Cuts the setup checklist down to the one condition that actually gates matching.
+ *
+ * Step 1 of the setup flow settled the gate: an agent can receive leads when their
+ * STATES ARE SET, and nothing else. Agency name and coverage types stay on the
+ * Agency Profile as part of the record, and support can still fill them, but
+ * neither blocks a lead any more.
+ *
+ * WHY THE OLD GATE HAD TO GO. ensurance_dashboard_setup_steps() requires all three
+ * of agency name, service areas and coverage types, and no funnel fills any of
+ * them — so no real agent could ever come back matchable. Worse, leaving coverage
+ * types in would have let an agent finish the one step the flow shows them, watch
+ * the card say done, and still receive nothing, blocked by a condition they were
+ * never shown.
+ *
+ * A FILTER, NOT AN EDIT, for the two reasons this file already does it elsewhere
+ * (see ensurance_dashboard_matchable_slot): CLAUDE.md's standing rule is new
+ * functions rather than changes to existing ones, and it keeps the checklist a
+ * single value with several inputs. Because ensurance_dashboard_matchable() is a
+ * reduction over this same filtered list, the old boolean follows the new gate on
+ * its own — there is no second definition of "matchable" to keep in step.
+ *
+ * DONE-NESS IS READ, NOT RECOMPUTED. The kept step's status comes off the step
+ * ensurance_dashboard_setup_steps() already resolved, so the test for "are there
+ * states" lives in exactly one place. Only the copy is restated, because the
+ * original names counties and this flow asks for states.
+ *
+ * @param array $steps   Resolved steps, in order.
+ * @param int   $user_id User the checklist is being resolved for.
+ * @return array The states step alone, or $steps untouched if it is not present.
+ */
+function ensurance_dashboard_states_only_checklist( $steps, $user_id ) {
+    foreach ( (array) $steps as $step ) {
+        if ( ! isset( $step['key'] ) || 'areas' !== $step['key'] ) {
+            continue;
+        }
+
+        $done = ( isset( $step['status'] ) && 'done' === $step['status'] );
+
+        return array(
+            array(
+                'key'    => 'areas',
+                // The only step left, so it is always the first one.
+                'number' => 1,
+                // `name` is this flow's addition to the documented shape: the bare
+                // noun, for ensurance_dashboard_can_receive_leads()'s missing list,
+                // where "States — not set" would read as its own sentence.
+                'name'   => 'States',
+                'label'  => $done ? 'States set' : 'States — not set',
+                // With one condition left there is no "upcoming": it is either
+                // done or it is the thing being asked for.
+                'status' => $done ? 'done' : 'current',
+                'title'  => 'Add your states before requests can reach you',
+                // One sentence, and it has to carry both halves: matching is off
+                // until the states are on the profile, AND nothing is being sent
+                // meanwhile. Without the second half an agent can reasonably read
+                // the first as "requests are queuing up somewhere".
+                'body'   => 'Matching stays off until your states are on your agency profile, and nothing is sent to you in the meantime.',
+            ),
+        );
+    }
+
+    // No states step to keep means someone has already filtered the checklist into
+    // a different shape; leave it alone rather than blanking it.
+    return $steps;
+}
+add_filter( 'ensurance_dashboard_setup_steps', 'ensurance_dashboard_states_only_checklist', 10, 2 );
+
+/**
+ * Whether this agent can receive leads, and what is missing if they cannot.
+ *
+ * Step 2 of the setup flow (templates/agent-dashboard/setup-flow/build-steps.md).
+ * THE one derived value the whole flow reads — the setup card, the Today slot, the
+ * Agency Profile and anything added later all ask this rather than re-deriving the
+ * condition. The gate is states-only (see
+ * ensurance_dashboard_states_only_checklist), and the point of naming it once is
+ * that changing the gate again is a change here and nowhere else.
+ *
+ * READ-ONLY. It resolves, and that is all: no writes, no redirects, no fetching.
+ * Callers decide what to do about a false — this never decides for them.
+ *
+ * `can` DELEGATES rather than re-testing. ensurance_dashboard_matchable() is
+ * already the app's boolean for this, so it stays the single answer and this
+ * function adds only the list beside it. The two therefore cannot disagree: both
+ * reduce over ensurance_dashboard_setup_steps().
+ *
+ * RETURN SHAPE:
+ *   can      bool   True when nothing is outstanding.
+ *   missing  array  One entry per outstanding item, in checklist order:
+ *                     key    string  Stable slug ('areas').
+ *                     name   string  The bare noun ('States').
+ *                     title  string  Headline asking for it.
+ *                     body   string  One sentence on why it blocks matching.
+ *                   Empty exactly when `can` is true.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return array{can:bool,missing:array<int,array{key:string,name:string,title:string,body:string}>}
+ */
+function ensurance_dashboard_can_receive_leads( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $missing = array();
+
+    foreach ( ensurance_dashboard_setup_steps( $user_id ) as $step ) {
+        if ( isset( $step['status'] ) && 'done' === $step['status'] ) {
+            continue;
+        }
+
+        $missing[] = array(
+            'key'   => isset( $step['key'] ) ? (string) $step['key'] : '',
+            // Falls back to the checklist label for a step added by some other
+            // filter, which has no reason to know about `name`.
+            'name'  => isset( $step['name'] ) ? (string) $step['name'] : ( isset( $step['label'] ) ? (string) $step['label'] : '' ),
+            'title' => isset( $step['title'] ) ? (string) $step['title'] : '',
+            'body'  => isset( $step['body'] ) ? (string) $step['body'] : '',
+        );
+    }
+
+    $eligibility = array(
+        'can'     => ensurance_dashboard_matchable( $user_id ),
+        'missing' => $missing,
+    );
+
+    /**
+     * Filter whether an agent can receive leads.
+     *
+     * The seam for a real eligibility record (a suspended agency, a lapsed
+     * subscription) to veto matching without touching the setup checklist. Keep
+     * `missing` empty whenever `can` is true — every consumer treats the two as
+     * describing one state.
+     *
+     * @param array $eligibility ['can' => bool, 'missing' => array].
+     * @param int   $user_id     User eligibility is being resolved for.
+     */
+    return (array) apply_filters( 'ensurance_dashboard_can_receive_leads', $eligibility, $user_id );
+}
+
+/**
+ * The Today view's URL — where every Accept and Pass lives.
+ *
+ * History is read-only: it lists the requests an agent has kept and never offers
+ * a decision on one, so the row that is still awaiting an answer points at Today
+ * instead ("Open in Today", in components/dashboard-view-requests.php). This is
+ * that destination.
+ *
+ * Resolved from the rail registry rather than written down, the same way
+ * ensurance_dashboard_profile_url() and ensurance_dashboard_support_url() are —
+ * the registry owns every view's href, so this link cannot drift from the rail
+ * row the agent would otherwise click, and Today's href is the bare /dashboard/
+ * rather than ?view=today, which is worth not duplicating.
+ *
+ * @return string Absolute URL to the Today view.
+ */
+function ensurance_dashboard_today_url() {
+    $url = '';
+
+    foreach ( ensurance_dashboard_views() as $view ) {
+        if ( 'today' === $view['view'] ) {
+            $url = (string) $view['href'];
+            break;
+        }
+    }
+
+    /**
+     * Filter the destination behind the product's "open it in Today" links.
+     *
+     * @param string $url Resolved Today URL.
+     */
+    $url = (string) apply_filters( 'ensurance_dashboard_today_url', $url );
+
+    // The registry always carries a Today row — it is the rail's first entry and
+    // the view everything falls back to — so this is a guard, not a branch.
+    return '' !== $url ? $url : home_url( '/dashboard/' );
+}
+
+/**
+ * The Agency Profile view's URL — where an agent goes to set their states.
+ *
+ * Resolved from the rail registry rather than written down, exactly the way
+ * ensurance_dashboard_support_url() resolves Account: the registry already owns
+ * every view's href (see ensurance_dashboard_views), so a link built here cannot
+ * drift from the row the agent would otherwise click.
+ *
+ * @return string Absolute URL to the Agency Profile view.
+ */
+function ensurance_dashboard_profile_url() {
+    $url = '';
+
+    foreach ( ensurance_dashboard_views() as $view ) {
+        if ( 'profile' === $view['view'] ) {
+            $url = (string) $view['href'];
+            break;
+        }
+    }
+
+    /**
+     * Filter the destination behind the product's "set up your agency" links.
+     *
+     * @param string $url Resolved Agency Profile URL.
+     */
+    $url = (string) apply_filters( 'ensurance_dashboard_profile_url', $url );
+
+    // The registry always carries a Profile row, so this is a guard rather than a
+    // branch anyone should hit.
+    return '' !== $url ? $url : add_query_arg( 'view', 'profile', home_url( '/dashboard/' ) );
+}
+
+/**
+ * The two tiles under the setup card's checklist.
+ *
+ * Step 3 of the setup flow (templates/agent-dashboard/setup-flow/build-steps.md).
+ * They replace the card's single "message agent support" button, which was the
+ * right control while every agency field was changed by a human and is now the
+ * one thing on the card pointing away from the only door: states are entered on
+ * Agency Profile and nowhere else.
+ *
+ * TWO, NOT ONE, because there are two things worth checking before matching turns
+ * on. The first is the blocking one — the states. The second is where a matched
+ * request would actually land, which is not blocking and is exactly the thing an
+ * agent discovers too late: matching switches on, a request is sent, and it goes
+ * to an address nobody reads.
+ *
+ * NEITHER IS A SUBMIT. Both are ordinary navigation to a view that already exists
+ * (see ensurance_dashboard_profile_url / ensurance_dashboard_support_url, which
+ * both resolve out of the rail registry) — the agent chooses to go, and nothing
+ * about this card writes, redirects or traps.
+ *
+ * RETURN SHAPE — one entry per tile, in the order shown:
+ *   key    string  Stable slug ('profile', 'account').
+ *   title  string  The tile's line.
+ *   sub    string  One line under it saying what is there.
+ *   url    string  Where it goes.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return array<int,array{key:string,title:string,sub:string,url:string}>
+ */
+function ensurance_dashboard_setup_tiles( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+
+    $tiles = array(
+        array(
+            'key'   => 'profile',
+            'title' => 'Review your agency profile',
+            'sub'   => 'Add the states you write in',
+            'url'   => ensurance_dashboard_profile_url(),
+        ),
+        array(
+            'key'   => 'account',
+            'title' => 'Confirm where requests are emailed',
+            'sub'   => 'Check the inbox matched requests are sent to',
+            'url'   => ensurance_dashboard_support_url(),
+        ),
+    );
+
+    /**
+     * Filter the setup card's tiles.
+     *
+     * @param array $tiles   Tiles in display order.
+     * @param int   $user_id User the card is being rendered for.
+     */
+    return (array) apply_filters( 'ensurance_dashboard_setup_tiles', $tiles, $user_id );
+}
+
+/**
+ * Hands the tiles to the setup card.
+ *
+ * A filter rather than an edit to ensurance_dashboard_setup_panel(), per
+ * CLAUDE.md's standing rule — the panel keeps writing the card's copy and this
+ * only adds the row of destinations under it.
+ *
+ * @param array $panel   The card's copy.
+ * @param int   $user_id User the card is being rendered for.
+ * @return array
+ */
+function ensurance_dashboard_setup_panel_tiles( $panel, $user_id ) {
+    // No headline means no card (see ensurance_dashboard_setup_panel), and tiles
+    // on a card that does not render would just be resolved and thrown away.
+    if ( empty( $panel['title'] ) ) {
+        return $panel;
+    }
+
+    $panel['tiles'] = ensurance_dashboard_setup_tiles( $user_id );
+
+    return $panel;
+}
+add_filter( 'ensurance_dashboard_setup_panel', 'ensurance_dashboard_setup_panel_tiles', 10, 2 );
+
+/**
+ * Retitles the setup card's eyebrow to the state it is actually reporting.
+ *
+ * ensurance_dashboard_setup_panel() writes "Step N of M" — a position in a
+ * sequence, which was the right eyebrow for a three-step checklist worked through
+ * one item at a time. With the gate cut to states alone that sentence renders as
+ * "Step 1 of 1", which tells an agent nothing and reads like a bug.
+ *
+ * Step 3 asks for the matching-off state instead, and the words are the mirror of
+ * the quiet panel's "Matching is on" (components/dashboard-slot-quiet.php) —
+ * deliberately, because they are the same claim about the same machinery with the
+ * answer flipped. The pulsing dot beside it is drawn by the component.
+ *
+ * @param array $panel   The card's copy.
+ * @param int   $user_id User the card is being rendered for.
+ * @return array
+ */
+function ensurance_dashboard_setup_panel_eyebrow( $panel, $user_id ) {
+    if ( empty( $panel['title'] ) ) {
+        return $panel;
+    }
+
+    $panel['eyebrow'] = 'Matching is off';
+
+    return $panel;
+}
+add_filter( 'ensurance_dashboard_setup_panel', 'ensurance_dashboard_setup_panel_eyebrow', 10, 2 );
+
+/**
+ * What the setup card says — its eyebrow, headline, sentence, checklist and the
+ * one button under them.
+ *
+ * Step 9 of templates/agent-dashboard/build-steps.md. First run: the agent has
+ * an account and cannot be matched yet, so this is the action of the moment and
+ * gets the same dark navy weight as a waiting request. Everything on it is about
+ * ONE thing — the first outstanding step (ensurance_dashboard_setup_steps) — with
+ * the other two visible only so the agent can see how much is left.
+ *
+ * The headline names that one blocking thing and the sentence says why it blocks
+ * matching. Neither is written down here: both come off the step itself, so a
+ * card about coverage types cannot end up captioned with the copy for counties.
+ *
+ * ONE BUTTON, and it goes to agent support (ensurance_dashboard_support_url) —
+ * not to a form. The agent cannot fix any of this themselves in v1, and a button
+ * that opened an editable profile would be promising something the product does
+ * not do.
+ *
+ * NO BLOCKING STEP, NO CARD. With the checklist finished there is no headline to
+ * write and nothing to ask for, so the title comes back empty and the component
+ * renders nothing — the same rule the live card and the decided panel follow.
+ * The slot should not be in this state at all by then; see
+ * ensurance_dashboard_matchable_slot.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return array{eyebrow:string,title:string,body:string,steps:array,cta:string,cta_url:string}
+ */
+function ensurance_dashboard_setup_panel( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $steps   = ensurance_dashboard_setup_steps( $user_id );
+
+    $panel = array(
+        'eyebrow' => '',
+        'title'   => '',
+        'body'    => '',
+        'steps'   => $steps,
+        'cta'     => 'Message agent support',
+        'cta_url' => ensurance_dashboard_support_url(),
+    );
+
+    foreach ( $steps as $step ) {
+        if ( 'current' !== $step['status'] ) {
+            continue;
+        }
+
+        // "Step 2 of 3" — the position of the blocking step in the sequence,
+        // counted against the checklist actually shown rather than a literal 3,
+        // so the two can never disagree if onboarding ever grows a fourth.
+        $panel['eyebrow'] = sprintf( 'Step %d of %d', $step['number'], count( $steps ) );
+        $panel['title']   = $step['title'];
+        $panel['body']    = $step['body'];
+        break;
+    }
+
+    /**
+     * Filter the setup card's copy.
+     *
+     * @param array $panel   ['eyebrow' => …, 'title' => …, 'body' => …, 'steps' => …, 'cta' => …, 'cta_url' => …].
+     * @param int   $user_id User the card is being rendered for.
+     */
+    return (array) apply_filters( 'ensurance_dashboard_setup_panel', $panel, $user_id );
+}
+
+/**
+ * When founding access started — the timeline's origin, and the date every other
+ * date on it is counted from.
+ *
+ * Step 10 of templates/agent-dashboard/build-steps.md. Unlike most of the
+ * dashboard's data, this one is REAL today: a founding agency gets an account
+ * through /create-account (see ensurance_founding_plans), and the moment that
+ * account was created is the moment its 60 days started. So `user_registered` is
+ * not a stand-in for the access record — until a subscription record exists, it
+ * IS the access record.
+ *
+ * It is stored in UTC, and the offset is stated rather than left to strtotime's
+ * default, which would read the string as server-local and slide the whole
+ * timeline by the server's offset.
+ *
+ * THE FILTER IS THE SEAM. When real founding-access records exist (a Stripe
+ * subscription, a manually set start for an agency onboarded by hand), point
+ * `ensurance_dashboard_access_start` at them and every date, the day counter and
+ * the elapsed/future split follow with no other change.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return int Unix timestamp, or 0 when there is no start date to count from.
+ */
+function ensurance_dashboard_access_start( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $user    = $user_id ? get_userdata( $user_id ) : null;
+    $start   = 0;
+
+    if ( $user && ! empty( $user->user_registered ) ) {
+        $parsed = strtotime( $user->user_registered . ' +00:00' );
+        $start  = $parsed ? (int) $parsed : 0;
+    }
+
+    /**
+     * Filter when founding access started for an agent.
+     *
+     * @param int $start   Unix timestamp, 0 when unknown.
+     * @param int $user_id User the timeline is being resolved for.
+     */
+    return (int) apply_filters( 'ensurance_dashboard_access_start', $start, $user_id );
+}
+
+/**
+ * How long founding access runs before it converts — 60 days.
+ *
+ * Named once rather than written into the timeline, because it decides three
+ * things that must agree: the "60-day mark" label, the date under it, and the
+ * "N days left" the today segment counts down. A term change moves all three.
+ *
+ * @return int Days. At least 1.
+ */
+function ensurance_dashboard_access_term() {
+    /**
+     * Filter the founding access term, in days.
+     *
+     * @param int $days Term length.
+     */
+    return max( 1, (int) apply_filters( 'ensurance_dashboard_access_term', 60 ) );
+}
+
+/**
+ * What continued access costs after the term — the design's "$29 / month".
+ *
+ * The public price, from the /pricing-plans card and its FAQ ("Founding Agent
+ * Access may continue at $29 per month unless canceled before the subscription
+ * begins"), stated in the design's shorter form.
+ *
+ * A CARD IS TAKEN UP FRONT. The 60 days are free; the payment method is not
+ * optional, and the subscription converts against the card already on file unless
+ * it is cancelled before the term ends. That is why the timeline states a first
+ * charge as a fact and the Account view's founding-access row leads with the
+ * cancel window.
+ *
+ * WHAT IS NOT SETTLED is where in the theme that card becomes readable — nothing
+ * here can see it yet, which is why ensurance_dashboard_payment_method() comes
+ * back empty and its row waits. This string and
+ * ensurance_dashboard_founding_timeline() are the two places on the dashboard
+ * that move if the price or the term does.
+ *
+ * @return string Formatted price, '' to drop it from the timeline.
+ */
+function ensurance_dashboard_access_price() {
+    /**
+     * Filter the price shown on the founding access timeline.
+     *
+     * @param string $price Formatted price string.
+     */
+    return (string) apply_filters( 'ensurance_dashboard_access_price', '$29 / month' );
+}
+
+/**
+ * Whole calendar days from one moment to another, in the site's timezone.
+ *
+ * CALENDAR days, not 86400-second blocks: both ends are floored to local midnight
+ * before they are compared, so "day 18" turns over when the date does rather than
+ * at the hour access started. That also makes it DST-safe — a 23- or 25-hour day
+ * still counts as one.
+ *
+ * @param int $from Unix timestamp to count from.
+ * @param int $to   Unix timestamp to count to.
+ * @return int Days between them. Negative when $to is before $from.
+ */
+function ensurance_dashboard_days_between( $from, $to ) {
+    $tz   = wp_timezone();
+    $from = ( new DateTimeImmutable( '@' . (int) $from ) )->setTimezone( $tz )->setTime( 0, 0 );
+    $to   = ( new DateTimeImmutable( '@' . (int) $to ) )->setTimezone( $tz )->setTime( 0, 0 );
+    $diff = $from->diff( $to );
+
+    return (int) $diff->days * ( $diff->invert ? -1 : 1 );
+}
+
+/**
+ * How far into founding access the agent is — the "day N" on the timeline.
+ *
+ * DAYS ELAPSED, which is what makes the timeline's arithmetic hold: the design
+ * reads day 18 on Aug 11 from a Jul 24 start (18 days elapsed), and puts the
+ * 60-day mark 60 days after that same start. Counting from 1 instead would leave
+ * the counter and the cancel date one day apart forever. The first day is
+ * therefore day 0 — zero days used — which is exactly what the segment beside it
+ * says by naming today's date as the start.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @param int $now     Optional. Moment to measure to. Defaults to now.
+ * @return int Days elapsed, 0 when there is no start date.
+ */
+function ensurance_dashboard_access_day( $user_id = 0, $now = 0 ) {
+    $start = ensurance_dashboard_access_start( $user_id );
+
+    if ( ! $start ) {
+        return 0;
+    }
+
+    return max( 0, ensurance_dashboard_days_between( $start, $now ? (int) $now : time() ) );
+}
+
+/**
+ * The founding access timeline — access started → today → the 60-day mark → the
+ * first charge.
+ *
+ * Step 10 of templates/agent-dashboard/build-steps.md, and the ONLY place billing
+ * dates appear on Today. Nothing else in the view may restate them — not the
+ * greeting row, and not the sidebar's founding-access card, which Step 1 left out
+ * for exactly this reason.
+ *
+ * BUILT TO BE REITERATED. The component that draws this takes whatever list it is
+ * given and does not know what a "60-day mark" is, and every visual difference
+ * between one segment and the next is DERIVED from `at` rather than authored:
+ *
+ *   - a segment whose `at` has passed is elapsed and takes the accent rule;
+ *   - a segment whose `at` is still ahead (or unknown) takes the neutral border;
+ *   - the LAST elapsed segment is the current one, and takes the accent label.
+ *
+ * So a fifth milestone — a verification date, a renewal, a second charge — is one
+ * entry through the filter below, in the right place, with the right rule, with
+ * nothing else touched. Same for dropping one: pass four, pass three, pass six.
+ *
+ * WHAT EACH SEGMENT CARRIES:
+ *   key     string  Stable slug, for filters targeting one segment.
+ *   label   string  The first line — what the moment is.
+ *   date    string  The second line's date, '' when the moment has no date to show.
+ *   note    string  The rest of the second line, joined to `date` with an em dash.
+ *   at      int     Unix timestamp the status is derived from. 0 = unknown, treated as ahead.
+ *   status  string  'done' | 'current' | 'upcoming'. Derived, never authored.
+ *
+ * TODAY'S SECOND LINE IS "N DAYS LEFT", where the design writes "Profile live,
+ * matching on". Two reasons for the change. It would be a second copy of status
+ * the priority slot already owns, which Step 15 forbids outright; and it can
+ * simply be FALSE — an agent in `setup` is neither live nor matching, and the
+ * timeline has no business claiming otherwise. Days remaining is true in every
+ * state, is nowhere else on the page, and is what an agent looking at a countdown
+ * actually wants from it.
+ *
+ * NO START DATE, NO TIMELINE. An empty list takes the whole section down in
+ * components/dashboard-timeline.php rather than drawing four rules over blanks —
+ * the same rule the live card and the setup card follow.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @param int $now     Optional. Moment to resolve against. Defaults to now.
+ * @return array<int,array{key:string,label:string,date:string,note:string,at:int,status:string}>
+ */
+function ensurance_dashboard_founding_timeline( $user_id = 0, $now = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $now     = $now ? (int) $now : time();
+    $start   = ensurance_dashboard_access_start( $user_id );
+
+    if ( ! $start ) {
+        return array();
+    }
+
+    $term = ensurance_dashboard_access_term();
+
+    // The two future dates, stepped in DAYS rather than by adding seconds, so a
+    // DST change inside the term cannot land the mark on the wrong date.
+    $origin = ( new DateTimeImmutable( '@' . $start ) )->setTimezone( wp_timezone() );
+    $mark   = $origin->modify( sprintf( '+%d days', $term ) )->getTimestamp();
+    $charge = $origin->modify( sprintf( '+%d days', $term + 1 ) )->getTimestamp();
+
+    $day  = max( 0, ensurance_dashboard_days_between( $start, $now ) );
+    $left = $term - $day;
+
+    // The countdown, phrased for the day it is on. Past the term it stops
+    // counting rather than going negative — the two segments after it carry
+    // what happened instead.
+    if ( $left > 1 ) {
+        $remaining = sprintf( '%d days left', $left );
+    } elseif ( 1 === $left ) {
+        $remaining = '1 day left';
+    } elseif ( 0 === $left ) {
+        $remaining = 'Last day';
+    } else {
+        $remaining = 'Access period ended';
+    }
+
+    $segments = array(
+        array(
+            'key'   => 'started',
+            'label' => 'Access started',
+            'date'  => wp_date( 'M j', $start ),
+            'note'  => '',
+            'at'    => $start,
+        ),
+        array(
+            'key'   => 'today',
+            // "Today — day 18". The em dash is the design's.
+            'label' => sprintf( 'Today — day %d', $day ),
+            'date'  => '',
+            'note'  => $remaining,
+            // Always the last elapsed moment, which is what makes this the
+            // current segment on every day of the term and after it.
+            'at'    => $now,
+        ),
+        array(
+            'key'   => 'mark',
+            'label' => sprintf( '%d-day mark', $term ),
+            'date'  => wp_date( 'M j', $mark ),
+            'note'  => 'cancel by this date',
+            'at'    => $mark,
+        ),
+        array(
+            'key'   => 'charge',
+            'label' => 'First charge',
+            'date'  => wp_date( 'M j', $charge ),
+            'note'  => ensurance_dashboard_access_price(),
+            'at'    => $charge,
+        ),
+    );
+
+    /**
+     * Filter the founding access timeline before statuses are derived.
+     *
+     * The hook to add, remove or reword a milestone. Entries must keep the shape
+     * documented above minus `status`, which is resolved below from `at` — so a
+     * segment added here cannot be given the wrong rule.
+     *
+     * @param array $segments Segments in display order.
+     * @param int   $user_id  User the timeline is being resolved for.
+     * @param int   $now      Moment the timeline is resolved against.
+     */
+    $segments = (array) apply_filters( 'ensurance_dashboard_founding_timeline', $segments, $user_id, $now );
+
+    // The current segment is the elapsed one nearest to now. Found first, because
+    // "is this the current one" cannot be answered while looking at one segment
+    // in isolation — every other part of the status can.
+    $current = -1;
+    $nearest = 0;
+
+    foreach ( $segments as $i => $segment ) {
+        $at = isset( $segment['at'] ) ? (int) $segment['at'] : 0;
+
+        if ( $at > 0 && $at <= $now && $at >= $nearest ) {
+            $nearest = $at;
+            $current = $i;
+        }
+    }
+
+    $resolved = array();
+
+    foreach ( $segments as $i => $segment ) {
+        $at = isset( $segment['at'] ) ? (int) $segment['at'] : 0;
+
+        if ( $i === $current ) {
+            $status = 'current';
+        } elseif ( $at > 0 && $at <= $now ) {
+            $status = 'done';
+        } else {
+            $status = 'upcoming';
+        }
+
+        $resolved[] = array(
+            'key'    => isset( $segment['key'] ) ? (string) $segment['key'] : (string) $i,
+            'label'  => isset( $segment['label'] ) ? (string) $segment['label'] : '',
+            'date'   => isset( $segment['date'] ) ? (string) $segment['date'] : '',
+            'note'   => isset( $segment['note'] ) ? (string) $segment['note'] : '',
+            'at'     => $at,
+            'status' => $status,
+        );
+    }
+
+    return $resolved;
+}
+
+/**
+ * A past moment written the way Today's Recent column writes it — "2h ago",
+ * "Aug 6".
+ *
+ * Step 11 of templates/agent-dashboard/build-steps.md, whose activity rows carry
+ * a relative timestamp on the right. The design writes those strings out; here
+ * they are derived from the moment itself, so a cached render cannot go stale.
+ *
+ * COARSE ON PURPOSE, and it switches units the way the design's own list does:
+ * anything inside the last day reads as elapsed time ("2h ago"), anything older
+ * reads as a date ("Aug 6"). That is the boundary at which an agent stops
+ * thinking in hours and starts thinking in days — "43h ago" answers a question
+ * nobody asked. This is deliberately NOT ensurance_dashboard_countdown(), which
+ * measures the other direction (time LEFT on a request, to the minute, because a
+ * deadline closing in is exactly when the minutes matter).
+ *
+ * A dated string gains its year once it is outside the current one, so an entry
+ * from a previous term cannot read as this August.
+ *
+ * Returns '' for an unknown moment, or one that has not happened — a row with
+ * nothing to stamp drops the stamp rather than printing "0m ago" or a date in
+ * the future.
+ *
+ * @param int $at  Unix timestamp of the moment.
+ * @param int $now Optional. Moment to measure from. Defaults to now.
+ * @return string Relative time like "12m ago" / "2h ago", or a date; '' if none.
+ */
+function ensurance_dashboard_relative_time( $at, $now = 0 ) {
+    $at  = (int) $at;
+    $now = $now ? (int) $now : time();
+
+    if ( $at <= 0 || $at > $now ) {
+        return '';
+    }
+
+    $ago = $now - $at;
+
+    if ( $ago < MINUTE_IN_SECONDS ) {
+        return 'Just now';
+    }
+
+    if ( $ago < HOUR_IN_SECONDS ) {
+        return sprintf( '%dm ago', (int) floor( $ago / MINUTE_IN_SECONDS ) );
+    }
+
+    if ( $ago < DAY_IN_SECONDS ) {
+        return sprintf( '%dh ago', (int) floor( $ago / HOUR_IN_SECONDS ) );
+    }
+
+    // Same-year dates stay short, the way the design writes them; older ones
+    // carry the year, since "Aug 6" with no year is a different claim.
+    $format = ( wp_date( 'Y', $at ) === wp_date( 'Y', $now ) ) ? 'M j' : 'M j, Y';
+
+    return wp_date( $format, $at );
+}
+
+/**
+ * What a shopper sees of this agency — the left reference column on Today.
+ *
+ * Step 11 of templates/agent-dashboard/build-steps.md: the four pieces of the
+ * agency that face outward, so an agent can check what is being shown on their
+ * behalf without leaving Today. Displayed name, the counties they are matched
+ * in, the coverages they are matched on, and the inbox a matched request is sent
+ * to.
+ *
+ * READ-ONLY, WITH NO EDIT AFFORDANCE — not even a disabled one. The step says so
+ * outright, and the scope note at the top of build-steps.md makes it the rule for
+ * the whole product: agency data is not editable in v1, and every "change this"
+ * path ends at agent support. So these are values and captions and nothing else;
+ * the sentence that routes changes to support is already on the quiet panel
+ * (Step 8) and gets its own row on Account (Step 14).
+ *
+ * NOTHING NEW IS RESOLVED HERE. Every value comes from the resolver that already
+ * owns it — ensurance_dashboard_agency_name(), _service_areas(),
+ * _coverage_types(), _request_inbox() — which is what keeps this column and the
+ * surfaces that state the same things (the rail's user card, the quiet panel's
+ * sentence) from ever disagreeing. Two of those have nothing to return outside
+ * the admin preview today, and their rows simply do not render: a caption over a
+ * blank would be the one thing worse than a missing row, since it would read as
+ * "your service areas are empty" rather than "not set up yet".
+ *
+ * SHAPE — a list of ['key' => …, 'value' => …, 'caption' => …], in display
+ * order, with `value` shown above `caption`. Any row missing either half is
+ * dropped.
+ *
+ * Captions are the design's own (the "What shoppers see" block of
+ * templates/agent-dashboard/AgentDashboard.dc.html).
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return array<int,array{key:string,value:string,caption:string}>
+ */
+function ensurance_dashboard_shopper_rows( $user_id = 0 ) {
+    $user_id   = $user_id ? (int) $user_id : get_current_user_id();
+    $areas     = ensurance_dashboard_service_areas( $user_id );
+    $coverages = ensurance_dashboard_coverage_types( $user_id );
+
+    $rows = array(
+        array(
+            'key'     => 'name',
+            'value'   => ensurance_dashboard_agency_name( $user_id ),
+            'caption' => 'Displayed name',
+        ),
+        array(
+            'key'     => 'areas',
+            // Plain commas, not wp_sprintf's "%l" — this is a list under a
+            // label, not prose, and "Coastal, Ventura, and Santa Barbara"
+            // reads as a sentence fragment in a column of values.
+            'value'   => implode( ', ', $areas ),
+            'caption' => 'Service areas',
+        ),
+        array(
+            'key'     => 'coverages',
+            'value'   => implode( ', ', $coverages ),
+            'caption' => 'Coverage types',
+        ),
+        array(
+            'key'     => 'inbox',
+            'value'   => ensurance_dashboard_request_inbox( $user_id ),
+            'caption' => 'Where requests are sent',
+        ),
+    );
+
+    /**
+     * Filter the rows in Today's "What shoppers see" column.
+     *
+     * The hook the real agency record attaches to when it exists. Rows must keep
+     * the shape documented above; anything missing a value or a caption is
+     * dropped rather than rendered blank.
+     *
+     * @param array $rows    Rows in display order.
+     * @param int   $user_id User the column is being resolved for.
+     */
+    $rows = (array) apply_filters( 'ensurance_dashboard_shopper_rows', $rows, $user_id );
+
+    $clean = array();
+
+    foreach ( $rows as $i => $row ) {
+        if ( empty( $row['value'] ) || empty( $row['caption'] ) ) {
+            continue;
+        }
+
+        $clean[] = array(
+            'key'     => isset( $row['key'] ) ? (string) $row['key'] : (string) $i,
+            'value'   => (string) $row['value'],
+            'caption' => (string) $row['caption'],
+        );
+    }
+
+    return $clean;
+}
+
+/**
+ * What has happened on this account lately — the right reference column on Today.
+ *
+ * Step 11 of templates/agent-dashboard/build-steps.md. Four lines at most, each
+ * one thing that happened and when: a decision made, a detail updated, a license
+ * verified. It is a record, not a queue — nothing here is actionable, and nothing
+ * here restates the priority slot's ask.
+ *
+ * IT IS ALSO NOT A STATUS PANEL. Step 11 forbids repeating what the rail already
+ * says, and Step 15 generalizes it: no status, count or date may appear twice on
+ * the page. So this column never counts anything ("4 matched this month" belongs
+ * to the quiet panel), never says what is waiting (the slot owns that), and never
+ * dates the term (the timeline owns that).
+ *
+ * AND IT DOES NOT DATE A MATCH — the rule Step 15's pass added, because the
+ * column was breaking it twice over. A request ARRIVING is already stamped
+ * everywhere it needs to be: the live card's "Submitted" tile carries the one
+ * still waiting, the quiet panel's "Last match" stat carries the most recent one
+ * when nothing is, and the History view stamps every one of them. A "request
+ * matched" row here put that same moment on Today a second time — beside the tile
+ * saying it in the live state, and beside a stat that disagreed with it in the
+ * quiet one. Decisions and record changes are what this column is for; the
+ * arrival belongs to the surfaces above it. Anything attached through the filter
+ * below should follow the same line — and, when a real trail starts recording
+ * decisions, hold the newest one back while the decided panel is still confirming
+ * it, for the same reason: the slot is already saying it, five inches higher.
+ *
+ * NOTHING IS RECORDED YET. No matched request, decision or profile change writes
+ * an activity trail — the same gap behind ensurance_dashboard_request_count() and
+ * ensurance_dashboard_match_stats() — so this returns an empty list and the
+ * column does not render. The admin preview is the one exception, for the same
+ * reason the live card has one: this band has to be reviewable before the product
+ * produces the events it lists.
+ *
+ * THE PREVIEW IS NOT SLOT-SPECIFIC. Unlike the sample request or the sample
+ * matching data, which each belong to one slot state, the reference band renders
+ * under EVERY state — so any `?slot=` preview shows the sample rows.
+ *
+ * SHAPE — a list of ['key' => …, 'what' => …, 'at' => …, 'when' => …], newest
+ * first. `at` is the moment; `when` is what the row prints, derived from `at`
+ * when the entry does not state it. The order given is the order shown: entries
+ * are not re-sorted, since an entry may legitimately arrive with no timestamp at
+ * all. Anything with nothing to say (no `what`) is dropped, and the list is cut
+ * to $limit.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @param int $limit   Optional. Most rows to return. Step 11 caps the column at 4.
+ * @param int $now     Optional. Moment relative stamps are measured from.
+ * @return array<int,array{key:string,what:string,at:int,when:string}>
+ */
+function ensurance_dashboard_activity( $user_id = 0, $limit = 4, $now = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $limit   = max( 0, (int) $limit );
+    $now     = $now ? (int) $now : time();
+
+    $entries = array();
+
+    // Admin preview only — see the note above. The design's own rows, with its
+    // fixed strings ("2h ago", "Aug 6") expressed as real moments so the preview
+    // exercises ensurance_dashboard_relative_time() rather than hardcoding its
+    // output.
+    //
+    // The design's newest row is "Auto request matched — Coastal County", stamped
+    // the same 2h ago as the live card's Submitted tile. It is not here: see the
+    // note above on why this column does not date a match. Its place is taken by
+    // the passed request from ensurance_dashboard_sample_history() — the same
+    // fabricated agency, described the same way, so the two surfaces agree.
+    //
+    // THE PASSED ROW BELONGS HERE EVEN THOUGH HISTORY NO LONGER LISTS IT, and
+    // the two are not in conflict. This column is a record of what the agent
+    // DID; History is a list of the requests they KEPT. Passing is something
+    // they did, so it is dated here — but the request itself is gone from
+    // History (see ensurance_dashboard_hide_passed_rows), which is the whole
+    // point of removing it: the decision is remembered, the request is not
+    // still sitting in the list looking like something to reconsider.
+    if ( '' !== ensurance_dashboard_priority_preview() ) {
+        $entries = array(
+            array(
+                'key'  => 'accepted',
+                'what' => 'Home request accepted — Ventura',
+                'at'   => $now - ( 5 * DAY_IN_SECONDS ),
+            ),
+            array(
+                'key'  => 'areas',
+                'what' => 'Service areas updated',
+                'at'   => $now - ( 7 * DAY_IN_SECONDS ),
+            ),
+            array(
+                'key'  => 'passed',
+                'what' => 'Auto request passed — Santa Barbara',
+                'at'   => $now - ( 9 * DAY_IN_SECONDS ),
+            ),
+            array(
+                'key'  => 'license',
+                'what' => 'License CA-0K48219 verified',
+                'at'   => $now - ( 18 * DAY_IN_SECONDS ),
+            ),
+        );
+    }
+
+    /**
+     * Filter Today's recent activity rows.
+     *
+     * The hook a real activity trail attaches to when it exists. Entries must
+     * keep the shape documented above and arrive newest first; `when` is
+     * optional and is derived from `at` when omitted.
+     *
+     * @param array $entries Entries, newest first.
+     * @param int   $user_id User the column is being resolved for.
+     * @param int   $limit   Most rows the column will show.
+     * @param int   $now     Moment relative stamps are measured from.
+     */
+    $entries = (array) apply_filters( 'ensurance_dashboard_activity', $entries, $user_id, $limit, $now );
+
+    // Asked for nothing, return nothing — the cap is applied after each row is
+    // built below, which would otherwise let a zero limit through with one row.
+    if ( 0 === $limit ) {
+        return array();
+    }
+
+    $clean = array();
+
+    foreach ( $entries as $i => $entry ) {
+        if ( empty( $entry['what'] ) ) {
+            continue;
+        }
+
+        $at   = isset( $entry['at'] ) ? (int) $entry['at'] : 0;
+        $when = isset( $entry['when'] ) ? (string) $entry['when'] : ensurance_dashboard_relative_time( $at, $now );
+
+        $clean[] = array(
+            'key'  => isset( $entry['key'] ) ? (string) $entry['key'] : (string) $i,
+            'what' => (string) $entry['what'],
+            'at'   => $at,
+            'when' => $when,
+        );
+
+        if ( count( $clean ) >= $limit ) {
+            break;
+        }
+    }
+
+    return $clean;
+}
+
+/**
+ * The three states a matched request can be in — THE list.
+ *
+ * Step 12 of templates/agent-dashboard/build-steps.md: each row carries a status
+ * badge, and its tone maps to the status. One array holds both halves of that
+ * mapping, so a row can only ever be in a state that has a label and a tone, and
+ * neither can be written down twice.
+ *
+ * THE TONES ARE THE DESIGN'S:
+ *
+ *   awaiting → info     the one row still asking something of the agent
+ *   accepted → ok       a request they took
+ *   passed   → neutral  a request they let go
+ *
+ * Nothing here is red: passing is a legitimate answer (Step 6 says not to
+ * discourage it), so it is retired without judgment rather than warned about.
+ *
+ * TWO OF THE THREE REACH THE HISTORY VIEW. `passed` is a real state — it is what
+ * ensurance_dashboard_request_rows() records when the agent passes on Today, and
+ * what Undo reverses — but History does not list it: see
+ * ensurance_dashboard_hide_passed_rows(). It stays named here because the row
+ * still passes THROUGH this state on its way out, and a state with no label
+ * would be dropped as unknown rather than hidden deliberately.
+ *
+ * THERE IS NO `expired`. The state was removed with the rest of the expiry
+ * treatment (the Expired pill, the badge and the "This request expired" closed
+ * card). Because ensurance_dashboard_request_rows() drops any row whose status
+ * this list does not name, a queue that still emits `expired` does not error and
+ * does not render an unlabeled chip — the row simply does not appear, which is
+ * the same place a passed request ends up and the right one: History is what the
+ * agent KEPT, and an expired request is neither kept nor still actionable.
+ *
+ * @return array<string,array{label:string,tone:string}> Status slug => label and
+ *                                                       badge tone.
+ */
+function ensurance_dashboard_request_statuses() {
+    return array(
+        'awaiting' => array(
+            'label' => 'Awaiting you',
+            'tone'  => 'info',
+        ),
+        'accepted' => array(
+            'label' => 'Accepted',
+            'tone'  => 'ok',
+        ),
+        'passed'   => array(
+            'label' => 'Passed',
+            'tone'  => 'neutral',
+        ),
+    );
+}
+
+/**
+ * The design's own sample history — the decided requests behind the History
+ * preview.
+ *
+ * The counterpart of ensurance_dashboard_sample_request() and
+ * ensurance_dashboard_sample_matching(), and separate from the first of those on
+ * purpose: this is everything the agent has ALREADY answered, while the sample
+ * request is the one still waiting. ensurance_dashboard_request_rows() puts the
+ * two together, which is what makes the awaiting row at the top of the table the
+ * same request Today is asking about rather than a fifth invention.
+ *
+ * PREVIEW ONLY. Nothing reaches this except through
+ * ensurance_dashboard_priority_preview(), which is capability-gated — an agent
+ * can never be shown these values. Copied row for row from `reqRows` in
+ * templates/agent-dashboard/AgentDashboard.dc.html, minus its first row (the
+ * awaiting one, which comes from the live request instead), with the design's
+ * fixed date strings expressed as real moments so the preview exercises
+ * ensurance_dashboard_relative_time() rather than hardcoding its output.
+ *
+ * THE PASSED ROW IS KEPT ON PURPOSE, and the expired one is gone. The design
+ * dropped `expired` entirely, so its row went with the state. The passed row
+ * stays because History no longer lists it — it is the row that proves
+ * ensurance_dashboard_hide_passed_rows() is doing its job, and without it the
+ * preview would exercise only the path where there is nothing to hide.
+ *
+ * @param int $now Optional. Moment the sample's ages are measured back from.
+ * @return array<int,array{key:string,title:string,detail:string,at:int,status:string}>
+ */
+function ensurance_dashboard_sample_history( $now = 0 ) {
+    $now = $now ? (int) $now : time();
+
+    return array(
+        array(
+            'key'    => 'sample-home-ventura',
+            'title'  => 'Home — Ventura County',
+            'detail' => 'Single family, purchased 2019',
+            'at'     => $now - ( 5 * DAY_IN_SECONDS ),
+            'status' => 'accepted',
+        ),
+        array(
+            'key'    => 'sample-auto-santa-barbara',
+            'title'  => 'Auto — Santa Barbara County',
+            'detail' => '1 driver · ZIP 93101',
+            'at'     => $now - ( 9 * DAY_IN_SECONDS ),
+            'status' => 'passed',
+        ),
+        array(
+            'key'    => 'sample-life-coastal',
+            'title'  => 'Life — Coastal County',
+            'detail' => 'Term, age 41',
+            'at'     => $now - ( 12 * DAY_IN_SECONDS ),
+            'status' => 'accepted',
+        ),
+    );
+}
+
+/**
+ * Every request matched to this agent, newest first — the History view's list.
+ *
+ * Step 12 of templates/agent-dashboard/build-steps.md. The whole history in one
+ * list: what the request was, the one line that describes it, when it arrived,
+ * and where it ended up.
+ *
+ * MINUS THE ONES THE AGENT PASSED ON. They are removed by
+ * ensurance_dashboard_hide_passed_rows() on the filter below, so a caller of
+ * this function never sees them — see that function for why the removal lives
+ * there rather than in the shaping loop.
+ *
+ * THE TOP ROW IS TODAY'S SLOT, NOT A COPY OF IT. The step is explicit that the
+ * awaiting row is the only row tied to Today, and the tie is real rather than
+ * cosmetic — the row is built from ensurance_dashboard_live_request(), the same
+ * resolver the live card renders, and its status follows
+ * ensurance_dashboard_decision(). So accepting on Today does not leave a stale
+ * "Awaiting you" in the table: the same row re-reads as Accepted, and Undo puts
+ * it back. Nothing in this file can disagree with the slot about the one request
+ * that is in both places, because there is only one request.
+ *
+ * EVERYTHING BELOW IT IS HISTORY, AND THERE IS NONE YET. No decision writes a
+ * history row — ensurance_dashboard_record_decision() names that as the queue's
+ * job — so the table holds at most the live row today, and usually nothing at
+ * all. The admin preview is the one exception, for the same reason the live card
+ * has one: /dashboard/?view=requests&slot=live is how the full list gets
+ * reviewed before a queue exists. (`?slot=` is the preview switch for the
+ * whole dashboard, not just Today; the reference band on Today reads it the same
+ * way.)
+ *
+ * NEWEST FIRST is the caller's contract, not a sort applied here: rows may
+ * legitimately arrive with no timestamp at all — the queue can know an order it
+ * cannot date — and re-sorting on `at` would drop those to the bottom. The live
+ * row is prepended because it is by definition the most recent thing matched.
+ *
+ * SHAPE — a list of ['key' => …, 'title' => …, 'detail' => …, 'at' => …,
+ * 'when' => …, 'status' => …, 'label' => …, 'tone' => …]. `when` is what the row
+ * prints, derived from `at` when the entry does not state it; `label` and `tone`
+ * come from ensurance_dashboard_request_statuses() and are not overridable per
+ * row, so two rows in the same state can never look different. A row with no
+ * title, or in a state that list does not name, is dropped.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @param int $now     Optional. Moment relative stamps are measured from.
+ * @return array<int,array{key:string,title:string,detail:string,at:int,when:string,status:string,label:string,tone:string}>
+ */
+function ensurance_dashboard_request_rows( $user_id = 0, $now = 0 ) {
+    $user_id  = $user_id ? (int) $user_id : get_current_user_id();
+    $now      = $now ? (int) $now : time();
+    $statuses = ensurance_dashboard_request_statuses();
+    $rows     = array();
+
+    // The request Today is asking about, as the table's newest row. Its status
+    // is whatever the agent has done with it so far — nothing yet, accepted, or
+    // passed — which is what keeps the two surfaces telling one story.
+    $live = ensurance_dashboard_live_request( $user_id );
+
+    if ( ! empty( $live ) ) {
+        $decision = ensurance_dashboard_decision( $user_id );
+
+        $decided = array(
+            'accept' => 'accepted',
+            'pass'   => 'passed',
+        );
+
+        $rows[] = array(
+            'key'    => 'live',
+            'title'  => sprintf( '%s — %s', $live['coverage'], $live['county'] ),
+            'detail' => $live['detail'],
+            'at'     => $live['matched_at'],
+            'status' => isset( $decided[ $decision ] ) ? $decided[ $decision ] : 'awaiting',
+        );
+    }
+
+    // Admin preview only — see the note above.
+    if ( '' !== ensurance_dashboard_priority_preview() ) {
+        $rows = array_merge( $rows, ensurance_dashboard_sample_history( $now ) );
+    }
+
+    /**
+     * Filter the rows of the dashboard's History list.
+     *
+     * The hook the real matching queue attaches to when it exists. Entries must
+     * keep the shape documented above and arrive NEWEST FIRST — they are not
+     * re-sorted. `when` is optional and is derived from `at` when omitted;
+     * `status` must be one of ensurance_dashboard_request_statuses(), whose
+     * label and tone are applied afterwards and cannot be overridden per row.
+     *
+     * @param array $rows    Rows, newest first.
+     * @param int   $user_id User the table is being resolved for.
+     * @param int   $now     Moment relative stamps are measured from.
+     */
+    $rows = (array) apply_filters( 'ensurance_dashboard_request_rows', $rows, $user_id, $now );
+
+    $clean = array();
+
+    foreach ( $rows as $i => $row ) {
+        $status = isset( $row['status'] ) ? sanitize_key( $row['status'] ) : '';
+
+        // A row with nothing to name, or in a state the badge has no word for,
+        // is dropped rather than rendered as a blank line or an unlabeled chip.
+        if ( empty( $row['title'] ) || ! isset( $statuses[ $status ] ) ) {
+            continue;
+        }
+
+        $at = isset( $row['at'] ) ? (int) $row['at'] : 0;
+
+        $clean[] = array(
+            'key'    => isset( $row['key'] ) ? (string) $row['key'] : (string) $i,
+            'title'  => (string) $row['title'],
+            'detail' => isset( $row['detail'] ) ? (string) $row['detail'] : '',
+            'at'     => $at,
+            'when'   => isset( $row['when'] ) ? (string) $row['when'] : ensurance_dashboard_relative_time( $at, $now ),
+            'status' => $status,
+            'label'  => $statuses[ $status ]['label'],
+            'tone'   => $statuses[ $status ]['tone'],
+        );
+    }
+
+    return $clean;
+}
+
+/**
+ * Drop passed requests from the History view's list.
+ *
+ * HISTORY IS WHAT THE AGENT KEPT. The view's own subhead says so — "Every
+ * request you have kept since access started" — and a request the agent passed
+ * on is, by their own decision, not one of them. So passing on Today does not
+ * move a row into a "Passed" state further down the list; it removes the request
+ * from the list entirely, which is what the design does (`.filter(l => l.st !==
+ * 'passed')` in templates/agent-dashboard/AgentDashboard.dc.html) and what makes
+ * the Passed pill and its count unnecessary rather than merely unused.
+ *
+ * IT IS NOT A HIDDEN ROW. Nothing renders it with `hidden`, nothing counts it in
+ * "N of N requests shown", and its `detail` never reaches the page — the row is
+ * gone before ensurance_dashboard_request_rows() has finished assembling its
+ * return value, so there is no copy of it in the document for a filter pill, a
+ * find-in-page or a view-source to turn up.
+ *
+ * UNDO STILL WORKS, because this hides a ROW, not a decision.
+ * ensurance_dashboard_decision() is untouched, so the decided panel on Today
+ * still offers Undo and taking it puts the request back in the list as
+ * "Awaiting you" — the row is rebuilt from the live request on the next render,
+ * exactly as it was before it was passed on.
+ *
+ * ON THE `ensurance_dashboard_request_rows` FILTER, at priority 99 rather than
+ * inside the resolver: the resolver is where the real matching queue attaches,
+ * and running last means a passed row the queue supplies is removed too, not
+ * just the one this file builds from the live request. It also keeps the rule in
+ * one readable place instead of a `continue` buried in the shaping loop.
+ *
+ * Entries arrive UNVALIDATED here (the shape check runs after the filter), so a
+ * row with no `status` at all is passed through untouched rather than assumed —
+ * dropping it is the shaping loop's job, and for its own reason.
+ *
+ * @param array $rows Rows, newest first.
+ * @return array The same rows minus any in the `passed` state.
+ */
+function ensurance_dashboard_hide_passed_rows( $rows ) {
+    if ( ! is_array( $rows ) ) {
+        return $rows;
+    }
+
+    $kept = array();
+
+    foreach ( $rows as $row ) {
+        if ( is_array( $row ) && isset( $row['status'] ) && 'passed' === sanitize_key( $row['status'] ) ) {
+            continue;
+        }
+
+        $kept[] = $row;
+    }
+
+    return $kept;
+}
+add_filter( 'ensurance_dashboard_request_rows', 'ensurance_dashboard_hide_passed_rows', 99 );
+
+/**
+ * The Make webhook History reads an agent's purchased leads from.
+ *
+ * A CAPABILITY URL, so it lives in wp-config.php per environment and is never
+ * committed — anyone holding it can ask for any agent's leads. Same handling as
+ * ENSURANCE_AGENT_UPSERT_WEBHOOK_URL, which the activation webhook above reads
+ * the same way:
+ *
+ *     define( 'ENSURANCE_AGENT_LEADS_WEBHOOK_URL', 'https://hook.us2.make.com/…' );
+ *
+ * Unset returns '' and the whole integration no-ops — History falls back to
+ * whatever it resolved without it, which is the live row or the empty line. A
+ * dashboard that renders without its leads is a worse dashboard; one that fatals
+ * because a constant is missing is a broken site.
+ *
+ * @return string Configured webhook URL, or '' when there is none.
+ */
+function ensurance_dashboard_leads_webhook_url() {
+    $url = ( defined( 'ENSURANCE_AGENT_LEADS_WEBHOOK_URL' ) && ENSURANCE_AGENT_LEADS_WEBHOOK_URL )
+        ? (string) ENSURANCE_AGENT_LEADS_WEBHOOK_URL
+        : '';
+
+    /**
+     * Filter the purchased-leads webhook URL.
+     *
+     * @param string $url Configured URL, '' when unset.
+     */
+    return (string) apply_filters( 'ensurance_dashboard_leads_webhook_url', $url );
+}
+
+/**
+ * The tones a lead's signal chip may carry — THE list.
+ *
+ * A closed set for the same reason ensurance_dashboard_request_statuses() is one:
+ * a tone that arrives from outside and is not one of these has no styling behind
+ * it, and rendering it anyway produces an unstyled chip rather than an obvious
+ * error. Unknown tones are dropped in the normalizer.
+ *
+ * @return array<int,string>
+ */
+function ensurance_dashboard_signal_tones() {
+    return array( 'ok', 'warn', 'error', 'neutral' );
+}
+
+/**
+ * Every lead this agent has PURCHASED, newest first — read from the Make webhook.
+ *
+ * THE REQUEST. One POST, JSON body, flat — the same shape
+ * ensurance_notify_agent_row_on_activation() already sends the Agent Row Upsert
+ * scenario, so the two scenarios read alike:
+ *
+ *     { "event": "agent_leads_fetch", "wp_user_id": 42,
+ *       "first_name": "…", "last_name": "…", "company": "…" }
+ *
+ * `company` is ensurance_get_company_name() — ENSURANCE_COMPANY_META, the value
+ * Make already matches agent rows on (see ensurance_dashboard_recorded_agency_name),
+ * so this joins on a key that exists rather than opening a second one. It is sent
+ * as `company` rather than the upsert's `company_name` because that is the field
+ * the leads scenario reads; the two scenarios differ by that name, deliberately
+ * and knowingly. `wp_user_id` is diagnostic — Make does not match on it.
+ *
+ * THE RESPONSE. A JSON array of purchased leads, newest first. Every entry in it
+ * is by definition ACCEPTED — the scenario returns purchased leads and nothing
+ * else, so presence IS the status and no row carries one. An agent with none gets
+ * `[]`. A `{ "leads": [ … ] }` wrapper is unwrapped too, because that is the one
+ * shape a Make scenario slips into by accident; nothing else is guessed at.
+ *
+ * NO DATE IS EVER A DISPLAY STRING. The design's sample carries `mins: 'Aug 10 ·
+ * 5h ago'`, already rendered. This reads `purchased_at` as ISO-8601 and turns it
+ * into a real moment, because "5h ago" is relative to whoever rendered it and is
+ * wrong the moment the page is cached — and because the row's <time datetime="…">
+ * has nowhere to put a pre-rendered string.
+ *
+ * ONE CALL PER PAGE LOAD, memoized per user for the life of the request.
+ * page-dashboard.php renders every view into the DOM on every load, so the
+ * resolver runs even while the agent is looking at Today; the static below is
+ * what keeps a second caller from meaning a second round trip. There is no
+ * transient: a fetch on navigation is what the queue owner asked for, and a cache
+ * would mean a just-purchased lead missing from a deliberate refresh.
+ *
+ * IT FAILS QUIET, ON PURPOSE. No URL, a transport error, a non-200, or a body
+ * that is not a JSON array all return array() after an error_log(). History then
+ * renders whatever it had without the webhook, which is the live row or the empty
+ * line — a dashboard missing its history is worse than one that fatals only in
+ * the sense that it still works.
+ *
+ * NOT DURING THE ADMIN PREVIEW. `?slot=` is for reviewing the design against the
+ * design's own sample data; mixing a reviewer's real purchased leads into it
+ * would make the preview a different thing on every account.
+ *
+ * SHAPE — a list of ['ref' => …, 'first_name' => …, 'last_name' => …,
+ * 'location' => …, 'address' => …, 'purchased_at' => int, 'driver' => …,
+ * 'household' => …, 'vehicle' => …, 'vehicle_use' => …, 'record' => …,
+ * 'carrier' => …, 'carrier_note' => …, 'bundle' => …, 'phone' => …,
+ * 'email' => …, 'signals' => [['label' => …, 'tone' => …], …]]. Every string
+ * defaults to '' and every lead carries every key, so a consumer never has to
+ * check before printing. A lead with no name at all is dropped — there is nothing
+ * to label its row with.
+ *
+ * The full record is returned rather than the two strings the list renders today,
+ * so the panel can be built out against it without a second fetch or a second
+ * shape. ensurance_dashboard_purchased_lead_rows() is what reduces it to a row.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return array<int,array<string,mixed>> Purchased leads, newest first.
+ */
+function ensurance_dashboard_purchased_leads( $user_id = 0 ) {
+    static $cache = array();
+
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+
+    if ( ! $user_id ) {
+        return array();
+    }
+
+    if ( isset( $cache[ $user_id ] ) ) {
+        return $cache[ $user_id ];
+    }
+
+    // Reviewing the design, not an account — see the note above.
+    if ( '' !== ensurance_dashboard_priority_preview() ) {
+        $cache[ $user_id ] = array();
+
+        return $cache[ $user_id ];
+    }
+
+    $cache[ $user_id ] = array();
+
+    $url = ensurance_dashboard_leads_webhook_url();
+
+    if ( '' === $url ) {
+        return $cache[ $user_id ];
+    }
+
+    $user = get_userdata( $user_id );
+
+    if ( ! ( $user instanceof WP_User ) ) {
+        return $cache[ $user_id ];
+    }
+
+    $payload = array(
+        'event'      => 'agent_leads_fetch',
+        'wp_user_id' => $user_id,
+        'first_name' => (string) $user->first_name,
+        'last_name'  => (string) $user->last_name,
+        'company'    => ensurance_get_company_name( $user_id ),
+    );
+
+    // Blocking, unlike the activation webhook: this one's answer IS the view.
+    // The timeout is what bounds how long a dashboard can hang on Make being
+    // slow — past it the page renders without its history rather than not at all.
+    $response = wp_remote_post(
+        $url,
+        array(
+            'timeout' => 8,
+            'headers' => array( 'Content-Type' => 'application/json' ),
+            'body'    => wp_json_encode( $payload ),
+        )
+    );
+
+    if ( is_wp_error( $response ) ) {
+        error_log( 'Ensurance purchased-leads webhook: ' . $response->get_error_message() );
+
+        return $cache[ $user_id ];
+    }
+
+    $code = (int) wp_remote_retrieve_response_code( $response );
+
+    if ( 200 !== $code ) {
+        error_log( 'Ensurance purchased-leads webhook: HTTP ' . $code );
+
+        return $cache[ $user_id ];
+    }
+
+    $body = json_decode( wp_remote_retrieve_body( $response ), true );
+
+    // The one wrapper worth tolerating — see the note above.
+    if ( is_array( $body ) && isset( $body['leads'] ) && is_array( $body['leads'] ) ) {
+        $body = $body['leads'];
+    }
+
+    if ( ! is_array( $body ) ) {
+        error_log( 'Ensurance purchased-leads webhook: response was not a JSON array.' );
+
+        return $cache[ $user_id ];
+    }
+
+    $cache[ $user_id ] = ensurance_dashboard_normalize_leads( $body );
+
+    return $cache[ $user_id ];
+}
+
+/**
+ * The shopper's age, from the `month_and_year_dob` the record carries.
+ *
+ * MONTH/YEAR ONLY — "June/1967" — which is all the shopper is asked for, and all
+ * the design prints ("Age 38"). The first of the month stands in for the day, so
+ * the answer can be up to a month early; the design shows a whole number of
+ * years and nothing downstream does arithmetic on it.
+ *
+ * ANYTHING THAT IS NOT THAT SHAPE RETURNS 0, and the caller prints no age at all.
+ * The live data already contains at least one row whose DOB is a bare spreadsheet
+ * serial ("17807") rather than a month and a year, and guessing at the format
+ * would put a fabricated age on a real person's record. A missing age is a gap;
+ * a wrong one is a lie about a shopper an agent is about to call.
+ *
+ * @param string $dob The record's `month_and_year_dob`.
+ * @return int Age in whole years, or 0 when the value is not "Month/YYYY".
+ */
+function ensurance_dashboard_lead_age( $dob ) {
+    if ( ! preg_match( '~^\s*([A-Za-z]+)\s*/\s*(\d{4})\s*$~', (string) $dob, $m ) ) {
+        return 0;
+    }
+
+    $born = date_create_immutable( $m[1] . ' 1 ' . $m[2] );
+
+    if ( ! $born ) {
+        return 0;
+    }
+
+    $age = (int) $born->diff( date_create_immutable( 'now' ) )->y;
+
+    // A DOB in the future, or one implying an implausible age, is bad data rather
+    // than a very old shopper — print nothing instead.
+    return ( $age > 0 && $age < 120 ) ? $age : 0;
+}
+
+/**
+ * The adverse and favourable cues on a lead — the design's `signals`, derived.
+ *
+ * THE RECORD CARRIES NO SIGNALS ARRAY. The design's sample data does, because it
+ * was written by hand; the real table has the underlying columns instead. So the
+ * cues are computed here, once, from what the record actually holds — which is
+ * better than storing them, because a cue can never disagree with the field it
+ * was drawn from.
+ *
+ * Tones are ensurance_dashboard_signal_tones(): `error` for the one thing that
+ * changes whether an agent quotes at all, `warn` for what changes the price,
+ * `ok` for what makes the risk attractive. A clean record is only claimed when
+ * BOTH counts are zero — "no accidents" beside an unmentioned ticket would read
+ * as a clean record it is not.
+ *
+ * @param array $entry One raw lead record from the webhook.
+ * @return array<int,array{label:string,tone:string}>
+ */
+function ensurance_dashboard_lead_signals( $entry ) {
+    $get = static function ( $key ) use ( $entry ) {
+        return isset( $entry[ $key ] ) ? trim( (string) $entry[ $key ] ) : '';
+    };
+
+    $signals   = array();
+    $accidents = $get( 'num_of_accidents' );
+    $tickets   = $get( 'num_of_tickets' );
+
+    if ( 'No' === $get( 'is_insured' ) ) {
+        $signals[] = array( 'label' => 'Uninsured', 'tone' => 'warn' );
+    }
+
+    // "2+" is a real value in this column, so the count is compared as text
+    // before it is compared as a number.
+    if ( '2+' === $accidents ) {
+        $signals[] = array( 'label' => '2+ accidents', 'tone' => 'error' );
+    } elseif ( (int) $accidents > 0 ) {
+        $signals[] = array(
+            'label' => sprintf( _n( '%d accident', '%d accidents', (int) $accidents ), (int) $accidents ),
+            'tone'  => 'warn',
+        );
+    }
+
+    if ( '2+' === $tickets ) {
+        $signals[] = array( 'label' => '2+ tickets', 'tone' => 'warn' );
+    } elseif ( (int) $tickets > 0 ) {
+        $signals[] = array(
+            'label' => sprintf( _n( '%d ticket', '%d tickets', (int) $tickets ), (int) $tickets ),
+            'tone'  => 'warn',
+        );
+    }
+
+    if ( '0' === $accidents && '0' === $tickets ) {
+        $signals[] = array( 'label' => 'Clean record', 'tone' => 'ok' );
+    }
+
+    if ( 'Yes' === $get( 'bundle_and_save' ) ) {
+        $signals[] = array( 'label' => 'Bundle interest', 'tone' => 'ok' );
+    }
+
+    return $signals;
+}
+
+/**
+ * Turn the webhook's decoded body into leads this product can print.
+ *
+ * SEPARATE FROM THE FETCH so the shape can be exercised against a fixture with no
+ * round trip — hand it a decoded response and it returns exactly what the
+ * resolver would have.
+ *
+ * THE RECORD IS THE DATABASE, NOT THE DESIGN. This was written first against the
+ * design's sample lead, whose fields are finished sentences ("Age 41 · Married",
+ * "2018 Toyota Tacoma"). The real webhook returns the columns those sentences
+ * were written FROM — city/state/zip, vehicle year/make/model, DOB and marital
+ * status, accident and ticket counts. So composing them is this function's main
+ * job, and it belongs here rather than in the template: the strings are the same
+ * on every surface that shows a lead, and a template that assembled them would
+ * have to be copied to assemble them again.
+ *
+ * WHAT IS NEVER PRINTED. `method_of_contact` and `per_month_insurance_cost` come
+ * back empty on every row in the live data, so they are not read at all — a
+ * labelled field with nothing in it is worse than an absent one. `purchased_by`
+ * is the agent's own email and identifies nothing about the shopper. `status` is
+ * read only as a guard: anything not `sold` is dropped, because this list is
+ * purchased leads and a row in another state arriving here is a scenario bug
+ * rather than a row to render.
+ *
+ * NAMES ARE READ AS LABELLED. The live data currently returns the given name in
+ * `last_name` and the surname in `first_name` — every row, confirmed against a
+ * lead that also appears in the design's sample. That is being corrected at the
+ * source, and this function deliberately does NOT compensate: a swap here would
+ * silently invert every name on the dashboard the day the columns are fixed, and
+ * the cause would be nowhere near the symptom.
+ *
+ * EVERY VALUE IS SANITIZED ON THE WAY IN, not on the way out — these strings come
+ * from outside WordPress and end up in the page, so sanitizing once here means no
+ * consumer has to remember to. Escaping at output is still the template's job.
+ *
+ * WHAT IS DROPPED, and why each: a row that is not `sold` (see above), a lead
+ * with neither name (nothing to title its row with), and a signal whose tone is
+ * not one of ensurance_dashboard_signal_tones(). Everything else is kept as ''
+ * rather than dropped, so every lead carries every key and the panel's grid never
+ * loses a cell.
+ *
+ * @param array $body Decoded response body — a list of lead records.
+ * @return array<int,array<string,mixed>> Normalized leads, newest first.
+ */
+function ensurance_dashboard_normalize_leads( $body ) {
+    $tones = ensurance_dashboard_signal_tones();
+    $leads = array();
+
+    foreach ( (array) $body as $entry ) {
+        if ( ! is_array( $entry ) ) {
+            continue;
+        }
+
+        $get = static function ( $key ) use ( $entry ) {
+            return isset( $entry[ $key ] ) ? sanitize_text_field( (string) $entry[ $key ] ) : '';
+        };
+
+        // Purchased leads only — see the note above.
+        $status = $get( 'status' );
+
+        if ( '' !== $status && 'sold' !== strtolower( $status ) ) {
+            continue;
+        }
+
+        $first = $get( 'first_name' );
+        $last  = $get( 'last_name' );
+
+        if ( '' === $first && '' === $last ) {
+            continue;
+        }
+
+        // "City, ST 92129" — the row's own second line and the design's `loc`.
+        $city_state = trim( implode( ' ', array_filter( array( $get( 'state' ), $get( 'zip_code' ) ), 'strlen' ) ) );
+        $location   = implode( ', ', array_filter( array( $get( 'city' ), $city_state ), 'strlen' ) );
+
+        // "2018 Chrysler Pacifica".
+        $vehicle = trim( implode(
+            ' ',
+            array_filter(
+                array( $get( 'primary_vehicle_year' ), $get( 'primary_vehicle_make' ), $get( 'primary_vehicle_model' ) ),
+                'strlen'
+            )
+        ) );
+
+        // The shopper answers ownership in the first person ("I own it
+        // outright"); the panel is read by an agent about someone else, so the
+        // answer is restated in the design's own terser third person. An answer
+        // this does not recognize is passed through as given rather than dropped.
+        $ownership = $get( 'primary_vehicle_ownership_type' );
+        $ownership = ( 0 === stripos( $ownership, 'I own' ) ) ? 'owned outright'
+            : ( ( 0 === stripos( $ownership, "I'm financing" ) || 0 === stripos( $ownership, 'I am financing' ) ) ? 'financing' : $ownership );
+
+        $age    = ensurance_dashboard_lead_age( $get( 'month_and_year_dob' ) );
+        $driver = implode(
+            ' · ',
+            array_filter( array( $age ? sprintf( 'Age %d', $age ) : '', $get( 'marital_status' ) ), 'strlen' )
+        );
+
+        // "Owns home · 1 vehicle · No military affiliation". `Other` housing is
+        // omitted rather than printed — it answers nothing an agent can use.
+        $home     = $get( 'own_or_rent_home' );
+        $housing  = ( 'Own' === $home ) ? 'Owns home' : ( ( 'Rent' === $home ) ? 'Rents' : '' );
+        $vehicles = (int) $get( 'num_of_vehicles' );
+        $military = $get( 'is_military_affiliated' );
+
+        $household = implode(
+            ' · ',
+            array_filter(
+                array(
+                    $housing,
+                    $vehicles ? sprintf( _n( '%d vehicle', '%d vehicles', $vehicles ), $vehicles ) : '',
+                    ( 'Yes' === $military ) ? 'Military affiliated' : ( ( 'No' === $military ) ? 'No military affiliation' : '' ),
+                ),
+                'strlen'
+            )
+        );
+
+        // "No accidents · no tickets", or the counts as given. Lower-cased on the
+        // second half because it continues the first rather than starting over.
+        $accidents = $get( 'num_of_accidents' );
+        $tickets   = $get( 'num_of_tickets' );
+        $record    = implode(
+            ' · ',
+            array_filter(
+                array(
+                    ( '' === $accidents ) ? '' : ( ( '0' === $accidents ) ? 'No accidents' : $accidents . ' accidents' ),
+                    ( '' === $tickets ) ? '' : ( ( '0' === $tickets ) ? 'no tickets' : $tickets . ' tickets' ),
+                ),
+                'strlen'
+            )
+        );
+
+        // The insurance block is filled only for shoppers who have insurance, so
+        // `is_insured` decides which pair of sentences this becomes rather than
+        // the emptiness of the columns.
+        if ( 'No' === $get( 'is_insured' ) ) {
+            $carrier      = 'Not currently insured';
+            $carrier_note = 'No prior carrier on file';
+        } else {
+            $carrier      = implode(
+                ' · ',
+                array_filter( array( $get( 'current_insurance_company' ), $get( 'continuous_insured_duration' ) ), 'strlen' )
+            );
+            $expires      = $get( 'current_insurance_expiration' );
+            $carrier_note = ( '' !== $expires ) ? sprintf( 'Renews %s', $expires ) : '';
+        }
+
+        $lead = array(
+            'ref'          => sanitize_key( $get( 'lead_id' ) ),
+            'first_name'   => $first,
+            'last_name'    => $last,
+            'location'     => $location,
+            'address'      => $get( 'address' ),
+            'driver'       => $driver,
+            'household'    => $household,
+            'vehicle'      => $vehicle,
+            'vehicle_use'  => implode(
+                ' · ',
+                array_filter( array( $get( 'primary_vehicle_use' ), $get( 'primary_vehicle_annual_miles' ), $ownership ), 'strlen' )
+            ),
+            'record'       => $record,
+            'carrier'      => $carrier,
+            'carrier_note' => $carrier_note,
+            'bundle'       => ( 'Yes' === $get( 'bundle_and_save' ) ) ? 'Open to bundling home + auto' : 'Auto only',
+            'phone'        => $get( 'phone_number' ),
+            'email'        => isset( $entry['email_address'] ) ? sanitize_email( (string) $entry['email_address'] ) : '',
+        );
+
+        // `reserved_at` is the moment the agent took the lead and is the only
+        // stamp filled on every row — `received_at` is null on more than half of
+        // them. ISO-8601 in, a real moment out; strtotime() returns false on
+        // anything it cannot read, which becomes the 0 the row shaper already
+        // handles by printing no <time> at all.
+        $at = strtotime( $get( 'reserved_at' ) );
+
+        $lead['purchased_at'] = $at ? (int) $at : 0;
+        $lead['signals']      = array();
+
+        foreach ( ensurance_dashboard_lead_signals( $entry ) as $signal ) {
+            if ( in_array( $signal['tone'], $tones, true ) && '' !== $signal['label'] ) {
+                $lead['signals'][] = $signal;
+            }
+        }
+
+        $leads[] = $lead;
+    }
+
+    /*
+     * NEWEST FIRST, and sorting is safe HERE in a way it is not on the generic
+     * row contract. That contract preserves the caller's order precisely because
+     * a queue may know an order it cannot date, and re-sorting would drop every
+     * undated row to the bottom. A purchased lead always has a purchase moment,
+     * so ordering by it cannot lose anything — and a lead whose stamp did not
+     * parse sorts last, which is where an undated purchase belongs.
+     */
+    usort(
+        $leads,
+        static function ( $a, $b ) {
+            return $b['purchased_at'] <=> $a['purchased_at'];
+        }
+    );
+
+    return $leads;
+}
+
+/**
+ * Put this agent's purchased leads into the History list.
+ *
+ * THE ADAPTER, and the only place the lead record meets the row shape. The rows
+ * ensurance_dashboard_request_rows() renders carry two strings — a `title` that
+ * names the row and a `detail` that qualifies it — so a lead is reduced to:
+ *
+ *   title  → the shopper's full name. Not masked: the agent PURCHASED this lead,
+ *            so there is nothing left to withhold. (The awaiting row on Today is
+ *            the one that is still masked, and it does not come through here.)
+ *   detail → location and vehicle, the two facts the design puts on the row
+ *            itself. Joined with the same "·" the rest of the product uses, and
+ *            whichever half is missing simply does not print.
+ *
+ * Everything else the lead carries — household, driving record, carrier, bundle,
+ * contact — is deliberately NOT squeezed into `detail`. It belongs in the panel,
+ * which reads ensurance_dashboard_purchased_leads() directly when it is built;
+ * crushing eight fields into one truncated line would lose them all.
+ *
+ * APPENDED, NOT PREPENDED. The live request is the newest thing matched by
+ * definition and is already the first row; purchased leads are history and follow
+ * it. Within themselves they are newest-first, which the normalizer guarantees.
+ *
+ * PRIORITY 10, so ensurance_dashboard_hide_passed_rows() at 99 still runs last.
+ * Nothing here is ever `passed` — a purchased lead was accepted — but the
+ * ordering is what keeps that a fact about the data rather than a coincidence of
+ * hook priorities.
+ *
+ * @param array $rows    Rows so far, newest first.
+ * @param int   $user_id User the list is being resolved for.
+ * @return array
+ */
+function ensurance_dashboard_purchased_lead_rows( $rows, $user_id = 0 ) {
+    $leads = ensurance_dashboard_purchased_leads( $user_id );
+
+    if ( empty( $leads ) ) {
+        return $rows;
+    }
+
+    foreach ( $leads as $i => $lead ) {
+        $name = trim( preg_replace( '/\s+/', ' ', $lead['first_name'] . ' ' . $lead['last_name'] ) );
+
+        // The row's one qualifying line — whichever of the two facts we hold.
+        $detail = array_filter( array( $lead['location'], $lead['vehicle'] ), 'strlen' );
+
+        $rows[] = array(
+            'key'    => ( '' !== $lead['ref'] ) ? 'lead-' . $lead['ref'] : 'lead-' . (int) $i,
+            'title'  => $name,
+            'detail' => implode( ' · ', $detail ),
+            'at'     => $lead['purchased_at'],
+            'status' => 'accepted',
+        );
+    }
+
+    return $rows;
+}
+add_filter( 'ensurance_dashboard_request_rows', 'ensurance_dashboard_purchased_lead_rows', 10, 2 );
+
+/**
+ * This agent's purchased leads, keyed by the History row each one produced.
+ *
+ * THE JOIN BETWEEN A ROW AND ITS RECORD. ensurance_dashboard_purchased_lead_rows()
+ * reduces a lead to the two strings a row prints and throws the rest away — which
+ * is right for the row and useless to the panel under it, which wants the whole
+ * record. This hands the panel that record back, indexed by the same `key` the
+ * adapter stamped on the row, so the tie is an exact string match rather than a
+ * guess at which lead a row was made from.
+ *
+ * THE KEY IS DERIVED THE SAME WAY, and deliberately in a second place rather than
+ * by widening the adapter — CLAUDE.md's standing rule is that existing functions
+ * in functions.php are added to, not edited. The expression is one line and the
+ * two are read together; if the adapter's keying ever changes, this changes with
+ * it and the panel simply stops matching in the meantime (a row with no record
+ * behind it renders as it did before purchased leads existed, rather than
+ * rendering the wrong shopper).
+ *
+ * NO SECOND FETCH. ensurance_dashboard_purchased_leads() is memoized per user for
+ * the life of the request, so calling it here after the row filter has already
+ * called it costs nothing.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return array<string,array<string,mixed>> Row key => the lead behind it.
+ */
+function ensurance_dashboard_lead_records( $user_id = 0 ) {
+    $records = array();
+
+    foreach ( ensurance_dashboard_purchased_leads( $user_id ) as $i => $lead ) {
+        $key = ( '' !== $lead['ref'] ) ? 'lead-' . $lead['ref'] : 'lead-' . (int) $i;
+
+        $records[ $key ] = $lead;
+    }
+
+    return $records;
+}
+
+/**
+ * What a purchased lead cost the agent.
+ *
+ * THE RECORD DOES NOT CARRY IT. The webhook returns the shopper's answers, not
+ * the transaction — there is no price column on a lead, and inventing one would
+ * put a number an agent was never charged next to a real purchase. So the amount
+ * is resolved rather than read, in the one order that can only ever be right:
+ *
+ *   1. the lead's own `charge`, if something upstream put one there. Nothing does
+ *      today; the key is honoured first so that the day the scenario returns an
+ *      amount per lead, wiring it through the filter below is the whole change.
+ *   2. the standing lead price, ENSURANCE_LEAD_PRICE — a per-environment constant
+ *      in wp-config.php, the same handling the webhook URLs get.
+ *   3. '' — and the panel prints "Not on file" rather than a figure.
+ *
+ * IT IS A DISPLAY STRING, not a number: "$25" or "$25.00" or "1 credit", whatever
+ * the product actually charges in. Nothing does arithmetic on it.
+ *
+ * @param array $lead One normalized lead.
+ * @return string What was charged, or '' when nothing is known.
+ */
+function ensurance_dashboard_lead_charge( $lead ) {
+    $charge = ( is_array( $lead ) && ! empty( $lead['charge'] ) ) ? (string) $lead['charge'] : '';
+
+    if ( '' === $charge && defined( 'ENSURANCE_LEAD_PRICE' ) && ENSURANCE_LEAD_PRICE ) {
+        $charge = (string) ENSURANCE_LEAD_PRICE;
+    }
+
+    /**
+     * Filter what a purchased lead is reported to have cost.
+     *
+     * Where a real per-lead amount attaches when the billing side has one.
+     *
+     * @param string $charge Resolved amount, '' when unknown.
+     * @param array  $lead   The lead it is being resolved for.
+     */
+    return (string) apply_filters( 'ensurance_dashboard_lead_charge', $charge, $lead );
+}
+
+/**
+ * User-meta key holding an agent's own working notes on the leads they bought.
+ *
+ * ONE ROW, ONE ARRAY — keyed by the lead's reference, each entry a status, a note
+ * and the moment it was written. WordPress serializes the array itself, so there
+ * is no JSON to parse and no second table: an agent's log is short, read whole
+ * every time the History view renders, and belongs to exactly one user.
+ *
+ * PRIVATE TO THE AGENT, and the key is underscored so it stays out of the custom
+ * fields box. Nothing else reads it, nothing syncs it outward, and no shopper-
+ * facing surface can reach it.
+ *
+ * INTERIM STORE, in the same sense as ENSURANCE_DASHBOARD_STATES_META: when the
+ * lead system owns a per-lead record of its own, that takes over through the
+ * filter on ensurance_dashboard_lead_log() and this can go.
+ */
+if ( ! defined( 'ENSURANCE_DASHBOARD_LEAD_LOG_META' ) ) {
+    define( 'ENSURANCE_DASHBOARD_LEAD_LOG_META', '_ensurance_lead_log' );
+}
+
+/**
+ * The statuses an agent may put on a lead they are working — THE list.
+ *
+ * A CLOSED SET, for the reason ensurance_dashboard_request_statuses() is one: a
+ * value that is not in here has no label behind it, and storing it anyway means a
+ * select that renders blank on the next load. The handler drops anything else.
+ *
+ * '' IS A REAL STATE and is not in this list, because it is the absence of one —
+ * it is the select's first option ("No status yet") and what an entry reverts to
+ * when the agent clears it.
+ *
+ * THESE FOUR describe where the agent got to with the shopper, which is what the
+ * agent asked to be able to record. They are deliberately NOT a pipeline the
+ * product enforces: nothing orders them, nothing blocks a jump, and nothing else
+ * in the dashboard reads them. It is the agent's own note-to-self, in a dropdown
+ * so two leads can be compared at a glance.
+ *
+ * @return array<string,string> Slug => label, in the order the select offers them.
+ */
+function ensurance_dashboard_lead_statuses() {
+    return array(
+        'contacted' => 'Contacted',
+        'quoted'    => 'Quoted',
+        'written'   => 'Written',
+        'no-answer' => 'No answer',
+    );
+}
+
+/**
+ * Everything this agent has written against their purchased leads.
+ *
+ * SHAPE — [ ref => ['status' => …, 'note' => …, 'at' => int] ]. Every entry
+ * carries all three keys, so a caller never has to check before printing, and a
+ * status the list above no longer names is dropped on the way out rather than
+ * rendered as an unlabelled value.
+ *
+ * READ-REPAIRING, NOT WRITE-REPAIRING: a malformed meta row (hand-edited, or
+ * written by an older shape) is cleaned as it is read and the stored row is left
+ * alone. Reading must never write.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return array<string,array{status:string,note:string,at:int}>
+ */
+function ensurance_dashboard_lead_log( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $log     = array();
+
+    if ( ! $user_id ) {
+        return $log;
+    }
+
+    $stored   = get_user_meta( $user_id, ENSURANCE_DASHBOARD_LEAD_LOG_META, true );
+    $statuses = ensurance_dashboard_lead_statuses();
+
+    foreach ( (array) $stored as $ref => $entry ) {
+        $ref = sanitize_key( $ref );
+
+        if ( '' === $ref || ! is_array( $entry ) ) {
+            continue;
+        }
+
+        $status = isset( $entry['status'] ) ? sanitize_key( $entry['status'] ) : '';
+
+        $log[ $ref ] = array(
+            'status' => isset( $statuses[ $status ] ) ? $status : '',
+            'note'   => isset( $entry['note'] ) ? (string) $entry['note'] : '',
+            'at'     => isset( $entry['at'] ) ? (int) $entry['at'] : 0,
+        );
+    }
+
+    /**
+     * Filter an agent's lead log.
+     *
+     * Where a real per-lead record takes over from the user-meta store.
+     *
+     * @param array $log     Entries keyed by lead reference.
+     * @param int   $user_id User the log was resolved for.
+     */
+    return (array) apply_filters( 'ensurance_dashboard_lead_log', $log, $user_id );
+}
+
+/**
+ * One lead's log entry, always fully formed.
+ *
+ * A lead nothing has been written about returns the same three keys empty, so the
+ * panel renders the same form whether or not there is anything in it.
+ *
+ * @param string $ref     The lead's reference.
+ * @param int    $user_id Optional. Defaults to the current user.
+ * @return array{status:string,note:string,at:int}
+ */
+function ensurance_dashboard_lead_entry( $ref, $user_id = 0 ) {
+    $ref   = sanitize_key( $ref );
+    $log   = ensurance_dashboard_lead_log( $user_id );
+    $empty = array(
+        'status' => '',
+        'note'   => '',
+        'at'     => 0,
+    );
+
+    return isset( $log[ $ref ] ) ? $log[ $ref ] : $empty;
+}
+
+/**
+ * The longest note the log will store, in characters.
+ *
+ * NOT A RULE ABOUT WHAT AN AGENT MAY WRITE — it is the bound on a single user-meta
+ * row that a free textarea would otherwise leave unbounded. 2000 characters is
+ * several times the longest call note anyone writes and small enough that a whole
+ * log stays one comfortable row.
+ */
+if ( ! defined( 'ENSURANCE_DASHBOARD_LEAD_NOTE_MAX' ) ) {
+    define( 'ENSURANCE_DASHBOARD_LEAD_NOTE_MAX', 2000 );
+}
+
+/**
+ * Write one lead's status and note into the agent's log.
+ *
+ * AN ENTRY IS REPLACED WHOLE, not merged: the form posts both fields together and
+ * always sends both, so what arrives IS the entry. That is what lets an agent
+ * clear a status by choosing "No status yet" — a merge would make clearing
+ * impossible to express.
+ *
+ * EMPTY ON BOTH SIDES DELETES. A cleared status and an emptied note is not an
+ * entry that says nothing, it is the absence of one, and storing it would leave
+ * the log growing a row for every lead an agent ever opened and thought better of.
+ *
+ * `at` IS THE MOMENT OF THE WRITE, stamped here rather than posted, so the "Saved"
+ * line under the form can never report a time the client made up.
+ *
+ * @param string $ref     The lead's reference.
+ * @param string $status  One of ensurance_dashboard_lead_statuses(), or '' for none.
+ * @param string $note    The agent's private note.
+ * @param int    $user_id Optional. Defaults to the current user.
+ * @return array{status:string,note:string,at:int}|false The stored entry, or false when nothing could be written.
+ */
+function ensurance_dashboard_save_lead_entry( $ref, $status, $note, $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $ref     = sanitize_key( $ref );
+
+    if ( ! $user_id || '' === $ref ) {
+        return false;
+    }
+
+    $statuses = ensurance_dashboard_lead_statuses();
+    $status   = sanitize_key( $status );
+    $status   = isset( $statuses[ $status ] ) ? $status : '';
+
+    // sanitize_textarea_field keeps the agent's line breaks and strips the markup
+    // — the value comes back out into the page, and the template escapes it
+    // again on the way.
+    $note = sanitize_textarea_field( $note );
+    $note = trim( mb_substr( $note, 0, ENSURANCE_DASHBOARD_LEAD_NOTE_MAX ) );
+
+    // Read through the resolver so a malformed row cannot survive a save.
+    $log = ensurance_dashboard_lead_log( $user_id );
+
+    if ( '' === $status && '' === $note ) {
+        unset( $log[ $ref ] );
+
+        update_user_meta( $user_id, ENSURANCE_DASHBOARD_LEAD_LOG_META, $log );
+
+        return array(
+            'status' => '',
+            'note'   => '',
+            'at'     => 0,
+        );
+    }
+
+    $entry = array(
+        'status' => $status,
+        'note'   => $note,
+        'at'     => time(),
+    );
+
+    $log[ $ref ] = $entry;
+
+    update_user_meta( $user_id, ENSURANCE_DASHBOARD_LEAD_LOG_META, $log );
+
+    /**
+     * Fires after an agent files a status or a note against a purchased lead.
+     *
+     * Where a CRM sync, an activity row or a notification attaches. Nothing
+     * listens today.
+     *
+     * @param string $ref     The lead's reference.
+     * @param array  $entry   The stored entry.
+     * @param int    $user_id Agent who wrote it.
+     */
+    do_action( 'ensurance_dashboard_lead_entry_saved', $ref, $entry, $user_id );
+
+    return $entry;
+}
+
+/**
+ * The History view's URL — where a lead note posts back to.
+ *
+ * Resolved out of the rail registry for the same reason
+ * ensurance_dashboard_profile_url() is: the registry owns every view's href, and
+ * a URL written by hand here is a second thing to keep in step. The slug is
+ * `requests`, which is the History view's — see the note on its registry entry.
+ *
+ * @return string Absolute URL to the History view.
+ */
+function ensurance_dashboard_requests_url() {
+    $url = '';
+
+    foreach ( ensurance_dashboard_views() as $view ) {
+        if ( 'requests' === $view['view'] ) {
+            $url = (string) $view['href'];
+            break;
+        }
+    }
+
+    /**
+     * Filter the destination behind the product's History links.
+     *
+     * @param string $url Resolved History URL.
+     */
+    $url = (string) apply_filters( 'ensurance_dashboard_requests_url', $url );
+
+    // The registry always carries a History row, so this is a guard rather than a
+    // branch anyone should hit.
+    return '' !== $url ? $url : add_query_arg( 'view', 'requests', home_url( '/dashboard/' ) );
+}
+
+/**
+ * How a lead-note save answers, on whichever path it arrived by.
+ *
+ * The shape ensurance_dashboard_states_response() established: the script's POST
+ * gets a status code and nothing else, the form's POST gets a redirect back to
+ * the view it came from. A rejected form post returns WITHOUT redirecting, so the
+ * page renders again showing the stored entry — which is the correction, stated
+ * by simply showing the truth, rather than WordPress's "link expired" screen.
+ *
+ * ALWAYS EXITS on the fetch path, and on an accepted form post.
+ *
+ * @param bool $ok Whether the write was accepted.
+ */
+function ensurance_dashboard_lead_note_response( $ok ) {
+    if ( ! empty( $_POST['dash_lead_async'] ) ) {
+        status_header( $ok ? 204 : 403 );
+        exit;
+    }
+
+    if ( ! $ok ) {
+        return;
+    }
+
+    // The reference rides along so the view can reopen the row that was just
+    // saved — see ensurance_dashboard_lead_note_saved(). Carried in the URL the
+    // way the decided slot carries its own outcome, rather than in a flash.
+    $ref = isset( $_POST['dash_lead_ref'] ) ? sanitize_key( wp_unslash( $_POST['dash_lead_ref'] ) ) : '';
+
+    wp_safe_redirect(
+        add_query_arg(
+            array(
+                'saved' => 'lead',
+                'lead'  => $ref,
+            ),
+            ensurance_dashboard_requests_url()
+        )
+    );
+    exit;
+}
+
+/**
+ * Saves the status and private note an agent files against a purchased lead.
+ *
+ * THE ONE EDITABLE THING ON HISTORY, and it is editable on accepted rows only —
+ * the view is otherwise a record of what happened, and the panel's own fields are
+ * the shopper's answers, which an agent may read and may not rewrite. What this
+ * stores is the agent's own work on top of them.
+ *
+ * AN ORDINARY FORM POST to the page it is on, exactly like
+ * ensurance_dashboard_handle_states(): no endpoint, no REST route, and a Save
+ * button that works with JavaScript off (one reload, landing back on History with
+ * the entry rendered). With the script it is the same post sent by fetch, so the
+ * panel stays open and the agent stays where they were.
+ *
+ * A SAVE BUTTON, unlike the agency name's blur-commit. A note is a paragraph an
+ * agent stops and starts in the middle of, often to look something up in the panel
+ * beside it; committing it on blur would file half a sentence and then file it
+ * again, and there would be no moment at which the agent decided they were done.
+ *
+ * NOTHING IS AUTHORIZED BEYOND "IS THIS THE AGENT". The entry is filed in the
+ * agent's own user meta under a reference only their own dashboard shows them, so
+ * a hand-built post with someone else's reference writes a note nobody but the
+ * poster can ever read. Checking the reference against the webhook would mean a
+ * round trip on every save, and losing an agent's note because Make was slow is
+ * the worse failure of the two.
+ *
+ * A SAVE POSTED FROM THE PREVIEW WRITES NOTHING, the rule every writer on this
+ * dashboard follows. `?slot=` suppresses purchased leads entirely
+ * (ensurance_dashboard_purchased_leads), so no note form renders under a preview
+ * and this is the guard for a post that arrives anyway.
+ *
+ * A failed or expired nonce writes nothing and says so (403 / no redirect).
+ */
+function ensurance_dashboard_handle_lead_note() {
+    // Cheapest test first — this runs on every front-end request.
+    if ( ! isset( $_POST['dash_lead_ref'] ) || ! is_page( 'dashboard' ) || ! is_user_logged_in() ) {
+        return;
+    }
+
+    $nonce = isset( $_POST['dash_lead_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['dash_lead_nonce'] ) ) : '';
+
+    if ( ! wp_verify_nonce( $nonce, 'ensurance_dashboard_lead_note' ) ) {
+        ensurance_dashboard_lead_note_response( false );
+        return;
+    }
+
+    if ( '' !== ensurance_dashboard_priority_preview() ) {
+        ensurance_dashboard_lead_note_response( true );
+        return;
+    }
+
+    $ref = sanitize_key( wp_unslash( $_POST['dash_lead_ref'] ) );
+
+    if ( '' === $ref ) {
+        ensurance_dashboard_lead_note_response( false );
+        return;
+    }
+
+    $status = isset( $_POST['dash_lead_status'] ) ? wp_unslash( $_POST['dash_lead_status'] ) : '';
+    $note   = isset( $_POST['dash_lead_note'] ) ? wp_unslash( $_POST['dash_lead_note'] ) : '';
+
+    $saved = ensurance_dashboard_save_lead_entry( $ref, $status, $note );
+
+    ensurance_dashboard_lead_note_response( false !== $saved );
+}
+add_action( 'template_redirect', 'ensurance_dashboard_handle_lead_note' );
+
+/**
+ * The lead whose note was just saved, when this request is that landing.
+ *
+ * Read-only presentation state, the same shape as
+ * ensurance_dashboard_agency_name_saved(): no side effects, so no nonce, and
+ * `saved` is compared against one known word so an arbitrary `?saved=` reaches
+ * the page as nothing at all.
+ *
+ * WHY IT RETURNS THE REFERENCE rather than a yes. Only the no-script path ever
+ * lands here — the fetch path never leaves the page — and on that path the row
+ * the agent was writing in has just closed itself, because a fresh render knows
+ * nothing about which panel was open. Naming the lead lets History reopen exactly
+ * that row with the stored note in it, which is both the confirmation and the
+ * place the agent was standing.
+ *
+ * The value is sanitize_key()'d and only ever compared against references the
+ * page itself resolved, so an invented `?lead=` opens nothing.
+ *
+ * @return string The saved lead's reference, or '' when this is not that landing.
+ */
+function ensurance_dashboard_lead_note_saved() {
+    if ( empty( $_GET['saved'] ) || ! is_string( $_GET['saved'] ) ) {
+        return '';
+    }
+
+    if ( 'lead' !== sanitize_key( wp_unslash( $_GET['saved'] ) ) ) {
+        return '';
+    }
+
+    return ( ! empty( $_GET['lead'] ) && is_string( $_GET['lead'] ) )
+        ? sanitize_key( wp_unslash( $_GET['lead'] ) )
+        : '';
+}
+
+/**
+ * The design's own sample agency record — agency name, license number and phone.
+ *
+ * The fields on the Agency Profile view that no other surface resolves, and the
+ * only ones the product has nowhere to read from at all: /create-account collects
+ * first name, last name, username and email, and nothing since captures an agency
+ * name, a license or a phone number (the same gap behind
+ * ensurance_dashboard_service_areas).
+ *
+ * PREVIEW ONLY, like ensurance_dashboard_sample_request() and
+ * ensurance_dashboard_sample_matching() — nothing reaches these values except
+ * through the capability-gated ensurance_dashboard_priority_preview(). An agent
+ * is never shown a license number that is not theirs.
+ *
+ * Copied field for field from the `isProf` view of
+ * templates/agent-dashboard/AgentDashboard.dc.html.
+ *
+ * @return array{name:string,license:string,phone:string}
+ */
+function ensurance_dashboard_sample_agency() {
+    return array(
+        'name'    => 'Coastline Insurance Group',
+        'license' => 'CA-0K48219',
+        'phone'   => '(805) 555-0142',
+    );
+}
+
+/**
+ * The agency's license number, as shown on the Agency Profile view.
+ *
+ * NOTHING CARRIES IT TODAY. It is verified out of band — the manual approval
+ * behind a founding agency's account is the record (see the identity step in
+ * ensurance_dashboard_setup_steps) — and no field in the product stores the
+ * number itself. So this returns '' and the profile drops the chip rather than
+ * printing a labeled blank, which on this view would read as "your license is
+ * missing" rather than "we have not put it on screen yet".
+ *
+ * The admin preview is the one exception, gated on `?slot=quiet` for the same
+ * reason ensurance_dashboard_service_areas() is: that is the preview in which
+ * the agency record is fully populated, so one URL shows the whole profile as
+ * the design draws it.
+ *
+ * Point the filter at the real agency record when it exists.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return string License number, '' when it is not known.
+ */
+function ensurance_dashboard_license_number( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $sample  = ensurance_dashboard_sample_agency();
+    $license = ( 'quiet' === ensurance_dashboard_priority_preview() ) ? $sample['license'] : '';
+
+    /**
+     * Filter the agency license number shown on the Agency Profile view.
+     *
+     * @param string $license License number, '' when unknown.
+     * @param int    $user_id User the profile is being resolved for.
+     */
+    return (string) apply_filters( 'ensurance_dashboard_license_number', $license, $user_id );
+}
+
+/**
+ * The agency's phone number, as shown on the Agency Profile view.
+ *
+ * Mirrors ensurance_dashboard_license_number() in every respect, including
+ * having nothing to return outside the admin preview — with one difference in
+ * what the view does about it. Phone is one of the four fields the profile
+ * promises, so an unresolved number holds its chip and reads "Not on file"
+ * instead of being dropped the way the license is
+ * (ensurance_dashboard_profile_fields).
+ *
+ * IT IS NOT A CONTACT ROUTE. The number is here as matching-relevant reference —
+ * what an accepted shopper would be given — not as a way to reach the agency, so
+ * the profile prints it as a value and never as a `tel:` link.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return string Phone number as it should be displayed, '' when not known.
+ */
+function ensurance_dashboard_agency_phone( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $sample  = ensurance_dashboard_sample_agency();
+    $phone   = ( 'quiet' === ensurance_dashboard_priority_preview() ) ? $sample['phone'] : '';
+
+    /**
+     * Filter the agency phone number shown on the Agency Profile view.
+     *
+     * @param string $phone   Phone number, '' when unknown.
+     * @param int    $user_id User the profile is being resolved for.
+     */
+    return (string) apply_filters( 'ensurance_dashboard_agency_phone', $phone, $user_id );
+}
+
+/**
+ * The name of the PERSON the account belongs to, as shown on Agency Profile.
+ *
+ * Distinct from ensurance_dashboard_agency_name(), which names the BUSINESS and
+ * is what the rail's user card, its initials and the quiet panel all greet. The
+ * profile shows both because they answer different questions — who we have on
+ * file as the agent, and which agency they are matched as — and support needs to
+ * be told which of the two is wrong when one of them is.
+ *
+ * FIRST AND LAST NAME, AND NOTHING ELSE. Those are the two fields
+ * /create-account collects for the person, and they are the answer this chip is
+ * asked for. There is no fallback to display_name or user_login on purpose:
+ * display_name is a WordPress setting an agent never chose and user_login is a
+ * username — printing either under "Agent name" would state as the agent's name
+ * something that is not it. An account with neither half filled in resolves to ''
+ * and the chip reads "Not on file", which is the truth and is what the locked
+ * notice sends them to support about.
+ *
+ * IT IS NOT THE AGENCY'S NAME, and the profile must never print it as though it
+ * were: the agency chip beside this one reads
+ * ensurance_dashboard_agency_record_name(), which holds nothing today and says so,
+ * rather than the greeting fallback that would echo this value back under the
+ * other label.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return string "First Last", or '' when the user record carries neither.
+ */
+function ensurance_dashboard_agent_name( $user_id = 0 ) {
+    $user = $user_id ? get_userdata( (int) $user_id ) : wp_get_current_user();
+
+    if ( ! ( $user instanceof WP_User ) || empty( $user->ID ) ) {
+        return '';
+    }
+
+    // One half on its own is still the name we hold — the collapse keeps a
+    // missing first or last name from leaving a stray space in the chip.
+    $name = trim( preg_replace( '/\s+/', ' ', $user->first_name . ' ' . $user->last_name ) );
+
+    /**
+     * Filter the agent's own name on the Agency Profile view.
+     *
+     * @param string  $name The resolved name.
+     * @param WP_User $user The user it was resolved from.
+     */
+    return (string) apply_filters( 'ensurance_dashboard_agent_name', $name, $user );
+}
+
+/**
+ * The labeled values at the top of the Agency Profile view.
+ *
+ * Step 13 of templates/agent-dashboard/build-steps.md: the identifying half of
+ * the agency record, over the service areas and coverage types that follow it.
+ *
+ * FOUR OF THEM ARE PROMISED. Agent name, agency name, phone and email are what
+ * this view exists to confirm, so they hold their slot whether or not anything
+ * can resolve them — a chip reading "Not on file" tells an agent that we do not
+ * have their phone number, which is precisely the thing the locked notice below
+ * asks them to message support about. License number is the exception: it is
+ * verified out of band and is not part of what the view promises, so it appears
+ * only when it is known (see ensurance_dashboard_license_number).
+ *
+ * STRINGS, NOT A FORM. This resolver returns values to print, and it says nothing
+ * about how they are rendered. Since Step 6 of the setup flow the component draws
+ * ONE of them — the agency name — as a real input, and every other field as the
+ * static box the step asks for: no Save, and emphatically not a disabled form,
+ * which would be a dead affordance on every field.
+ *
+ * NOTHING NEW IS RESOLVED HERE, the same rule Today's reference column follows
+ * (see ensurance_dashboard_shopper_rows): the name and inbox come from the
+ * resolvers that already own them, so the profile, the rail's user card and the
+ * quiet panel's sentence can never disagree about the agency they describe.
+ *
+ * "NOT ON FILE" IS A STATEMENT, NOT A PROMPT — as true of the empty chips as of
+ * the filled ones: there is nothing to click on one and nothing to type into it.
+ * The agency-name field is the exception the component makes, and it makes it
+ * properly: an input with a placeholder, not a chip with placeholder text in it.
+ *
+ * SHAPE — a list of ['key' => …, 'label' => …, 'value' => …, 'empty' => bool] in
+ * display order. A promised field with nothing to resolve carries the placeholder
+ * as its `value` and `empty` true, which is what the component renders in the
+ * faint shade. Any other field with no value is DROPPED rather than rendered
+ * blank.
+ *
+ * Labels are the design's own (the `isProf` view of
+ * templates/agent-dashboard/AgentDashboard.dc.html), except the inbox: the design
+ * calls it "Request inbox", and this view says "Email" because on a record of who
+ * we have on file it sits beside a name and a phone number and is read as the
+ * agency's address. The value is unchanged — it is still the inbox an accepted
+ * request's contact details are sent to (ensurance_dashboard_request_inbox), and
+ * Today's accepted panel still names it in those words.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return array<int,array{key:string,label:string,value:string,empty:bool}>
+ */
+function ensurance_dashboard_profile_fields( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+
+    // What a promised field says when nothing resolves it. One phrase for all
+    // four, because four different ways of saying "we do not have this" would
+    // read as four different problems.
+    $unknown = 'Not on file';
+
+    $fields = array(
+        array(
+            'key'     => 'agent',
+            'label'   => 'Agent name',
+            'value'   => ensurance_dashboard_agent_name( $user_id ),
+            'promise' => true,
+        ),
+        array(
+            'key'   => 'name',
+            'label' => 'Agency name',
+            /*
+             * The RECORD resolver, not the greeting one. The rail's card falls
+             * back to the user's own name so it has something to say hello to;
+             * doing that here printed the agent's name twice under two labels,
+             * with nothing to tell an agent that we hold no agency name at all.
+             * See ensurance_dashboard_agency_record_name().
+             */
+            'value'   => ensurance_dashboard_agency_record_name( $user_id ),
+            'promise' => true,
+        ),
+        array(
+            'key'     => 'phone',
+            'label'   => 'Phone',
+            'value'   => ensurance_dashboard_agency_phone( $user_id ),
+            'promise' => true,
+        ),
+        array(
+            'key'     => 'inbox',
+            'label'   => 'Email',
+            'value'   => ensurance_dashboard_request_inbox( $user_id ),
+            'promise' => true,
+        ),
+        array(
+            'key'   => 'license',
+            'label' => 'License number',
+            'value' => ensurance_dashboard_license_number( $user_id ),
+        ),
+    );
+
+    /**
+     * Filter the labeled values on the Agency Profile view.
+     *
+     * The hook the real agency record attaches to when it exists. Fields must
+     * keep the shape documented above. A field marked `promise` keeps its slot
+     * with a "not on file" placeholder when it has no value; any other field
+     * with no value is dropped rather than rendered blank.
+     *
+     * @param array $fields  Fields in display order.
+     * @param int   $user_id User the profile is being resolved for.
+     */
+    $fields = (array) apply_filters( 'ensurance_dashboard_profile_fields', $fields, $user_id );
+
+    $clean = array();
+
+    foreach ( $fields as $i => $field ) {
+        if ( empty( $field['label'] ) ) {
+            continue;
+        }
+
+        $value = isset( $field['value'] ) ? (string) $field['value'] : '';
+        $empty = ( '' === trim( $value ) );
+
+        if ( $empty && empty( $field['promise'] ) ) {
+            continue;
+        }
+
+        $clean[] = array(
+            'key'   => isset( $field['key'] ) ? (string) $field['key'] : (string) $i,
+            'label' => (string) $field['label'],
+            'value' => $empty ? $unknown : $value,
+            'empty' => $empty,
+        );
+    }
+
+    return $clean;
+}
+
+/**
+ * The agency name the RECORD holds — the company name given at sign-up, and the
+ * one the agent typed on the profile after it.
+ *
+ * Step 6 of the setup flow (design_handoff_agency_profile/SETUP-FLOW.md): the
+ * name has to survive a reload, which means it has to be read from somewhere.
+ * That somewhere already exists — ENSURANCE_COMPANY_META (`_ensurance_company_name`),
+ * written by ensurance_remember_company_name() from the `company` field on
+ * /create-account and read by ensurance_get_company_name(). It is the same value
+ * Make matches an agent row on, so the profile edits the record the rest of the
+ * funnel already uses rather than opening a second one beside it.
+ *
+ * A FILTER, NOT AN EDIT, per CLAUDE.md's standing rule and per the invitation in
+ * ensurance_dashboard_agency_record_name()'s own docblock ("point the filter at
+ * the real agency record when it exists"). This is that record.
+ *
+ * THE PREVIEW STILL WINS. A non-empty $name means `?slot=quiet` resolved the
+ * sample agency, and the admin preview is supposed to show the record as the
+ * design draws it — so the stored name fills the gap rather than overriding it.
+ * Outside the preview $name is always '', so a real agent sees their own.
+ *
+ * @param string $name    Name resolved so far ('' for a real agent).
+ * @param int    $user_id User the agency is being resolved for.
+ * @return string
+ */
+function ensurance_dashboard_recorded_agency_name( $name, $user_id ) {
+    if ( '' !== trim( (string) $name ) ) {
+        return $name;
+    }
+
+    return ensurance_get_company_name( $user_id );
+}
+add_filter( 'ensurance_dashboard_agency_record_name', 'ensurance_dashboard_recorded_agency_name', 10, 2 );
+
+/**
+ * Where the Agency Profile's name field posts (raw — esc_url at output).
+ *
+ * The profile view's own URL, so the save lands back on the view the agent was
+ * looking at rather than on Today. Resolved through
+ * ensurance_dashboard_profile_url() for the reason that function exists: the rail
+ * registry owns every view's href, and a second URL written by hand is a second
+ * thing to keep in step.
+ *
+ * `?slot=` is deliberately NOT carried, unlike the live card's
+ * ensurance_dashboard_decision_action(). A decision made under the preview is a
+ * previewed decision and has to stay one; a NAME is written to the real record
+ * whatever the page was previewing, so the post lands on the plain profile where
+ * the value that was just saved is the value on screen.
+ *
+ * @return string
+ */
+function ensurance_dashboard_agency_name_action() {
+    return ensurance_dashboard_profile_url();
+}
+
+/**
+ * Saves the agency name posted from the Agency Profile view.
+ *
+ * Step 6 of the setup flow. THE EXISTING MUTATION: update_user_meta() against
+ * ENSURANCE_COMPANY_META, the key ensurance_remember_company_name() already
+ * writes at sign-up — no endpoint, no REST route, no second store.
+ *
+ * AN ORDINARY FORM POST, modelled on ensurance_dashboard_handle_decision(): the
+ * design has no Save button, so assets/dashboard.js submits this form on blur and
+ * on Enter, and with JavaScript off Enter in the single-field form still submits
+ * it natively. Post-redirect-get, so a refresh cannot re-save and the confirmation
+ * arrives on a clean URL.
+ *
+ * WHAT IT DOES NOT DO, because the step is explicit that the app's rules win:
+ * there is no length rule, no character rule and no format rule here. The value
+ * gets sanitize_text_field() and trim() — exactly what the sign-up saver applies
+ * — and nothing else.
+ *
+ * EMPTY AFTER TRIM SAVES NOTHING. It is not a delete: a field cleared by accident
+ * (or by a browser restoring a blank) must not wipe a name support may have put
+ * there. The redirect re-renders the stored value, which is the revert. The script
+ * does the same thing without the round trip.
+ *
+ * UNCHANGED SAVES NOTHING EITHER, and reports nothing: blur fires every time focus
+ * leaves the field, and a "saved" line after a visit where nothing was typed would
+ * be a claim about a write that never happened.
+ *
+ * A failed or expired nonce returns WITHOUT saving and WITHOUT redirecting — the
+ * same choice the decision handler makes, and the same reason: the view renders
+ * again showing the stored name, which is the truth, instead of WordPress's "link
+ * expired" interstitial.
+ */
+function ensurance_dashboard_handle_agency_name() {
+    // Cheapest test first — this runs on every front-end request.
+    if ( ! isset( $_POST['dash_agency_name'] ) || ! is_page( 'dashboard' ) || ! is_user_logged_in() ) {
+        return;
+    }
+
+    $nonce = isset( $_POST['dash_agency_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['dash_agency_nonce'] ) ) : '';
+
+    if ( ! wp_verify_nonce( $nonce, 'ensurance_dashboard_agency_name' ) ) {
+        return;
+    }
+
+    $user_id = get_current_user_id();
+    $target  = ensurance_dashboard_agency_name_action();
+
+    /*
+     * A SAVE POSTED FROM THE PREVIEW WRITES NOTHING. Under `?slot=quiet` the field
+     * is showing the sample agency (ensurance_dashboard_sample_agency), not this
+     * account's record, and posting it would file "Coastline Insurance Group"
+     * against a real user. Same rule the decided slot follows: what a preview
+     * produces stays a preview. The redirect still lands on the plain profile, so
+     * what the reviewer sees next is their own record.
+     *
+     * The marker is a hidden field rather than a `?slot=` read, because the form's
+     * action deliberately drops the preview arg
+     * (ensurance_dashboard_agency_name_action) — by the time this runs there is
+     * nothing in the URL left to tell.
+     */
+    if ( ! empty( $_POST['dash_agency_preview'] ) ) {
+        wp_safe_redirect( $target );
+        exit;
+    }
+
+    $posted = trim( sanitize_text_field( wp_unslash( $_POST['dash_agency_name'] ) ) );
+    $stored = ensurance_get_company_name( $user_id );
+
+    if ( '' !== $posted && $posted !== $stored ) {
+        update_user_meta( $user_id, ENSURANCE_COMPANY_META, $posted );
+
+        // Carried in the URL rather than in a session flash, the way the decided
+        // slot carries its own outcome: the confirmation belongs to the page the
+        // redirect lands on, and nothing else has to be stored to show it.
+        $target = add_query_arg( 'saved', 'name', $target );
+    }
+
+    wp_safe_redirect( $target );
+    exit;
+}
+add_action( 'template_redirect', 'ensurance_dashboard_handle_agency_name' );
+
+/**
+ * Whether this request is the landing after a name was saved.
+ *
+ * Read-only presentation state — no side effects, so no nonce to verify. The
+ * value is compared against one known word, so an arbitrary `?saved=` cannot
+ * reach the page as anything but false.
+ *
+ * @return bool
+ */
+function ensurance_dashboard_agency_name_saved() {
+    if ( empty( $_GET['saved'] ) || ! is_string( $_GET['saved'] ) ) {
+        return false;
+    }
+
+    return ( 'name' === sanitize_key( wp_unslash( $_GET['saved'] ) ) );
+}
+
+/**
+ * User-meta key holding the states an agency writes in.
+ *
+ * ONE COMMA-SEPARATED LINE — "California,Texas,Nevada" — which is the shape
+ * ensurance_dashboard_served_states_csv() published into the page as a hidden
+ * field while the storage behind it was still being written. No JSON, no
+ * separate table: the list is short, closed
+ * (ensurance_dashboard_us_states) and only ever read whole.
+ *
+ * INTERIM STORE, in the same sense as ENSURANCE_DASHBOARD_DECISION_META. The real
+ * home for served states is whatever eventually matches a request against an
+ * agency; when that exists it takes over through the
+ * `ensurance_dashboard_service_areas` filter and this can go, with no change to
+ * anything that reads it.
+ */
+if ( ! defined( 'ENSURANCE_DASHBOARD_STATES_META' ) ) {
+    define( 'ENSURANCE_DASHBOARD_STATES_META', '_ensurance_served_states' );
+}
+
+/**
+ * The canonical name for a state, '' when it is not one of the 50 plus DC.
+ *
+ * THE CLOSED LIST IS THE VALIDATION, and this is where a value meets it: whatever
+ * arrives — from the select, from a hand-built post, from a meta row written
+ * years ago — is either one of our states or it is nothing. "california" and
+ * " California " come back as "California"; "Califnoria" comes back as '' and is
+ * dropped rather than stored as a place that does not exist.
+ *
+ * The inverse of ensurance_dashboard_state_code(), and built on it, so there is
+ * one matcher and not two.
+ *
+ * @param string $name Name as it arrived.
+ * @return string The state's name as this product spells it, or ''.
+ */
+function ensurance_dashboard_state_name( $name ) {
+    $code   = ensurance_dashboard_state_code( $name );
+    $states = ensurance_dashboard_us_states();
+
+    return isset( $states[ $code ] ) ? $states[ $code ] : '';
+}
+
+/**
+ * The states this agent has stored, in the order they were added.
+ *
+ * Every name is put back through ensurance_dashboard_state_name(), so a row that
+ * predates the closed list — or one a human edited — cannot put a state on the
+ * profile that the picker would never have offered. Duplicates collapse for the
+ * same reason: the chips are a set, however the meta got written.
+ *
+ * ORDER IS INSERTION ORDER, not alphabetical. The chips are a record of what the
+ * agent did, and a list that reshuffles itself after every add makes the one that
+ * was just added the hardest to find.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return string[] State names, empty when none are stored.
+ */
+function ensurance_dashboard_stored_states( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $stored  = (string) get_user_meta( $user_id, ENSURANCE_DASHBOARD_STATES_META, true );
+    $states  = array();
+
+    if ( '' === trim( $stored ) ) {
+        return $states;
+    }
+
+    foreach ( explode( ',', $stored ) as $piece ) {
+        $name = ensurance_dashboard_state_name( $piece );
+
+        if ( '' !== $name && ! in_array( $name, $states, true ) ) {
+            $states[] = $name;
+        }
+    }
+
+    return $states;
+}
+
+/**
+ * Hands the stored states to the resolver the whole product already reads.
+ *
+ * Step 7 of the setup flow (design_handoff_agency_profile/SETUP-FLOW.md). THE ONE
+ * SEAM: ensurance_dashboard_service_areas() is what
+ * ensurance_dashboard_served_states(), the profile's chips, the picker's
+ * remaining choices, the setup checklist and therefore
+ * ensurance_dashboard_can_receive_leads() all reduce to. Attaching storage here
+ * means matching switches on and off with the list and nothing else had to be
+ * told about it — including Today's setup card, which reads the same value.
+ *
+ * A FILTER, NOT AN EDIT, per CLAUDE.md's standing rule and per that resolver's own
+ * docblock ("the hook the real agency profile attaches to when it exists").
+ *
+ * THE PREVIEW STILL WINS, exactly as it does for the agency name: a non-empty
+ * $areas means `?slot=quiet` resolved the sample, and the preview is there to show
+ * the view populated. Outside it $areas is always empty, so a real agent sees
+ * their own list.
+ *
+ * @param string[] $areas   Areas resolved so far (the sample, or empty).
+ * @param int      $user_id User the dashboard is being rendered for.
+ * @return string[]
+ */
+function ensurance_dashboard_stored_service_areas( $areas, $user_id ) {
+    if ( ! empty( $areas ) ) {
+        return $areas;
+    }
+
+    return ensurance_dashboard_stored_states( $user_id );
+}
+add_filter( 'ensurance_dashboard_service_areas', 'ensurance_dashboard_stored_service_areas', 10, 2 );
+
+/**
+ * Answers a states post — 204 to the script, a redirect to a browser.
+ *
+ * TWO CALLERS, ONE HANDLER. The picker sends its add and remove with fetch, so the
+ * page it is already on stays put and the chips do not blink; a browser with no
+ * fetch submits the same form the ordinary way and needs to be sent somewhere.
+ * The difference is one hidden field, and it changes nothing about what was
+ * written — this is not a second endpoint, it is the same post answered in the
+ * shape its sender can read.
+ *
+ * A REFUSAL IS A REFUSAL EITHER WAY. 403 tells the script the change did not
+ * land, which is what makes it put the chip back and say so. The form path
+ * returns without redirecting instead — the view renders again from the record,
+ * which is the same correction stated by simply showing the truth. That is the
+ * choice ensurance_dashboard_handle_decision() makes on a bad nonce, and for the
+ * same reason.
+ *
+ * ALWAYS EXITS on the fetch path, and on a successful form post.
+ *
+ * @param bool $ok Whether the change was accepted.
+ */
+function ensurance_dashboard_states_response( $ok ) {
+    if ( ! empty( $_POST['dash_states_async'] ) ) {
+        status_header( $ok ? 204 : 403 );
+        exit;
+    }
+
+    if ( ! $ok ) {
+        return;
+    }
+
+    wp_safe_redirect( ensurance_dashboard_profile_url() );
+    exit;
+}
+
+/**
+ * Adds or removes one served state.
+ *
+ * Step 7 of the setup flow. THE EXISTING MUTATION, in the sense the handoff means
+ * it: one update_user_meta() against the agency record, no endpoint and no REST
+ * route — the profile posts to the page it is on, the way Today's Accept / Pass
+ * buttons do (ensurance_dashboard_handle_decision).
+ *
+ * AN INTENT, NOT A SNAPSHOT. The post says "add California" or "remove Texas"; it
+ * never sends the whole list. Two changes made in quick succession therefore both
+ * land, in either order, and a stale page cannot overwrite the record with the
+ * list as it looked a minute ago. The hidden CSV field keeps its documented job —
+ * publishing the current list into the page — and is no longer what saves.
+ *
+ * REMOVE OUTRANKS ADD, because the no-script path posts both: a chip's × is a
+ * submit button inside the same form as the select, so pressing it sends whatever
+ * the select happens to be showing alongside it. One of the two has to win and it
+ * is the button the agent actually pressed.
+ *
+ * NO-OPS ARE SUCCESSES, not errors: nothing selected, a state already served, a
+ * state removed that was not there, a name that is not one of ours. The design's
+ * rule is that the picker cannot offer a wrong choice
+ * (ensurance_dashboard_state_choices removes what is already served), so a
+ * duplicate arriving here is a stale page or a hand-built post — and the record
+ * ends up in the state the agent asked for either way, which is the definition of
+ * nothing having gone wrong.
+ *
+ * LICENSING IS NOT CHECKED HERE, and must not be. Verification is server-side
+ * truth held elsewhere (see the closing note on the view): this never blocks a
+ * state, never marks one verified, and never says anything about one. It records
+ * what the agent claims to write in.
+ *
+ * A failed or expired nonce writes nothing and says so (403 / no redirect).
+ */
+function ensurance_dashboard_handle_states() {
+    $adding   = isset( $_POST['dash_state_add'] );
+    $removing = isset( $_POST['dash_state_remove'] );
+
+    // Cheapest test first — this runs on every front-end request.
+    if ( ( ! $adding && ! $removing ) || ! is_page( 'dashboard' ) || ! is_user_logged_in() ) {
+        return;
+    }
+
+    $nonce = isset( $_POST['dash_states_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['dash_states_nonce'] ) ) : '';
+
+    if ( ! wp_verify_nonce( $nonce, 'ensurance_dashboard_states' ) ) {
+        ensurance_dashboard_states_response( false );
+        return;
+    }
+
+    /*
+     * A CHANGE MADE IN THE PREVIEW WRITES NOTHING. Under `?slot=quiet` the chips
+     * are the sample agency's, not this account's, so adding to them would file
+     * the sample against a real user — the same rule the agency name follows
+     * (ensurance_dashboard_handle_agency_name). The script does not even send the
+     * request; this is the guard for the form path, which cannot know.
+     */
+    if ( ! empty( $_POST['dash_states_preview'] ) ) {
+        ensurance_dashboard_states_response( true );
+        return;
+    }
+
+    $user_id = get_current_user_id();
+    $states  = ensurance_dashboard_stored_states( $user_id );
+
+    if ( $removing ) {
+        $target = ensurance_dashboard_state_name( sanitize_text_field( wp_unslash( $_POST['dash_state_remove'] ) ) );
+        $states = array_values( array_diff( $states, array( $target ) ) );
+    } else {
+        $target = ensurance_dashboard_state_name( sanitize_text_field( wp_unslash( $_POST['dash_state_add'] ) ) );
+
+        // '' is the placeholder option, or a name that is not one of ours.
+        if ( '' !== $target && ! in_array( $target, $states, true ) ) {
+            $states[] = $target;
+        }
+    }
+
+    // Written even when the list did not change: the value stored is the value
+    // resolved, and a write of the same line costs nothing. Removing the last
+    // state stores '' — an empty list is a record, not a missing one, and it is
+    // what turns matching back off (ensurance_dashboard_can_receive_leads).
+    update_user_meta( $user_id, ENSURANCE_DASHBOARD_STATES_META, implode( ',', $states ) );
+
+    ensurance_dashboard_states_response( true );
+}
+add_action( 'template_redirect', 'ensurance_dashboard_handle_states' );
+
+/**
+ * Rewrites the quiet panel's sentence now that the areas it names are STATES.
+ *
+ * Step 8 of the setup flow (design_handoff_agency_profile/SETUP-FLOW.md): when
+ * matching turns on, the panel that reports it has to name what it turned on FOR
+ * — the states the agent just set, and the inbox a match will be emailed to.
+ * ensurance_dashboard_quiet_panel() writes that sentence with the county
+ * vocabulary the dashboard was built on ("from Coastal, Ventura and Santa Barbara
+ * counties"), which since Step 7 renders as "from California and Texas counties":
+ * the one sentence confirming that matching is on, describing places that do not
+ * exist.
+ *
+ * A FILTER, NOT AN EDIT, per CLAUDE.md's standing rule — and the sentence is
+ * rebuilt whole rather than patched, because it is one sentence: only the middle
+ * clause changes, but a str_replace on "counties" would leave this depending on
+ * the exact words of a string it does not own. The coverage clause and the inbox
+ * clause are therefore restated here, and both keep their fallbacks — nothing in
+ * the sentence is allowed to render as a blank.
+ *
+ * THE CLOSING LINE CHANGES TOO. It read "message agent support and we will update
+ * your counties or coverage types", which was true while the whole agency record
+ * was read-only and is now a misdirection: states are the one thing the agent
+ * sets themselves, on the profile. It still says support for coverage types,
+ * which they cannot. It stays PLAIN TEXT — the handoff's Step 8 rules out an
+ * add-a-state affordance in this panel, and naming where the door is does not
+ * open one here.
+ *
+ * @param array $panel   The panel's copy.
+ * @param int   $user_id User the panel is being rendered for.
+ * @return array
+ */
+function ensurance_dashboard_quiet_panel_states( $panel, $user_id ) {
+    $states    = ensurance_dashboard_served_states( $user_id );
+    $coverages = ensurance_dashboard_coverage_types( $user_id );
+    $inbox     = ensurance_dashboard_request_inbox( $user_id );
+
+    // WHAT is being matched — the design's own phrasing, lowercased because it
+    // runs mid-sentence (see ensurance_dashboard_quiet_panel).
+    $kinds = ! empty( $coverages )
+        ? sprintf( 'every %s request', wp_sprintf( '%l', array_map( 'strtolower', $coverages ) ) )
+        : 'every request';
+
+    // …and WHERE from. No trailing noun: a state's name is already the whole
+    // answer, which is exactly what "counties" had to be added for.
+    $where = ! empty( $states )
+        ? sprintf( 'from %s', wp_sprintf( '%l', $states ) )
+        : 'matched to your states';
+
+    // …and WHERE IT GOES. The panel promising an email is only useful if the
+    // agent knows which inbox to watch.
+    $lands = ( '' !== $inbox )
+        ? sprintf( 'Nothing is required of you until one lands — we email %s the moment it does.', $inbox )
+        : 'Nothing is required of you until one lands — we email you the moment it does.';
+
+    $panel['body'] = sprintf( 'You are in the running for %s %s. %s', $kinds, $where, $lands );
+    $panel['note'] = 'To widen what reaches you, add states on your agency profile — or message agent support to change your coverage types.';
+
+    return $panel;
+}
+add_filter( 'ensurance_dashboard_quiet_panel', 'ensurance_dashboard_quiet_panel_states', 10, 2 );
+
+/**
+ * The design's own sample ACCOUNT values — a card and a password age.
+ *
+ * PREVIEW ONLY, and gated exactly like ensurance_dashboard_sample_agency(): the
+ * Account view's rows fall back to these under `?slot=quiet`, which is the state
+ * in which the whole agent record is populated, so one URL shows the view as the
+ * design draws it. ensurance_dashboard_priority_preview() is capability-gated, so
+ * a real agent can never be shown them.
+ *
+ * `password` is an AGE in days rather than a date, because the design's own value
+ * is one ("password last changed 18 days ago") and a fixed date would drift out
+ * of that sentence the week after it was written.
+ *
+ * Copied field for field from the `isAcct` view of
+ * templates/agent-dashboard/AgentDashboard.dc.html.
+ *
+ * @return array{payment:string,password:int}
+ */
+function ensurance_dashboard_sample_account() {
+    return array(
+        'payment'  => 'Visa •••• 4242 — expires 09/28',
+        'password' => 18,
+    );
+}
+
+/**
+ * The card the subscription is billed to, written the way it should read.
+ *
+ * A CARD IS REQUIRED to take founding access — the 60 days are free, the payment
+ * method is not optional — so every agent looking at this row has one. Nothing in
+ * the theme can reach it yet (whatever takes the card at sign-up owns that
+ * record), so this returns '' and the Account view DROPS the row rather than
+ * describing a card it cannot see. Same rule as the profile's license and phone
+ * chips: a labeled blank on a read-only record reads as data that has gone
+ * missing, and a sentence in its place would be this file guessing at the state
+ * of someone's billing.
+ *
+ * A DISPLAY STRING, not card data. Whatever fills this in (Stripe, most likely)
+ * should return the same already-redacted summary the design writes — brand, last
+ * four, expiry — because nothing on this page has any business handling more of a
+ * card than that.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return string Payment method summary, '' when there is none on file.
+ */
+function ensurance_dashboard_payment_method( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $sample  = ensurance_dashboard_sample_account();
+    $payment = ( 'quiet' === ensurance_dashboard_priority_preview() ) ? $sample['payment'] : '';
+
+    /**
+     * Filter the payment method shown on the Account view.
+     *
+     * @param string $payment Redacted payment method summary, '' when none.
+     * @param int    $user_id User the account is being resolved for.
+     */
+    return (string) apply_filters( 'ensurance_dashboard_payment_method', $payment, $user_id );
+}
+
+/**
+ * The address an agent SIGNS IN with, for the Account view's sign-in row.
+ *
+ * DELIBERATELY NOT ensurance_dashboard_request_inbox(), even though the two are
+ * the same address on every account today. They answer different questions — this
+ * one is "how do I get in", that one is "where do matched requests land" — and
+ * the moment an agency points its request inbox at a shared address through the
+ * filter, a sign-in row reading from it would be telling agents to log in with a
+ * mailbox that has no account behind it.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @return string Email address, '' when there is no user or no address.
+ */
+function ensurance_dashboard_signin_email( $user_id = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $user    = $user_id ? get_userdata( $user_id ) : false;
+    $email   = ( $user && ! empty( $user->user_email ) ) ? (string) $user->user_email : '';
+
+    return is_email( $email ) ? $email : '';
+}
+
+/**
+ * When the agent's password was last changed — the second half of the sign-in row.
+ *
+ * WORDPRESS DOES NOT RECORD THIS. The user record keeps the hash and nothing
+ * about when it was set, so there is no honest value to return and this comes
+ * back 0; the sign-in row then prints the address alone rather than guessing at
+ * an age. Registration date is NOT a stand-in — it would silently claim every
+ * agent last changed their password on the day they signed up.
+ *
+ * A MOMENT, not a written-out "18 days ago", so a cached render cannot go stale —
+ * the same rule the timeline and the Recent column follow.
+ *
+ * A password-age plugin, or a reset flow that stamps its own user meta, points the
+ * filter here and the row picks the clause back up with no other change.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @param int $now     Optional. Moment the sample age is measured back from.
+ * @return int Unix timestamp, 0 when it is not known.
+ */
+function ensurance_dashboard_password_changed( $user_id = 0, $now = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $now     = $now ? (int) $now : time();
+    $changed = 0;
+
+    if ( 'quiet' === ensurance_dashboard_priority_preview() ) {
+        $sample  = ensurance_dashboard_sample_account();
+        $changed = $now - ( (int) $sample['password'] * DAY_IN_SECONDS );
+    }
+
+    /**
+     * Filter when the agent's password was last changed.
+     *
+     * @param int $changed Unix timestamp, 0 when unknown.
+     * @param int $user_id User the account is being resolved for.
+     */
+    return (int) apply_filters( 'ensurance_dashboard_password_changed', $changed, $user_id );
+}
+
+/**
+ * Where the Account view's one action actually goes.
+ *
+ * THE END OF THE LINE. Every "change this" path in the product routes to agent
+ * support, and ensurance_dashboard_support_url() sends all of them to this VIEW —
+ * the profile's locked notice, the setup card's button, the quiet panel's closing
+ * line. So the Message button here is the last link in that chain and has to reach
+ * a human: /contact/, with the topic preselected so these arrive tagged as coming
+ * from an agent (see $ct_topics in page-contact.php).
+ *
+ * Not ensurance_founding_agent_contact_url(), whose `founding` topic is for
+ * PROSPECTIVE members coming off the /pricing-plans CTAs. An agent messaging from
+ * inside the dashboard has already joined.
+ *
+ * @return string Raw URL — esc_url at output.
+ */
+function ensurance_dashboard_support_contact_url() {
+    $url = add_query_arg( 'topic', 'agent', home_url( '/contact/' ) );
+
+    /**
+     * Filter the destination behind the Account view's Message button.
+     *
+     * The hook for a real support desk (a help widget, a ticket form) when one
+     * exists. Everything in the dashboard that says "message agent support" ends
+     * up here, so changing it moves all of them.
+     *
+     * @param string $url Contact URL.
+     */
+    return (string) apply_filters( 'ensurance_dashboard_support_contact_url', $url );
+}
+
+/**
+ * The Account view's ruled rows — access and billing, payment, sign-in, support.
+ *
+ * Step 14 of templates/agent-dashboard/build-steps.md, and the last of the three
+ * views outside Today. It is the answer to "what am I signed up for, what happens
+ * at the end of it, and how do I change any of it".
+ *
+ * DISPLAY-ONLY, WITH ONE EXCEPTION. The step is explicit: no Cancel, no Update, no
+ * Change — the agent support row is the single row carrying an action. That is not
+ * a placeholder for buttons that are coming; it is the product's actual shape
+ * today (the scope note at the top of build-steps.md), and a Cancel button that
+ * opened a contact form would be a worse lie than no button. So `action` is set on
+ * exactly one row here, and the component that renders these has no other
+ * interactive element in it.
+ *
+ * THE DATES COME FROM THE TIMELINE, never from a second calculation. Today's
+ * founding access timeline (ensurance_dashboard_founding_timeline) owns the cancel
+ * date and the first-charge date; this view reads the same two segments, so the
+ * two surfaces cannot disagree about when an agent is charged. They are on
+ * different views, which is what keeps Step 15's "no date in two places" intact —
+ * the rule is about one screen, and an account page that hid its own billing dates
+ * to satisfy it would be unusable.
+ *
+ * TENSE IS DERIVED. The segments carry their own status, so the sentence reads
+ * "begins Sep 23" while the charge is ahead and "from Sep 23" once it is not,
+ * and the cancel clause stops inviting a cancellation the window has closed on.
+ * Every founding agent crosses that boundary on day 60.
+ *
+ * SHAPE — one entry per row, in display order:
+ *   key    string  Stable slug, for filters targeting one row.
+ *   title  string  The row's name.
+ *   detail string  The line under it.
+ *   action array   ['label' => …, 'url' => …], or empty for a display-only row.
+ *
+ * A row with no title or no detail is DROPPED rather than ruled off around a
+ * blank — the same rule the profile's chips follow.
+ *
+ * @param int $user_id Optional. Defaults to the current user.
+ * @param int $now     Optional. Moment to resolve against. Defaults to now.
+ * @return array<int,array{key:string,title:string,detail:string,action:array}>
+ */
+function ensurance_dashboard_account_rows( $user_id = 0, $now = 0 ) {
+    $user_id = $user_id ? (int) $user_id : get_current_user_id();
+    $now     = $now ? (int) $now : time();
+
+    // ── Founding access: what it costs, when that starts, and the window to
+    // get out before it does. Built from the timeline's own two future
+    // milestones so the dates are the same object Today shows.
+    $mark   = array();
+    $charge = array();
+
+    foreach ( ensurance_dashboard_founding_timeline( $user_id, $now ) as $segment ) {
+        if ( 'mark' === $segment['key'] ) {
+            $mark = $segment;
+        } elseif ( 'charge' === $segment['key'] ) {
+            $charge = $segment;
+        }
+    }
+
+    $sentences = array();
+
+    // The design's `billNote` — "$29 / month begins Sep 23." The price rides on
+    // the charge segment's note (ensurance_dashboard_access_price), so filtering
+    // the price away drops the clause instead of printing a bare date.
+    if ( ! empty( $charge['date'] ) && ! empty( $charge['note'] ) ) {
+        $sentences[] = ( 'upcoming' === $charge['status'] )
+            ? sprintf( '%s begins %s.', $charge['note'], $charge['date'] )
+            : sprintf( '%s from %s.', $charge['note'], $charge['date'] );
+    }
+
+    if ( ! empty( $mark['date'] ) ) {
+        $sentences[] = ( 'upcoming' === $mark['status'] )
+            ? sprintf( 'Cancel before %s and you are never charged — message support and we will take care of it.', $mark['date'] )
+            : sprintf( 'The cancel window closed %s — message support to make a change.', $mark['date'] );
+    }
+
+    // NO START DATE, NO DATES AT ALL — the timeline returns nothing without one
+    // (a user record with no registration date), so the row falls back to the
+    // terms themselves, which are true whether or not this account's dates are
+    // known. It still says the two things that matter: it converts, and it can
+    // be stopped before it does.
+    if ( empty( $sentences ) ) {
+        $price = ensurance_dashboard_access_price();
+
+        $sentences[] = ( '' !== $price )
+            ? sprintf(
+                'Founding access runs %d days, then continues at %s. Cancel before it ends and you are never charged — message support and we will take care of it.',
+                ensurance_dashboard_access_term(),
+                $price
+            )
+            : sprintf(
+                'Founding access runs %d days. Cancel before it ends and you are never charged — message support and we will take care of it.',
+                ensurance_dashboard_access_term()
+            );
+    }
+
+    $rows = array(
+        array(
+            'key'    => 'access',
+            'title'  => 'Founding Agent Access',
+            'detail' => implode( ' ', $sentences ),
+        ),
+    );
+
+    // ── Payment method, when something can tell us what it is. A card is
+    // required to take founding access, so an unresolved one is a gap in what
+    // this theme can read rather than a fact about the account — the row waits
+    // instead of characterizing it. See ensurance_dashboard_payment_method().
+    $payment = ensurance_dashboard_payment_method( $user_id );
+
+    if ( '' !== $payment ) {
+        $rows[] = array(
+            'key'    => 'payment',
+            'title'  => 'Payment method',
+            'detail' => $payment,
+        );
+    }
+
+    // ── Sign-in. The address is the row; the password age is a clause that only
+    // appears when something actually knows it.
+    $email = ensurance_dashboard_signin_email( $user_id );
+
+    if ( '' !== $email ) {
+        $changed = ensurance_dashboard_password_changed( $user_id, $now );
+        $detail  = $email;
+
+        if ( $changed > 0 && $changed <= $now ) {
+            $days = ensurance_dashboard_days_between( $changed, $now );
+
+            if ( $days <= 0 ) {
+                $aged = 'password last changed today';
+            } elseif ( 1 === $days ) {
+                $aged = 'password last changed yesterday';
+            } else {
+                $aged = sprintf( 'password last changed %d days ago', $days );
+            }
+
+            $detail = sprintf( '%s — %s', $email, $aged );
+        }
+
+        $rows[] = array(
+            'key'    => 'signin',
+            'title'  => 'Sign-in',
+            'detail' => $detail,
+        );
+    }
+
+    /*
+     * ── Agent support, and the one row with an action.
+     *
+     * THE HOURS ARE NOT THE DESIGN'S. It writes "Weekdays 7am–5pm PT · typical
+     * reply under 2 hours", and both halves of that are a promise nothing else in
+     * the product makes: /contact states one to two business days, in its intro,
+     * its trust cues, its FAQ answer and its success screen. Shipping a two-hour
+     * SLA on the one surface an agent is told to use for everything — cancelling,
+     * service areas, a locked profile — would set an expectation the team has
+     * already said it does not meet, on the page where missing it costs the most.
+     * So the row keeps its shape and states the reply time the rest of the site
+     * states. Real staffed hours belong here through the filter below, alongside
+     * a matching change to page-contact.php.
+     */
+    $rows[] = array(
+        'key'    => 'support',
+        'title'  => 'Agent support',
+        'detail' => 'Messages are answered by email, usually within one to two business days.',
+        'action' => array(
+            'label' => 'Message',
+            'url'   => ensurance_dashboard_support_contact_url(),
+        ),
+    );
+
+    /**
+     * Filter the Account view's rows.
+     *
+     * The hook a real subscription record attaches to. Rows must keep the shape
+     * documented above; anything missing a title or a detail is dropped, and an
+     * `action` without both a label and a URL is ignored rather than rendered as
+     * a dead control.
+     *
+     * @param array $rows    Rows in display order.
+     * @param int   $user_id User the account is being resolved for.
+     * @param int   $now     Moment the rows were resolved against.
+     */
+    $rows = (array) apply_filters( 'ensurance_dashboard_account_rows', $rows, $user_id, $now );
+
+    $clean = array();
+
+    foreach ( $rows as $i => $row ) {
+        if ( empty( $row['title'] ) || empty( $row['detail'] ) ) {
+            continue;
+        }
+
+        $action = array();
+
+        if ( ! empty( $row['action']['label'] ) && ! empty( $row['action']['url'] ) ) {
+            $action = array(
+                'label' => (string) $row['action']['label'],
+                'url'   => (string) $row['action']['url'],
+            );
+        }
+
+        $clean[] = array(
+            'key'    => isset( $row['key'] ) ? (string) $row['key'] : (string) $i,
+            'title'  => (string) $row['title'],
+            'detail' => (string) $row['detail'],
+            'action' => $action,
+        );
+    }
+
+    return $clean;
+}
+
 // ============================================================================
 // 2b-v-a4. FOUNDING AGENT PLAN SELECTION — SIGN-UP FUNNEL MEMORY
 // ============================================================================

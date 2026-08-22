@@ -24,9 +24,30 @@
  * the page content inside the framed .sq-formslot card, so the form stays
  * swappable from the WordPress editor without touching this file.
  *
- * SEO: title / meta description / canonical / robots are owned by Yoast and
- * emitted through wp_head(); this template outputs none of them.
+ * SEO: meta description / canonical / robots are owned by Yoast and emitted
+ * through wp_head(); this template outputs none of them. The <title> is the one
+ * exception — see the title override below.
  */
+
+/**
+ * <title> override.
+ *
+ * This page was cloned from the auto template, and the Yoast SEO title came
+ * along with it — it still reads "SECURE Auto Insurance Quotes Online | …", so
+ * the renters page ships the wrong title. Force the correct one here.
+ *
+ * Yoast removes core's _wp_render_title_tag and prints its own title, so
+ * 'wpseo_title' is the hook that actually decides the output. The
+ * 'pre_get_document_title' filter is the fallback for when Yoast is inactive;
+ * it runs at 99 so it beats anything hooked at the default priority.
+ */
+add_filter( 'wpseo_title', function () {
+    return 'Renters Insurance Quote Request | Ensurance';
+} );
+
+add_filter( 'pre_get_document_title', function () {
+    return 'Renters Insurance Quote Request | Ensurance';
+}, 99 );
 
 /**
  * Inline Lucide icon renderer (shared with the other Calm Intelligence page
