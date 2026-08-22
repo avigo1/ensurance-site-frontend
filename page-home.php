@@ -221,12 +221,12 @@ get_header( 'home' );
     <div class="whatis">
       <div>
         <p class="eyebrow">What is Ensurance?</p>
-        <h2>Start an auto insurance quote request and move toward options.</h2>
-        <p class="whatis__intro">Ensurance helps shoppers start insurance quote requests online, organize their details, and move toward quote options with more clarity and control. The experience is designed to reduce confusion, pressure, unwanted contact, and quote chaos.</p>
+        <h2>More insurance choice from one guided request.</h2>
+        <p class="whatis__intro">Ensurance helps you start one insurance request and move toward available quote options through licensed insurance professionals. Instead of starting over company after company, you can explore available options with more clarity, control, and less quote chaos.</p>
         <div class="whatis__rows">
-          <div class="spotlight-row"><?php echo wp_kses( ensurance_home_icon( 'shield-check', 18 ), $ensurance_svg_allowed ); ?><span>Start with one organized auto request instead of repeating forms.</span></div>
-          <div class="spotlight-row"><?php echo wp_kses( ensurance_home_icon( 'car', 18 ), $ensurance_svg_allowed ); ?><span>Your request is organized for a clearer, more controlled quote path.</span></div>
-          <div class="spotlight-row"><?php echo wp_kses( ensurance_home_icon( 'message', 18 ), $ensurance_svg_allowed ); ?><span>Move toward quote options with more clarity when support is available.</span></div>
+          <div class="spotlight-row"><?php echo wp_kses( ensurance_home_icon( 'shield-check', 18 ), $ensurance_svg_allowed ); ?><span>Start with one guided auto request instead of repeating forms.</span></div>
+          <div class="spotlight-row"><?php echo wp_kses( ensurance_home_icon( 'car', 18 ), $ensurance_svg_allowed ); ?><span>Move toward available carrier options without starting over each time.</span></div>
+          <div class="spotlight-row"><?php echo wp_kses( ensurance_home_icon( 'message', 18 ), $ensurance_svg_allowed ); ?><span>Get licensed insurance help when you need it.</span></div>
         </div>
         <div class="whatis__actions">
           <a class="btn btn-secondary" data-cta-text="See How Ensurance Works" data-page-type="homepage" data-track="cta_click_see_how_ensurance_works" href="#how-it-works">See How Ensurance Works <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 16 ), $ensurance_svg_allowed ); ?></a>
@@ -239,8 +239,8 @@ get_header( 'home' );
   <section class="section" id="how-it-works" aria-label="How Ensurance works">
     <div class="section-head">
       <p class="eyebrow">How Ensurance works</p>
-      <h2>A clearer way to start your auto quote request.</h2>
-      <p>From your first detail to a clearer next step — you'll always know where you are.</p>
+      <h2>Start once. Move toward more insurance options.</h2>
+      <p>One guided request gives you a clearer way to shop without repeating the same process company after company.</p>
     </div>
     <div class="steps-grid">
       <article class="card step-card">
@@ -249,7 +249,7 @@ get_header( 'home' );
           <span class="step-card__num">01</span>
         </div>
         <h3>Tell us what you need</h3>
-        <p>Share the key auto details once — short guided questions, minimal typing.</p>
+        <p>Share the key auto details once through short, guided questions.</p>
       </article>
       <article class="card step-card">
         <div class="step-card__top">
@@ -257,15 +257,15 @@ get_header( 'home' );
           <span class="step-card__num">02</span>
         </div>
         <h3>Your request is organized</h3>
-        <p>Ensurance organizes your information for the next step, so nothing gets repeated.</p>
+        <p>Ensurance keeps your details together so you do not have to keep starting over.</p>
       </article>
       <article class="card step-card">
         <div class="step-card__top">
           <span class="icon-box icon-box--navy"><?php echo wp_kses( ensurance_home_icon( 'user', 19 ), $ensurance_svg_allowed ); ?></span>
           <span class="step-card__num">03</span>
         </div>
-        <h3>Move toward options with more clarity</h3>
-        <p>Available quote paths are reviewed when appropriate, and you move forward with a clearer next step.</p>
+        <h3>Move toward available options</h3>
+        <p>Where available, licensed insurance professionals can review available paths and help you move toward the right next step.</p>
       </article>
     </div>
   </section>
@@ -286,7 +286,7 @@ get_header( 'home' );
           </div>
           <div>
             <h3>Auto insurance</h3>
-            <p>Start an organized auto insurance quote request and move toward quote options with more clarity and control — one guided request, a clearer next step.</p>
+            <p>Start one guided auto insurance request and move toward available quote options without repeating the same process across multiple insurance companies.</p>
           </div>
           <div class="coverage-featured__tags">
             <span class="tag-pill">Liability</span>
@@ -317,36 +317,36 @@ get_header( 'home' );
   <section class="section" aria-label="What makes Ensurance different">
     <div class="section-head">
       <p class="eyebrow">What makes Ensurance different</p>
-      <h2>Guided auto requests designed to reduce quote chaos.</h2>
-      <p>Ensurance organizes your request so the next step is clearer and more controlled.</p>
+      <h2>Why shop for insurance through Ensurance?</h2>
+      <p>More potential insurance choice without repeating the same process across company after company.</p>
     </div>
     <div class="why-grid">
       <article class="card why-tile">
         <span class="icon-box icon-box--accent"><?php echo wp_kses( ensurance_home_icon( 'file-text', 20 ), $ensurance_svg_allowed ); ?></span>
         <div>
-          <h3>Organized from the start</h3>
-          <p>Start with one organized quote request.</p>
+          <h3>One request to start</h3>
+          <p>Start with one guided request instead of filling out the same information again and again.</p>
         </div>
       </article>
       <article class="card why-tile">
         <span class="icon-box icon-box--accent"><?php echo wp_kses( ensurance_home_icon( 'sparkles', 20 ), $ensurance_svg_allowed ); ?></span>
         <div>
-          <h3>Built for quote options</h3>
-          <p>Your details are organized so you can move toward quote options with more clarity.</p>
+          <h3>Built for more choice</h3>
+          <p>Move toward available insurance options instead of beginning with just one company.</p>
         </div>
       </article>
       <article class="card why-tile">
         <span class="icon-box icon-box--accent"><?php echo wp_kses( ensurance_home_icon( 'shield-check', 20 ), $ensurance_svg_allowed ); ?></span>
         <div>
-          <h3>Licensed review where appropriate</h3>
-          <p>Licensed support may review available quote paths when appropriate.</p>
+          <h3>Licensed insurance help</h3>
+          <p>Licensed insurance professionals can help review available paths when appropriate.</p>
         </div>
       </article>
       <article class="card why-tile">
         <span class="icon-box icon-box--accent"><?php echo wp_kses( ensurance_home_icon( 'arrow-right', 20 ), $ensurance_svg_allowed ); ?></span>
         <div>
-          <h3>Focused on clearer next steps</h3>
-          <p>Move forward with less confusion and a clearer next step.</p>
+          <h3>Less quote chaos</h3>
+          <p>Shop through a more controlled process designed to reduce confusion, pressure, and repeated outreach.</p>
         </div>
       </article>
     </div>
@@ -401,8 +401,8 @@ get_header( 'home' );
   <!-- ── Final CTA ───────────────────────────────────────────────── -->
   <section class="final-cta" aria-label="Start your auto quote request">
     <div class="final-card">
-      <h2>A clearer way to move toward auto insurance quote options.</h2>
-      <p>Many online quote paths ask for personal details before explaining what comes next. Ensurance helps organize your request from the start.</p>
+      <h2>More insurance choice without starting over.</h2>
+      <p>Start one guided request and move toward available auto insurance options through a more controlled shopping process.</p>
       <div class="hero-actions">
         <a class="btn btn-reversed btn--lg" data-cta-text="Start My Auto Quote Request" data-page-type="homepage" data-track="cta_click_start_auto_quote_request" href="<?php echo $start_url; ?>">Start My Auto Quote Request <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 18 ), $ensurance_svg_allowed ); ?></a>
       </div>

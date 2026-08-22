@@ -6394,7 +6394,7 @@ add_action( 'uwp_email_activation_success', 'ensurance_notify_agent_row_on_activ
 // gotcha in prior work.
 
 function ensurance_pricing_plans_assets() {
-    if ( ! is_page('pricing-plans') ) {
+    if ( ! is_page( array( 'pricing-plans', 'agent-access' ) ) ) {
         return;
     }
 
@@ -6410,12 +6410,14 @@ function ensurance_pricing_plans_assets() {
         array(),
         null
     );
+
     wp_enqueue_style(
         'ensurance-home',
         get_stylesheet_directory_uri() . '/assets/home.css',
         array(),
         filemtime(get_stylesheet_directory() . '/assets/home.css')
     );
+
     wp_enqueue_script(
         'ensurance-home',
         get_stylesheet_directory_uri() . '/assets/home.js',
@@ -6431,6 +6433,7 @@ function ensurance_pricing_plans_assets() {
         array('ensurance-home'),
         filemtime(get_stylesheet_directory() . '/assets/pricing-plans.css')
     );
+
     wp_enqueue_script(
         'ensurance-pricing-plans',
         get_stylesheet_directory_uri() . '/assets/pricing-plans.js',
@@ -6439,8 +6442,8 @@ function ensurance_pricing_plans_assets() {
         true
     );
 }
-add_action('wp_enqueue_scripts', 'ensurance_pricing_plans_assets', 20);
 
+add_action('wp_enqueue_scripts', 'ensurance_pricing_plans_assets', 20);
 // ============================================================================
 // 2b-v-c. PUBLISH YOUR AGENCY (/publish-your-agency) — SELF-CONTAINED ASSETS
 // ============================================================================
