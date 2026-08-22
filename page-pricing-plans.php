@@ -59,8 +59,8 @@ add_filter( 'pre_get_document_title', function () {
 // The hero buttons (#plans) remain in-page jump links to the plan comparison.
 // Both CTAs are wrapped in ensurance_founding_cta_url() so an already-logged-in
 // agent is sent straight to /dashboard/ instead of back through sign-up.
-$fa_cta_60day   = ensurance_founding_cta_url( ensurance_create_account_url( '60-day' ) );  // Start 60 day access → self-serve signup
-$fa_cta_monthly = ensurance_founding_cta_url( ensurance_create_account_url( 'monthly' ) ); // Join as a Founding Agent → self-serve signup → Stripe
+$fa_cta_60day   = is_user_logged_in() ? home_url( '/dashboard/' ) : 'https://checkout.ensurance.com/b/9B66oG3U7fs26Pg7va63K09';  // Start 60 day access → self-serve signup
+$fa_cta_monthly = is_user_logged_in() ? home_url( '/dashboard/' ) : 'https://checkout.ensurance.com/b/7sY7sK8an93E2z04iY63K08'; // Join as a Founding Agent → self-serve signup → Stripe
 
 /**
  * Inline Lucide glyphs (stroke 2, round caps) used on this page.
@@ -102,8 +102,8 @@ $fa_svg_allowed = array(
 $fa_faq = array(
 	array( 'What is Founding Agent Access?', 'Founding Agent Access is an early agent access option for licensed insurance agents who want a more organized way to review shopper opportunities through Ensurance. Agents can create an agency profile, review eligible request details when available, and accept or pass before deciding whether to engage.' ),
 	array( 'Is Ensurance a lead buying platform?', 'No. Ensurance is not a bulk lead seller or quote-comparison site. Ensurance is building a more structured way for insurance shoppers and agents to connect around organized insurance quote requests.' ),
-	array( 'What does the 60 Day Founding Agent Access include?', 'The 60 day access option includes an agency profile, access to eligible request previews when available, and the ability to accept or pass before engaging. This option may be available for selected agents while Ensurance opens access in selected states.' ),
-	array( 'What happens after the 60 day access period?', 'After the 60 day access period, Founding Agent Access may continue at $29 per month unless canceled before the subscription begins.' ),
+	array( 'What does the 60 Day Access include?', 'The 60 day access option includes an agency profile, access to eligible request previews when available, and the ability to accept or pass before engaging. This option may be available for selected agents while Ensurance opens access in selected states.' ),
+	array( 'What happens after the 60 day access period?', 'After the 60 day access period, you may choose to continue with Founding Agent Access at $29 per month.' ),
 	array( 'What does the $29 per month plan include?', 'The $29 per month Founding Agent Access plan includes an agency profile, continued access to eligible shopper request previews when available, and the ability to accept or pass before engaging.' ),
 	array( 'Are shopper requests guaranteed?', 'No. Availability of shopper requests may vary by state, coverage type, shopper activity, and agent eligibility. Founding Agent Access does not guarantee request volume.' ),
 	array( 'Can I accept or pass on requests?', 'Yes. Ensurance is designed to give agents more control. Agents may review eligible request details and decide whether to accept or pass before engaging.' ),
@@ -185,7 +185,7 @@ get_header( 'home' );
 				<div class="fa-hero__aside">
 					<div class="fa-summary">
 						<div class="fa-summary__head">
-							<span class="fa-summary__label">Founding Access · Priority states</span>
+							<span class="fa-summary__label">60 Day Access · Priority states</span>
 							<span class="fa-badge fa-badge--status"><span class="fa-badge__dot" aria-hidden="true"></span> Now opening</span>
 						</div>
 						<div class="fa-summary__body">
@@ -224,7 +224,7 @@ get_header( 'home' );
 		<div class="fa-container">
 			<div class="fa-head fa-head--center">
 				<span class="fa-eyebrow">Choose your access</span>
-				<h2 id="fa-plans-title" class="fa-h2">Two ways to join as a Founding Agent.</h2>
+				<h2 id="fa-plans-title" class="fa-h2">Choose how you want to get started.</h2>
 				<p class="fa-head__sub">Start with 60 day access while Ensurance opens your state, or join monthly for continued access. You stay in control of which opportunities you pursue.</p>
 			</div>
 
@@ -234,10 +234,10 @@ get_header( 'home' );
 				<article class="fa-plan fa-plan--featured">
 					<span class="fa-plan__bar" aria-hidden="true"></span>
 					<div class="fa-plan__top">
-						<span class="fa-plan__tag">60 Day Founding Agent Access</span>
+						<span class="fa-plan__tag">60 Day Access</span>
 						<span class="fa-badge fa-badge--accent">Start here</span>
 					</div>
-					<h3 class="fa-plan__title">60 Day Founding Agent Access</h3>
+					<h3 class="fa-plan__title">60 Day Access</h3>
 					<div class="fa-plan__price"><span class="fa-plan__amount">$0</span><span class="fa-plan__unit">for 60 days</span></div>
 					<p class="fa-plan__supporting">Available for selected agents in priority states while Ensurance opens access in selected states.</p>
 					<ul class="fa-plan__bullets">
@@ -246,10 +246,10 @@ get_header( 'home' );
 						<?php endforeach; ?>
 					</ul>
 					<a class="fa-btn fa-btn--solid fa-btn--block" href="<?php echo esc_url( $fa_cta_60day ); ?>" data-event="plan_60_day_checkout_click">Start 60 day access <?php echo wp_kses( ensurance_fa_icon( 'arrow-right', 17 ), $fa_svg_allowed ); ?></a>
-					<p class="fa-plan__note">After the 60 day access period, Founding Agent Access may continue at $29 per month unless canceled before the subscription begins.</p>
+					<p class="fa-plan__note">After the 60 day access period, you may choose to continue with Founding Agent Access at $29 per month.</p>
 					<div class="fa-consent">
 						<?php echo wp_kses( ensurance_fa_icon( 'lock', 13, 'fa-consent__icon' ), $fa_svg_allowed ); ?>
-						<span>By continuing, I understand this access is free for 60 days. After the 60 day access period, Founding Agent Access may continue at $29 per month unless canceled before the subscription begins.</span>
+						<span>By continuing, I understand this access is free for 60 days. After the 60 day access period, I may choose to continue with Founding Agent Access at $29 per month.</span>
 					</div>
 				</article>
 
@@ -360,7 +360,7 @@ get_header( 'home' );
 					array( 'file-text', 'Review eligible request details', 'When eligible shopper requests are available in your state or service area, you may be able to review request details before deciding whether to engage.' ),
 					array( 'check', 'Accept or pass', 'You choose whether the opportunity fits your agency.' ),
 					array( 'message', 'Engage when it makes sense', 'If you accept, you can move forward with the shopper-authorized opportunity.' ),
-					array( 'clock', 'Continue or cancel', 'After the 60 day access period, continue at $29 per month, or cancel before the subscription begins.' ),
+					array( 'clock', 'Choose what comes next', 'After the 60 day access period, you may choose to continue with Founding Agent Access at $29 per month.' ),
 				);
 				foreach ( $fa_steps as $i => $s ) : ?>
 					<li class="fa-step">
@@ -414,8 +414,8 @@ get_header( 'home' );
 			</div>
 			<div class="fa-terms">
 				<div class="fa-terms__card">
-					<span class="fa-terms__tag">60 Day Founding Agent Access</span>
-					<p class="fa-terms__text">By continuing, I understand this access is free for 60 days. After the 60 day access period, Founding Agent Access may continue at $29 per month unless canceled before the subscription begins.</p>
+					<span class="fa-terms__tag">60 Day Access</span>
+					<p class="fa-terms__text">This access is free for 60 days. After the 60 day access period, you may choose to continue with Founding Agent Access at $29 per month.</p>
 				</div>
 				<div class="fa-terms__card">
 					<span class="fa-terms__tag">Founding Agent Access · $29 per month</span>

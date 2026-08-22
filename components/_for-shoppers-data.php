@@ -20,46 +20,46 @@
 return array(
 
     'meta' => array(
-        'title'       => 'For Shoppers | Guided Insurance Requests | Ensurance',
-        'description' => 'Ensurance helps shoppers start a guided insurance request, organize their details, and move toward controlled licensed review and available coverage options.',
+        'title'       => 'For Shoppers | More Insurance Choice, Less Quote Chaos | Ensurance',
+        'description' => 'Start one guided insurance request and move toward available insurance options through licensed professionals, without restarting company after company.',
         'canonical'   => '/for-shoppers',
-        'og_title'    => 'For Shoppers | Guided Insurance Requests | Ensurance',
-        'og_desc'     => 'One guided insurance request, prepared for licensed review. Stay in control. Real human help when you need it.',
+        'og_title'    => 'For Shoppers | More Insurance Choice, Less Quote Chaos | Ensurance',
+        'og_desc'     => 'One guided insurance request. More potential insurance choice. Licensed help where available, through a more controlled shopping process.',
     ),
 
     'hero' => array(
         'eyebrow'   => 'For shoppers',
         // Pipe splits the headline into two lines; matches the Figma's stacked layout.
-        'headline'  => 'Insurance help online, | without the quote chaos.',
-        'body'      => 'Ensurance turns what you need into a clear, protected request and prepares it for controlled licensed review where available. Less noise, less unwanted contact, and a clearer next step.',
+        'headline'  => 'More insurance choice. | Less quote chaos.',
+        'body'      => 'Start one guided insurance request and move toward available insurance options through licensed professionals, without restarting the process company after company.',
         'actions'   => array(
             array( 'label' => 'Start your request',  'href' => '/start',        'variant' => 'primary',   'event' => 'for_shoppers_hero_start_request_click' ),
             array( 'label' => 'How Ensurance works', 'href' => '/how-it-works', 'variant' => 'secondary', 'event' => 'for_shoppers_hero_how_it_works_click' ),
         ),
-        'microcopy' => 'Takes about 2 minutes · Your request is handled through a controlled process',
+        'microcopy' => 'Takes about 2 minutes · One guided request through a more controlled process',
         'trust_items' => array(
-            'You stay in control',
-            'Not broadly distributed',
+            'One guided request',
+            'More potential insurance choice',
             'Controlled licensed review',
         ),
     ),
 
     'problem' => array(
         'eyebrow'  => 'The problem',
-        'headline' => 'Why insurance shopping feels overwhelming',
-        'lead'     => 'The moment you ask for help online, the noise starts. One form turns into a dozen calls, a flood of emails, and quotes you never asked for — from people who bought your information.',
+        'headline' => 'More insurance choice can mean more work and more quote chaos',
+        'lead'     => 'Trying to explore more insurance options can mean starting over across separate companies, repeating the same information, navigating unclear handoffs, and dealing with unwanted outreach.',
         'cards' => array(
             array(
-                'title' => 'The form that never ends',
-                'body'  => 'You enter your details once and suddenly everyone has them — the same questions, over and over, from sources you do not recognize.',
+                'title' => 'Starting over again and again',
+                'body'  => 'Shopping company by company can mean entering the same details repeatedly just to explore different insurance options.',
             ),
             array(
-                'title' => 'Numbers without context',
-                'body'  => 'Quotes appear before anyone understands your situation. Comparing them feels like guessing, not deciding.',
+                'title' => 'Options without enough context',
+                'body'  => 'Different insurance companies can evaluate the same shopper differently, which makes understanding the available paths more important.',
             ),
             array(
-                'title' => 'Pressure instead of help',
-                'body'  => 'Calls at dinner. Emails that will not stop. It starts to feel like being processed, not helped.',
+                'title' => 'More effort than expected',
+                'body'  => 'Repeated forms, unclear next steps, and unwanted outreach can make a simple insurance search feel harder than it should.',
             ),
         ),
     ),
@@ -69,39 +69,39 @@ return array(
     'answer' => array(
         'eyebrow'  => 'In short',
         'headline' => 'What is Ensurance?',
-        'body'     => 'Ensurance helps you start one clear, protected insurance request. We organize your details and move the request through a controlled process toward licensed review where available, without broadly distributing it.',
+        'body'     => 'Ensurance gives shoppers one guided starting point for an insurance request. Where available, that request can move toward insurance options through licensed professionals without requiring the shopper to restart the process company after company.',
     ),
 
     'value' => array(
         'eyebrow'  => 'What Ensurance does',
-        'headline' => 'We turn what you need into one clear, protected request',
-        'lead'     => 'Ensurance is not a quote-comparison site built around broad distribution. It structures what you need into a clear request, protects your information, and prepares it for licensed review where available.',
+        'headline' => 'One guided request can open a clearer path to more insurance options',
+        'lead'     => 'Ensurance gives you one place to start, structures the information needed for review, and helps your request move toward available insurance options through licensed professionals where available.',
         'cards' => array(
-            array( 'number' => '01', 'title' => 'Structured, not scattered', 'body' => 'Your needs are captured once, clearly — so nothing gets lost, repeated, or misunderstood along the way.' ),
-            array( 'number' => '02', 'title' => 'Protected by default',      'body' => 'Your information is handled through a controlled process designed to reduce unnecessary exposure and unwanted contact.' ),
-            array( 'number' => '03', 'title' => 'Ready for real help',       'body' => 'When licensed review is appropriate and available, the professional reviewing your request receives the context needed to understand your situation.' ),
+            array( 'number' => '01', 'title' => 'Start once', 'body' => 'Share what you need through one guided request instead of restarting the same shopping process company after company.' ),
+            array( 'number' => '02', 'title' => 'Move toward more options',      'body' => 'Where available, your request can move toward insurance or carrier options that may fit your needs and eligibility.' ),
+            array( 'number' => '03', 'title' => 'Get licensed insurance help',       'body' => 'Licensed agents, agencies, or approved insurance partners can review your request with the context needed to help where appropriate.' ),
         ),
     ),
 
     'steps' => array(
         'eyebrow'  => 'What happens next',
         'headline' => 'What happens after you start your request',
-        'lead'     => 'No surprises. Here is what to expect as your request moves from guided intake to structured review.',
+        'lead'     => 'One guided starting point helps your request move toward the appropriate next step without making you restart the process across separate companies.',
         'steps' => array(
-            array( 'number' => '1', 'title' => 'You describe what you need', 'body' => 'A few clear questions, in plain language. No jargon, no endless forms.' ),
-            array( 'number' => '2', 'title' => 'We structure your request', 'body' => 'Ensurance organizes your needs into one clear, complete picture — privately.' ),
-            array( 'number' => '3', 'title' => 'You choose your next step', 'body' => 'You can continue, pause, or stop. Your request remains within a controlled process.' ),
-            array( 'number' => '4', 'title' => 'Licensed review where available', 'body' => 'Where appropriate, a licensed agent, agency, or approved insurance partner may review your request with the context needed to help.' ),
+            array( 'number' => '1', 'title' => 'You describe what you need', 'body' => 'Answer a few guided questions about the insurance help you are looking for.' ),
+            array( 'number' => '2', 'title' => 'We structure your request', 'body' => 'Ensurance organizes the information needed to understand your request and prepare it for the next step.' ),
+            array( 'number' => '3', 'title' => 'Your request is prepared', 'body' => 'Your information stays within a more controlled process as the appropriate next step is determined.' ),
+            array( 'number' => '4', 'title' => 'Move toward available options', 'body' => 'Where appropriate, a licensed agent, agency, or approved insurance partner may review available paths and help you move forward.' ),
         ),
     ),
 
     'control' => array(
         'eyebrow'  => 'Your control',
-        'headline' => 'You stay in control at every step',
-        'body'     => 'Ensurance is built around clear choices and controlled request handling. You choose whether to continue, how you prefer to be contacted, and whether to pause or stop the process.',
+        'headline' => 'A more controlled way to shop for insurance',
+        'body'     => 'Ensurance is built around clearer expectations and controlled request handling. You can decide whether to continue, pause, or stop as your request moves through the process.',
         'items' => array(
             'Choose whether to continue your request',
-            'Set your preferred contact method',
+            'Know what happens as your request moves forward',
             'Pause or stop the process anytime',
             'Update or remove your details on request',
         ),
@@ -109,43 +109,43 @@ return array(
 
     'callout' => array(
         'eyebrow'  => 'Real help',
-        'headline' => 'Real licensed help when available',
+        'headline' => 'Licensed insurance help when available',
         'body'     => array(
-            'Software can organize your request. It cannot reassure you, answer the question behind your question, or tailor coverage to your life. That is a person\'s job.',
-            'When licensed review is available, a licensed agent, agency, or approved insurance partner can review your request with useful context before follow-up.',
+            'Technology can organize an insurance request, but licensed human judgment remains important when reviewing available paths, discussing coverage, or helping with an insurance transaction.',
+            'When licensed review is available, a licensed agent, agency, or approved insurance partner can review your request with useful context and help determine appropriate next steps.',
         ),
-        'quote'       => '“The goal is a calmer handoff: useful context, controlled access, and a clearer conversation when licensed help is available.”',
+        'quote'       => '“The goal is a better handoff: useful context, controlled access, and a clearer path toward available insurance options.”',
         'attribution' => 'How every Ensurance handoff is designed to feel',
     ),
 
     'comparison' => array(
-        'eyebrow'  => 'No quote chaos',
-        'headline' => 'Help without the quote chaos',
-        'lead'     => 'Ensurance is deliberately not a quote-comparison site built around broad distribution. The difference is the whole point.',
+        'eyebrow'  => 'Less quote chaos',
+        'headline' => 'More choice without making insurance shopping more chaotic',
+        'lead'     => 'Ensurance is designed as one guided starting point for moving toward available insurance options, not a wall of instant quotes or a broadly distributed request.',
         'not_label' => 'What Ensurance is not',
         'not_items' => array(
             'A wall of instant quotes to compare',
-            'Your information broadly distributed',
-            'A flood of cold calls and emails',
+            'A request broadly distributed for attention',
+            'A process built around repeated outreach',
             'Pressure to decide before you are ready',
         ),
         'is_label' => 'What Ensurance is',
         'is_items' => array(
-            'One structured, protected request',
-            'Your information protected by default',
+            'One guided insurance request',
+            'A path toward more potential insurance choice',
             'Controlled licensed review where available',
-            'Time and space to decide for yourself',
+            'A more controlled way to move forward',
         ),
     ),
 
     'privacy' => array(
         'eyebrow'  => 'Privacy',
         'headline' => 'Your information is handled through a controlled process',
-        'lead'     => 'Privacy is built into the process. Your details are handled through controlled workflows designed to reduce unnecessary exposure and unwanted contact.',
+        'lead'     => 'Your details are handled through controlled workflows designed to reduce unnecessary exposure and unwanted outreach while supporting the appropriate next step.',
         'cards' => array(
             array( 'title' => 'Controlled handling', 'body' => 'Your information is handled through controlled workflows rather than broadly distributed.' ),
-            array( 'title' => 'Clear choices throughout', 'body' => 'You can choose whether to continue and how you prefer to be contacted as your request moves forward.' ),
-            array( 'title' => 'Controlled licensed access', 'body' => 'When licensed review is appropriate, request access is controlled rather than broadly distributed.' ),
+            array( 'title' => 'Clear expectations', 'body' => 'You can understand how your request is moving forward and decide whether you want to continue the process.' ),
+            array( 'title' => 'Controlled licensed access', 'body' => 'When licensed review is appropriate, access to your request is handled through a controlled process rather than broad distribution.' ),
         ),
         'footnote' => 'Encrypted in transit  ·  You can request removal of your details at any time',
     ),
@@ -157,27 +157,27 @@ return array(
             array(
                 'key'      => 'is_quote_comparison_site',
                 'question' => 'Is Ensurance a quote-comparison site?',
-                'answer'   => 'No. Ensurance does not show you a wall of quotes or pit carriers against each other. It helps you create one clear, protected request that can move toward controlled licensed review and available coverage options.',
+                'answer'   => 'No. Ensurance does not show you a wall of instant quotes. It gives you one guided starting point and, where available, helps your request move toward insurance options through licensed professionals.',
             ),
             array(
                 'key'      => 'will_my_info_be_sold',
                 'question' => 'Will my information be sold or shared with lots of companies?',
-                'answer'   => 'No. Ensurance does not sell your information or broadly distribute your request to a crowd of companies. Your information is handled through a controlled process and may move into licensed review where available.',
+                'answer'   => 'Ensurance does not broadly distribute your request to a crowd of companies. Your information is handled through a controlled process and may be made available for licensed review where appropriate.',
             ),
             array(
                 'key'      => 'what_does_it_cost',
                 'question' => 'What does it cost to use Ensurance?',
-                'answer'   => 'Starting a request is free. Ensurance helps you create a clearer path toward licensed review where available. There is no charge to start or describe what you need.',
+                'answer'   => 'Starting a request is free. Ensurance gives you one guided starting point and helps your request move toward the appropriate next step where available. There is no charge to start or describe what you need.',
             ),
             array(
                 'key'      => 'will_i_get_flood_of_calls',
                 'question' => 'Will I get a flood of calls and emails?',
-                'answer'   => 'No. Ensurance is designed to reduce broad sharing and unwanted contact. Follow-up, where available, happens through a controlled process based on your request and contact preference.',
+                'answer'   => 'Ensurance is designed to reduce broad distribution and unwanted outreach. Any follow-up depends on your request, the available path, and whether licensed review is appropriate.',
             ),
             array(
                 'key'      => 'do_i_have_to_talk_right_away',
                 'question' => 'Do I have to talk to someone right away?',
-                'answer'   => 'No. You set the pace. You can continue, pause, or stop, and choose your preferred contact method if follow-up becomes available.',
+                'answer'   => 'No. You can start online and move through the request at your pace. Licensed human help becomes part of the process where appropriate and available.',
             ),
             array(
                 'key'      => 'can_i_remove_my_info',
@@ -188,13 +188,13 @@ return array(
     ),
 
     'cta_band' => array(
-        'headline' => 'Get insurance help — calmly, and on your terms',
-        'body'     => 'Start your request in about two minutes. Your details are handled through a controlled process designed to reduce broad sharing and unwanted contact.',
+        'headline' => 'More insurance choice. Less quote chaos.',
+        'body'     => 'Start one guided insurance request and move toward available options through a more controlled process, without restarting company after company.',
         'actions'  => array(
             array( 'label' => 'Start your request', 'href' => '/start', 'variant' => 'on-dark-primary', 'event' => 'for_shoppers_final_start_request_click' ),
             array( 'label' => 'How Ensurance works', 'href' => '/how-it-works', 'variant' => 'on-dark-secondary', 'event' => 'for_shoppers_final_how_it_works_click' ),
         ),
-        'microcopy' => 'Less unwanted contact · Controlled request access · Licensed review where available',
+        'microcopy' => 'One guided request · More potential insurance choice · Licensed review where available',
     ),
 
 );

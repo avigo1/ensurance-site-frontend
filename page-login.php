@@ -20,10 +20,10 @@
  *   (hooked on template_redirect) handles it unchanged: WordPress wp_signon(),
  *   sessions, "remember me", redirect and the agent-profile flow all keep working.
  *     - username / password            → the two configured UsersWP login fields
- *     - remember_me = "forever"         → enables persistent login
- *     - redirect_to                     → post-login destination (/dashboard/,
+ *     - remember_me = "forever"        → enables persistent login
+ *     - redirect_to                    → post-login destination (/dashboard/,
  *                                         or a validated ?redirect_to= target)
- *     - uwp_login_nonce                 → wp_create_nonce('uwp-login-nonce'),
+ *     - uwp_login_nonce                → wp_create_nonce('uwp-login-nonce'),
  *                                         verified in UsersWP class-forms.php
  *     - uwp_login_submit                → submit button name
  *   Login errors surface through UsersWP's own notices via
@@ -87,13 +87,10 @@ $al_trust_url    = esc_url( home_url( '/trust-center' ) );
 $al_agents_url   = esc_url( home_url( '/for-agents' ) );
 $al_contact_url  = esc_url( home_url( '/contact' ) );
 
-// Both Founding Agent paths are self-serve sign-ups (→ /create-account?plan=…):
-// the free "Start 60 Day Access" (plan=60-day → dashboard) and the paid "Join as
-// a Founding Agent" ($29/mo, plan=monthly → Stripe checkout, then dashboard).
-// Registry + funnel: functions.php. Logged-in agents skip sign-up and go straight
-// to the dashboard (ensurance_founding_cta_url); logged-out visitors sign up.
-$al_cta_60day   = esc_url( ensurance_founding_cta_url( ensurance_create_account_url( '60-day' ) ) );  // Start 60 Day Access → self-serve signup
-$al_cta_monthly = esc_url( ensurance_founding_cta_url( ensurance_create_account_url( 'monthly' ) ) ); // Join as a Founding Agent → self-serve signup → Stripe
+// Current Stripe destinations.
+$al_stripe_portal_url = esc_url( 'https://checkout.ensurance.com/p/login/bJe4gycqD6Vw1uW16M63K00' );
+$al_cta_60day         = esc_url( 'https://checkout.ensurance.com/b/9B66oG3U7fs26Pg7va63K09' );
+$al_cta_monthly       = esc_url( 'https://checkout.ensurance.com/b/7sY7sK8an93E2z04iY63K08' );
 
 // UsersWP-resolved auth destinations (fall back gracefully if helpers are gone).
 $al_forgot_url   = function_exists( 'uwp_get_forgot_page_url' )  ? esc_url( uwp_get_forgot_page_url() )  : esc_url( wp_lostpassword_url() );
@@ -137,62 +134,19 @@ get_header( 'home' );
   <section class="al-container al-login reveal" id="login" aria-label="Agent sign in">
     <div class="al-login__grid">
 
-      <!-- Returning agent — re-skinned UsersWP login form -->
+      <!-- Returning agent -->
       <div class="al-card al-login__box">
         <span class="al-eyebrow al-eyebrow--secondary">Returning agent?</span>
-        <h2 class="al-card__title">Log in to your dashboard</h2>
-        <p class="al-card__lead">Log in to manage your agency profile, review your access status, and check eligible request details when available in your state or service area.</p>
+        <h2 class="al-card__title">Manage your Ensurance membership</h2>
+        <p class="al-card__lead">Access your secure Stripe portal to manage your membership, billing information, payment method, invoices, or cancellation.</p>
 
-        <?php
-		// UsersWP login error / status notices (rendered on failed submit).
-		if ( function_exists( 'uwp_get_option' ) ) {
-			do_action( 'uwp_template_display_notices', 'login' );
-		}
-		?>
+        <div class="al-form">
+          <a href="<?php echo $al_stripe_portal_url; ?>" class="al-btn al-btn--solid al-submit">
+            Manage Membership &amp; Billing <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 18 ), $ensurance_svg_allowed ); ?>
+          </a>
+        </div>
 
-        <form class="al-form" method="post" action="<?php echo $al_login_action; ?>">
-          <div class="al-field">
-            <label for="username">Email or username</label>
-            <input id="username" name="username" type="text" autocomplete="username" placeholder="you@youragency.com" required />
-          </div>
-          <div class="al-field">
-            <label for="password">Password</label>
-            <div class="al-field__pw">
-              <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required />
-              <button type="button" class="al-pw-toggle" data-target="password" aria-label="Show password" aria-pressed="false">Show</button>
-            </div>
-          </div>
-
-          <div class="al-form__row">
-            <label class="al-check">
-              <input type="checkbox" name="remember_me" value="forever" checked />
-              <span>Remember me</span>
-            </label>
-            <a class="al-link" href="<?php echo $al_forgot_url; ?>" data-event="forgot_password_click">Reset your password</a>
-          </div>
-
-          <?php // --- UsersWP auth contract: keep these exactly. --- ?>
-          <input type="hidden" name="redirect_to" value="<?php echo $al_redirect_to; ?>" />
-          <input type="hidden" name="uwp_login_nonce" value="<?php echo esc_attr( wp_create_nonce( 'uwp-login-nonce' ) ); ?>" />
-
-          <?php
-          // Cloudflare Turnstile — the SAME bot check UsersWP's stock login form
-          // enforces (verify_uwp on uwp_validate_result, gated by the uwp_login
-          // protection which is ON). This hand-rolled form does NOT fire
-          // uwp_template_fields, so without this the login submit fails with
-          // "Security verification missing." Renders just the placeholder; the
-          // ayecode-connect site-wide script hydrates + validates it on submit.
-          if ( has_action( 'ayecode_verify_turnstile_form_fields' ) ) {
-              do_action( 'ayecode_verify_turnstile_form_fields' );
-          }
-          ?>
-
-          <button type="submit" name="uwp_login_submit" class="al-btn al-btn--solid al-submit">
-            Log In to Agent Dashboard <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 18 ), $ensurance_svg_allowed ); ?>
-          </button>
-        </form>
-
-        <p class="al-card__foot">Forgot your password? <a href="<?php echo $al_forgot_url; ?>">Reset your password here.</a></p>
+        <p class="al-card__foot">Membership and billing are managed securely through Stripe.</p>
       </div>
 
       <!-- New agent -->
