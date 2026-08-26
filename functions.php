@@ -6427,6 +6427,218 @@ function ensurance_notify_agent_row_on_activation( $user_id ) {
 }
 add_action( 'uwp_email_activation_success', 'ensurance_notify_agent_row_on_activation', 10, 1 );
 
+// ----------------------------------------------------------------------------
+// 2b-iv-c. AGENCY RECORD SYNC — keeping the agent's sheet row current
+// ----------------------------------------------------------------------------
+// ensurance_notify_agent_row_on_activation() above creates the agent's row once,
+// at activation, carrying the agency name as it stood at sign-up. Nothing kept
+// that row current afterwards: an agent who fixes their agency name on the Agency
+// Profile, or adds the states they are licensed in, changed only the WordPress
+// user record — the row went on saying what it said on day one, and never carried
+// the states at all.
+//
+// THE SAME PIPE, NOT A SECOND ONE. This posts to the SAME
+// ENSURANCE_AGENT_UPSERT_WEBHOOK_URL, with the same key names, keyed on the same
+// `wp_user_id`. The scenario behind it should upsert on that id, so a record
+// update lands on the row activation created rather than making a new one. The
+// only difference is `event`, which is 'agent_record_updated' here, so the
+// scenario can tell a first write from a later one if it wants to.
+//
+// IT FOLLOWS THE RECORD, NOT THE FORM. The trigger is core's own
+// added_user_meta / updated_user_meta on the two keys that hold the agency
+// record, so EVERY writer is covered — the Agency Profile's name field and state
+// picker, the sign-up `company` field, an admin editing the user in wp-admin,
+// wp-cli. There is nothing for a future writer to remember to call.
+
+/**
+ * The agent-row webhook URL for record updates (raw).
+ *
+ * Reads the constant the activation webhook already uses — one endpoint, one
+ * scenario, one row per agent. The filter exists so a test can point it
+ * somewhere else (or at '' to switch the sync off) without touching wp-config.
+ *
+ * @return string Configured URL, '' when unset.
+ */
+function ensurance_agency_record_webhook_url() {
+    $url = ( defined( 'ENSURANCE_AGENT_UPSERT_WEBHOOK_URL' ) && ENSURANCE_AGENT_UPSERT_WEBHOOK_URL )
+        ? (string) ENSURANCE_AGENT_UPSERT_WEBHOOK_URL
+        : '';
+
+    /**
+     * Filter where an agency-record update is posted.
+     *
+     * @param string $url Configured URL, '' when unset.
+     */
+    return (string) apply_filters( 'ensurance_agency_record_webhook_url', $url );
+}
+
+/**
+ * The user-meta keys that make up the agency record.
+ *
+ * The two fields the Agency Profile can change. Filtered so a field added to that
+ * view later (a phone, a licence number) starts syncing by being named here,
+ * rather than by a second copy of the trigger below.
+ *
+ * @return string[]
+ */
+function ensurance_agency_record_keys() {
+    return (array) apply_filters(
+        'ensurance_agency_record_keys',
+        array( ENSURANCE_COMPANY_META, ENSURANCE_DASHBOARD_STATES_META )
+    );
+}
+
+/**
+ * The agency record as the sheet row wants it.
+ *
+ * KEY NAMES MATCH THE ACTIVATION PAYLOAD exactly — `company_name`, `first_name`,
+ * `last_name`, `email`, `wp_user_id` — so both events map onto the same columns
+ * and the scenario needs no second mapping.
+ *
+ * THE STATES ARE SENT THREE WAYS, because a sheet can be either shape and this
+ * side should not have to know which: `states` is the array (iterate it for one
+ * row per agency+state), `states_csv` is the display line for a sheet with one
+ * row per agency ("California, Texas"), and `state_codes` is the same list as
+ * two-letter codes ("CA, TX"). All three come from the stored record through
+ * ensurance_dashboard_stored_states(), so a value that is not one of the 50 plus
+ * DC cannot reach the sheet.
+ *
+ * @param int $user_id User the record belongs to.
+ * @return array Payload, empty when the user does not exist.
+ */
+function ensurance_agency_record_payload( $user_id ) {
+    $user_id = (int) $user_id;
+    $user    = get_userdata( $user_id );
+
+    if ( ! ( $user instanceof WP_User ) ) {
+        return array();
+    }
+
+    $states = ensurance_dashboard_stored_states( $user_id );
+    $codes  = array();
+
+    foreach ( $states as $state ) {
+        $code = ensurance_dashboard_state_code( $state );
+
+        if ( '' !== $code ) {
+            $codes[] = $code;
+        }
+    }
+
+    $payload = array(
+        'event'        => 'agent_record_updated',
+        'wp_user_id'   => $user_id,
+        'company_name' => ensurance_get_company_name( $user_id ),
+        'first_name'   => (string) $user->first_name,
+        'last_name'    => (string) $user->last_name,
+        'email'        => (string) $user->user_email,
+        'plan'         => (string) get_user_meta( $user_id, ENSURANCE_FOUNDING_PLAN_META, true ),
+        'states'       => $states,
+        'states_csv'   => implode( ', ', $states ),
+        'state_codes'  => implode( ', ', $codes ),
+        'state_count'  => count( $states ),
+    );
+
+    /**
+     * Filter the agency record posted to the agent-row webhook.
+     *
+     * @param array $payload Record as built here.
+     * @param int   $user_id User it belongs to.
+     */
+    return (array) apply_filters( 'ensurance_agency_record_payload', $payload, $user_id );
+}
+
+/**
+ * The users whose record changed during this request.
+ *
+ * ONE SEND PER USER PER REQUEST, however many keys moved. The name handler and
+ * the states handler each write one key, but a sign-up writes the company name
+ * while other meta is being set, and an admin can save both at once — sending on
+ * each write would post the same record twice for one change.
+ *
+ * @param int $user_id Optional. User to queue; omit to read the queue.
+ * @return int[] Queued user IDs.
+ */
+function ensurance_agency_record_queue( $user_id = 0 ) {
+    static $queued = array();
+
+    $user_id = (int) $user_id;
+
+    if ( $user_id && ! in_array( $user_id, $queued, true ) ) {
+        $queued[] = $user_id;
+    }
+
+    return $queued;
+}
+
+/**
+ * Queues a sync when a field of the agency record is written.
+ *
+ * Core fires added_user_meta / updated_user_meta AFTER the write, and
+ * update_user_meta() does not fire the update event at all when the value is
+ * unchanged — so a states save that changed nothing posts nothing, which is the
+ * behaviour we want and would otherwise have had to write.
+ *
+ * @param int    $meta_id  Unused — core's signature.
+ * @param int    $user_id  User the meta belongs to.
+ * @param string $meta_key Key that was written.
+ */
+function ensurance_agency_record_touch( $meta_id, $user_id, $meta_key ) {
+    if ( ! in_array( (string) $meta_key, ensurance_agency_record_keys(), true ) ) {
+        return;
+    }
+
+    ensurance_agency_record_queue( (int) $user_id );
+}
+add_action( 'added_user_meta', 'ensurance_agency_record_touch', 10, 3 );
+add_action( 'updated_user_meta', 'ensurance_agency_record_touch', 10, 3 );
+
+/**
+ * Posts the queued records on the way out.
+ *
+ * ON SHUTDOWN, and fire-and-forget, for the reason the activation webhook is:
+ * nothing an agent is doing should wait on Make. The Agency Profile's own save
+ * redirects immediately and the states picker's fetch expects a 204 — neither can
+ * afford a blocking round trip to an external service.
+ *
+ * A MISSING URL IS NOT AN ERROR HERE, unlike at activation: that webhook creates
+ * the row, and its absence loses the agent, while this one only refreshes a row
+ * that already exists. It stays silent so a site with no webhook configured does
+ * not fill its log on every profile edit.
+ */
+function ensurance_agency_record_flush() {
+    $queued = ensurance_agency_record_queue();
+
+    if ( empty( $queued ) ) {
+        return;
+    }
+
+    $url = ensurance_agency_record_webhook_url();
+
+    if ( '' === $url ) {
+        return;
+    }
+
+    foreach ( $queued as $user_id ) {
+        $payload = ensurance_agency_record_payload( $user_id );
+
+        if ( empty( $payload ) ) {
+            continue;
+        }
+
+        wp_remote_post(
+            $url,
+            array(
+                'blocking' => false,
+                'timeout'  => 5,
+                'headers'  => array( 'Content-Type' => 'application/json' ),
+                'body'     => wp_json_encode( $payload ),
+            )
+        );
+    }
+}
+add_action( 'shutdown', 'ensurance_agency_record_flush' );
+
 // ============================================================================
 // 2b-v-b. FOUNDING AGENT ACCESS (/pricing-plans) — SELF-CONTAINED ASSETS
 // ============================================================================
