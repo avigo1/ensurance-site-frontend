@@ -59,8 +59,8 @@ add_filter( 'pre_get_document_title', function () {
 // The hero buttons (#plans) remain in-page jump links to the plan comparison.
 // Both CTAs are wrapped in ensurance_founding_cta_url() so an already-logged-in
 // agent is sent straight to /dashboard/ instead of back through sign-up.
-$fa_cta_60day   = is_user_logged_in() ? home_url( '/dashboard/' ) : 'https://checkout.ensurance.com/b/9B66oG3U7fs26Pg7va63K09';  // Start 60 day access → self-serve signup
-$fa_cta_monthly = is_user_logged_in() ? home_url( '/dashboard/' ) : 'https://checkout.ensurance.com/b/7sY7sK8an93E2z04iY63K08'; // Join as a Founding Agent → self-serve signup → Stripe
+$fa_cta_60day   = is_user_logged_in() ? ensurance_dashboard_url() : 'https://checkout.ensurance.com/b/9B66oG3U7fs26Pg7va63K09';  // Start 60 day access → self-serve signup
+$fa_cta_monthly = is_user_logged_in() ? ensurance_dashboard_url() : 'https://checkout.ensurance.com/b/7sY7sK8an93E2z04iY63K08'; // Join as a Founding Agent → self-serve signup → Stripe
 
 /**
  * Inline Lucide glyphs (stroke 2, round caps) used on this page.

@@ -21,5 +21,5 @@ if ( function_exists( 'ensurance_founding_checkout_start' ) ) {
 }
 
 // Safety net — unreachable in normal operation (the handler always exits).
-wp_safe_redirect( home_url( '/dashboard/' ) );
+wp_safe_redirect( ensurance_dashboard_url() );
 exit;

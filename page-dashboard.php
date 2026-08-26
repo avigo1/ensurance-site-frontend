@@ -79,7 +79,7 @@ if ( ! is_user_logged_in() ) {
 		}
 	}
 
-	$dashboard_target = home_url( '/dashboard/' );
+	$dashboard_target = ensurance_dashboard_url();
 
 	if ( ! empty( $dashboard_args ) ) {
 		$dashboard_target = add_query_arg( $dashboard_args, $dashboard_target );

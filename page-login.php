@@ -115,7 +115,7 @@ $al_login_action = esc_url( get_permalink() ); // post to self — UsersWP proce
 // wp_validate_redirect() returns an EMPTY string (not the fallback) for empty
 // input, and an empty redirect_to would drop us back into UsersWP's own
 // defaults — hence the explicit empty checks on both sides of it.
-$al_dashboard_url = home_url( '/dashboard/' );
+$al_dashboard_url = ensurance_dashboard_url();
 $al_redirect_raw  = isset( $_GET['redirect_to'] ) && is_string( $_GET['redirect_to'] )
 	? trim( wp_unslash( $_GET['redirect_to'] ) )
 	: '';

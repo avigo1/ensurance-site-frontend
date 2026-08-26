@@ -714,6 +714,59 @@ function ensurance_dashboard_request_count( $user_id = 0 ) {
 }
 
 /**
+ * The dashboard page's REAL URL, wherever the WordPress page happens to live.
+ *
+ * WHY THIS EXISTS. Every dashboard URL in the theme used to be written out as
+ * home_url( '/dashboard/' ), which is only correct while the page sits at the top
+ * level. On production it does not: the page is a CHILD of /for-agents/, so its
+ * permalink is /for-agents/dashboard/ and the hardcoded URL is a 404. Staging has
+ * it at the top level, which is why the same code behaved differently on the two
+ * sites.
+ *
+ * NAVIGATION HID THAT AND SAVING EXPOSED IT. A GET for /dashboard/ never looked
+ * broken, because WordPress's own canonical redirect quietly 301s it to the real
+ * permalink — but redirect_canonical() returns early on any method that is not
+ * GET or HEAD. So every POST the dashboard makes (the agency name, the states
+ * picker, Accept / Pass, Undo, lead notes) landed on the 404 page instead of on
+ * its handler, and the handler — which never ran — was blamed. That 404 is the
+ * "error page" an agent got after typing their agency name.
+ *
+ * RESOLVED BY SLUG, NOT BY PATH. get_page_by_path( 'dashboard' ) matches the full
+ * path and therefore misses a nested page; a `name` query matches the slug
+ * whatever the parent is. So this keeps working if the page is moved again, and
+ * it is what makes the URLs agree with is_page( 'dashboard' ) — the test every
+ * handler already guards on, which has always matched on slug alone.
+ *
+ * Cached for the request: the rail registry alone asks four times per render.
+ *
+ * @param array $args Optional. Query args to add — array( 'view' => 'profile' ).
+ * @return string Absolute URL, raw. esc_url at output.
+ */
+function ensurance_dashboard_url( $args = array() ) {
+    static $base = '';
+
+    if ( '' === $base ) {
+        $pages = get_posts(
+            array(
+                'post_type'      => 'page',
+                'name'           => 'dashboard',
+                'post_status'    => 'publish',
+                'posts_per_page' => 1,
+                'fields'         => 'ids',
+                'no_found_rows'  => true,
+            )
+        );
+
+        // The old literal stays as the fallback for the one case the lookup
+        // cannot answer — no published page with that slug — which is also the
+        // case where nothing on the dashboard is reachable anyway.
+        $base = ! empty( $pages ) ? trailingslashit( get_permalink( $pages[0] ) ) : home_url( '/dashboard/' );
+    }
+
+    return empty( $args ) ? $base : add_query_arg( $args, $base );
+}
+
+/**
  * The Agent Dashboard's rail and views — THE single source of truth.
  *
  * One entry per row of the left rail in the AgentDashboard design
@@ -789,7 +842,7 @@ function ensurance_dashboard_views() {
             'label' => 'Today',
             // Icon `home`.
             'icon'  => '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>',
-            'href'  => home_url( '/dashboard/' ),
+            'href'  => ensurance_dashboard_url(),
             // Today's <h1> is the greeting itself, not a view name, and the
             // design gives it no eyebrow or intro — so it renders through its
             // own part instead of the generic header the other three use.
@@ -869,7 +922,7 @@ function ensurance_dashboard_views() {
         $item = array_merge( $defaults, $item );
 
         if ( '' === $item['href'] ) {
-            $item['href'] = add_query_arg( 'view', $item['view'], home_url( '/dashboard/' ) );
+            $item['href'] = add_query_arg( 'view', $item['view'], ensurance_dashboard_url() );
         }
 
         $items[ $i ] = $item;
@@ -1658,11 +1711,11 @@ function ensurance_dashboard_handle_decision() {
                 'slot'     => 'decided',
                 'decision' => $decision,
             ),
-            home_url( '/dashboard/' )
+            ensurance_dashboard_url()
         );
     } else {
         ensurance_dashboard_record_decision( $decision );
-        $target = home_url( '/dashboard/' );
+        $target = ensurance_dashboard_url();
     }
 
     wp_safe_redirect( $target );
@@ -1681,7 +1734,7 @@ add_action( 'template_redirect', 'ensurance_dashboard_handle_decision' );
  * @return string
  */
 function ensurance_dashboard_decision_action() {
-    $action = home_url( '/dashboard/' );
+    $action = ensurance_dashboard_url();
 
     if ( 'live' === ensurance_dashboard_priority_preview() ) {
         $action = add_query_arg( 'slot', 'live', $action );
@@ -1876,10 +1929,10 @@ function ensurance_dashboard_handle_undo() {
     // The panel's form posts to its own URL, so the preview args are still
     // readable here — which is how a previewed decision is told from a real one.
     if ( 'decided' === ensurance_dashboard_priority_preview() ) {
-        $target = add_query_arg( 'slot', 'live', home_url( '/dashboard/' ) );
+        $target = add_query_arg( 'slot', 'live', ensurance_dashboard_url() );
     } else {
         ensurance_dashboard_clear_decision();
-        $target = home_url( '/dashboard/' );
+        $target = ensurance_dashboard_url();
     }
 
     wp_safe_redirect( $target );
@@ -1897,7 +1950,7 @@ add_action( 'template_redirect', 'ensurance_dashboard_handle_undo' );
  * @return string
  */
 function ensurance_dashboard_undo_action() {
-    $action = home_url( '/dashboard/' );
+    $action = ensurance_dashboard_url();
 
     if ( 'decided' !== ensurance_dashboard_priority_preview() ) {
         return $action;
@@ -2711,7 +2764,7 @@ function ensurance_dashboard_today_url() {
 
     // The registry always carries a Today row — it is the rail's first entry and
     // the view everything falls back to — so this is a guard, not a branch.
-    return '' !== $url ? $url : home_url( '/dashboard/' );
+    return '' !== $url ? $url : ensurance_dashboard_url();
 }
 
 /**
@@ -2743,7 +2796,7 @@ function ensurance_dashboard_profile_url() {
 
     // The registry always carries a Profile row, so this is a guard rather than a
     // branch anyone should hit.
-    return '' !== $url ? $url : add_query_arg( 'view', 'profile', home_url( '/dashboard/' ) );
+    return '' !== $url ? $url : add_query_arg( 'view', 'profile', ensurance_dashboard_url() );
 }
 
 /**
@@ -4671,7 +4724,7 @@ function ensurance_dashboard_requests_url() {
 
     // The registry always carries a History row, so this is a guard rather than a
     // branch anyone should hit.
-    return '' !== $url ? $url : add_query_arg( 'view', 'requests', home_url( '/dashboard/' ) );
+    return '' !== $url ? $url : add_query_arg( 'view', 'requests', ensurance_dashboard_url() );
 }
 
 /**
@@ -5940,7 +5993,7 @@ function ensurance_founding_plans() {
             // plans/agent-onboarding-1-free-agent.md). The immediate redirect
             // only fires under the 'auto_approve_login' registration action;
             // until then the durable user-meta copy carries the plan.
-            'destination' => home_url( '/dashboard/' ),
+            'destination' => ensurance_dashboard_url(),
         ),
         'monthly' => array(
             'label'       => 'Join as a Founding Agent',
@@ -6009,7 +6062,7 @@ function ensurance_founding_agent_contact_url() {
  */
 function ensurance_founding_cta_url( $logged_out_url ) {
     if ( is_user_logged_in() ) {
-        return home_url( '/dashboard/' );
+        return ensurance_dashboard_url();
     }
     return $logged_out_url;
 }
@@ -6197,13 +6250,13 @@ function ensurance_founding_checkout_start() {
 
     // Already checked out once — never open a second subscription.
     if ( get_user_meta( $user->ID, ENSURANCE_SUBSCRIPTION_ACTIVE_META, true ) ) {
-        wp_safe_redirect( home_url( '/dashboard/' ) );
+        wp_safe_redirect( ensurance_dashboard_url() );
         exit;
     }
 
     // Only the paid monthly plan checks out here.
     if ( 'monthly' !== ensurance_get_remembered_founding_plan( $user->ID ) ) {
-        wp_safe_redirect( home_url( '/dashboard/' ) );
+        wp_safe_redirect( ensurance_dashboard_url() );
         exit;
     }
 
@@ -6229,7 +6282,7 @@ function ensurance_founding_checkout_start() {
         // literal {CHECKOUT_SESSION_ID} token (add_query_arg would URL-encode the
         // braces, and wp_remote_post's own encoding would then double-encode them,
         // so Stripe could not substitute the session id).
-        'success_url'             => home_url( '/dashboard/?checkout=success&session_id={CHECKOUT_SESSION_ID}' ),
+        'success_url'             => ensurance_dashboard_url() . '?checkout=success&session_id={CHECKOUT_SESSION_ID}',
         'cancel_url'              => home_url( '/pricing-plans/?checkout=cancelled' ),
         // Match key for the Make scenario — on the session…
         'metadata[wp_user_id]'    => (string) $user->ID,
