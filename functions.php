@@ -1359,6 +1359,29 @@ function ensurance_dashboard_priority_preview() {
  * @return array A request in ensurance_dashboard_live_request()'s shape.
  */
 function ensurance_dashboard_sample_request() {
+    $life_preview = isset( $_GET['preview_request'] )
+        && 'life' === sanitize_key( wp_unslash( $_GET['preview_request'] ) )
+        && current_user_can( 'manage_options' );
+
+    if ( $life_preview ) {
+        return array(
+            'coverage'   => 'Life',
+            'county'     => 'California · ZIP 92648',
+            'expires_at' => 0,
+            'matched_at' => time() - ( 2 * MINUTE_IN_SECONDS ),
+            'detail'     => 'Protected shopper request · California · ZIP 92648',
+            'rate_label' => 'Participating rate · $15 if accepted',
+            'facts'      => array(
+                array( 'label' => 'Age', 'value' => '42' ),
+                array( 'label' => 'Coverage amount', 'value' => '$500,000' ),
+                array( 'label' => 'Life type', 'value' => 'Term' ),
+                array( 'label' => 'Term', 'value' => '20 years' ),
+                array( 'label' => 'Tobacco use', 'value' => 'No' ),
+                array( 'label' => 'Coverage timing', 'value' => 'As soon as possible' ),
+            ),
+        );
+    }
+
     return array(
         'coverage'   => 'Auto',
         'county'     => 'Coastal County',
@@ -1429,13 +1452,16 @@ function ensurance_dashboard_live_request( $user_id = 0 ) {
     return array(
         'coverage'   => (string) $request['coverage'],
         'county'     => (string) $request['county'],
+        // Optional queue identifier. Legacy/sample/Auto requests can omit it;
+        // non-auto uses it so Accept/Pass acts on the exact request rendered.
+        'request_id' => isset( $request['request_id'] ) ? sanitize_text_field( (string) $request['request_id'] ) : '',
         'expires_at' => isset( $request['expires_at'] ) ? (int) $request['expires_at'] : 0,
         'matched_at' => isset( $request['matched_at'] ) ? (int) $request['matched_at'] : 0,
         'detail'     => isset( $request['detail'] ) ? (string) $request['detail'] : '',
-        // The design's row is four tiles wide; a fifth would wrap to a lone
-        // tile on a row of its own, so extras are dropped rather than allowed
-        // to reshape the card.
-        'facts'      => array_slice( $facts, 0, 4 ),
+        'rate_label' => isset( $request['rate_label'] ) ? sanitize_text_field( (string) $request['rate_label'] ) : '',
+        // Non-auto requests use a six-fact protected preview. Legacy/Auto
+        // requests keep the established four-tile presentation unchanged.
+        'facts'      => array_slice( $facts, 0, ! empty( $request['request_id'] ) ? 6 : 4 ),
     );
 }
 
@@ -6083,6 +6109,20 @@ function ensurance_founding_plan_login_redirect( $redirect_to, $redirect_page_id
     if ( ! ( $user instanceof WP_User ) || empty( $user->ID ) ) {
         return $redirect_to;
     }
+    // Honor an explicit, same-site login destination first. Request-offer links
+    // use redirect_to to return an agent to the exact protected request they
+    // opened. A remembered Founding Agent plan must not hijack that flow.
+    $requested_redirect = isset( $_REQUEST['redirect_to'] ) && is_string( $_REQUEST['redirect_to'] )
+        ? trim( wp_unslash( $_REQUEST['redirect_to'] ) )
+        : '';
+
+    if ( '' !== $requested_redirect ) {
+        $validated_redirect = wp_validate_redirect( $requested_redirect, '' );
+        if ( '' !== $validated_redirect ) {
+            return $validated_redirect;
+        }
+    }
+
     $slug = ensurance_get_remembered_founding_plan( $user->ID );
     if ( $slug ) {
         return ensurance_founding_plan_destination( $slug );
@@ -7837,29 +7877,64 @@ add_filter('ninja_forms_submit_data', function($form_data){
 // ============================================================================
 
 function lead_page_shortcode() {
-    if (!isset($_GET['id'])) {
-        return '<h3 style="color:red;">No lead specified</h3>';
+    if ( ! is_user_logged_in() ) {
+        $login_lead_id = isset( $_GET['id'] ) ? sanitize_text_field( wp_unslash( $_GET['id'] ) ) : '';
+        $return_url    = home_url( '/lead-page/' );
+        if ( '' !== $login_lead_id ) {
+            $return_url = add_query_arg( 'id', rawurlencode( $login_lead_id ), $return_url );
+        }
+
+        return '<div style="max-width:680px;margin:48px auto;padding:28px;background:#fff;border:1px solid #dfe6ee;border-radius:14px;text-align:center;"><h3 style="margin:0 0 10px;color:#1F3A5F;">Sign in to view this accepted request</h3><p style="margin:0 0 18px;color:#64748b;">Shopper contact information is available only to the professional who successfully purchased access to this request.</p><a href="' . esc_url( wp_login_url( $return_url ) ) . '" style="display:inline-block;padding:12px 20px;border-radius:999px;background:#2B8673;color:#fff;text-decoration:none;font-weight:700;">Sign in</a></div>';
     }
 
-    $lead_id  = sanitize_text_field($_GET['id']);
-    $response = wp_remote_get("https://hook.us2.make.com/iysgqdlai1efll0qsd6ybjc3kszmskhb?lead_id=" . $lead_id);
+    if ( ! isset( $_GET['id'] ) ) {
+        return '<div style="max-width:680px;margin:48px auto;padding:28px;background:#fff;border:1px solid #dfe6ee;border-radius:14px;text-align:center;"><h3 style="margin:0;color:#1F3A5F;">Request not found</h3></div>';
+    }
 
-    if (is_wp_error($response)) return '<p>Error loading lead</p>';
+    $lead_id = sanitize_text_field( wp_unslash( $_GET['id'] ) );
+    $user    = wp_get_current_user();
+    $email   = sanitize_email( $user->user_email );
 
-    $body = wp_remote_retrieve_body($response);
-    $data = json_decode($body, true);
-    if (!$data) return '<p>Invalid response</p>';
+    if ( '' === $lead_id || ! is_email( $email ) ) {
+        return '<p>We could not verify access to this request.</p>';
+    }
+
+    $response = wp_remote_post(
+        'https://hook.us2.make.com/fbahw72lw4bnyo63lk2zlmytdhqwbx26',
+        array(
+            'timeout' => 12,
+            'headers' => array( 'Content-Type' => 'application/json' ),
+            'body'    => wp_json_encode(
+                array(
+                    'lead_id'     => $lead_id,
+                    'agent_email' => strtolower( $email ),
+                )
+            ),
+        )
+    );
+
+    if ( is_wp_error( $response ) ) {
+        return '<p>We could not load this request right now. Please try again.</p>';
+    }
+
+    $status = (int) wp_remote_retrieve_response_code( $response );
+    $body   = wp_remote_retrieve_body( $response );
+    $data   = json_decode( $body, true );
+
+    if ( 200 !== $status || ! is_array( $data ) || isset( $data['error'] ) ) {
+        return '<div style="max-width:680px;margin:48px auto;padding:28px;background:#fff;border:1px solid #dfe6ee;border-radius:14px;text-align:center;"><h3 style="margin:0 0 10px;color:#1F3A5F;">Shopper details are protected</h3><p style="margin:0;color:#64748b;">This account does not currently have finalized access to this request.</p></div>';
+    }
 
     ob_start();
     ?>
     <style>
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
       :root {
-        --blue: #0073E6; --blue-dark: #0D4095; --blue-light: #e6f0f8;
-        --orange: #F5A524; --orange-dark: #d98e18;
-        --green: #16a34a; --green-light: #dcfce7;
-        --white: #ffffff; --off-white: #f7f8fc;
-        --border: #e2e8f0; --text-muted: #64748b; --text-dark: #1e293b;
+        --blue: #1F3A5F; --blue-dark: #162D4A; --blue-light: #F3F7FA;
+        --orange: #2B8673; --orange-dark: #247261;
+        --green: #2B8673; --green-light: #EEF8F4;
+        --white: #ffffff; --off-white: #F7F9FC;
+        --border: #DFE6EE; --text-muted: #64748b; --text-dark: #1F3A5F;
         --text-light: rgba(255,255,255,0.55);
         --font-head: 'Manrope', sans-serif; --font-body: 'Inter', sans-serif;
       }
@@ -7902,21 +7977,21 @@ function lead_page_shortcode() {
     </style>
     <div class="wrapper">
       <div class="header-card">
-        <h1>You're Connected to a <span>New Active Shopper</span></h1>
-        <p>You now have direct access to this shopper's contact details. Reaching out early gives you the best chance to win the relationship.</p>
+        <h1>Your <span>request access</span> is confirmed</h1>
+        <p>Your finalized access includes the shopper information below. Use the request details to continue the conversation when you are ready.</p>
       </div>
 
       <div style="background:#f0f7ff; border-left:1px solid #e2e8f0; border-right:1px solid #e2e8f0; padding:20px 40px; border-bottom:1px solid #e2e8f0;">
-        <p style="font-size:11px; font-weight:700; color:#0073E6; text-transform:uppercase; letter-spacing:1.2px; margin-bottom:10px;">What happens next</p>
+        <p style="font-size:11px; font-weight:700; color:#2B8673; text-transform:uppercase; letter-spacing:1.2px; margin-bottom:10px;">Your next step</p>
         <ul style="list-style:none; padding:0; margin:0; font-size:13px; color:#475569; line-height:2;">
-          <li>&#10003;&nbsp; This shopper is actively reviewing options</li>
-          <li>&#10003;&nbsp; You have full access to reach out directly</li>
-          <li>&#10003;&nbsp; Early contact typically leads to better engagement</li>
+          <li>&#10003;&nbsp; Review the shopper's request details below</li>
+          <li>&#10003;&nbsp; Contact the shopper using the information provided</li>
+          <li>&#10003;&nbsp; Continue the insurance conversation directly</li>
         </ul>
       </div>
 
       <div class="main-card">
-        <p style="font-size:11px; font-weight:700; color:#F5A524; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:6px;">Start here</p>
+        <p style="font-size:11px; font-weight:700; color:#2B8673; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:6px;">Shopper contact</p>
         <div class="section-label">Contact Information</div>
         <div class="info-grid">
           <div class="info-row">
@@ -7976,7 +8051,7 @@ function lead_page_shortcode() {
           </div>
         </div>
 
-        <p style="font-size:11px; font-weight:700; color:#F5A524; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; margin-top:4px;">Opportunity insight</p>
+        <p style="font-size:11px; font-weight:700; color:#2B8673; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; margin-top:4px;">Request context</p>
         <div class="section-label">Current Insurance</div>
         <div class="info-grid">
           <div class="info-row">
@@ -7999,8 +8074,8 @@ function lead_page_shortcode() {
         </div>
 
         <div class="timestamp">
-          <div style="font-size:12px; color:#475569; line-height:1.7;">This shopper is currently reviewing insurance options.<br>You have full access to reach out and start the conversation.</div>
-          <span class="status-pill">&#10003; Active Shopper</span>
+          <div style="font-size:12px; color:#475569; line-height:1.7;">Your finalized request access is active.<br>You may use the shopper information above to continue the conversation.</div>
+          <span class="status-pill">&#10003; Access Confirmed</span>
         </div>
       </div>
 
@@ -8013,7 +8088,7 @@ function lead_page_shortcode() {
       </div>
 
       <p class="legal">
-        This lead is exclusively assigned to you. Do not share or redistribute.<br>
+        This shopper request is available only through your finalized Ensurance access.<br>
         For support contact <a href="mailto:support@ensurance.com">support@ensurance.com</a>
       </p>
     </div>
@@ -8021,6 +8096,363 @@ function lead_page_shortcode() {
     return ob_get_clean();
 }
 add_shortcode('lead_page', 'lead_page_shortcode');
+
+// Normalize the current public Agent Request Types page without changing stored revisions or payment logic.
+add_filter( 'the_content', function ( $content ) {
+    if ( ! is_page( 772 ) ) {
+        return $content;
+    }
+    $replacements = array(
+        'href="/pricing-plans/"' => 'href="/for-agents/agent-access/"',
+        'href="/homeowners-insurance-quote/"' => 'href="/insurance-coverage/homeowners-insurance-quote-help-ensurance/"',
+        'href="/renters-insurance-quote/"' => 'href="/insurance-coverage/renters-insurance-quote/"',
+        'href="/life-insurance-quote/"' => 'href="/insurance-coverage/life-insurance-quote/"',
+        'href="/health-insurance-quote-request/"' => 'href="/insurance-coverage/health-insurance-quote-request/"',
+        'href="/commercial-insurance-quote/"' => 'href="/insurance-coverage/commercial-insurance-quote/"',
+    );
+    return strtr( $content, $replacements );
+}, 20 );
+
+// Keep private agent, account, request, payment and checkout utility surfaces usable but out of search/AI discovery.
+function ensurance_is_private_utility_surface() {
+    return is_page( array( 20614, 2867, 2868, 2866, 21161, 21482, 21483, 21504, 21125, 21124, 2365, 2364, 2363, 2361, 11596, 11851 ) );
+}
+add_action( 'template_redirect', function () {
+    if ( ! ensurance_is_private_utility_surface() ) {
+        return;
+    }
+    add_filter( 'wpseo_json_ld_output', '__return_false', 999 );
+    add_filter( 'wpseo_opengraph_title', '__return_false', 999 );
+    add_filter( 'wpseo_opengraph_desc', '__return_false', 999 );
+    add_filter( 'wpseo_twitter_title', '__return_false', 999 );
+    add_filter( 'wpseo_twitter_description', '__return_false', 999 );
+    add_filter( 'wpseo_robots', function () {
+        return 'noindex, nofollow, nosnippet, noarchive';
+    }, 999 );
+    add_filter( 'wpseo_robots_array', function ( $robots ) {
+        $robots['index'] = 'noindex';
+        $robots['follow'] = 'nofollow';
+        return $robots;
+    }, 999 );
+}, 0 );
+add_action( 'send_headers', function () {
+    if ( ensurance_is_private_utility_surface() ) {
+        header( 'X-Robots-Tag: noindex, nofollow, nosnippet, noarchive', true );
+    }
+} );
+add_action( 'wp_head', function () {
+    if ( ensurance_is_private_utility_surface() ) {
+        echo '<meta name="googlebot" content="noindex, nofollow, nosnippet, noarchive, noimageindex">' . "\n";
+        echo '<meta name="bingbot" content="noindex, nofollow, nosnippet, noarchive, noimageindex">' . "\n";
+    }
+}, 2 );
+
+/**
+ * Auto V2 controlled-checkout browser layer.
+ *
+ * This intentionally overrides only the acceptance action on the existing Auto
+ * checkout page. Pricing cards and membership-context presentation remain in
+ * the page content, while purchase authority stays on the Ensurance server.
+ */
+function ensurance_auto_v2_checkout_browser_layer() {
+    if ( ! is_page( 20614 ) ) {
+        return;
+    }
+    ?>
+    <style>
+      .ens-checkout-window {
+        margin: 18px 0 0;
+        padding: 16px 18px;
+        border: 1px solid #d7e2ea;
+        border-radius: 12px;
+        background: #f8fafc;
+        text-align: center;
+      }
+      .ens-checkout-window__label {
+        margin: 0 0 5px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: .5px;
+        text-transform: uppercase;
+        color: #64748b;
+      }
+      .ens-checkout-window__time {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 800;
+        line-height: 1.2;
+        color: #1F3A5F;
+      }
+      .ens-checkout-window__copy {
+        margin: 7px 0 0;
+        font-size: 12px;
+        line-height: 1.5;
+        color: #64748b;
+      }
+      .ens-checkout-window__button {
+        margin-top: 14px !important;
+      }
+    </style>
+    <script>
+    (function () {
+      const V2_CHECKOUT_URL = 'https://hook.us2.make.com/o4q4cyijvh5z3gr48ubco7q357csv7lx';
+      const TOKEN_CHECKOUT_URL = 'https://hook.us2.make.com/bik17wic8j95r9h6dws5a9wit3kg0vk9';
+      const params = new URLSearchParams(window.location.search);
+      const leadId = params.get('lead_id');
+      const email = params.get('email');
+      const offerToken = params.get('offer_token');
+      let countdownTimer = null;
+
+      function safeHtml(value) {
+        return String(value || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+
+      function checkoutContainer() {
+        return document.getElementById('checkout-container');
+      }
+
+      function stopCountdown() {
+        if (countdownTimer) {
+          window.clearInterval(countdownTimer);
+          countdownTimer = null;
+        }
+      }
+
+      function renderExpired() {
+        stopCountdown();
+        const container = checkoutContainer();
+        if (!container) return;
+        container.innerHTML = `
+          <div class="ens-state">
+            <div class="ens-state-icon ens-state-icon-error">&#128336;</div>
+            <span class="ens-state-badge ens-state-badge-error">Checkout Window Ended</span>
+            <h2>Your checkout window has expired.</h2>
+            <p>The request may still be available. Check availability again to continue.</p>
+            <button type="button" class="ens-btn ens-btn-standard" onclick="window.location.reload()">Check availability again</button>
+          </div>
+        `;
+      }
+
+      function renderCheckoutWindow(url, expiresAt) {
+        const container = checkoutContainer();
+        if (!container || !url || !expiresAt) return;
+
+        const expiryMs = Date.parse(expiresAt);
+        if (!Number.isFinite(expiryMs)) {
+          throw new Error('Invalid checkout expiration');
+        }
+
+        container.innerHTML = `
+          <div class="ens-state">
+            <div class="ens-state-icon ens-state-icon-success">&#10003;</div>
+            <span class="ens-state-badge ens-state-badge-success">Request Available</span>
+            <h2>Secure checkout is ready</h2>
+            <p>Your temporary checkout window is shown below. The server controls availability.</p>
+            <div class="ens-checkout-window" aria-live="polite">
+              <p class="ens-checkout-window__label">Checkout window</p>
+              <p class="ens-checkout-window__time" id="ens-checkout-countdown">--:-- remaining</p>
+              <p class="ens-checkout-window__copy">Complete secure checkout before this window ends.</p>
+              <a class="ens-btn ens-btn-join ens-checkout-window__button" id="ens-v2-stripe-link" href="${safeHtml(url)}">Continue to secure checkout</a>
+            </div>
+          </div>
+        `;
+
+        const tick = function () {
+          const remaining = Math.max(0, expiryMs - Date.now());
+          if (remaining <= 0) {
+            renderExpired();
+            return;
+          }
+          const totalSeconds = Math.ceil(remaining / 1000);
+          const minutes = Math.floor(totalSeconds / 60);
+          const seconds = totalSeconds % 60;
+          const node = document.getElementById('ens-checkout-countdown');
+          if (node) {
+            node.textContent = minutes + ':' + String(seconds).padStart(2, '0') + ' remaining';
+          }
+        };
+
+        tick();
+        countdownTimer = window.setInterval(tick, 1000);
+      }
+
+      async function loadPrivateOfferContext() {
+        if (!offerToken) return;
+
+        const container = checkoutContainer();
+        if (!container) return;
+
+        container.innerHTML = `
+          <div class="ens-state">
+            <div class="ens-spinner"></div>
+            <h2>Checking your request access...</h2>
+            <p>We are confirming this private request link and your current pricing.</p>
+          </div>
+        `;
+
+        try {
+          const response = await fetch(TOKEN_CHECKOUT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              offer_token: offerToken,
+              purchase_option: 'context'
+            })
+          });
+
+          const data = await response.json();
+          if (!response.ok || data.error) {
+            throw new Error(data.error || 'Private request link could not be verified');
+          }
+
+          const membershipStatus = String(data.membership_status || '').trim().toLowerCase();
+          const isMember = membershipStatus === 'member' || membershipStatus === 'trialing';
+
+          if (isMember) {
+            container.innerHTML = `
+              <div class="ens-intro">
+                <h2>Participating Agent pricing</h2>
+                <p>Your current Participating Agent pricing applies to this request.</p>
+              </div>
+              <div class="ens-options">
+                <div class="ens-option ens-option-featured">
+                  <div class="ens-option-row">
+                    <div class="ens-option-text">
+                      <div class="ens-option-title">Accept this request</div>
+                      <p class="ens-option-copy">One-time Participating Agent price. No new membership or trial is added.</p>
+                    </div>
+                    <div class="ens-price ens-price-green">$15<span>one time</span></div>
+                  </div>
+                  <button type="button" class="ens-btn ens-btn-join" onclick="beginCheckout('standard')">Accept Request - $15</button>
+                </div>
+              </div>
+            `;
+            return;
+          }
+
+          container.innerHTML = `
+            <div class="ens-intro">
+              <h2>Choose how you'd like to accept</h2>
+              <p>We'll confirm the request is still available before sending you to secure checkout.</p>
+            </div>
+            <div class="ens-options">
+              <div class="ens-option">
+                <div class="ens-option-row">
+                  <div class="ens-option-text">
+                    <div class="ens-option-title">Accept this request</div>
+                    <p class="ens-option-copy">One-time Standard price. No subscription or recurring charge.</p>
+                  </div>
+                  <div class="ens-price">$22<span>one time</span></div>
+                </div>
+                <button type="button" class="ens-btn ens-btn-standard" onclick="beginCheckout('standard')">Accept Request - $22</button>
+              </div>
+              <div class="ens-option ens-option-featured">
+                <div class="ens-badge">Save $7 + Get 60 Days Free</div>
+                <div class="ens-option-row">
+                  <div class="ens-option-text">
+                    <div class="ens-option-title">Join &amp; Accept</div>
+                    <p class="ens-option-copy">Become a Participating Agent and accept this request for $15 today.</p>
+                  </div>
+                  <div class="ens-price ens-price-green">$15<span>today</span></div>
+                </div>
+                <div class="ens-renewal">Then $29/month unless canceled.</div>
+                <button type="button" class="ens-btn ens-btn-join" onclick="beginCheckout('join')">Join &amp; Accept - $15</button>
+              </div>
+            </div>
+          `;
+        } catch (error) {
+          container.innerHTML = `
+            <div class="ens-state">
+              <div class="ens-state-icon ens-state-icon-error">&#128274;</div>
+              <span class="ens-state-badge ens-state-badge-error">Private Link Unavailable</span>
+              <h2>We could not verify this request link</h2>
+              <p>Please return to your Ensurance request email and use the most recent link.</p>
+            </div>
+          `;
+        }
+      }
+
+      if (offerToken) {
+        loadPrivateOfferContext();
+      }
+
+      window.beginCheckout = async function (purchaseOption) {
+        if (purchaseOption !== 'standard' && purchaseOption !== 'join') return;
+        const container = checkoutContainer();
+        if (!container || (!offerToken && (!leadId || !email))) return;
+
+        stopCountdown();
+        container.innerHTML = `
+          <div class="ens-state">
+            <div class="ens-spinner"></div>
+            <h2>Checking availability...</h2>
+            <p>We are confirming this insurance request and your current pricing.</p>
+            <div class="ens-secure"><span class="ens-secure-dot"></span>Secure checkout via Stripe</div>
+          </div>
+        `;
+
+        try {
+          const checkoutUrl = offerToken ? TOKEN_CHECKOUT_URL : V2_CHECKOUT_URL;
+          const checkoutPayload = offerToken
+            ? {
+                offer_token: offerToken,
+                purchase_option: purchaseOption
+              }
+            : {
+                lead_id: leadId,
+                email: email,
+                purchase_option: purchaseOption
+              };
+
+          const response = await fetch(checkoutUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(checkoutPayload)
+          });
+
+          if (!response.ok) throw new Error('Checkout request failed');
+          const data = await response.json();
+
+          if (data.error) {
+            container.innerHTML = `
+              <div class="ens-state">
+                <div class="ens-state-icon ens-state-icon-error">&#128274;</div>
+                <span class="ens-state-badge ens-state-badge-error">Request Unavailable</span>
+                <h2>Checkout is not available right now</h2>
+                <p>${safeHtml(data.error)}</p>
+                <button type="button" class="ens-btn ens-btn-standard" onclick="window.location.reload()">Check availability again</button>
+              </div>
+            `;
+            return;
+          }
+
+          if (!data.url || !data.expires_at) {
+            throw new Error('Incomplete checkout response');
+          }
+
+          renderCheckoutWindow(data.url, data.expires_at);
+        } catch (error) {
+          container.innerHTML = `
+            <div class="ens-state">
+              <div class="ens-state-icon ens-state-icon-error">&#9888;</div>
+              <span class="ens-state-badge ens-state-badge-error">Unable to Continue</span>
+              <h2>We could not start secure checkout</h2>
+              <p>Please check availability again or contact <a href="mailto:support@ensurance.com" class="ens-support-link">support@ensurance.com</a>.</p>
+              <button type="button" class="ens-btn ens-btn-standard" onclick="window.location.reload()">Check availability again</button>
+            </div>
+          `;
+        }
+      };
+    })();
+    </script>
+    <?php
+}
+add_action( 'wp_footer', 'ensurance_auto_v2_checkout_browser_layer', 100 );
 
 // ─────────────────────────────────────────────────────────────────────
 // 2b-xiii. "START YOUR REQUEST" FORM SLOT — RENDER ONLY THE NINJA FORM
@@ -8062,6 +8494,106 @@ function ensurance_remove_gd_location_switcher() {
 }
 add_action( 'template_redirect', 'ensurance_remove_gd_location_switcher' );
 
+// Permanently retire the former GeoDirectory public agency namespace.
+// No live agency listings remain under /insurance-agencies/. Returning 410
+// gives search engines a stronger removal signal than a generic 404 while
+// preserving the newer /participating-professionals/ and agent workflows.
+function ensurance_retire_legacy_agency_directory() {
+    $path = trim( (string) wp_parse_url( isset( $_SERVER['REQUEST_URI'] ) ? wp_unslash( $_SERVER['REQUEST_URI'] ) : '', PHP_URL_PATH ), '/' );
+
+    $legacy_agency_path = ( 'insurance-agencies' === $path || 0 === strpos( $path, 'insurance-agencies/' ) );
+    $legacy_location_path = ( 'location' === $path || 0 === strpos( $path, 'location/' ) );
+
+    if ( ! $legacy_agency_path && ! $legacy_location_path ) {
+        return;
+    }
+
+    status_header( 410 );
+    nocache_headers();
+    header( 'X-Robots-Tag: noindex, follow', true );
+
+    if ( function_exists( 'get_header' ) ) {
+        get_header();
+    }
+
+    echo '<main id="main" class="site-main"><div class="site-container" style="max-width:760px;padding:72px 24px 96px;"><h1>This directory has been retired.</h1><p>Ensurance no longer operates a public insurance agency directory. Start with an insurance request instead, or learn how Ensurance works.</p><p><a href="' . esc_url( home_url( '/insurance-coverage/' ) ) . '">Explore insurance request types</a> &nbsp; <a href="' . esc_url( home_url( '/how-ensurance-works/' ) ) . '">How Ensurance works</a></p></div></main>';
+
+    if ( function_exists( 'get_footer' ) ) {
+        get_footer();
+    }
+    exit;
+}
+add_action( 'template_redirect', 'ensurance_retire_legacy_agency_directory', 1 );
+
+// Recover search equity from retired California health articles by sending
+// those exact legacy URLs to the current Health authority page.
+function ensurance_recover_legacy_health_urls() {
+    $path = trim( (string) wp_parse_url( isset( $_SERVER['REQUEST_URI'] ) ? wp_unslash( $_SERVER['REQUEST_URI'] ) : '', PHP_URL_PATH ), '/' );
+    $legacy_health_paths = array(
+        'article/affordable-health-insurance-california',
+        'article/affordable-health-insurance-california-self-employed',
+    );
+
+    if ( in_array( $path, $legacy_health_paths, true ) ) {
+        wp_safe_redirect( home_url( '/insurance-coverage/health-insurance-quote-request/' ), 301 );
+        exit;
+    }
+
+    if ( in_array( $path, array( 'about-ensurance-inc', 'about-ensurance-inc/founder-story' ), true ) ) {
+        wp_safe_redirect( home_url( '/about-ensurance/' ), 301 );
+        exit;
+    }
+
+    if ( 'faq' === $path ) {
+        wp_safe_redirect( home_url( '/insurance-request-faq-ensurance/' ), 301 );
+        exit;
+    }
+}
+add_action( 'template_redirect', 'ensurance_recover_legacy_health_urls', 0 );
+
+// Recover high-impression legacy navigation URLs still appearing in Search Console.
+function ensurance_recover_legacy_navigation_urls() {
+    $path = trim( (string) wp_parse_url( isset( $_SERVER['REQUEST_URI'] ) ? wp_unslash( $_SERVER['REQUEST_URI'] ) : '', PHP_URL_PATH ), '/' );
+    $redirects = array(
+        'coverage'                  => '/insurance-coverage/',
+        'how-it-works'              => '/how-ensurance-works/',
+        'join-as-agent'             => '/for-agents/',
+        'join-the-ensurance-family' => '/for-agents/',
+        'insurance-agents'          => '/for-agents/',
+        'about-ensurance-inc'       => '/about-ensurance/',
+        'renters-insurance-quote'    => '/insurance-coverage/renters-insurance-quote/',
+        'texas-insurance'            => '/insurance-by-state/texas-insurance/',
+        'commercial-insurance-for-new-jersey-businesses' => '/insurance-by-state/commercial-insurance-for-new-jersey-businesses/',
+        'faq'                       => '/insurance-request-faq-ensurance/',
+        'login'                     => '/for-agents/login/',
+        'auto-insurance/car-insurance-quote-without-spam-calls' => '/insurance-coverage/auto-insurance-quote-request/car-insurance-quote-without-spam-calls/',
+        'auto-insurance-quote-request/car-insurance-quote-without-spam-calls' => '/insurance-coverage/auto-insurance-quote-request/car-insurance-quote-without-spam-calls/',
+        'auto-insurance-quote'       => '/insurance-coverage/auto-insurance-quote-request/',
+        'car'                        => '/insurance-coverage/auto-insurance-quote-request/',
+        'fast-free-auto-insurance-quote' => '/insurance-coverage/auto-insurance-quote-request/',
+        'insurance-products'         => '/insurance-coverage/',
+        'auto-insurance-quote-2'     => '/insurance-coverage/auto-insurance-quote-request/auto-insurance-quote/',
+        'health-insurance-quote-2'   => '/insurance-coverage/health-insurance-quote-request/health-insurance-quote-help/',
+        'get-a-quote'                => '/insurance-coverage/',
+        'get-my-quote-form'          => '/insurance-coverage/',
+        'article/business-owners-policy-california' => '/insurance-coverage/commercial-insurance-quote/',
+        'article/commercial-insurance-in-san-diego-2026-guide-to-coverage-costs-local-risk-factors' => '/insurance-coverage/commercial-insurance-quote/',
+        'article/home-insurance-in-orange-county-what-you-need-to-know' => '/insurance-coverage/homeowners-insurance-quote-help-ensurance/',
+        'article/los-angeles-county-homeowners-insurance-coverage-costs-tips' => '/insurance-coverage/homeowners-insurance-quote-help-ensurance/',
+        'article/renters-insurance-in-san-diego-how-to-get-the-best-coverage' => '/insurance-coverage/renters-insurance-quote/',
+        'article/how-much-life-insurance-do-i-need-for-families' => '/insurance-coverage/life-insurance-quote/',
+        'article/independent-insurance-agents-in-california-what-they-actually-do' => '/insurance-by-state/california-insurance/',
+        'article/california-car-insurance-guide-2025' => '/insurance-by-state/california-insurance/california-auto-insurance/',
+        'article/best-way-to-get-auto-insurance-in-san-diego-county' => '/insurance-by-state/california-insurance/california-auto-insurance/',
+    );
+
+    if ( isset( $redirects[ $path ] ) ) {
+        wp_safe_redirect( home_url( $redirects[ $path ] ), 301 );
+        exit;
+    }
+}
+add_action( 'template_redirect', 'ensurance_recover_legacy_navigation_urls', 0 );
+
 // ─────────────────────────────────────────────────────────────────────
 // 2b-xv. INVESTOR BRIEF (CALM INTELLIGENCE REDESIGN) — FONT SWAP
 // The investor brief was rebuilt on the Calm Intelligence design system
@@ -8096,6 +8628,25 @@ add_action( 'wp_enqueue_scripts', 'ensurance_investor_brief_fonts', 20 );
  *
  * Works with Yoast SEO's existing robots meta tag.
  */
+// Non-auto request adapter for the shared agent dashboard. The file is additive
+// and leaves the existing Auto lead/dashboard integration untouched.
+$ensurance_non_auto_dashboard_file = get_stylesheet_directory() . '/includes/non-auto-dashboard.php';
+if ( file_exists( $ensurance_non_auto_dashboard_file ) ) {
+    require_once $ensurance_non_auto_dashboard_file;
+}
+
+$ensurance_non_auto_purchase_control_file = get_stylesheet_directory() . '/includes/non-auto-purchase-control.php';
+if ( file_exists( $ensurance_non_auto_purchase_control_file ) ) {
+    require_once $ensurance_non_auto_purchase_control_file;
+}
+$ensurance_auto_purchase_control_file = get_stylesheet_directory() . '/includes/auto-purchase-control.php';
+if ( file_exists( $ensurance_auto_purchase_control_file ) ) {
+    require_once $ensurance_auto_purchase_control_file;
+}
+$ensurance_life_purchase_control_file = get_stylesheet_directory() . '/includes/life-purchase-control.php';
+if ( file_exists( $ensurance_life_purchase_control_file ) ) {
+    require_once $ensurance_life_purchase_control_file;
+}
 add_filter( 'wpseo_robots', function( $robots, $presentation ) {
 
     if ( is_admin() ) {
@@ -8117,6 +8668,13 @@ add_filter( 'wpseo_robots', function( $robots, $presentation ) {
 
     if ( '/' !== $request_path ) {
         $request_path .= '/';
+    }
+
+    // Public insurance pages must allow crawlers to follow their internal links.
+    // This overrides stale Yoast per-page nofollow flags without changing indexation.
+    $public_follow_page_ids = array( 11596, 11851, 11854, 11864, 11870 );
+    if ( is_page( $public_follow_page_ids ) && is_string( $robots ) ) {
+        $robots = str_replace( 'nofollow', 'follow', $robots );
     }
 
     $noindex_paths = array(
@@ -8144,3 +8702,427 @@ add_filter( 'wpseo_robots', function( $robots, $presentation ) {
     return $robots;
 
 }, 99, 2 );
+
+// Keep plugin analytics taxonomy out of Yoast XML sitemaps.
+add_filter( 'wpseo_sitemap_exclude_taxonomy', function( $excluded, $taxonomy ) {
+    if ( 'wpa-stats-type' === $taxonomy ) {
+        return true;
+    }
+
+    return $excluded;
+}, 10, 2 );
+
+// Normalize legacy internal links on public authority content only.
+// Request forms, checkout, account, and product-model pages are intentionally excluded.
+add_filter( 'the_content', function( $content ) {
+    if ( is_admin() || ! is_singular() ) {
+        return $content;
+    }
+
+    $authority_post_ids = array(
+        303, 772, 17884, 19851, 20043, 20209, 20210, 20212, 20214, 20248,
+        20558, 21187, 21194, 21198, 21200, 21202, 21206, 21209, 21210, 21213,
+        21217, 21223, 21226, 21228, 21256, 21258,
+    );
+
+    if ( ! in_array( get_the_ID(), $authority_post_ids, true ) ) {
+        return $content;
+    }
+
+    $legacy_urls = array(
+        'href="/coverage/"'                   => 'href="/insurance-coverage/"',
+        'href="/auto-insurance-quote/"'       => 'href="/insurance-coverage/auto-insurance-quote-request/"',
+        'href="/homeowners-insurance-quote/"' => 'href="/insurance-coverage/homeowners-insurance-quote-help-ensurance/"',
+        'href="/renters-insurance-quote/"'    => 'href="/insurance-coverage/renters-insurance-quote/"',
+        'href="/commercial-insurance-quote/"' => 'href="/insurance-coverage/commercial-insurance-quote/"',
+        'href="/life-insurance-quote/"'       => 'href="/insurance-coverage/life-insurance-quote/"',
+        'href="/health-insurance-quote-request/"' => 'href="/insurance-coverage/health-insurance-quote-request/"',
+        'href="/insurance-by-state/georgia-insurance/"' => 'href="/insurance-by-state/georgia-insurance-help-auto-home-more-ensurance/"',
+    );
+
+    $content = str_replace( array_keys( $legacy_urls ), array_values( $legacy_urls ), $content );
+
+    // Give the Texas authority hub a real internal discovery path to its six guides.
+    if ( 20043 === get_the_ID() && false === strpos( $content, 'id="texas-ensurance-guides"' ) ) {
+        $texas_guides = <<<'HTML'
+<section class="etx-section etx-white" id="texas-ensurance-guides">
+  <div class="etx-container">
+    <div class="etx-resources-heading">
+      <p class="etx-eyebrow">TEXAS INSURANCE GUIDES</p>
+      <h2>Go deeper on the Texas coverage you are researching.</h2>
+      <p>Use these Ensurance guides for more detail on Texas rules, coverage questions, and what to understand before starting an insurance request.</p>
+    </div>
+    <div class="etx-resource-grid">
+      <a class="etx-resource" href="/article/texas-auto-insurance-guide-requirements-coverage-options-and-state-laws-explained/"><span>AUTO</span><strong>Texas Auto Insurance Guide</strong><p>Requirements, coverage choices, and Texas auto insurance rules.</p></a>
+      <a class="etx-resource" href="/article/texas-homeowners-insurance-guide-coverage-costs-and-state-requirements-explained/"><span>HOME</span><strong>Texas Homeowners Insurance Guide</strong><p>Home coverage, Texas property risks, and questions to understand.</p></a>
+      <a class="etx-resource" href="/article/texas-renters-insurance-guide-coverage-costs-and-what-renters-should-know/"><span>RENTERS</span><strong>Texas Renters Insurance Guide</strong><p>What renters coverage can protect and what tenants should know.</p></a>
+      <a class="etx-resource" href="/article/texas-life-insurance-guide-coverage-options-costs-and-what-residents-should-know/"><span>LIFE</span><strong>Texas Life Insurance Guide</strong><p>Coverage types, planning questions, and licensed-review considerations.</p></a>
+      <a class="etx-resource" href="/article/texas-commercial-insurance-guide-coverage-types-requirements-and-costs-for-businesses/"><span>BUSINESS</span><strong>Texas Business Insurance Guide</strong><p>Coverage types, Texas business requirements, and common risk questions.</p></a>
+      <a class="etx-resource" href="/article/texas-health-insurance-guide-coverage-options-costs-and-how-it-works/"><span>HEALTH</span><strong>Texas Health Insurance Guide</strong><p>Coverage options, Marketplace context, and how Texas health insurance works.</p></a>
+    </div>
+  </div>
+</section>
+HTML;
+
+        $content = str_replace(
+            '<!-- OFFICIAL RESOURCES -->',
+            $texas_guides . "\n<!-- OFFICIAL RESOURCES -->",
+            $content
+        );
+    }
+
+    $texas_article_links = array(
+        20207 => array( 'label' => 'Auto insurance help', 'url' => '/insurance-coverage/auto-insurance-quote-request/' ),
+        20209 => array( 'label' => 'Business insurance help', 'url' => '/insurance-coverage/commercial-insurance-quote/' ),
+        20210 => array( 'label' => 'Home insurance help', 'url' => '/insurance-coverage/homeowners-insurance-quote-help-ensurance/' ),
+        20212 => array( 'label' => 'Renters insurance help', 'url' => '/insurance-coverage/renters-insurance-quote/' ),
+        20214 => array( 'label' => 'Health insurance help', 'url' => '/insurance-coverage/health-insurance-quote-request/' ),
+        20248 => array( 'label' => 'Life insurance help', 'url' => '/insurance-coverage/life-insurance-quote/' ),
+    );
+
+    $current_id = get_the_ID();
+    if ( isset( $texas_article_links[ $current_id ] ) && false === strpos( $content, 'ensurance-texas-related' ) ) {
+        $related = $texas_article_links[ $current_id ];
+        $content .= '<aside class="ensurance-texas-related" aria-label="More Texas insurance help"><h2>More Texas insurance help</h2><p><a href="/insurance-by-state/texas-insurance/">Texas Insurance Help</a> &middot; <a href="' . esc_url( $related['url'] ) . '">' . esc_html( $related['label'] ) . '</a></p></aside>';
+    }
+
+    return $content;
+}, 20 );
+
+// ============================================================================
+// ENSURANCE NON-AUTO REQUEST MVP — Home / Life / Health / Renters
+// ============================================================================
+
+function ensurance_non_auto_request_assets() {
+    $draft_visual_preview = ! empty( $_GET['wpvibe_preview'] )
+        && ! empty( $_GET['ens_preview'] )
+        && in_array( sanitize_key( wp_unslash( $_GET['ens_preview'] ) ), array( 'life', 'multi' ), true );
+
+    if ( ! $draft_visual_preview
+        && ! is_page_template( 'page-insurance-request.php' )
+        && ! is_page_template( 'page-life-insurance-request.php' )
+        && ! is_page_template( 'page-life-insurance-quote.php' )
+        && ! is_page( 'insurance-request' )
+        && ! is_page( 'life-insurance-request' )
+        && ! is_page( 'life-insurance-quote' )
+        && ! is_page( 11870 )
+        && ! is_page( 21482 )
+        && ! is_page( 21483 ) ) {
+        return;
+    }
+
+    wp_dequeue_style( 'ensurance-marketing' );
+    wp_dequeue_script( 'ensurance-marketing' );
+    wp_dequeue_style( 'ensurance-marketing-fonts' );
+
+    // Strictly reuse the same live Ensurance design system and request-page frame
+    // as /auto-insurance-quote, /life-insurance-quote and
+    // /homeowners-insurance-quote. The non-auto stylesheet is only an additive
+    // mapping layer for its custom form controls.
+    wp_enqueue_style(
+        'ensurance-home-fonts',
+        'https://fonts.googleapis.com/css2?family=Albert+Sans:wght@700;800;900&family=Rubik:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap',
+        array(),
+        null
+    );
+    wp_enqueue_style(
+        'ensurance-home',
+        get_stylesheet_directory_uri() . '/assets/home.css',
+        array(),
+        filemtime( get_stylesheet_directory() . '/assets/home.css' )
+    );
+    wp_enqueue_script(
+        'ensurance-home',
+        get_stylesheet_directory_uri() . '/assets/home.js',
+        array(),
+        filemtime( get_stylesheet_directory() . '/assets/home.js' ),
+        true
+    );
+    wp_enqueue_style(
+        'ensurance-auto-insurance-quote',
+        get_stylesheet_directory_uri() . '/assets/auto-insurance-quote.css',
+        array( 'ensurance-home' ),
+        filemtime( get_stylesheet_directory() . '/assets/auto-insurance-quote.css' )
+    );
+    wp_enqueue_script(
+        'ensurance-auto-insurance-quote',
+        get_stylesheet_directory_uri() . '/assets/auto-insurance-quote.js',
+        array( 'ensurance-home' ),
+        filemtime( get_stylesheet_directory() . '/assets/auto-insurance-quote.js' ),
+        true
+    );
+    wp_enqueue_style(
+        'ensurance-non-auto-request',
+        get_stylesheet_directory_uri() . '/assets/non-auto-request.css',
+        array( 'ensurance-auto-insurance-quote' ),
+        filemtime( get_stylesheet_directory() . '/assets/non-auto-request.css' )
+    );
+    wp_enqueue_script(
+        'ensurance-non-auto-request',
+        get_stylesheet_directory_uri() . '/assets/non-auto-request.js',
+        array( 'ensurance-home', 'ensurance-auto-insurance-quote' ),
+        filemtime( get_stylesheet_directory() . '/assets/non-auto-request.js' ),
+        true
+    );
+    wp_localize_script( 'ensurance-non-auto-request', 'ensuranceNonAutoRequest', array(
+        'endpoint' => esc_url_raw( rest_url( 'ensurance/v1/insurance-request' ) ),
+    ) );
+}
+add_action( 'wp_enqueue_scripts', 'ensurance_non_auto_request_assets', 20 );
+
+function ensurance_non_auto_register_request_cpt() {
+    register_post_type( 'ensurance_request', array(
+        'labels' => array(
+            'name'          => 'Insurance Requests',
+            'singular_name' => 'Insurance Request',
+        ),
+        'public'              => false,
+        'show_ui'             => true,
+        'show_in_menu'        => true,
+        'supports'            => array( 'title' ),
+        'capability_type'     => 'post',
+        'map_meta_cap'        => true,
+        'exclude_from_search' => true,
+        'show_in_rest'        => false,
+    ) );
+}
+add_action( 'init', 'ensurance_non_auto_register_request_cpt' );
+
+function ensurance_non_auto_request_register_rest() {
+    register_rest_route( 'ensurance/v1', '/insurance-request', array(
+        'methods'             => 'POST',
+        'callback'            => 'ensurance_non_auto_request_handle',
+        'permission_callback' => '__return_true',
+    ) );
+}
+add_action( 'rest_api_init', 'ensurance_non_auto_request_register_rest' );
+
+function ensurance_non_auto_request_handle( WP_REST_Request $request ) {
+    // Honeypot. Return success-shaped response so automated spam does not learn.
+    if ( '' !== trim( (string) $request->get_param( 'website' ) ) ) {
+        return array( 'ok' => true, 'request_id' => '' );
+    }
+
+    $elapsed = absint( $request->get_param( 'elapsed_ms' ) );
+    if ( $elapsed < 2500 ) {
+        return new WP_Error( 'ens_request_too_fast', 'Please take another look at the form and try again.', array( 'status' => 400 ) );
+    }
+
+    $ip    = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
+    $rlkey = 'ens_req_rl_' . md5( $ip );
+    $count = (int) get_transient( $rlkey );
+    if ( $count >= 10 ) {
+        return new WP_Error( 'ens_request_rate_limited', 'Too many requests were submitted from this connection. Please try again later.', array( 'status' => 429 ) );
+    }
+
+    $coverage = sanitize_key( (string) $request->get_param( 'coverage_type' ) );
+    $allowed  = array( 'life', 'home', 'health', 'renters' );
+    if ( ! in_array( $coverage, $allowed, true ) ) {
+        return new WP_Error( 'ens_request_coverage', 'Choose a valid insurance type.', array( 'status' => 400 ) );
+    }
+
+    $state = strtoupper( sanitize_text_field( (string) $request->get_param( 'state' ) ) );
+    $zip   = preg_replace( '/\D+/', '', (string) $request->get_param( 'zip' ) );
+    $email = sanitize_email( (string) $request->get_param( 'email' ) );
+    $phone = preg_replace( '/[^0-9+() .-]/', '', (string) $request->get_param( 'phone' ) );
+    $first = sanitize_text_field( (string) $request->get_param( 'first_name' ) );
+    $last  = sanitize_text_field( (string) $request->get_param( 'last_name' ) );
+    $pref  = sanitize_key( (string) $request->get_param( 'preferred_contact' ) );
+
+    $valid_states = array( 'AL','AK','AZ','AR','CA','CO','CT','DE','DC','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY' );
+    if ( ! in_array( $state, $valid_states, true ) || 5 !== strlen( $zip ) || ! ctype_digit( $zip ) ) {
+        return new WP_Error( 'ens_request_location', 'Check the state and ZIP code and try again.', array( 'status' => 400 ) );
+    }
+    if ( '' === $first || '' === $last || ! is_email( $email ) || strlen( preg_replace( '/\D+/', '', $phone ) ) < 10 ) {
+        return new WP_Error( 'ens_request_contact', 'Check your contact information and try again.', array( 'status' => 400 ) );
+    }
+    if ( ! in_array( $pref, array( 'phone', 'text', 'email' ), true ) ) {
+        return new WP_Error( 'ens_request_contact_method', 'Choose a preferred contact method.', array( 'status' => 400 ) );
+    }
+
+    $consent = sanitize_text_field( (string) $request->get_param( 'consent' ) );
+    if ( '1' !== $consent ) {
+        return new WP_Error( 'ens_request_consent', 'Please confirm the authorization before submitting your request.', array( 'status' => 400 ) );
+    }
+
+    // Partner attribution is server-authoritative. The browser may send only a
+    // short public referral code; it never supplies the canonical partner ID.
+    $source_type   = 'direct';
+    $partner_id    = '';
+    $referral_code = sanitize_key( (string) $request->get_param( 'referral_code' ) );
+    $source_url    = esc_url_raw( (string) $request->get_param( 'source_url' ) );
+
+    if ( 'lp01' === $referral_code ) {
+        $source_type = 'partner_referral';
+        $partner_id = 'partner_lp01';
+    } else {
+        $referral_code = '';
+    }
+
+    $request_id = 'ENS-' . gmdate( 'Ymd' ) . '-' . strtoupper( wp_generate_password( 8, false, false ) );
+    $created_at = gmdate( 'c' );
+
+    $payload = array(
+        'request_id'              => $request_id,
+        'coverage_type'           => $coverage,
+        'state'                   => $state,
+        'zip'                     => $zip,
+        'age'                     => absint( $request->get_param( 'age' ) ),
+        'first_name'              => $first,
+        'last_name'               => $last,
+        'email'                   => $email,
+        'phone'                   => $phone,
+        'preferred_contact'       => $pref,
+        'source_type'             => $source_type,
+        'partner_id'              => $partner_id,
+        'referral_code'           => $referral_code,
+        'consent_timestamp'       => $created_at,
+        'source_url'              => $source_url,
+        'notes'                   => sanitize_textarea_field( (string) $request->get_param( 'notes' ) ),
+        'life_type'               => sanitize_key( (string) $request->get_param( 'life_type' ) ),
+        'coverage_amount'         => sanitize_text_field( (string) $request->get_param( 'coverage_amount' ) ),
+        'term_length'             => sanitize_text_field( (string) $request->get_param( 'term_length' ) ),
+        'tobacco_use'             => sanitize_key( (string) $request->get_param( 'tobacco_use' ) ),
+        'health_band'             => sanitize_key( (string) $request->get_param( 'health_band' ) ),
+        'existing_coverage'       => sanitize_key( (string) $request->get_param( 'existing_coverage' ) ),
+        'coverage_timing'         => sanitize_key( (string) $request->get_param( 'coverage_timing' ) ),
+        'property_type'           => sanitize_key( (string) $request->get_param( 'property_type' ) ),
+        'ownership_status'        => sanitize_key( (string) $request->get_param( 'ownership_status' ) ),
+        'year_built'              => absint( $request->get_param( 'year_built' ) ),
+        'current_insurance'       => sanitize_key( (string) ( 'renters' === $coverage ? $request->get_param( 'renters_current_insurance' ) : $request->get_param( 'current_insurance' ) ) ),
+        'claims_context'          => sanitize_key( (string) $request->get_param( 'claims_context' ) ),
+        'renting_status'          => sanitize_key( (string) $request->get_param( 'renting_status' ) ),
+        'renters_current_insurance'=> sanitize_key( (string) $request->get_param( 'renters_current_insurance' ) ),
+        'renters_start_timing'    => sanitize_key( (string) $request->get_param( 'renters_start_timing' ) ),
+        'health_request_type'     => sanitize_key( (string) $request->get_param( 'health_request_type' ) ),
+        'health_household_size'   => absint( $request->get_param( 'health_household_size' ) ),
+        'health_coverage_timing'  => sanitize_key( (string) $request->get_param( 'health_coverage_timing' ) ),
+    );
+
+    if ( 'home' === $coverage ) {
+        $payload['coverage_timing'] = sanitize_key( (string) $request->get_param( 'home_coverage_timing' ) );
+    }
+
+    // Product-level server validation. Keep it intentionally MVP-sized.
+    if ( 'life' === $coverage ) {
+        if ( $payload['age'] < 18 || $payload['age'] > 100 || '' === $payload['life_type'] || '' === $payload['coverage_amount'] || '' === $payload['tobacco_use'] || '' === $payload['coverage_timing'] ) {
+            return new WP_Error( 'ens_request_life', 'A few life insurance request details are missing.', array( 'status' => 400 ) );
+        }
+    } elseif ( 'home' === $coverage ) {
+        if ( '' === $payload['property_type'] || '' === $payload['ownership_status'] || '' === $payload['current_insurance'] || '' === $payload['coverage_timing'] ) {
+            return new WP_Error( 'ens_request_home', 'A few home insurance request details are missing.', array( 'status' => 400 ) );
+        }
+    } elseif ( 'renters' === $coverage ) {
+        if ( '' === $payload['renting_status'] || '' === $payload['renters_start_timing'] ) {
+            return new WP_Error( 'ens_request_renters', 'A few renters insurance request details are missing.', array( 'status' => 400 ) );
+        }
+    } elseif ( 'health' === $coverage ) {
+        if ( '' === $payload['health_request_type'] || $payload['health_household_size'] < 1 || '' === $payload['health_coverage_timing'] ) {
+            return new WP_Error( 'ens_request_health', 'A few health insurance request details are missing.', array( 'status' => 400 ) );
+        }
+    }
+
+    set_transient( $rlkey, $count + 1, HOUR_IN_SECONDS );
+
+    // Local private fallback is created before any external handoff.
+    $post_id = wp_insert_post( array(
+        'post_type'   => 'ensurance_request',
+        'post_status' => 'private',
+        'post_title'  => $request_id . ' — ' . strtoupper( $coverage ) . ' — ' . $state,
+        'meta_input'  => array(
+            '_ens_request_id'        => $request_id,
+            '_ens_coverage_type'     => $coverage,
+            '_ens_state'             => $state,
+            '_ens_email'             => $email,
+            '_ens_partner_id'        => $partner_id,
+            '_ens_created_at'        => $created_at,
+            '_ens_request_payload'   => wp_json_encode( $payload ),
+            '_ens_forwarding_status' => 'pending',
+        ),
+    ), false );
+
+    // Private server-side handoff to Make. The capability URL lives in a server-side
+    // WordPress option rather than theme code so it can never be exposed by the form JS.
+    $make_endpoint = esc_url_raw( (string) get_option( 'ensurance_non_auto_intake_webhook_url', '' ) );
+
+    if ( '' === $make_endpoint ) {
+        $forward = new WP_Error( 'ens_request_no_forward_endpoint', 'Non-auto automation endpoint is not configured.' );
+    } else {
+        $forward = wp_remote_post( $make_endpoint, array(
+            'timeout' => 12,
+            'headers' => array( 'Content-Type' => 'application/json' ),
+            'body'    => wp_json_encode( $payload ),
+        ) );
+    }
+
+    $forward_ok = ! is_wp_error( $forward ) && (int) wp_remote_retrieve_response_code( $forward ) >= 200 && (int) wp_remote_retrieve_response_code( $forward ) < 300;
+
+    if ( $post_id ) {
+        update_post_meta( $post_id, '_ens_forwarding_status', $forward_ok ? 'forwarded' : 'failed' );
+        if ( is_wp_error( $forward ) ) {
+            update_post_meta( $post_id, '_ens_forwarding_error', sanitize_text_field( $forward->get_error_message() ) );
+        }
+    }
+
+    if ( ! $forward_ok ) {
+        wp_mail(
+            'ethel@ensurance.com',
+            'Ensurance request needs manual routing — ' . $request_id,
+            "A new {$coverage} insurance request was safely stored in WordPress, but the automation handoff did not complete.\n\nRequest ID: {$request_id}\nState: {$state}\nCoverage: {$coverage}\n\nOpen WordPress > Insurance Requests to recover it."
+        );
+    }
+
+    if ( ! $forward_ok && ! $post_id ) {
+        return new WP_Error( 'ens_request_failed', 'We could not safely save your request. Please try again in a moment.', array( 'status' => 500 ) );
+    }
+
+    return array(
+        'ok'         => true,
+        'request_id' => $request_id,
+        'queued'     => $forward_ok,
+    );
+}
+
+/**
+ * Draft-theme visual preview for the private non-auto request pages.
+ *
+ * WPVibe can preview draft theme files but WordPress still 404s a private page
+ * for an unauthenticated preview request. This query-only bridge lets the
+ * draft-theme preview render the exact private template without changing page
+ * status. Remove this helper before the draft theme is published.
+ */
+function ensurance_non_auto_draft_visual_preview( $template ) {
+    if ( empty( $_GET['wpvibe_preview'] ) || empty( $_GET['ens_preview'] ) ) {
+        return $template;
+    }
+
+    $preview = sanitize_key( wp_unslash( $_GET['ens_preview'] ) );
+    if ( 'life' === $preview ) {
+        $candidate = get_stylesheet_directory() . '/page-life-insurance-request.php';
+    } elseif ( 'multi' === $preview ) {
+        $candidate = get_stylesheet_directory() . '/page-insurance-request.php';
+    } else {
+        return $template;
+    }
+
+    return file_exists( $candidate ) ? $candidate : $template;
+}
+add_filter( 'template_include', 'ensurance_non_auto_draft_visual_preview', 99 );
+
+// On the California state hub, route informational Auto links to the
+// California Auto authority while leaving direct request/form URLs untouched.
+function ensurance_california_auto_authority_links( $content ) {
+    if ( ! is_page( 19851 ) ) {
+        return $content;
+    }
+
+    $content = str_replace(
+        'Organize details about your vehicles, drivers, current coverage, timing, and coverage needs.',
+        'Organize details about your vehicles, drivers, current coverage, timing, and coverage needs. <a href="/insurance-by-state/california-insurance/california-auto-insurance/">Learn about California auto insurance</a>.',
+        $content
+    );
+
+    return $content;
+}
+add_filter( 'the_content', 'ensurance_california_auto_authority_links', 30 );
+

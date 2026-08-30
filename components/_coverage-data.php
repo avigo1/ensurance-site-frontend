@@ -38,7 +38,7 @@ return array(
         ),
         'actions' => array(
             array( 'label' => 'Start your request',  'href' => '/start',        'variant' => 'primary',   'event' => 'coverage_hero_start_request_click' ),
-            array( 'label' => 'How Ensurance works', 'href' => '/how-it-works', 'variant' => 'secondary', 'event' => 'coverage_hero_how_it_works_click' ),
+            array( 'label' => 'How Ensurance works', 'href' => '/how-ensurance-works/', 'variant' => 'secondary', 'event' => 'coverage_hero_how_it_works_click' ),
         ),
         'trust_line' => 'Structured request flow. Licensed review. Quote options where available.',
         'flow' => array(
@@ -64,12 +64,12 @@ return array(
         'eyebrow'  => 'Coverage request paths',
         'headline' => 'Choose the insurance type that fits your situation.',
         'cards' => array(
-            array( 'title' => 'Auto insurance',     'body' => 'Start a guided auto request for licensed review of available carrier options.',                'href' => '/auto-insurance-quote', 'label' => 'Start auto request',     'event' => 'coverage_path_auto_click' ),
-            array( 'title' => 'Home insurance',     'body' => 'Structure your home details for licensed review of available carrier options.',                'href' => '/home-insurance',       'label' => 'Start home request',     'event' => 'coverage_path_home_click' ),
-            array( 'title' => 'Renters insurance',  'body' => 'Begin a renters request built to clarify your coverage needs before licensed review.',         'href' => '/renters-insurance',    'label' => 'Start renters request',  'event' => 'coverage_path_renters_click' ),
-            array( 'title' => 'Life insurance',     'body' => 'Share life insurance goals through a guided request for licensed review where available.',     'href' => '/life-insurance-quote-3',       'label' => 'Start life request',     'event' => 'coverage_path_life_click' ),
-            array( 'title' => 'Business insurance', 'body' => 'Organize your business details for licensed review of available carrier options.',              'href' => '/commercial-insurance-quote',   'label' => 'Start business request', 'event' => 'coverage_path_business_click' ),
-            array( 'title' => 'Health insurance',   'body' => 'Begin a guided health request for available options through licensed review where applicable.', 'href' => '/health-insurance',     'label' => 'Start health request',   'event' => 'coverage_path_health_click' ),
+            array( 'title' => 'Auto insurance',     'body' => 'Start a guided auto request for licensed review of available carrier options.',                'href' => '/insurance-coverage/auto-insurance-quote-request/auto-insurance-quote/', 'label' => 'Start auto request',     'event' => 'coverage_path_auto_click' ),
+            array( 'title' => 'Home insurance',     'body' => 'Structure your home details for licensed review of available carrier options.',                'href' => '/insurance-coverage/homeowners-insurance-quote-help-ensurance/',       'label' => 'Start home request',     'event' => 'coverage_path_home_click' ),
+            array( 'title' => 'Renters insurance',  'body' => 'Begin a renters request built to clarify your coverage needs before licensed review.',         'href' => '/insurance-coverage/renters-insurance-quote/',    'label' => 'Start renters request',  'event' => 'coverage_path_renters_click' ),
+            array( 'title' => 'Life insurance',     'body' => 'Share life insurance goals through a guided request for licensed review where available.',     'href' => '/insurance-coverage/life-insurance-quote/',       'label' =>'Start life request',     'event' => 'coverage_path_life_click' ),
+            array( 'title' => 'Business insurance', 'body' => 'Organize your business details for licensed review of available carrier options.',              'href' => '/insurance-coverage/commercial-insurance-quote/',   'label' => 'Start business request', 'event' => 'coverage_path_business_click' ),
+            array( 'title' => 'Health insurance',   'body' => 'Begin a guided health request for available options through licensed review where applicable.', 'href' => '/insurance-coverage/health-insurance-quote-request/',     'label' => 'Start health request',   'event' => 'coverage_path_health_click' ),
         ),
     ),
 
@@ -116,7 +116,7 @@ return array(
         'eyebrow'  => 'Trust and privacy',
         'headline' => 'A controlled flow for insurance details.',
         'lead'     => 'Insurance requests can involve personal details. Ensurance keeps the starting point structured and clear.',
-        'action'   => array( 'label' => 'Read Trust and Privacy', 'href' => '/trust-and-privacy', 'variant' => 'primary', 'event' => 'coverage_trust_privacy_click' ),
+        'action'   => array( 'label' => 'Read Trust and Privacy', 'href' => '/trust-center/', 'variant' => 'primary', 'event' => 'coverage_trust_privacy_click' ),
         'disclosure' => 'Your information is used to structure your request and support licensed review. Availability and quote options vary by coverage type, location, eligibility, and carrier appetite.',
         'trust_points' => array(
             'Your request is guided from the start.',
@@ -190,7 +190,7 @@ return array(
         'body'     => 'Choose your insurance type. Ensurance organizes your details for a clearer path to available quote options through licensed agents, agencies, or approved insurance partners.',
         'actions' => array(
             array( 'label' => 'Start your request',  'href' => '/start',        'variant' => 'primary',   'event' => 'coverage_final_start_request_click' ),
-            array( 'label' => 'How Ensurance works', 'href' => '/how-it-works', 'variant' => 'secondary', 'event' => 'coverage_final_how_it_works_click' ),
+            array( 'label' => 'How Ensurance works', 'href' => '/how-ensurance-works/', 'variant' => 'secondary', 'event' => 'coverage_final_how_it_works_click' ),
         ),
         'trust_line' => 'Guided request. Licensed review. Quote options where available.',
     ),

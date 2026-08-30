@@ -16,7 +16,7 @@ return array(
     'meta' => array(
         'title'       => 'How Ensurance Works | Guided Insurance Requests',
         'description' => 'See how Ensurance turns one guided insurance request into a clearer path to licensed review. Start online, stay in control, get human help when needed.',
-        'canonical'   => '/how-it-works',
+        'canonical'   => '/how-ensurance-works/',
     ),
 
     'hero' => array(
@@ -57,10 +57,10 @@ return array(
     'direct_answer' => array(
         'eyebrow'  => 'Direct answer',
         'headline' => 'How Ensurance works',
-        'lead'     => 'Ensurance is trust-first insurance demand infrastructure. One guided request becomes a structured, protected starting point for licensed review.',
+        'lead'     => 'Ensurance is a trusted starting point for insurance shopping. One guided request becomes a structured, protected request supported by CATE™, the Controlled Access Trust Engine, before licensed review where available.',
         'paragraphs' => array(
-            'You start one guided request online. Ensurance organizes the details. A licensed agent, agency, or approved insurance partner can review available carrier options and help guide the next step.',
-            'The experience is designed to reduce confusion, exposure, and pressure. You stay in control of what is shared and when.',
+            'You start one guided request online. Ensurance organizes the details and moves the request through a more controlled process supported by CATE™. Licensed agents, agencies, or approved insurance partners may review available carrier options and help guide the next step where available.',
+            'The experience is designed to reduce confusion, unnecessary exposure, and pressure. How a request moves forward depends on the applicable product workflow and licensed availability.'
         ),
         'trust_line' => 'Insurance help online without quote chaos.',
         'answer_block' => array(
@@ -68,7 +68,7 @@ return array(
             'headline'  => 'Trust-first insurance demand infrastructure.',
             'paragraphs' => array(
                 'Ensurance turns consumer insurance intent into a structured, protected request that licensed agents, agencies, or approved insurance partners can review.',
-                'It is not a quote comparison site, a lead marketplace, or a public directory of agents.',
+                'It is not a public directory, a bulk lead-blast system, or an instant quote-comparison engine.',
             ),
         ),
     ),
@@ -127,7 +127,7 @@ return array(
         'eyebrow'  => 'Trust boundary',
         'headline' => 'What Ensurance is not.',
         'paragraphs' => array(
-            'Ensurance is not a quote comparison site, a lead marketplace, or a public directory of agents.',
+            'Ensurance is not a public directory, a bulk lead-blast system, or an instant quote-comparison engine.',
             'It is not designed to make insurance shopping feel chaotic, exposed, or pressured.',
         ),
         'not_items' => array(
@@ -168,7 +168,7 @@ return array(
         array(
             'key'      => 'will_my_request_go_to_many_agents',
             'question' => 'Will my request be sent to many agents at once?',
-            'answer'   => 'No. Ensurance is designed around controlled request flow. The experience is built to reduce unnecessary exposure and help your request move through a clearer path.',
+            'answer'   => 'Ensurance does not use a public lead-blast model. Eligible licensed professionals may be able to review a protected request through the applicable controlled-access workflow. Availability and the number of professionals who can review a request depend on the product and request.'
         ),
         array(
             'key'      => 'who_provides_quote_options',
@@ -186,9 +186,9 @@ return array(
             'answer'   => 'Yes. Ensurance keeps room for licensed human support when it actually helps. The online flow is built so the next conversation starts with context, not confusion.',
         ),
         array(
-            'key'      => 'is_it_a_lead_marketplace',
-            'question' => 'Is Ensurance a lead marketplace?',
-            'answer'   => 'No. Ensurance is not a lead marketplace. It is designed around controlled request flow, shopper clarity, and licensed review rather than broad distribution.',
+            'key'      => 'bulk_lead_model',
+            'question' => 'Does Ensurance use a bulk lead-blast model?',
+            'answer'   => 'No. Ensurance is designed around protected requests, controlled access, shopper clarity, and eligible licensed review where available.',
         ),
     ),
 

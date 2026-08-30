@@ -225,9 +225,10 @@ $request_today = ensurance_dashboard_today_url();
  * The agent's own log is read the same way — one meta row for the whole list, so
  * a panel does not query per lead.
  */
-$request_leads  = ensurance_dashboard_lead_records();
-$request_log    = ensurance_dashboard_lead_log();
-$request_states = ensurance_dashboard_lead_statuses();
+$request_leads    = ensurance_dashboard_lead_records();
+$request_non_auto = function_exists( 'ensurance_non_auto_dashboard_accepted_records' ) ? ensurance_non_auto_dashboard_accepted_records() : array();
+$request_log      = ensurance_dashboard_lead_log();
+$request_states   = ensurance_dashboard_lead_statuses();
 
 // Where the note form posts. Same view, so a no-script save lands back on the
 // list it was written in.
@@ -346,7 +347,8 @@ $request_field = static function ( $label, $value, $sub = '' ) {
 
 		// The purchased lead behind this row, when it is one. Matched on the row
 		// key the adapter stamped — see ensurance_dashboard_lead_records().
-		$row_lead = isset( $request_leads[ $row['key'] ] ) ? $request_leads[ $row['key'] ] : array();
+		$row_lead     = isset( $request_leads[ $row['key'] ] ) ? $request_leads[ $row['key'] ] : array();
+			$row_non_auto = isset( $request_non_auto[ $row['key'] ] ) ? $request_non_auto[ $row['key'] ] : array();
 
 		/*
 		 * A NOTE IS FILED AGAINST A REFERENCE, so a lead that arrived without one
@@ -362,7 +364,7 @@ $request_field = static function ( $label, $value, $sub = '' ) {
 
 		// See "WHICH ROWS OPEN" above. An awaiting row opens even with no facts
 		// behind it, because the note inside is itself the reason to open it.
-		$row_opens = $row_awaiting || ! empty( $row_facts ) || ! empty( $row_lead );
+		$row_opens = $row_awaiting || ! empty( $row_facts ) || ! empty( $row_lead ) || ! empty( $row_non_auto );
 		$row_panel = 'dash-request-panel-' . (int) $row_index;
 
 		/*
@@ -493,7 +495,74 @@ $request_field = static function ( $label, $value, $sub = '' ) {
 				?>
 				<div class="dash-requests__panel" id="<?php echo esc_attr( $row_panel ); ?>"<?php echo $row_open ? '' : ' hidden'; ?>>
 
-					<?php if ( ! empty( $row_lead ) ) : ?>
+					<?php if ( ! empty( $row_non_auto ) ) : ?>
+
+							<?php
+							$non_auto_label = function_exists( 'ensurance_non_auto_coverage_label' ) ? ensurance_non_auto_coverage_label( $row_non_auto['coverage_type'] ) : ucfirst( $row_non_auto['coverage_type'] );
+							$non_auto_at    = ! empty( $row_non_auto['purchased_at'] ) ? (int) $row_non_auto['purchased_at'] : 0;
+							$non_auto_tel   = preg_replace( '/[^0-9+]/', '', (string) $row_non_auto['phone'] );
+							$non_auto_name  = trim( $row_non_auto['first_name'] . ' ' . $row_non_auto['last_name'] );
+							?>
+
+							<div class="dash-requests__fields">
+								<?php
+								$request_field( 'Coverage', $non_auto_label );
+								$request_field( 'Location', trim( $row_non_auto['state'] . ( $row_non_auto['zip'] ? ' · ZIP ' . $row_non_auto['zip'] : '' ) ) );
+
+								if ( 'life' === $row_non_auto['coverage_type'] ) {
+									$request_field( 'Age', $row_non_auto['age'] );
+									$request_field( 'Coverage amount', is_numeric( $row_non_auto['coverage_amount'] ) ? '$' . number_format( (float) $row_non_auto['coverage_amount'] ) : ucwords( str_replace( '-', ' ', $row_non_auto['coverage_amount'] ) ) );
+									$request_field( 'Life insurance type', ucwords( str_replace( '-', ' ', $row_non_auto['life_type'] ) ) );
+									$request_field( 'Term', $row_non_auto['term_length'] ? $row_non_auto['term_length'] . ( is_numeric( $row_non_auto['term_length'] ) ? ' years' : '' ) : '' );
+									$request_field( 'Tobacco / nicotine', ucwords( str_replace( '-', ' ', $row_non_auto['tobacco_use'] ) ) );
+									$request_field( 'Overall health', ucwords( str_replace( '-', ' ', $row_non_auto['health_band'] ) ) );
+									$request_field( 'Timing', ucwords( str_replace( '-', ' ', $row_non_auto['coverage_timing'] ) ) );
+								} elseif ( 'home' === $row_non_auto['coverage_type'] ) {
+									$request_field( 'Property type', ucwords( str_replace( '-', ' ', $row_non_auto['property_type'] ) ) );
+									$request_field( 'Property status', ucwords( str_replace( '-', ' ', $row_non_auto['ownership_status'] ) ) );
+									$request_field( 'Current insurance', ucwords( str_replace( '-', ' ', $row_non_auto['current_insurance'] ) ) );
+									$request_field( 'Timing', ucwords( str_replace( '-', ' ', $row_non_auto['coverage_timing'] ) ) );
+								} elseif ( 'renters' === $row_non_auto['coverage_type'] ) {
+									$request_field( 'Rental status', ucwords( str_replace( '-', ' ', $row_non_auto['renting_status'] ) ) );
+									$request_field( 'Timing', ucwords( str_replace( '-', ' ', $row_non_auto['renters_timing'] ) ) );
+								} elseif ( 'health' === $row_non_auto['coverage_type'] ) {
+									$request_field( 'Coverage need', ucwords( str_replace( '-', ' ', $row_non_auto['health_type'] ) ) );
+									$request_field( 'People needing coverage', $row_non_auto['household_size'] );
+									$request_field( 'Timing', ucwords( str_replace( '-', ' ', $row_non_auto['health_timing'] ) ) );
+								}
+
+								$request_field( 'Preferred contact', ucwords( str_replace( '-', ' ', $row_non_auto['preferred_contact'] ) ) );
+								$request_field( 'Notes', $row_non_auto['notes'] );
+								$request_field( 'Reference', $row_non_auto['request_id'] );
+								$request_field( 'Charged', $row_non_auto['accepted_price'] ? '$' . number_format( (float) $row_non_auto['accepted_price'], 2 ) : '' );
+								?>
+
+								<div class="dash-requests__field">
+									<div class="dash-requests__field-label">Accepted</div>
+									<?php if ( $non_auto_at ) : ?>
+										<div class="dash-requests__field-value"><time datetime="<?php echo esc_attr( wp_date( 'c', $non_auto_at ) ); ?>"><?php echo esc_html( wp_date( 'M j, Y', $non_auto_at ) ); ?></time></div>
+										<div class="dash-requests__field-sub"><?php echo esc_html( wp_date( 'g:i a', $non_auto_at ) ); ?></div>
+									<?php else : ?>
+										<div class="dash-requests__field-value dash-requests__field-value--empty">Not on file</div>
+									<?php endif; ?>
+								</div>
+							</div>
+
+							<div class="dash-requests__contact">
+								<?php if ( '' !== $non_auto_tel ) : ?>
+									<a class="dash-requests__contact-action" href="tel:<?php echo esc_attr( $non_auto_tel ); ?>"><?php echo esc_html( $row_non_auto['phone'] ); ?></a>
+								<?php endif; ?>
+
+								<?php if ( ! empty( $row_non_auto['email'] ) ) : ?>
+									<a class="dash-requests__contact-action" href="mailto:<?php echo esc_attr( $row_non_auto['email'] ); ?>"><?php echo esc_html( $row_non_auto['email'] ); ?></a>
+								<?php endif; ?>
+
+								<?php if ( '' === $non_auto_tel && empty( $row_non_auto['email'] ) ) : ?>
+									<p class="dash-requests__contact-none">No contact details are on file for this accepted request.</p>
+								<?php endif; ?>
+							</div>
+
+						<?php elseif ( ! empty( $row_lead ) ) : ?>
 
 						<?php
 						/*

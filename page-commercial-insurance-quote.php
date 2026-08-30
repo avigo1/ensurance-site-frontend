@@ -42,11 +42,11 @@
  * it runs at 99 so it beats anything hooked at the default priority.
  */
 add_filter( 'wpseo_title', function () {
-    return 'Business Insurance Quote Request | Ensurance';
+    return 'Business Insurance Quote Help & Coverage Guide | Ensurance';
 } );
 
 add_filter( 'pre_get_document_title', function () {
-    return 'Business Insurance Quote Request | Ensurance';
+    return 'Business Insurance Quote Help & Coverage Guide | Ensurance';
 }, 99 );
 
 /**
@@ -86,7 +86,7 @@ $ensurance_svg_allowed = array(
 // §Trust-cue row beneath the form.
 $sq_cues = array(
     array( 'clock', 'About 3 minutes' ),
-    array( 'lock',  'Never sold or blasted to a list' ),
+    array( 'lock',  'One organized request' ),
     array( 'user',  'Controlled licensed review' ),
 );
 
@@ -94,14 +94,14 @@ $sq_cues = array(
 $sq_next = array(
     array( 'sparkles', 'A few guided questions', 'Short steps, one at a time — mostly taps, minimal typing.' ),
     array( 'user',     'Controlled licensed review',  'Your request is organized for licensed review of available coverage options.' ),
-    array( 'message',  'Contact happens your way', 'By email, text, or call — based on the contact preference you choose.' ),
+    array( 'message',  'Next steps vary by request', 'Available next steps can vary by coverage type, location, eligibility, and licensed review.' ),
 );
 
 // §Trust band — three protections (icon / title / body).
 $sq_trust = array(
-    array( 'shield-check', 'Prepared for licensed review', 'Your request moves through controlled licensed review — not auctioned or broadly distributed.' ),
-  array( 'lock', 'Your details stay private', "We don't sell your information or broadly distribute it. Your request is handled through a controlled process." ),
-    array( 'file-text',    'No commitment to start',       'Starting a request is free and never binds you to anything. You review options and decide.' ),
+    array( 'shield-check', 'Prepared for licensed review', 'Your request is organized for licensed review through the applicable Ensurance workflow.' ),
+    array( 'lock', 'Controlled request handling', 'How information is handled depends on the applicable request workflow. See the Trust Center and Privacy Policy for details.' ),
+    array( 'file-text', 'No purchase commitment', 'Starting a request does not require you to purchase insurance. You decide whether to continue with an available next step.' ),
 );
 
 get_header( 'home' );
@@ -116,7 +116,7 @@ get_header( 'home' );
 
       <div class="sq-request__intro">
         <span class="eyebrow">Start your request</span>
-        <h1 class="sq-request__title">Tell us what you need. We'll handle the rest.</h1>
+        <h1 class="sq-request__title">Tell us what you need. Start one organized request.</h1>
         <p class="sq-request__sub">A few guided questions, then Ensurance organizes your request for licensed review of available coverage options. About three minutes.</p>
       </div>
 
@@ -143,13 +143,30 @@ get_header( 'home' );
     </div>
   </section>
 
+  <!-- ── Business insurance basics ───────────────────────────────── -->
+  <section class="sq-next reveal" aria-labelledby="business-basics-title">
+    <div class="sq-next__head">
+      <span class="eyebrow">Business insurance basics</span>
+      <h2 id="business-basics-title">What types of insurance do businesses commonly consider?</h2>
+      <p>Business insurance needs vary by industry, location, employees, property, contracts, vehicles, and the services or products a company provides. A licensed professional can help review which coverages may apply.</p>
+    </div>
+    <div class="sq-next__grid">
+      <div class="sq-next__item"><span class="sq-next__badge"><?php echo wp_kses( ensurance_home_icon( 'shield-check', 20 ), $ensurance_svg_allowed ); ?><span class="sq-next__num">01</span></span><div><p class="sq-next__title">General liability</p><p class="sq-next__body">General liability can address certain claims involving bodily injury, property damage, and other covered liability risks arising from business operations.</p></div></div>
+      <div class="sq-next__item"><span class="sq-next__badge"><?php echo wp_kses( ensurance_home_icon( 'file-text', 20 ), $ensurance_svg_allowed ); ?><span class="sq-next__num">02</span></span><div><p class="sq-next__title">Business property</p><p class="sq-next__body">Property coverage can help protect buildings, equipment, inventory, furniture, and other business property from covered losses.</p></div></div>
+      <div class="sq-next__item"><span class="sq-next__badge"><?php echo wp_kses( ensurance_home_icon( 'clock', 20 ), $ensurance_svg_allowed ); ?><span class="sq-next__num">03</span></span><div><p class="sq-next__title">Business interruption or continuation</p><p class="sq-next__body">Depending on the policy, business interruption coverage may help with certain continuing expenses or lost income after a covered disruption.</p></div></div>
+      <div class="sq-next__item"><span class="sq-next__badge"><?php echo wp_kses( ensurance_home_icon( 'user', 20 ), $ensurance_svg_allowed ); ?><span class="sq-next__num">04</span></span><div><p class="sq-next__title">Professional, workers' compensation, and other specialized coverage</p><p class="sq-next__body">Professional liability, workers' compensation, commercial auto, cyber, and other coverages may apply depending on what the business does and applicable state requirements.</p></div></div>
+      <div class="sq-next__item"><span class="sq-next__badge"><?php echo wp_kses( ensurance_home_icon( 'file-text', 20 ), $ensurance_svg_allowed ); ?><span class="sq-next__num">05</span></span><div><p class="sq-next__title">A BOP can combine several common protections</p><p class="sq-next__body">A Business Owners Policy, often called a BOP, typically packages property, liability, and business interruption or continuation coverage for eligible businesses. Not every business qualifies.</p></div></div>
+    </div>
+    <p class="sq-next__source"><a href="https://content.naic.org/consumer/small-business.htm" rel="noopener noreferrer">NAIC small business insurance guidance</a> &middot; <a href="https://www.sba.gov/counseling/launch-your-business/" rel="noopener noreferrer">U.S. Small Business Administration insurance overview</a></p>
+  </section>
+
   <!-- ── You're in control (brand callout) ────────────────────────── -->
   <section class="sq-control reveal" aria-label="You're in control">
     <div class="sq-callout" role="note">
       <span class="sq-callout__icon"><?php echo wp_kses( ensurance_home_icon( 'shield-check', 20 ), $ensurance_svg_allowed ); ?></span>
       <div>
         <p class="sq-callout__title">You're always in control</p>
-        <p class="sq-callout__body">Your request moves through a controlled process designed to reduce broad sharing and unwanted contact. Nothing binds you to purchase coverage.</p>
+        <p class="sq-callout__body">Your protected request follows the applicable controlled-access workflow supported by CATE™, the Controlled Access Trust Engine, with licensed review where available. Nothing requires you to purchase coverage.</p>
       </div>
     </div>
   </section>
@@ -158,7 +175,7 @@ get_header( 'home' );
   <section class="sq-next reveal" aria-label="What happens next">
     <div class="sq-next__head">
       <span class="eyebrow">What happens next</span>
-      <h2>Three quiet steps. No spam, no auction.</h2>
+      <h2>Three clear steps after you start.</h2>
     </div>
     <div class="sq-next__grid">
       <?php foreach ( $sq_next as $i => $step ) : ?>

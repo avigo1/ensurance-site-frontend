@@ -64,12 +64,13 @@ $ensurance_svg_allowed = array(
 );
 
 // Resolved destinations (use the site's real slugs).
-$aq_hiw_url      = esc_url( home_url( '/how-it-works' ) );
-$aq_coverage_url = esc_url( home_url( '/coverage' ) );
-$aq_trust_url    = esc_url( home_url( '/trust-center' ) );
+$aq_hiw_url      = esc_url( home_url( '/how-ensurance-works/' ) );
+$aq_coverage_url = esc_url( home_url( '/insurance-coverage/' ) );
+$aq_trust_url    = esc_url( home_url( '/trust-center/' ) );
+$aq_ca_auto_url  = esc_url( home_url( '/insurance-by-state/california-insurance/california-auto-insurance/' ) );
 // "Start auto request" routes to the existing auto insurance quote page.
 // Swap if the intake URL changes.
-$aq_start_url    = esc_url( home_url( '/auto-insurance-quote' ) );
+$aq_start_url    = esc_url( home_url( '/insurance-coverage/auto-insurance-quote-request/auto-insurance-quote/' ) );
 
 // §Hero — guided-request stage track (icon / number / title / subtitle).
 $aq_stages = array(
@@ -83,7 +84,7 @@ $aq_stages = array(
 $aq_compare_bad = array(
     'Re-entering vehicle and driver details across separate sites.',
     'Personal information requested before anything is explained.',
-    'Details blasted to a long list of companies.',
+    'A public lead-blast path with little control over the next step.',
     'Pressure to decide before you understand your options.',
 );
 $aq_compare_good = array(
@@ -113,7 +114,7 @@ $aq_steps = array(
 $aq_review = array(
     array( 'user',      'A licensed professional, not a robot', 'Licensed agents, agencies, or approved partners review available carriers — a person decides what may fit your situation.' ),
     array( 'file-text', 'One organized request',                'Your vehicle and driver details stay together as a single request, so nothing important is missing or repeated.' ),
-    array( 'lock',      'Controlled request access',        'Access to your structured auto request is controlled — not auctioned or broadly distributed.' ),
+    array( 'lock',      'CATE™ controlled access',        'Your protected auto request moves through the applicable controlled-access process supported by CATE™, the Controlled Access Trust Engine, with review by eligible licensed professionals where available.' ),
 );
 
 // §FAQ — also feeds the FAQPage JSON-LD below.
@@ -139,7 +140,7 @@ add_action( 'wp_head', function () use ( $aq_faq ) {
     $schema = array(
         '@context'   => 'https://schema.org',
         '@type'      => 'FAQPage',
-        '@id'        => home_url( '/auto-insurance-quote-request' ) . '#faq',
+        '@id'        => home_url( '/insurance-coverage/auto-insurance-quote-request/' ) . '#faq',
         'mainEntity' => $entities,
     );
     $flags = JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE;
@@ -156,7 +157,7 @@ get_header( 'home' );
     <span class="aq-hero__glow aq-hero__glow--b" aria-hidden="true"></span>
     <div class="aq-hero__inner">
       <span class="aq-pill"><?php echo wp_kses( ensurance_home_icon( 'car', 14 ), $ensurance_svg_allowed ); ?> Auto insurance</span>
-      <h1 class="aq-hero__title">Find your way to the <span class="aq-accent">right auto coverage</span>.</h1>
+      <h1 class="aq-hero__title">Auto insurance quote help, with <span class="aq-accent">more choice and less quote chaos</span>.</h1>
       <p class="aq-hero__sub">Answer a few guided questions once. Ensurance organizes your vehicle and driver details so your request can move into controlled licensed review and toward quote options where available.</p>
       <div class="aq-hero__actions">
         <a class="btn btn-primary btn--lg" href="<?php echo $aq_start_url; ?>" data-track="cta_click_start_auto_quote_request" data-cta-text="Start auto request" data-page-type="auto_insurance">Start auto request <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 18 ), $ensurance_svg_allowed ); ?></a>
@@ -298,6 +299,7 @@ get_header( 'home' );
         <a class="aq-link aq-link--light" href="<?php echo $aq_hiw_url; ?>">How Ensurance works <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 16 ), $ensurance_svg_allowed ); ?></a>
         <a class="aq-link aq-link--accent" href="<?php echo $aq_trust_url; ?>">Read Trust and privacy <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 16 ), $ensurance_svg_allowed ); ?></a>
         <a class="aq-link aq-link--muted" href="<?php echo $aq_coverage_url; ?>">Coverage types <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 16 ), $ensurance_svg_allowed ); ?></a>
+        <a class="aq-link aq-link--muted" href="<?php echo $aq_ca_auto_url; ?>">California auto insurance help <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 16 ), $ensurance_svg_allowed ); ?></a>
       </div>
     </div>
   </section>

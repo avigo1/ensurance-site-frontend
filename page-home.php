@@ -40,12 +40,16 @@
  * it runs at 99 so it beats anything hooked at the default priority.
  */
 add_filter( 'wpseo_title', function () {
-    return 'Auto Insurance Quote Help | Ensurance';
+    return 'Ensurance | Auto Insurance Quote Help, Less Quote Chaos';
 } );
 
 add_filter( 'pre_get_document_title', function () {
-    return 'Auto Insurance Quote Help | Ensurance';
+    return 'Ensurance | Auto Insurance Quote Help, Less Quote Chaos';
 }, 99 );
+
+add_filter( 'wpseo_opengraph_title', function () {
+    return 'Ensurance | More Insurance Choice, Less Quote Chaos';
+} );
 
 // --- Per-page FAQPage schema — Q&A verbatim from package index.php ---
 $home_schema = json_decode( <<<'JSON'
@@ -198,15 +202,15 @@ $ensurance_svg_allowed = array(
     'rect'   => array( 'x' => true, 'y' => true, 'width' => true, 'height' => true, 'rx' => true ),
 );
 
-$start_url = esc_url( home_url( '/auto-insurance-quote' ) );
+$start_url = esc_url( home_url( '/insurance-coverage/auto-insurance-quote-request/auto-insurance-quote/' ) );
 
 // Coverage lines beyond the featured Auto tile: icon, title, body, request slug.
 $coverage_lines = array(
-    array( 'icon' => 'home',        'title' => 'Home',      'slug' => 'homeowners-insurance-quote',                       'track' => 'home',      'body' => 'Start a home insurance quote request and move toward quote options with more clarity.' ),
-    array( 'icon' => 'key',         'title' => 'Renters',   'slug' => 'renters-insurance-quote',         'track' => 'renters',   'body' => 'Start a renters insurance quote request and move toward quote options with more clarity.' ),
-    array( 'icon' => 'heart',       'title' => 'Life',      'slug' => 'life-insurance-quote',      'track' => 'life',      'body' => 'Start a life insurance quote request and move toward quote options with more clarity.' ),
-    array( 'icon' => 'heart-pulse', 'title' => 'Health',    'slug' => 'health-insurance-quote-request',    'track' => 'health',    'body' => 'Start a health insurance quote request and move toward quote options with more clarity.' ),
-    array( 'icon' => 'briefcase',   'title' => 'Business',  'slug' => 'commercial-insurance-quote',  'track' => 'business',  'body' => 'Start a business insurance quote request and move toward quote options where supported.' ),
+    array( 'icon' => 'home',        'title' => 'Home',      'slug' => 'insurance-coverage/homeowners-insurance-quote-help-ensurance/', 'track' => 'home',      'body' => 'Start a home insurance quote request and move toward quote options with more clarity.' ),
+    array( 'icon' => 'key',         'title' => 'Renters',   'slug' => 'insurance-coverage/renters-insurance-quote/', 'track' => 'renters',   'body' => 'Start a renters insurance quote request and move toward quote options with more clarity.' ),
+    array( 'icon' => 'heart',       'title' => 'Life',      'slug' => 'insurance-coverage/life-insurance-quote/', 'track' => 'life',      'body' => 'Start a life insurance quote request and move toward quote options with more clarity.' ),
+    array( 'icon' => 'heart-pulse', 'title' => 'Health',    'slug' => 'insurance-coverage/health-insurance-quote-request/', 'track' => 'health',    'body' => 'Start a health insurance quote request and move toward quote options with more clarity.' ),
+    array( 'icon' => 'briefcase',   'title' => 'Business',  'slug' => 'insurance-coverage/commercial-insurance-quote/', 'track' => 'business',  'body' => 'Start a business insurance quote request and move toward quote options where supported.' ),
 );
 
 get_header( 'home' );
@@ -222,7 +226,7 @@ get_header( 'home' );
       <div>
         <p class="eyebrow">What is Ensurance?</p>
         <h2>More insurance choice from one guided request.</h2>
-        <p class="whatis__intro">Ensurance helps you start one insurance request and move toward available quote options through licensed insurance professionals. Instead of starting over company after company, you can explore available options with more clarity, control, and less quote chaos.</p>
+        <p class="whatis__intro">Ensurance helps you start one guided insurance request and move toward available quote options through licensed insurance professionals. CATE™, our Controlled Access Trust Engine, supports a more controlled request process so you can explore available options with more clarity, control, and less quote chaos.</p>
         <div class="whatis__rows">
           <div class="spotlight-row"><?php echo wp_kses( ensurance_home_icon( 'shield-check', 18 ), $ensurance_svg_allowed ); ?><span>Start with one guided auto request instead of repeating forms.</span></div>
           <div class="spotlight-row"><?php echo wp_kses( ensurance_home_icon( 'car', 18 ), $ensurance_svg_allowed ); ?><span>Move toward available carrier options without starting over each time.</span></div>

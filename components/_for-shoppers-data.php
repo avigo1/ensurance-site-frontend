@@ -33,8 +33,8 @@ return array(
         'headline'  => 'More insurance choice. | Less quote chaos.',
         'body'      => 'Start one guided insurance request and move toward available insurance options through licensed professionals, without restarting the process company after company.',
         'actions'   => array(
-            array( 'label' => 'Start your request',  'href' => '/start',        'variant' => 'primary',   'event' => 'for_shoppers_hero_start_request_click' ),
-            array( 'label' => 'How Ensurance works', 'href' => '/how-it-works', 'variant' => 'secondary', 'event' => 'for_shoppers_hero_how_it_works_click' ),
+            array( 'label' => 'Start your request',  'href' => '/for-shoppers/start/',        'variant' => 'primary',   'event' => 'for_shoppers_hero_start_request_click' ),
+            array( 'label' => 'How Ensurance works', 'href' => '/how-ensurance-works/', 'variant' => 'secondary', 'event' => 'for_shoppers_hero_how_it_works_click' ),
         ),
         'microcopy' => 'Takes about 2 minutes · One guided request through a more controlled process',
         'trust_items' => array(
@@ -98,7 +98,7 @@ return array(
     'control' => array(
         'eyebrow'  => 'Your control',
         'headline' => 'A more controlled way to shop for insurance',
-        'body'     => 'Ensurance is built around clearer expectations and controlled request handling. You can decide whether to continue, pause, or stop as your request moves through the process.',
+        'body'     => 'Ensurance uses CATE™, the Controlled Access Trust Engine, to support a more controlled request process. You can decide whether to continue, pause, or stop as your protected request moves forward.',
         'items' => array(
             'Choose whether to continue your request',
             'Know what happens as your request moves forward',
@@ -121,11 +121,11 @@ return array(
     'comparison' => array(
         'eyebrow'  => 'Less quote chaos',
         'headline' => 'More choice without making insurance shopping more chaotic',
-        'lead'     => 'Ensurance is designed as one guided starting point for moving toward available insurance options, not a wall of instant quotes or a broadly distributed request.',
+        'lead'     => 'Ensurance is designed as one guided starting point for moving toward available insurance options through a more controlled request process, not a wall of instant quotes.',
         'not_label' => 'What Ensurance is not',
         'not_items' => array(
             'A wall of instant quotes to compare',
-            'A request broadly distributed for attention',
+            'A public lead-blast model',
             'A process built around repeated outreach',
             'Pressure to decide before you are ready',
         ),
@@ -143,9 +143,9 @@ return array(
         'headline' => 'Your information is handled through a controlled process',
         'lead'     => 'Your details are handled through controlled workflows designed to reduce unnecessary exposure and unwanted outreach while supporting the appropriate next step.',
         'cards' => array(
-            array( 'title' => 'Controlled handling', 'body' => 'Your information is handled through controlled workflows rather than broadly distributed.' ),
+            array( 'title' => 'Controlled handling', 'body' => 'Your protected request follows the applicable controlled-access workflow toward eligible licensed review where available.' ),
             array( 'title' => 'Clear expectations', 'body' => 'You can understand how your request is moving forward and decide whether you want to continue the process.' ),
-            array( 'title' => 'Controlled licensed access', 'body' => 'When licensed review is appropriate, access to your request is handled through a controlled process rather than broad distribution.' ),
+            array( 'title' => 'Controlled licensed access', 'body' => 'When licensed review is available, eligible licensed professionals may review a protected request through the applicable controlled-access workflow.' ),
         ),
         'footnote' => 'Encrypted in transit  ·  You can request removal of your details at any time',
     ),
@@ -162,7 +162,7 @@ return array(
             array(
                 'key'      => 'will_my_info_be_sold',
                 'question' => 'Will my information be sold or shared with lots of companies?',
-                'answer'   => 'Ensurance does not broadly distribute your request to a crowd of companies. Your information is handled through a controlled process and may be made available for licensed review where appropriate.',
+                'answer'   => 'Ensurance does not use a public lead-blast model. Your request is handled through a controlled process, and eligible licensed professionals may be able to review a protected request where the applicable product workflow allows.'
             ),
             array(
                 'key'      => 'what_does_it_cost',
@@ -191,8 +191,8 @@ return array(
         'headline' => 'More insurance choice. Less quote chaos.',
         'body'     => 'Start one guided insurance request and move toward available options through a more controlled process, without restarting company after company.',
         'actions'  => array(
-            array( 'label' => 'Start your request', 'href' => '/start', 'variant' => 'on-dark-primary', 'event' => 'for_shoppers_final_start_request_click' ),
-            array( 'label' => 'How Ensurance works', 'href' => '/how-it-works', 'variant' => 'on-dark-secondary', 'event' => 'for_shoppers_final_how_it_works_click' ),
+            array( 'label' => 'Start your request', 'href' => '/for-shoppers/start/', 'variant' => 'on-dark-primary', 'event' => 'for_shoppers_final_start_request_click' ),
+            array( 'label' => 'How Ensurance works', 'href' => '/how-ensurance-works/', 'variant' => 'on-dark-secondary', 'event' => 'for_shoppers_final_how_it_works_click' ),
         ),
         'microcopy' => 'One guided request · More potential insurance choice · Licensed review where available',
     ),

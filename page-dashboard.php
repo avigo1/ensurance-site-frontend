@@ -79,6 +79,12 @@ if ( ! is_user_logged_in() ) {
 		}
 	}
 
+	// Request-offer links must survive the login round-trip so the agent returns
+	// to the exact protected request they opened, not a generic dashboard state.
+	if ( ! empty( $_GET['request_id'] ) && is_string( $_GET['request_id'] ) ) {
+		$dashboard_args['request_id'] = sanitize_text_field( wp_unslash( $_GET['request_id'] ) );
+	}
+
 	$dashboard_target = home_url( '/dashboard/' );
 
 	if ( ! empty( $dashboard_args ) ) {

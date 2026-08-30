@@ -85,6 +85,10 @@ $countdown = ensurance_dashboard_countdown( $request['expires_at'] );
 ?>
 <h2 class="dash-request__title"><?php echo esc_html( sprintf( '%s coverage — %s', $request['coverage'], $request['county'] ) ); ?></h2>
 
+<?php if ( ! empty( $request['rate_label'] ) ) : ?>
+	<p class="dash-request__rate"><?php echo esc_html( $request['rate_label'] ); ?></p>
+<?php endif; ?>
+
 <?php
 /*
  * FACT TILES. A description list, because that is exactly what these are —
@@ -156,6 +160,10 @@ endif;
 
 	<?php wp_nonce_field( 'ensurance_dashboard_decide', 'dash_decide_nonce' ); ?>
 
+	<?php if ( ! empty( $request['request_id'] ) ) : ?>
+		<input type="hidden" name="dash_request_id" value="<?php echo esc_attr( $request['request_id'] ); ?>">
+	<?php endif; ?>
+
 	<?php // .btn / .btn-primary from assets/home.css — the site's own button, which is what the design's Button component renders at size md (48px, pill radius, medium weight). The spinner is hidden until the press and takes the button's own text color, so it can never drift from the label beside it. ?>
 	<button type="submit" class="btn btn-primary dash-request__accept" name="dash_decision" value="accept" aria-describedby="dash-request-note">
 		<span class="dash-request__spinner" aria-hidden="true"></span>Accept request
@@ -166,7 +174,7 @@ endif;
 		<span class="dash-request__spinner" aria-hidden="true"></span>Pass
 	</button>
 
-	<p class="dash-request__note" id="dash-request-note">Name, phone, and email unlock on accept. Passing removes it from your queue.</p>
+	<p class="dash-request__note" id="dash-request-note">Accept takes you to checkout. Shopper name, phone, and email unlock only after a successful purchase. Passing removes the request from your queue.</p>
 
 	<?php // Filled by assets/dashboard.js on the press. .sr-only (home.css) is position:absolute, so it is not a flex item in this row and takes none of its 12px gap. ?>
 	<p class="dash-request__status sr-only" role="status"></p>

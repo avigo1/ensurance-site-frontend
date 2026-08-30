@@ -42,11 +42,11 @@
  * it runs at 99 so it beats anything hooked at the default priority.
  */
 add_filter( 'wpseo_title', function () {
-    return 'Life Insurance Quote Request | Ensurance';
+    return 'Life Insurance Quote Help & Coverage Guide | Ensurance';
 } );
 
 add_filter( 'pre_get_document_title', function () {
-    return 'Life Insurance Quote Request | Ensurance';
+    return 'Life Insurance Quote Help & Coverage Guide | Ensurance';
 }, 99 );
 
 /**
@@ -86,7 +86,7 @@ $ensurance_svg_allowed = array(
 // §Trust-cue row beneath the form.
 $sq_cues = array(
     array( 'clock', 'About 3 minutes' ),
-    array( 'lock',  'Not broadly distributed' ),
+    array( 'lock',  'Controlled request process' ),
     array( 'user',  'Controlled licensed review' ),
 );
 
@@ -108,39 +108,64 @@ get_header( 'home' );
 ?>
 <main id="main" class="page-auto-quote page-life-quote">
 
-  <!-- ── Request (centered intro + framed form slot + trust cues) ──── -->
-  <section class="sq-request reveal" aria-label="Start your request">
-    <span class="sq-request__glow sq-request__glow--a" aria-hidden="true"></span>
-    <span class="sq-request__glow sq-request__glow--b" aria-hidden="true"></span>
-    <div class="sq-request__inner">
+  <!-- ── Life request ─────────────────────────────────────────────── -->
+  <?php
+  $ensurance_life_request_context = array(
+      'coverage_lock' => 'life',
+      'partner_id'    => '',
+      'referral_code' => '',
+      'eyebrow'       => 'Life insurance request',
+      'title'         => 'Start your life insurance request.',
+      'subcopy'       => 'Share a few focused details about the coverage you are looking for. Ensurance keeps your request organized and your contact information protected while it moves toward licensed review where available.',
+  );
+  get_template_part( 'template-parts/non-auto-request-form', null, $ensurance_life_request_context );
+  ?>
 
-      <div class="sq-request__intro">
-        <span class="eyebrow">Start your request</span>
-        <h1 class="sq-request__title">Start your life insurance request with more clarity.</h1>
-        <p class="sq-request__sub">Answer a few guided questions, organize your details, and move toward coverage options with more clarity and control. About three minutes.</p>
-      </div>
-
-      <!-- ── FORM SLOT ────────────────────────────────────────────────
-           Renders ONLY the Life Insurance Quote Request Ninja Form:
-           the [ninja_form] shortcode is extracted from this page's
-           editor content (falling back to form 11), so the page's
-           retired Gutenberg layout can never leak into the card. -->
-      <div class="sq-formslot">
-        <?php
-        while ( have_posts() ) :
-            the_post();
-            ensurance_sq_render_form( 11 );
-        endwhile;
-        ?>
-      </div>
-
-      <div class="sq-cues">
-        <?php foreach ( $sq_cues as $cue ) : ?>
-        <span class="trust-cue"><?php echo wp_kses( ensurance_home_icon( $cue[0], 16 ), $ensurance_svg_allowed ); ?><?php echo esc_html( $cue[1] ); ?></span>
-        <?php endforeach; ?>
-      </div>
-
+  <!-- ── Life insurance basics (consumer education) ───────────────── -->
+  <section class="sq-next reveal" aria-labelledby="life-basics-title">
+    <div class="sq-next__head">
+      <span class="eyebrow">Life insurance basics</span>
+      <h2 id="life-basics-title">What should you understand before choosing life insurance?</h2>
+      <p>Life insurance can help provide financial support to people who depend on you. The right type and amount depend on your situation, budget, and how long the need for protection may last.</p>
     </div>
+    <div class="sq-next__grid">
+      <div class="sq-next__item">
+        <span class="sq-next__badge"><?php echo wp_kses( ensurance_home_icon( 'file-text', 20 ), $ensurance_svg_allowed ); ?><span class="sq-next__num">01</span></span>
+        <div>
+          <p class="sq-next__title">Term and permanent policies work differently</p>
+          <p class="sq-next__body">Term life insurance covers a defined period and generally does not build cash value. Permanent or cash-value policies can include whole life, universal life, or variable life, with different costs, features, and long-term considerations.</p>
+        </div>
+      </div>
+      <div class="sq-next__item">
+        <span class="sq-next__badge"><?php echo wp_kses( ensurance_home_icon( 'user', 20 ), $ensurance_svg_allowed ); ?><span class="sq-next__num">02</span></span>
+        <div>
+          <p class="sq-next__title">Think about the financial responsibilities you want covered</p>
+          <p class="sq-next__body">Common questions include how much income others depend on, debts or a mortgage, education costs, final expenses, existing assets or insurance, and how long financial support may be needed.</p>
+        </div>
+      </div>
+      <div class="sq-next__item">
+        <span class="sq-next__badge"><?php echo wp_kses( ensurance_home_icon( 'shield-check', 20 ), $ensurance_svg_allowed ); ?><span class="sq-next__num">03</span></span>
+        <div>
+          <p class="sq-next__title">Mortgage protection is one possible need, not a separate replacement for broader planning</p>
+          <p class="sq-next__body">A mortgage may be one financial obligation you want life insurance to help address. Your broader need may also include income replacement, dependents, debts, education, or final expenses.</p>
+        </div>
+      </div>
+      <div class="sq-next__item">
+        <span class="sq-next__badge"><?php echo wp_kses( ensurance_home_icon( 'user', 20 ), $ensurance_svg_allowed ); ?><span class="sq-next__num">04</span></span>
+        <div>
+          <p class="sq-next__title">Beneficiaries should reflect your current wishes</p>
+          <p class="sq-next__body">A beneficiary is the person or entity designated to receive policy proceeds. Life changes such as marriage, divorce, births, adoptions, or deaths can be reasons to review beneficiary designations.</p>
+        </div>
+      </div>
+      <div class="sq-next__item">
+        <span class="sq-next__badge"><?php echo wp_kses( ensurance_home_icon( 'shield-check', 20 ), $ensurance_svg_allowed ); ?><span class="sq-next__num">05</span></span>
+        <div>
+          <p class="sq-next__title">Do not cancel existing coverage before replacement coverage is in force</p>
+          <p class="sq-next__body">If you already have life insurance, NAIC advises keeping the current policy until you have received and reviewed the new policy. Replacing coverage can have costs and should be considered carefully.</p>
+        </div>
+      </div>
+    </div>
+    <p class="sq-next__source"><a href="https://content.naic.org/consumer/life-insurance.htm" rel="noopener noreferrer">NAIC consumer life insurance guidance</a> &middot; <a href="https://content.naic.org/article/consumer-insight-what-type-life-insurance-right-you" rel="noopener noreferrer">NAIC: What type of life insurance is right for you?</a></p>
   </section>
 
   <!-- ── You're in control (brand callout) ────────────────────────── -->
@@ -149,7 +174,7 @@ get_header( 'home' );
       <span class="sq-callout__icon"><?php echo wp_kses( ensurance_home_icon( 'shield-check', 20 ), $ensurance_svg_allowed ); ?></span>
       <div>
         <p class="sq-callout__title">You're always in control</p>
-        <p class="sq-callout__body">Your request moves through a controlled process designed to reduce broad sharing, pressure, and unwanted contact. Starting a request does not commit you to buy coverage.</p>
+        <p class="sq-callout__body">Your protected request moves through the applicable controlled-access process supported by CATE™, the Controlled Access Trust Engine, with eligible licensed review where available. Starting a request does not commit you to buy coverage.</p>
       </div>
     </div>
   </section>

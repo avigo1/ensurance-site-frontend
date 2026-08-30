@@ -182,7 +182,7 @@ get_header( 'home' );
       <span class="sq-callout__icon"><?php echo wp_kses( ensurance_home_icon( 'shield-check', 20 ), $ensurance_svg_allowed ); ?></span>
       <div>
         <p class="sq-callout__title">More choice through a more controlled process</p>
-        <p class="sq-callout__body">Starting a request does not commit you to buy. Ensurance is designed to help you move toward available insurance options while reducing repeated forms, broad sharing, pressure, and unwanted contact.</p>
+        <p class="sq-callout__body">Your protected auto request moves through the applicable controlled-access process supported by CATE™, the Controlled Access Trust Engine, with eligible licensed review where available. Starting a request does not commit you to buy coverage.</p>
       </div>
     </div>
   </section>

@@ -10,9 +10,9 @@
  * Build / Phase 4 — Launch). Links resolve to 404 until those ship.
  */
 $footer_site_nav = array(
-    array( 'label' => 'How it works',      'href' => '/how-it-works' ),
-    array( 'label' => 'Coverage types',    'href' => '/coverage' ),
-    array( 'label' => 'Trust and privacy', 'href' => '/trust-and-privacy' ),
+    array( 'label' => 'How it works',      'href' => '/how-ensurance-works/' ),
+    array( 'label' => 'Coverage types',    'href' => '/insurance-coverage/' ),
+    array( 'label' => 'Trust and privacy', 'href' => '/trust-center/' ),
     array( 'label' => 'For agents',        'href' => '/for-agents' ),
 );
 

@@ -36,8 +36,8 @@
       <span></span><span></span><span></span>
     </button>
     <nav id="primary-nav" class="primary-nav" aria-label="Main navigation">
-      <a href="<?php echo esc_url( home_url( '/how-it-works' ) ); ?>">How it works</a>
-      <a href="<?php echo esc_url( home_url( '/coverage' ) ); ?>">Coverage types</a>
+      <a href="<?php echo esc_url( home_url( '/how-ensurance-works/' ) ); ?>">How it works</a>
+      <a href="<?php echo esc_url( home_url( '/insurance-coverage/' ) ); ?>">Coverage types</a>
       <a href="<?php echo esc_url( home_url( '/trust-center' ) ); ?>">Trust Center</a>
       <a href="<?php echo esc_url( home_url( '/for-agents' ) ); ?>">For agents</a>
       <?php if ( is_user_logged_in() ) : ?>
@@ -45,7 +45,7 @@
       <?php else : ?>
         <a class="nav-login" href="<?php echo esc_url( home_url( '/login' ) ); ?>" data-track="nav_agent_login_click" data-cta-text="Agent login">Agent login</a>
       <?php endif; ?>
-      <a class="nav-cta" href="<?php echo esc_url( home_url( '/auto-insurance-quote' ) ); ?>" data-track="cta_click_start_auto_quote_request" data-cta-text="Start My Auto Quote Request" data-page-type="homepage">Start My Auto Quote Request</a>
+      <a class="nav-cta" href="<?php echo esc_url( home_url( '/insurance-coverage/' ) ); ?>" data-track="cta_click_start_insurance_request" data-cta-text="Start an Insurance Request" data-page-type="sitewide">Start an Insurance Request</a>
     </nav>
   </div>
 </header>
