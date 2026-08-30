@@ -118,7 +118,7 @@ get_header( 'home' );
         <p class="pp-hero__sub">Welcome to Ensurance.com (the &ldquo;Site&rdquo;), owned and operated by Ensurance Incorporated (&ldquo;Ensurance.com,&rdquo; &ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;). Ensurance.com provides a structured insurance request platform designed to help Consumers organize insurance information and, when appropriate, connect with licensed insurance professionals or agencies.</p>
         <div class="pp-hero__meta">
           <span class="pp-meta-pill">Effective date: Aug 18, 2025</span>
-          <span class="pp-meta-pill">Last updated: Aug 08, 2026</span>
+          <span class="pp-meta-pill">Last updated: Aug 29, 2026</span>
         </div>
         <p class="pp-hero__fine">Prefer the plain-English overview first? <a href="<?php echo $pp_trust_url; ?>">Visit the Trust Center</a>.</p>
       </div>
@@ -221,11 +221,11 @@ get_header( 'home' );
           <span class="pp-section__n">4</span>
           <h2>Anticipating Legal Risk</h2>
         </div>
-        <p class="pp-p">Ensurance.com recognizes the importance of transparency to reduce legal exposure. Our platform:</p>
+        <p class="pp-p">Ensurance.com recognizes the importance of transparency about how information moves through our request process. Our platform:</p>
         <ul class="pp-list">
-          <li>Hosts <strong>public, user-generated content</strong>, such as agency profiles, reviews, and uploaded media that may contain personal information.</li>
-          <li>May collect <strong>behavioral and technical data</strong>, including search activity, location information, device identifiers, and engagement metrics.</li>
-          <li>Provides <strong>advertising opportunities</strong> and may share data with third-party partners in compliance with applicable privacy laws.</li>
+          <li>Receives information that Consumers and Agents choose to provide through insurance requests, account features, support, referrals, and other communications.</li>
+          <li>May collect <strong>behavioral and technical data</strong>, including site activity, approximate location information, device identifiers, and engagement metrics.</li>
+          <li>Uses service providers where needed to operate the Site, process requests, store data, provide analytics, support communications, and maintain security.</li>
         </ul>
         <p class="pp-p">We maintain a broad and detailed privacy framework to:</p>
         <ul class="pp-list">
@@ -253,10 +253,10 @@ get_header( 'home' );
           <li><strong>Sensitive Personal Information</strong> &ndash; voluntarily provided and relevant to platform use.</li>
           <li><strong>Reviews &amp; Moderation Data</strong> &ndash; information related to review submissions and safety checks (see <strong>Section 5.1</strong> for details).</li>
         </ul>
-        <p class="pp-p">We use this data for service delivery, personalization, advertising, analytics, fraud prevention, and compliance. We may share it with trusted third parties such as advertisers, content partners, service providers, and government authorities when lawful.</p>
+        <p class="pp-p">We use this data for service delivery, request processing, site improvement, analytics, fraud prevention, security, communications, and compliance. We may share it with service providers and government or regulatory authorities when lawful and necessary for those purposes.</p>
 
         <h3 class="pp-sub">5.1 Reviews &amp; Moderation Data</h3>
-        <p class="pp-p"><strong>What we collect when you submit a review.</strong> We collect the information you provide (e.g., name, email, rating, review text, photos) and technical data associated with the submission (e.g., IP address, approximate location derived from IP, device/browser details, timestamp, referral URL). We also create moderation records such as rule flags (spam/bot/phishing/PII), redaction notes, publish/decline decisions, and dispute correspondence.</p>
+        <p class="pp-p"><strong>What we collect if you submit a review through a review feature we make available.</strong> We may collect the information you provide (e.g., name, email, rating, review text, photos) and technical data associated with the submission (e.g., IP address, approximate location derived from IP, device/browser details, timestamp, referral URL). We may also create moderation records such as rule flags (spam/bot/phishing/PII), redaction notes, publish/decline decisions, and dispute correspondence.</p>
         <p class="pp-p"><strong>How do we use this information?</strong></p>
         <ul class="pp-list">
           <li>Operate and display the review feature</li>
@@ -265,7 +265,7 @@ get_header( 'home' );
           <li>Communicate with you about your submission (e.g., requests for clarification).</li>
           <li>Maintain security, improve moderation accuracy, and generate de-identified or aggregated insights about feature usage.</li>
         </ul>
-        <p class="pp-p"><strong>Public nature of reviews.</strong> Published reviews are visible to anyone who visits the Site (including Agents). Please do not include private information such as policy/claim numbers, phone/email, addresses, SSN/DOB, or payment data. We may redact such data and mark changes as <strong>[moderator redaction]</strong>.</p>
+        <p class="pp-p"><strong>Public nature of reviews.</strong> If a review feature is available and a review is published, that review may be visible to visitors to the Site. Please do not include private information such as policy/claim numbers, phone/email, addresses, SSN/DOB, or payment data. We may redact such data and mark changes as <strong>[moderator redaction]</strong>.</p>
         <p class="pp-p"><strong>Sources and categories.</strong> Sources include you (directly), your device/browser (automatically), and our hosting/anti-abuse providers (as service providers). Categories include identifiers (name, email, IP), internet/network activity (device, user agent, referral), coarse geolocation (from IP), audio/visual content (if uploaded), and inferences generated solely for abuse detection (e.g., spam risk scores).</p>
         <p class="pp-p"><strong>Sharing and service providers.</strong> We may disclose review and moderation data to vetted <strong>service providers</strong> (hosting, storage, anti-spam/moderation, email delivery) under contracts limiting their use to our instructions. We may also disclose information as required by law, to enforce our policies, or to protect rights and safety. We <strong>do not sell</strong> review or moderation data and <strong>do not share it for cross-context behavioral advertising</strong>.</p>
         <p class="pp-p"><strong>Automated tools &amp; human review.</strong> We use automated tools to flag likely spam/bot/phishing or policy issues; <strong>human moderators make the final decision</strong> in most cases. We do not make adverse decisions about you based solely on automated processing of review data.</p>
@@ -299,7 +299,7 @@ get_header( 'home' );
         <ul class="pp-list">
           <li>Enable core site functionality.</li>
           <li>Understand user behavior and improve our platform.</li>
-          <li>Provide relevant content and advertising.</li>
+          <li>Provide relevant site content and measure how our services are used.</li>
         </ul>
         <p class="pp-p">You can control cookies through your browser settings, though disabling them may limit some site functionality.</p>
       </section>
@@ -312,10 +312,10 @@ get_header( 'home' );
         </div>
         <p class="pp-p">We believe trust is earned through transparency and clear communication. Our privacy commitments help us:</p>
         <ul class="pp-list">
-          <li>Compete fairly in the insurance marketplace.</li>
           <li>Provide clarity about how your data is collected, used, and shared.</li>
-          <li>Maintain a policy that is defensible if reviewed by regulators or courts.</li>
-          <li>Reinforce our reputation as a trusted, compliant, and user-focused marketplace.</li>
+          <li>Support a controlled insurance request process with clear privacy expectations.</li>
+          <li>Maintain a policy that can be reviewed against applicable legal and regulatory requirements.</li>
+          <li>Reinforce our commitment to a trusted, user-focused starting point for insurance shopping.</li>
         </ul>
       </section>
 

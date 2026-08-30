@@ -46,7 +46,7 @@ $tc_schema = json_decode( <<<'JSON'
       "name": "Will my information be sent everywhere?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "No. Your request is handled through a more controlled process designed to reduce unnecessary exposure, broad sharing, and unwanted contact."
+        "text": "Ensurance does not use a public lead-blast model. A protected request follows the applicable controlled-access workflow, with eligible licensed review where available."
       }
     },
     {
@@ -133,10 +133,10 @@ $ensurance_svg_allowed = array(
 );
 
 // Resolved destinations.
-$privacy_url  = esc_url( home_url( '/privacy' ) );
-$hiw_url      = esc_url( home_url( '/how-it-works' ) );
-$coverage_url = esc_url( home_url( '/coverage' ) );
-$coverage_paths_url = esc_url( home_url( '/coverage/' ) ) . '#paths'; // Second section (coverage request paths) of the coverage page.
+$privacy_url  = esc_url( home_url( '/privacy-policy/' ) );
+$hiw_url      = esc_url( home_url( '/how-ensurance-works/' ) );
+$coverage_url = esc_url( home_url( '/insurance-coverage/' ) );
+$coverage_paths_url = esc_url( home_url( '/insurance-coverage/' ) ) . '#paths'; // Second section (coverage request paths) of the coverage page.
 
 // Table of contents — order mirrors the sections below.
 $tc_toc = array(
@@ -150,12 +150,12 @@ $tc_toc = array(
 );
 
 // Hero feature cues.
-$tc_cues = array( 'Controlled request process', 'Licensed review where available', 'Move toward quote options' );
+$tc_cues = array( 'Protected request process', 'CATE™ controlled access', 'Licensed review where available' );
 
 // §1 — Clarity, control & licensed review.
 $tc_clarity_lead = array(
-    array( 'Clarity',         'You start with clear, plain-English steps and realistic expectations, not a wall of forms or a noisy quote marketplace.' ),
-    array( 'Control',         'Your details move through a controlled request process designed to reduce unnecessary exposure, repeated entry, and confusion.' ),
+    array( 'Clarity',         'You start with clear, plain-English steps and realistic expectations, not a wall of repeated quote forms or unclear next steps.' ),
+    array( 'Control',         'Your details move through a protected request process supported by CATE™, the Controlled Access Trust Engine, to reduce unnecessary exposure, repeated entry, and confusion.' ),
     array( 'Licensed review', 'Your organized request may be reviewed by licensed agents, agencies, or approved partners where available.' ),
 );
 
@@ -171,14 +171,14 @@ $tc_review_lead = array(
     array( 'A licensed professional may review your request', 'Licensed agents, agencies, or approved partners may review your organized request where available.' ),
     array( 'One request, clearer context',                    'Your organized request gives licensed professionals clearer context before the next step.' ),
     array( 'Grounded in eligibility',                         'Review may consider location, coverage type, eligibility, carrier participation, and other relevant details.' ),
-    array( 'Not broadly shared',                              'Your request is handled through a more controlled process, not broadly posted or sent everywhere without context.' ),
+    array( 'Controlled licensed access',                     'Eligible licensed professionals may review a protected request through the applicable controlled-access workflow where available.' ),
 );
 
 // §4 — Reducing exposure (compare).
 $tc_compare_bad  = array(
     'Re-entering the same details across separate forms.',
     'Personal information requested before the process is clear.',
-    'Details sent broadly without clear context.',
+    'A public lead-blast path with little control over the next step.',
     'Pressure to decide before you understand your next step.',
 );
 $tc_compare_good = array(
@@ -190,7 +190,7 @@ $tc_compare_good = array(
 
 // §5 — A guided experience.
 $tc_guided_lead = array(
-    array( 'Controlled by design',  'Your organized request is handled through a more controlled process designed to reduce broad sharing and unwanted contact.' ),
+    array( 'Controlled by design',  'Your protected request moves through a controlled-access process supported by CATE™, with eligible licensed review where available.' ),
     array( 'One organized request', 'Everything you share stays together in one request, helping reduce repeated entry and confusion.' ),
     array( 'At your own pace',      'Starting a request is not a commitment to buy. Review available options or next steps when you are ready.' ),
 );
@@ -199,7 +199,7 @@ $tc_guided_lead = array(
 $tc_faq = array(
     array( 'What happens to my information when I start a request?', 'Your details are organized into one request so licensed review can happen with clearer context where available. The Privacy Policy explains the formal details of how your information is handled.' ),
     array( 'Who may review my request?', 'Where available, licensed agents, agencies, or approved partners may review your organized request and help identify quote options or a clearer next step.' ),
-    array( 'Will my information be sent everywhere?', 'No. Your request is handled through a more controlled process designed to reduce unnecessary exposure, broad sharing, and unwanted contact.' ),
+    array( 'Will my information be sent everywhere?', 'Ensurance does not use a public lead-blast model. A protected request follows the applicable controlled-access workflow, with eligible licensed review where available.' ),
     array( 'How does Ensurance help me move toward quote options?', 'Ensurance helps you start one guided quote request, organize your details, and move toward quote options where available. Quote options may come through licensed agents, agencies, or approved partners.' ),
     array( 'Can one request help me move toward multiple carrier options?', 'Yes, where available. Your organized request can give licensed professionals clearer context to review available carrier options without making you repeat the same details across separate forms.' ),
     array( 'Is starting a request a commitment to buy insurance?', 'No. Starting a request is free and does not require you to buy coverage. You can review available options or next steps at your own pace.' ),
@@ -338,7 +338,7 @@ get_header( 'home' );
       <section class="tc-section" id="guided">
         <div class="tc-section__head">
           <span class="tc-section__n">5</span>
-          <h2>A guided request experience, not a noisy quote marketplace.</h2>
+          <h2>A guided request experience built around clarity and controlled access.</h2>
         </div>
         <p class="tc-p">Start with clarity before moving forward. Your details move through a controlled request process built around organization, licensed review where available, and clearer next steps.</p>
         <?php $tc_render_lead( $tc_guided_lead ); ?>

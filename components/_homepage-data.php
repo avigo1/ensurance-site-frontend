@@ -31,7 +31,7 @@ return array(
         ),
         'actions' => array(
             array( 'label' => 'Start your request',   'href' => '/start',         'variant' => 'primary',   'event' => 'hero_start_request_click' ),
-            array( 'label' => 'How Ensurance works',  'href' => '/how-it-works',  'variant' => 'secondary', 'event' => 'hero_how_it_works_click' ),
+            array( 'label' => 'How Ensurance works',  'href' => '/how-ensurance-works/',  'variant' => 'secondary', 'event' => 'hero_how_it_works_click' ),
         ),
         'trust_line' => 'Structured request flow. Licensed review. Quote options where available.',
         'flow' => array(
@@ -110,13 +110,13 @@ return array(
         'eyebrow'  => 'Coverage types',
         'headline' => 'Start a guided request for the coverage you need.',
         'cards' => array(
-            // Note: auto coverage uses the canonical "/auto-insurance-quote" route, not "/auto-insurance".
-            array( 'title' => 'Auto insurance',     'body' => 'Start a guided auto request with a clearer path to available carrier options through licensed review.',     'href' => '/auto-insurance-quote', 'label' => 'Start auto request',     'event' => 'coverage_auto_click' ),
-            array( 'title' => 'Home insurance',     'body' => 'Start a guided home request with a clearer path to available carrier options through licensed review.',     'href' => '/home-insurance',       'label' => 'Start home request',     'event' => 'coverage_home_click' ),
-            array( 'title' => 'Renters insurance',  'body' => 'Start a guided renters request with a clearer path to available carrier options through licensed review.',  'href' => '/renters-insurance',    'label' => 'Start renters request',  'event' => 'coverage_renters_click' ),
-            array( 'title' => 'Life insurance',     'body' => 'Start a guided life request with a clearer path to available carrier options through licensed review.',     'href' => '/life-insurance-quote-3',       'label' => 'Start life request',     'event' => 'coverage_life_click' ),
-            array( 'title' => 'Business insurance', 'body' => 'Start a guided business request with a clearer path to available carrier options through licensed review.', 'href' => '/commercial-insurance-quote',   'label' => 'Start business request', 'event' => 'coverage_business_click' ),
-            array( 'title' => 'Health insurance',   'body' => 'Start a guided health request with a clearer path to available carrier options through licensed review.',   'href' => '/health-insurance',     'label' => 'Start health request',   'event' => 'coverage_health_click' ),
+            // Auto request CTAs use the current Coverage Hub request path.
+            array( 'title' => 'Auto insurance',     'body' => 'Start a guided auto request with a clearer path to available carrier options through licensed review.',     'href' => '/insurance-coverage/auto-insurance-quote-request/auto-insurance-quote/', 'label' => 'Start auto request',     'event' => 'coverage_auto_click' ),
+            array( 'title' => 'Home insurance',     'body' => 'Start a guided home request with a clearer path to available carrier options through licensed review.',     'href' => '/insurance-coverage/homeowners-insurance-quote-help-ensurance/',       'label' => 'Start home request',     'event' => 'coverage_home_click' ),
+            array( 'title' => 'Renters insurance',  'body' => 'Start a guided renters request with a clearer path to available carrier options through licensed review.',  'href' => '/insurance-coverage/renters-insurance-quote/',    'label' => 'Start renters request',  'event' => 'coverage_renters_click' ),
+            array( 'title' => 'Life insurance',     'body' => 'Start a guided life request with a clearer path to available carrier options through licensed review.',     'href' => '/insurance-coverage/life-insurance-quote/',  'label' => 'Start life request',     'event' => 'coverage_life_click' ),
+            array( 'title' => 'Business insurance', 'body' => 'Start a guided business request with a clearer path to available carrier options through licensed review.', 'href' => '/insurance-coverage/commercial-insurance-quote/',  'label' => 'Start business request', 'event' => 'coverage_business_click' ),
+            array( 'title' => 'Health insurance',   'body' => 'Start a guided health request with a clearer path to available carrier options through licensed review.',   'href' => '/insurance-coverage/health-insurance-quote-request/',     'label' => 'Start health request',   'event' => 'coverage_health_click' ),
         ),
     ),
 
@@ -173,7 +173,7 @@ return array(
         'body'     => 'Ensurance helps organize your information and create a clearer path to available quote options through licensed agents, agencies, or approved insurance partners.',
         'actions' => array(
             array( 'label' => 'Start your request',  'href' => '/start',         'variant' => 'primary',   'event' => 'final_start_request_click' ),
-            array( 'label' => 'See how it works',    'href' => '/how-it-works',  'variant' => 'secondary', 'event' => 'final_how_it_works_click' ),
+            array( 'label' => 'See how it works',    'href' => '/how-ensurance-works/',  'variant' => 'secondary', 'event' => 'final_how_it_works_click' ),
         ),
         'trust_line' => 'No pressure. Clearer steps. Licensed professional review.',
     ),

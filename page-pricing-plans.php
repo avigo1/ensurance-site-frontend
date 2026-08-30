@@ -101,9 +101,9 @@ $fa_svg_allowed = array(
 // --- Per-page FAQPage schema — mirrors the visible FAQ below verbatim. ---
 $fa_faq = array(
 	array( 'What is Founding Agent Access?', 'Founding Agent Access is an early agent access option for licensed insurance agents who want a more organized way to review shopper opportunities through Ensurance. Agents can create an agency profile, review eligible request details when available, and accept or pass before deciding whether to engage.' ),
-	array( 'Is Ensurance a lead buying platform?', 'No. Ensurance is not a bulk lead seller or quote-comparison site. Ensurance is building a more structured way for insurance shoppers and agents to connect around organized insurance quote requests.' ),
+	array( 'Is Ensurance a lead buying platform?', 'No. Ensurance uses a protected request model. CATE™, the Controlled Access Trust Engine, supports the applicable controlled-access workflow so eligible licensed professionals can review request context and accept or pass where available.' ),
 	array( 'What does the 60 Day Access include?', 'The 60 day access option includes an agency profile, access to eligible request previews when available, and the ability to accept or pass before engaging. This option may be available for selected agents while Ensurance opens access in selected states.' ),
-	array( 'What happens after the 60 day access period?', 'After the 60 day access period, you may choose to continue with Founding Agent Access at $29 per month.' ),
+	array( 'What happens after the 60 day access period?', 'After 60 days, Founding Agent Access continues at $29 per month unless canceled.' ),
 	array( 'What does the $29 per month plan include?', 'The $29 per month Founding Agent Access plan includes an agency profile, continued access to eligible shopper request previews when available, and the ability to accept or pass before engaging.' ),
 	array( 'Are shopper requests guaranteed?', 'No. Availability of shopper requests may vary by state, coverage type, shopper activity, and agent eligibility. Founding Agent Access does not guarantee request volume.' ),
 	array( 'Can I accept or pass on requests?', 'Yes. Ensurance is designed to give agents more control. Agents may review eligible request details and decide whether to accept or pass before engaging.' ),
@@ -112,24 +112,6 @@ $fa_faq = array(
 	array( 'Is Founding Agent Access available in every state?', 'Availability may vary by state and agent eligibility. Ensurance is opening access in selected states as shopper activity and agent coverage expand.' ),
 );
 
-$fa_faq_schema = array(
-	'@context'   => 'https://schema.org',
-	'@type'      => 'FAQPage',
-	'@id'        => home_url( '/pricing-plans/#faq' ),
-	'mainEntity' => array(),
-);
-foreach ( $fa_faq as $qa ) {
-	$fa_faq_schema['mainEntity'][] = array(
-		'@type'          => 'Question',
-		'name'           => $qa[0],
-		'acceptedAnswer' => array( '@type' => 'Answer', 'text' => $qa[1] ),
-	);
-}
-
-add_action( 'wp_head', function () use ( $fa_faq_schema ) {
-	echo '<script type="application/ld+json">' . wp_json_encode( $fa_faq_schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) . '</script>' . "\n";
-}, 20 );
-
 /**
  * Keep /pricing-plans/ out of search engines. Yoast owns the robots meta on
  * this site (see SEO note above), so force its output to noindex,nofollow
@@ -137,20 +119,31 @@ add_action( 'wp_head', function () use ( $fa_faq_schema ) {
  * where Yoast is inactive, so the directive is present either way.
  */
 add_filter( 'wpseo_robots', function () {
-	return 'noindex, nofollow';
+	return 'noindex, nofollow, nosnippet, noarchive';
 }, 999 );
 // Newer Yoast builds a robots array before stringifying it — cover that too.
 add_filter( 'wpseo_robots_array', function ( $robots ) {
-	$robots['index']  = 'noindex';
-	$robots['follow'] = 'nofollow';
+	$robots['index']      = 'noindex';
+	$robots['follow']     = 'nofollow';
+	$robots['nosnippet']  = 'nosnippet';
+	$robots['noarchive']  = 'noarchive';
 	return $robots;
 }, 999 );
 // Fallback for when Yoast is not emitting a robots tag on this request.
 add_action( 'wp_head', function () {
 	if ( ! defined( 'WPSEO_VERSION' ) ) {
-		echo '<meta name="robots" content="noindex, nofollow">' . "\n";
+		echo '<meta name="robots" content="noindex, nofollow, nosnippet, noarchive">' . "\n";
 	}
 }, 1 );
+add_action( 'send_headers', function () {
+	header( 'X-Robots-Tag: noindex, nofollow, nosnippet, noarchive', true );
+} );
+
+add_filter( 'wpseo_json_ld_output', '__return_false', 999 );
+add_action( 'wp_head', function () {
+	echo '<meta name="googlebot" content="noindex, nofollow, nosnippet, noarchive, noimageindex">' . "\n";
+	echo '<meta name="bingbot" content="noindex, nofollow, nosnippet, noarchive, noimageindex">' . "\n";
+}, 2 );
 
 $fa_disclaimer = 'Availability of shopper requests may vary by state, coverage type, shopper activity, and agent eligibility. Founding Agent Access does not guarantee request volume.';
 
@@ -212,8 +205,8 @@ get_header( 'home' );
 		<div class="fa-container">
 			<div class="fa-intro__wrap">
 				<span class="fa-eyebrow">Why Founding Agent Access exists</span>
-				<h2 id="fa-intro-title" class="fa-h2">A better, more trusted way for shoppers and agents to connect.</h2>
-				<p class="fa-lede">Ensurance is building a better, more trusted way for insurance shoppers and agents to connect around structured insurance quote requests. For shoppers, that means insurance quote help without the quote chaos. For agents, it means a better path to serious, organized shopper opportunities without bulk lead buying.</p>
+				<h2 id="fa-intro-title" class="fa-h2">A more controlled way to review protected shopper requests.</h2>
+				<p class="fa-lede">Ensurance organizes shopper insurance intent into protected requests. CATE™, the Controlled Access Trust Engine, supports the applicable controlled-access process so eligible licensed agents can review request context and decide whether to accept or pass where available.</p>
 				<p class="fa-lede">Founding Agent Access is designed for licensed agents who want an early position as Ensurance opens access in selected states.</p>
 			</div>
 		</div>
@@ -246,10 +239,10 @@ get_header( 'home' );
 						<?php endforeach; ?>
 					</ul>
 					<a class="fa-btn fa-btn--solid fa-btn--block" href="<?php echo esc_url( $fa_cta_60day ); ?>" data-event="plan_60_day_checkout_click">Start 60 day access <?php echo wp_kses( ensurance_fa_icon( 'arrow-right', 17 ), $fa_svg_allowed ); ?></a>
-					<p class="fa-plan__note">After the 60 day access period, you may choose to continue with Founding Agent Access at $29 per month.</p>
+					<p class="fa-plan__note">60 days at no cost. Then Founding Agent Access continues at $29 per month unless canceled.</p>
 					<div class="fa-consent">
 						<?php echo wp_kses( ensurance_fa_icon( 'lock', 13, 'fa-consent__icon' ), $fa_svg_allowed ); ?>
-						<span>By continuing, I understand this access is free for 60 days. After the 60 day access period, I may choose to continue with Founding Agent Access at $29 per month.</span>
+						<span>By continuing, I understand this access is free for 60 days and then continues at $29 per month unless canceled.</span>
 					</div>
 				</article>
 
@@ -360,7 +353,7 @@ get_header( 'home' );
 					array( 'file-text', 'Review eligible request details', 'When eligible shopper requests are available in your state or service area, you may be able to review request details before deciding whether to engage.' ),
 					array( 'check', 'Accept or pass', 'You choose whether the opportunity fits your agency.' ),
 					array( 'message', 'Engage when it makes sense', 'If you accept, you can move forward with the shopper-authorized opportunity.' ),
-					array( 'clock', 'Choose what comes next', 'After the 60 day access period, you may choose to continue with Founding Agent Access at $29 per month.' ),
+					array( 'clock', 'What happens after 60 days', 'Founding Agent Access continues at $29 per month unless canceled.' ),
 				);
 				foreach ( $fa_steps as $i => $s ) : ?>
 					<li class="fa-step">
@@ -415,7 +408,7 @@ get_header( 'home' );
 			<div class="fa-terms">
 				<div class="fa-terms__card">
 					<span class="fa-terms__tag">60 Day Access</span>
-					<p class="fa-terms__text">This access is free for 60 days. After the 60 day access period, you may choose to continue with Founding Agent Access at $29 per month.</p>
+					<p class="fa-terms__text">This access is free for 60 days. After 60 days, Founding Agent Access continues at $29 per month unless canceled.</p>
 				</div>
 				<div class="fa-terms__card">
 					<span class="fa-terms__tag">Founding Agent Access · $29 per month</span>

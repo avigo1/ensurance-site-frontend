@@ -253,8 +253,8 @@ get_header( 'home' );
     <div class="al-callout">
       <span class="al-callout__icon" aria-hidden="true"><?php echo wp_kses( ensurance_home_icon( 'shield-check', 20 ), $ensurance_svg_allowed ); ?></span>
       <div>
-        <p class="al-callout__title">Not bulk lead buying</p>
-        <p class="al-callout__body">Ensurance is not a bulk lead seller or quote comparison site. We are building a more structured way for insurance shoppers and agents to connect around organized quote requests.</p>
+        <p class="al-callout__title">Controlled request access</p>
+        <p class="al-callout__body">Ensurance uses a protected request model supported by CATE™, the Controlled Access Trust Engine. Eligible licensed professionals can review request context through the applicable controlled-access workflow where available.</p>
       </div>
     </div>
   </section>

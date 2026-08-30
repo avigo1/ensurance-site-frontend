@@ -42,11 +42,11 @@
  * it runs at 99 so it beats anything hooked at the default priority.
  */
 add_filter( 'wpseo_title', function () {
-    return 'Renters Insurance Quote Request | Ensurance';
+    return 'Renters Insurance Quote Help & Coverage Guide | Ensurance';
 } );
 
 add_filter( 'pre_get_document_title', function () {
-    return 'Renters Insurance Quote Request | Ensurance';
+    return 'Renters Insurance Quote Help & Coverage Guide | Ensurance';
 }, 99 );
 
 /**
@@ -86,7 +86,7 @@ $ensurance_svg_allowed = array(
 // §Trust-cue row beneath the form.
 $sq_cues = array(
     array( 'clock', 'About 3 minutes' ),
-    array( 'lock',  'Not broadly distributed' ),
+    array( 'lock',  'Controlled request process' ),
     array( 'user',  'Controlled licensed review' ),
 );
 
@@ -143,13 +143,45 @@ get_header( 'home' );
     </div>
   </section>
 
+  <!-- ── Renters insurance basics ─────────────────────────────────── -->
+  <section class="sq-next reveal" aria-labelledby="renters-basics-title">
+    <div class="sq-next__head">
+      <span class="eyebrow">Renters insurance basics</span>
+      <h2 id="renters-basics-title">What does renters insurance commonly cover?</h2>
+      <p>Renters insurance generally protects the renter's belongings and personal liability rather than the building itself. Exact coverage, limits, deductibles, and exclusions depend on the policy.</p>
+    </div>
+    <div class="sq-next__grid">
+      <div class="sq-next__item">
+        <span class="sq-next__badge"><?php echo wp_kses( ensurance_home_icon( 'file-text', 20 ), $ensurance_svg_allowed ); ?><span class="sq-next__num">01</span></span>
+        <div><p class="sq-next__title">Personal property</p><p class="sq-next__body">Coverage may help repair or replace belongings such as furniture, clothing, electronics, and other possessions after a covered loss.</p></div>
+      </div>
+      <div class="sq-next__item">
+        <span class="sq-next__badge"><?php echo wp_kses( ensurance_home_icon( 'user', 20 ), $ensurance_svg_allowed ); ?><span class="sq-next__num">02</span></span>
+        <div><p class="sq-next__title">Personal liability</p><p class="sq-next__body">Liability coverage may help if you are legally responsible for certain injuries to other people or damage to their property, subject to policy terms and limits.</p></div>
+      </div>
+      <div class="sq-next__item">
+        <span class="sq-next__badge"><?php echo wp_kses( ensurance_home_icon( 'shield-check', 20 ), $ensurance_svg_allowed ); ?><span class="sq-next__num">03</span></span>
+        <div><p class="sq-next__title">Additional living expenses</p><p class="sq-next__body">If a covered loss makes your rental unlivable, some policies can help with additional temporary living expenses, subject to limits.</p></div>
+      </div>
+      <div class="sq-next__item">
+        <span class="sq-next__badge"><?php echo wp_kses( ensurance_home_icon( 'file-text', 20 ), $ensurance_svg_allowed ); ?><span class="sq-next__num">04</span></span>
+        <div><p class="sq-next__title">Replacement cost vs. actual cash value matters</p><p class="sq-next__body">Replacement-cost coverage and actual-cash-value coverage can pay differently after a loss because actual cash value generally reflects depreciation.</p></div>
+      </div>
+      <div class="sq-next__item">
+        <span class="sq-next__badge"><?php echo wp_kses( ensurance_home_icon( 'lock', 20 ), $ensurance_svg_allowed ); ?><span class="sq-next__num">05</span></span>
+        <div><p class="sq-next__title">Your landlord's policy is different</p><p class="sq-next__body">A landlord's insurance generally protects the building, not the renter's personal belongings. Renters should review their own protection needs separately.</p></div>
+      </div>
+    </div>
+    <p class="sq-next__source"><a href="https://content.naic.org/article/renting-your-home-what-you-need-know-about-renters-insurance" rel="noopener noreferrer">NAIC renters insurance guidance</a> &middot; <a href="https://content.naic.org/article/consumer-insight-understanding-your-homeowners-or-renters-policy" rel="noopener noreferrer">NAIC policy guide</a></p>
+  </section>
+
   <!-- ── You're in control (brand callout) ────────────────────────── -->
   <section class="sq-control reveal" aria-label="You're in control">
     <div class="sq-callout" role="note">
       <span class="sq-callout__icon"><?php echo wp_kses( ensurance_home_icon( 'shield-check', 20 ), $ensurance_svg_allowed ); ?></span>
       <div>
         <p class="sq-callout__title">You're always in control</p>
-        <p class="sq-callout__body">Your request moves through a controlled process designed to reduce broad sharing, pressure, and unwanted contact. Starting a request does not commit you to buy coverage.</p>
+        <p class="sq-callout__body">Your protected request moves through a controlled-access process supported by CATE™, the Controlled Access Trust Engine. Starting a request does not commit you to buy coverage.</p>
       </div>
     </div>
   </section>

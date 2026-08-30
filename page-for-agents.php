@@ -27,14 +27,14 @@ $fa_schema = json_decode( <<<'JSON'
   "@type": "FAQPage",
   "@id": "https://www.ensurance.com/for-agents#faq",
   "mainEntity": [
-    { "@type": "Question", "name": "What is Ensurance for agents?", "acceptedAnswer": { "@type": "Answer", "text": "Ensurance helps licensed agents and agencies review organized shopper insurance requests with better context. Shopper intent is gathered through a guided request flow and prepared for licensed review where available." } },
-    { "@type": "Question", "name": "How is Ensurance different from buying bulk insurance leads?", "acceptedAnswer": { "@type": "Answer", "text": "Ensurance is not a bulk lead seller. Shopper requests are organized with context before review, instead of arriving as low-context contact records circulated broadly." } },
+    { "@type": "Question", "name": "What is Ensurance for agents?", "acceptedAnswer": { "@type": "Answer", "text": "Ensurance gives eligible licensed professionals a more controlled way to review protected shopper insurance requests. CATE, the Controlled Access Trust Engine, supports the request flow so context can be reviewed before engagement where the applicable product workflow allows." } },
+    { "@type": "Question", "name": "How is Ensurance different from buying bulk insurance leads?", "acceptedAnswer": { "@type": "Answer", "text": "Ensurance is built around protected shopper requests rather than batches of contact records. Eligible licensed professionals review available request context through the applicable controlled-access workflow and can decide whether to engage where supported." } },
     { "@type": "Question", "name": "Does Ensurance guarantee request volume?", "acceptedAnswer": { "@type": "Answer", "text": "No. Ensurance does not guarantee request volume. The focus is shopper context and request quality, and availability can vary." } },
     { "@type": "Question", "name": "Does Ensurance guarantee close rates or sales?", "acceptedAnswer": { "@type": "Answer", "text": "No. Ensurance does not guarantee appointments, exclusivity, close rates, sales, or outcomes. Results depend on fit, carrier appetite, eligibility, and agent follow-up." } },
     { "@type": "Question", "name": "What kind of information may be included in a shopper request?", "acceptedAnswer": { "@type": "Answer", "text": "An organized shopper request may include the coverage type a shopper is exploring and the context they shared through guided questions, so you can review it before the first conversation." } },
     { "@type": "Question", "name": "Who can request agent access?", "acceptedAnswer": { "@type": "Answer", "text": "Licensed insurance agents and agencies can request access. Participation is reviewed against professional standards and is not guaranteed." } },
     { "@type": "Question", "name": "Can agents review multiple coverage types?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Organized shopper requests can span common coverage types, including auto, home, renters, life, business, and health, where available." } },
-    { "@type": "Question", "name": "How does Ensurance protect shopper trust?", "acceptedAnswer": { "@type": "Answer", "text": "Shopper requests move through a controlled process designed to reduce broad sharing, preserve context, and support a better first conversation." } },
+    { "@type": "Question", "name": "How does Ensurance protect shopper trust?", "acceptedAnswer": { "@type": "Answer", "text": "Protected shopper requests move through the applicable controlled-access process supported by CATE, with eligible licensed review where available." } },
     { "@type": "Question", "name": "How does Ensurance support the shopper quote request journey?", "acceptedAnswer": { "@type": "Answer", "text": "Ensurance helps shoppers start guided quote requests, organize their details, and move toward quote options where available through licensed agents, agencies, or approved partners." } },
     { "@type": "Question", "name": "How do I get started?", "acceptedAnswer": { "@type": "Answer", "text": "Request agent access using the form on this page. Provide your professional details for review against participation standards." } }
   ]
@@ -93,13 +93,13 @@ $ensurance_svg_allowed = array(
 
 // Resolved destinations (use the site's real slugs).
 $fa_home_url     = esc_url( home_url( '/' ) );
-$fa_hiw_url      = esc_url( home_url( '/how-it-works' ) );
-$fa_coverage_url = esc_url( home_url( '/coverage' ) );
+$fa_hiw_url      = esc_url( home_url( '/how-ensurance-works/' ) );
+$fa_coverage_url = esc_url( home_url( '/insurance-coverage/' ) );
 $fa_trust_url    = esc_url( home_url( '/trust-center' ) );
 $fa_contact_url  = esc_url( home_url( '/contact' ) );
-$fa_pricing_url  = esc_url( home_url( '/pricing-plans/' ) );
+$fa_pricing_url  = esc_url( home_url( '/for-agents/agent-access/' ) );
 // Primary "Get started" destination for every agent CTA on this page — agents
-// pick a plan on /pricing-plans/ rather than routing through the contact form.
+// review current Founding Agent Access options on the existing agent-access page.
 $fa_access_form_url = $fa_pricing_url;
 
 // Hero request-preview rows (label / value).
@@ -113,7 +113,7 @@ $fa_request_rows = array(
 // §Context — bulk-leads vs. structured-request compare.
 $fa_compare_bad = array(
     'Contact details with limited shopper context.',
-    'The same shopper record circulated broadly.',
+    'A contact record distributed without a controlled review path.',
     'Pressure to chase volume instead of fit.',
     'Shopper trust weakened before the first conversation.',
 );
@@ -128,14 +128,14 @@ $fa_compare_good = array(
 $fa_controlled = array(
     array( 'file-text',    'One organized request',        'Shopper details are organized into one request, with context in one place instead of scattered across forms.' ),
     array( 'shield-check', 'Prepared for licensed review', 'Each request is prepared so licensed agents, agencies, or approved partners can review shopper context where available.' ),
-    array( 'lock',         'Controlled request access',    'Requests move through a controlled process designed to reduce broad sharing and preserve shopper trust.' ),
+    array( 'lock',         'CATE™ controlled access',      'Protected requests move through the applicable controlled-access workflow so eligible licensed professionals can review context before deciding whether to engage where supported.' ),
 );
 
 // §Flow — connected stepper (icon / title / body).
 $fa_flow = array(
     array( 'user',         'Shopper starts a request',     'A shopper answers guided questions about the coverage they are exploring, one step at a time.' ),
     array( 'file-text',    'Ensurance organizes it',       'Their details are organized into one clearer request before follow-up begins.' ),
-    array( 'shield-check', 'Licensed review',              'Licensed agents, agencies, or approved partners may review the request with clearer shopper context where available.' ),
+    array( 'shield-check', 'Preview and decide',           'Where the product workflow supports it, eligible licensed professionals can review protected request context and accept or pass before the applicable access step.' ),
     array( 'message',      'A better first conversation',  'You begin with context already in hand, where requests are available, instead of starting from a low-context contact record.' ),
 );
 
@@ -166,8 +166,8 @@ $fa_access_cues = array(
 
 // §FAQ — mirrors the FAQPage schema above.
 $fa_faq = array(
-    array( 'What is Ensurance for agents?', 'Ensurance helps licensed agents and agencies review organized shopper insurance requests with better context. Shopper intent is gathered through a guided request flow and prepared for licensed review where available.' ),
-    array( 'How is Ensurance different from buying bulk insurance leads?', 'Ensurance is not a bulk lead seller. Shopper requests are organized with context before review, instead of arriving as low-context contact records circulated broadly.' ),
+    array( 'What is Ensurance for agents?', 'Ensurance gives eligible licensed professionals a more controlled way to review protected shopper insurance requests. CATE™, the Controlled Access Trust Engine, supports the request flow so context can be reviewed before engagement where the applicable product workflow allows.' ),
+    array( 'How is Ensurance different from buying bulk insurance leads?', 'Ensurance is built around protected shopper requests rather than batches of contact records. Eligible licensed professionals review available request context through the applicable controlled-access workflow and can decide whether to engage where supported.' ),
     array( 'Does Ensurance guarantee request volume?', 'No. Ensurance does not guarantee request volume. The focus is shopper context and request quality, and availability can vary.' ),
     array( 'Does Ensurance guarantee close rates or sales?', 'No. Ensurance does not guarantee appointments, exclusivity, close rates, sales, or outcomes. Results depend on fit, carrier appetite, eligibility, and agent follow-up.' ),
     array( 'What kind of information may be included in a shopper request?', 'An organized shopper request may include the coverage type a shopper is exploring and the context they shared through guided questions, so you can review it before the first conversation.' ),
@@ -197,7 +197,7 @@ get_header( 'home' );
         <div class="fa-hero__col">
           <span class="fa-kicker fa-kicker--dot"><span class="fa-kicker__dot" aria-hidden="true"></span> For agents</span>
           <h1 class="fa-hero__title">Better-context shopper requests, prepared for licensed review.</h1>
-          <p class="fa-hero__sub">Ensurance helps organize shopper insurance intent into clearer requests that licensed agents, agencies, or approved partners can review with more context before engaging.</p>
+          <p class="fa-hero__sub">Ensurance organizes shopper insurance intent into protected requests. Where the applicable workflow supports it, eligible licensed professionals can preview request context and decide whether to engage before the applicable access step.</p>
           <div class="fa-hero__actions">
             <a class="btn btn-primary btn--lg" href="<?php echo $fa_pricing_url; ?>" data-track="cta_click_get_started" data-cta-text="Get started" data-page-type="for_agents">Get started <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 18 ), $ensurance_svg_allowed ); ?></a>
             <a class="fa-hero__ghost" href="<?php echo $fa_hiw_url; ?>">See how shopper requests work</a>
@@ -278,8 +278,8 @@ get_header( 'home' );
       <span class="fa-panel__glow" aria-hidden="true"></span>
       <div class="fa-panel__head">
         <span class="fa-kicker">Controlled by design</span>
-        <h2 class="fa-panel__title">A controlled request process built for better review.</h2>
-        <p class="fa-panel__sub">A more controlled way to review shopper insurance requests with clearer context and stronger trust.</p>
+        <h2 class="fa-panel__title">CATE™ supports a controlled request process built for better review.</h2>
+        <p class="fa-panel__sub">CATE™, the Controlled Access Trust Engine, supports how protected requests move through the applicable controlled-access process, with clearer context before eligible licensed review.</p>
       </div>
       <div class="fa-panel__cards">
         <?php foreach ( $fa_controlled as $card ) : ?>

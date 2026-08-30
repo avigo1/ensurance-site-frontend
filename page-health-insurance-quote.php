@@ -28,8 +28,31 @@
  * emitted through wp_head(); this template outputs none of them.
  */
 
-/**
- * Inline Lucide icon renderer (shared with the other Calm Intelligence page
+// Keep the Health request page's SEO signals product-specific.
+add_filter( 'wpseo_title', function () {
+    return 'Health Insurance Quote Request | Ensurance';
+} );
+add_filter( 'pre_get_document_title', function () {
+    return 'Health Insurance Quote Request | Ensurance';
+}, 99 );
+add_filter( 'wpseo_metadesc', function () {
+    return 'Start a health insurance request with Ensurance. Answer guided questions and move toward licensed review where available.';
+} );
+add_filter( 'wpseo_opengraph_title', function () {
+    return 'Health Insurance Quote Request';
+} );
+add_filter( 'wpseo_opengraph_desc', function () {
+    return 'Start a health insurance request with Ensurance. Answer guided questions and move toward licensed review where available.';
+} );
+add_filter( 'wpseo_schema_webpage', function( $data ) {
+    if ( is_array( $data ) ) {
+        $data['name'] = 'Health Insurance Quote Request | Ensurance';
+        $data['description'] = 'Start a health insurance request with Ensurance. Answer guided questions and move toward licensed review where available.';
+    }
+    return $data;
+} );
+
+/** (shared with the other Calm Intelligence page
  * templates via the function_exists guard). Only one page template renders per
  * request, so this copy carries the full glyph set this page needs.
  * Paths from Lucide (ISC license).
@@ -65,7 +88,7 @@ $ensurance_svg_allowed = array(
 // §Trust-cue row beneath the form.
 $sq_cues = array(
     array( 'clock', 'About 3 minutes' ),
-    array( 'lock',  'Not broadly distributed' ),
+    array( 'lock',  'Controlled request process' ),
     array( 'user',  'Controlled licensed review' ),
 );
 
@@ -128,7 +151,7 @@ get_header( 'home' );
       <span class="sq-callout__icon"><?php echo wp_kses( ensurance_home_icon( 'shield-check', 20 ), $ensurance_svg_allowed ); ?></span>
       <div>
         <p class="sq-callout__title">You're always in control</p>
-        <p class="sq-callout__body">Your request moves through a controlled process designed to reduce broad sharing, pressure, and unwanted contact. Starting a request does not commit you to buy coverage.</p>
+        <p class="sq-callout__body">Your protected request moves through the applicable controlled-access process supported by CATE™, the Controlled Access Trust Engine, with eligible licensed review where available. Starting a request does not commit you to buy coverage.</p>
       </div>
     </div>
   </section>

@@ -20,7 +20,7 @@ $hiw_schema = json_decode( <<<'JSON'
 {
   "@context": "https://schema.org",
   "@type": "FAQPage",
-  "@id": "https://www.ensurance.com/how-it-works#faq",
+  "@id": "https://www.ensurance.com/how-ensurance-works/#faq",
   "mainEntity": [
     {
       "@type": "Question",
@@ -59,7 +59,7 @@ $hiw_schema = json_decode( <<<'JSON'
       "name": "Is Ensurance a quote-comparison site?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "No. Ensurance is not an instant quote-comparison engine. It structures one request for licensed review, rather than auctioning your details for automated price lists."
+        "text": "No. Ensurance is not an instant quote-comparison engine. It structures one protected request and supports a more controlled path to licensed review where available."
       }
     },
     {
@@ -67,7 +67,7 @@ $hiw_schema = json_decode( <<<'JSON'
       "name": "Will my information be sent everywhere?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "No. Your structured request is shared for licensed review where appropriate. It is not blasted out to a long list of companies."
+        "text": "Ensurance does not use a public lead-blast model. Your protected request follows the applicable controlled-access workflow, with eligible licensed review where available."
       }
     }
   ]
@@ -117,7 +117,7 @@ $ensurance_svg_allowed = array(
 // "Start your request" CTAs deep-link to the coverage page's second
 // section (#paths — the coverage-type picker), which auto-scrolls into view
 // under the sticky header via scroll-margin-top in assets/coverage.css.
-$start_url = esc_url( home_url( '/coverage' ) ) . '#paths';
+$start_url = esc_url( home_url( '/insurance-coverage/' ) ) . '#paths';
 
 // Timeline steps — verbatim from the design's PROCESS array.
 $hiw_steps = array(
@@ -139,7 +139,7 @@ $hiw_why = array(
     array( 'icon' => 'user',         'title' => 'A person reviews your request', 'body' => 'Licensed agents and agencies understand coverage, eligibility, and the carriers available to them.' ),
     array( 'icon' => 'file-text',    'title' => 'One request, multiple carriers', 'body' => 'A licensed professional can review several available carriers from your single structured request.' ),
     array( 'icon' => 'shield-check', 'title' => 'Built around eligibility',       'body' => 'Review considers what you actually qualify for, so the options you see are grounded in reality.' ),
-    array( 'icon' => 'ban',          'title' => 'No detail blasting',            'body' => 'Your request is reviewed where appropriate — not auctioned to a long list of companies.' ),
+    array( 'icon' => 'ban',          'title' => 'Controlled request access',    'body' => 'Your protected request moves through the applicable controlled-access process, with licensed review where available.' ),
 );
 
 // "Quote options" dark-panel cards.
@@ -165,7 +165,7 @@ get_header( 'home' );
       <div class="hiw-hero__center">
         <p class="eyebrow">How it works</p>
         <h1 class="hiw-hero__title">How Ensurance Works.</h1>
-        <p class="hiw-hero__sub">Start one guided quote request. Ensurance organizes your details so licensed agents, agencies, or approved partners can review your request and help you move toward quote options where available.</p>
+        <p class="hiw-hero__sub">Start one guided insurance request. Ensurance organizes it as a protected request and supports a more controlled path through CATE™, the Controlled Access Trust Engine, toward eligible licensed review where available.</p>
         <div class="hero-actions">
           <a class="btn btn-primary btn--lg" href="<?php echo $start_url; ?>" data-track="cta_click_start_auto_quote_request" data-cta-text="Start your request" data-page-type="how_it_works">Start your request <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 18 ), $ensurance_svg_allowed ); ?></a>
           <a class="btn btn-ghost btn--lg" href="#process">See the process</a>
@@ -308,11 +308,11 @@ get_header( 'home' );
       </details>
       <details>
         <summary>Is Ensurance a quote-comparison site?</summary>
-        <p>No. Ensurance isn't an instant quote-comparison engine. It structures one request for licensed review, rather than auctioning your details for automated price lists.</p>
+        <p>No. Ensurance isn't an instant quote-comparison engine. It structures one protected request and supports a more controlled path to licensed review where available.</p>
       </details>
       <details>
         <summary>Will my information be sent everywhere?</summary>
-        <p>No. Your structured request is shared for licensed review where appropriate. It isn't blasted out to a long list of companies.</p>
+        <p>Ensurance does not use a public lead-blast model. Your protected request follows the applicable controlled-access workflow, with eligible licensed review where available.</p>
       </details>
     </div>
   </section>

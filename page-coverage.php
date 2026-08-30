@@ -28,7 +28,7 @@ $cov_paths = array(
         'body'    => 'Start a guided auto insurance quote request for your vehicles, drivers, timing, and coverage needs.',
         'points'  => array( 'Vehicles and drivers on your policy', 'Liability, collision, and comprehensive coverage', 'Multi-car, teen drivers, and bundling details' ),
         'aside'   => 'Answer a few guided questions and organize the details needed to move toward auto quote options where available.',
-        'href'    => '/auto-insurance-quote',
+        'href'    => '/insurance-coverage/auto-insurance-quote-request/auto-insurance-quote/',
         'anchor'  => 'Start auto request',
         'popular' => true,
     ),
@@ -40,7 +40,7 @@ $cov_paths = array(
         'body'    => 'Start a guided home insurance request for the property you own and organize the details needed for review.',
         'points'  => array( 'The home you own and its structure', 'Belongings and personal liability', 'Dwelling, contents, and available add-ons' ),
         'aside'   => 'Answer guided questions so your home insurance request can be reviewed with clearer context where available.',
-        'href'    => '/homeowners-insurance-quote',
+        'href'    => '/insurance-coverage/homeowners-insurance-quote-help-ensurance/',
         'anchor'  => 'Start home request',
         'popular' => false,
     ),
@@ -52,7 +52,7 @@ $cov_paths = array(
         'body'    => 'Start a guided renters insurance request and organize the details for your rented home.',
         'points'  => array( 'Belongings in your rented home', 'Personal liability coverage', 'Renter-focused coverage needs' ),
         'aside'   => 'Answer guided questions and organize renters insurance details with less repeated entry.',
-        'href'    => '/renters-insurance-quote',
+        'href'    => '/insurance-coverage/renters-insurance-quote/',
         'anchor'  => 'Start renters request',
         'popular' => false,
     ),
@@ -64,7 +64,7 @@ $cov_paths = array(
         'body'    => 'Start a guided life insurance request and share basic details so your needs can be reviewed with more context.',
         'points'  => array( 'Term and permanent life insurance needs', 'Coverage for the people who depend on you', 'Review with a licensed professional where available' ),
         'aside'   => 'Answer guided questions so your life insurance request can move forward with a clearer next step.',
-        'href'    => '/life-insurance-quote',
+        'href'    => '/insurance-coverage/life-insurance-quote/',
         'anchor'  => 'Start life request',
         'popular' => false,
     ),
@@ -76,7 +76,7 @@ $cov_paths = array(
         'body'    => 'Start a guided business insurance request and organize details about the coverage your work may need.',
         'points'  => array( 'Liability for your operations', 'Property, equipment, and continuity needs', 'Industry and business details for review' ),
         'aside'   => 'Answer guided questions so your business insurance request can be reviewed with clearer context.',
-        'href'    => '/commercial-insurance-quote',
+        'href'    => '/insurance-coverage/commercial-insurance-quote/',
         'anchor'  => 'Start business request',
         'popular' => false,
     ),
@@ -101,8 +101,8 @@ $cov_faq = array(
     array( 'q' => 'Do I need to know exactly what coverage I need?', 'a' => 'No. Choose the insurance type that fits your situation, then answer guided questions one step at a time. You do not need to know every coverage detail before you begin.' ),
     array( 'q' => 'Who reviews my coverage request?', 'a' => 'Where available, licensed agents, agencies, or approved partners may review your organized request and help identify quote options or a clearer next step.' ),
     array( 'q' => 'Will I receive quotes for every coverage type?', 'a' => 'Not always. Quote options depend on location, coverage type, eligibility, carrier participation, and licensed review.' ),
-    array( 'q' => 'How is Ensurance different from quote-comparison sites?', 'a' => 'Ensurance is not built around showing a noisy grid of quotes or sending your information broadly. Ensurance helps you start one guided quote request, organize your details, and move toward quote options with more clarity and control.' ),
-    array( 'q' => 'Will my information be sent everywhere?', 'a' => 'No. Your request is handled through a more controlled process designed to reduce unnecessary exposure, broad sharing, and unwanted contact.' ),
+    array( 'q' => 'How is Ensurance different from quote-comparison sites?', 'a' => 'Ensurance starts with one guided request rather than an instant grid of automated quotes. Your protected request follows the applicable controlled-access workflow toward eligible licensed review where available.' ),
+    array( 'q' => 'Will my information be sent everywhere?', 'a' => 'Ensurance does not use a public lead-blast model. Your request follows the applicable controlled-access workflow, and eligible licensed professionals may be able to review a protected request where available.' ),
     array( 'q' => 'What happens after I choose a coverage type?', 'a' => 'You begin one guided request for that coverage type. Ensurance organizes your details and helps move your request toward licensed review or a clearer next step where available.' ),
 );
 
@@ -136,8 +136,8 @@ add_action( 'wp_head', function () use ( $cov_paths, $cov_faq ) {
         '@graph'   => array(
             array(
                 '@type'       => 'WebPage',
-                '@id'         => home_url( '/coverage' ),
-                'url'         => home_url( '/coverage' ),
+                '@id'         => home_url( '/insurance-coverage/' ),
+                'url'         => home_url( '/insurance-coverage/' ),
                 'name'        => $page_title,
                 'description' => $page_desc,
             ),
@@ -145,7 +145,7 @@ add_action( 'wp_head', function () use ( $cov_paths, $cov_faq ) {
                 '@type'           => 'BreadcrumbList',
                 'itemListElement' => array(
                     array( '@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => home_url( '/' ) ),
-                    array( '@type' => 'ListItem', 'position' => 2, 'name' => 'Coverage types', 'item' => home_url( '/coverage' ) ),
+                    array( '@type' => 'ListItem', 'position' => 2, 'name' => 'Coverage types', 'item' => home_url( '/insurance-coverage/' ) ),
                 ),
             ),
             array(
@@ -217,7 +217,7 @@ $cov_hero_trust = array(
 $cov_compare_bad = array(
     'Re-entering the same details across separate forms.',
     'Personal information requested before the process is clear.',
-    'Details sent broadly without clear context.',
+    'A public lead-blast path with little control over the next step.',
     'Pressure to decide before you understand your next step.',
 );
 $cov_compare_good = array(
@@ -229,7 +229,7 @@ $cov_compare_good = array(
 
 // "Controlled by design" dark-panel cards.
 $cov_flow_cards = array(
-    array( 'icon' => 'lock',      'title' => 'Handled through a controlled process', 'body' => 'Your request is organized before review and designed to reduce unnecessary exposure and unwanted contact.' ),
+    array( 'icon' => 'lock',      'title' => 'Supported by CATE™ controlled access', 'body' => 'Your protected request is organized before review and moves through the applicable controlled-access process, with eligible licensed review where available.' ),
     array( 'icon' => 'file-text', 'title' => 'One organized request',                'body' => 'Everything you share stays together in one request, helping reduce repeated entry and confusion.' ),
     array( 'icon' => 'user',      'title' => 'Reviewed where available',             'body' => 'Licensed agents, agencies, or approved partners may review your request and help identify available next steps.' ),
 );
@@ -258,7 +258,7 @@ get_header( 'home' );
       <p class="cov-hero__sub">Ensurance helps shoppers choose a guided insurance quote request path for auto, home, renters, life, business, or health insurance, organized for licensed review where available.</p>
       <div class="hero-actions">
         <a class="btn btn-primary btn--lg" href="<?php echo esc_attr( $paths_anchor ); ?>" data-track="cta_click_choose_coverage" data-cta-text="Choose your coverage type" data-page-type="coverage">Choose your coverage type <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 18 ), $ensurance_svg_allowed ); ?></a>
-        <a class="btn btn-ghost btn--lg" href="<?php echo esc_url( home_url( '/how-it-works' ) ); ?>">How Ensurance works</a>
+        <a class="btn btn-ghost btn--lg" href="<?php echo esc_url( home_url( '/how-ensurance-works/' ) ); ?>">How Ensurance works</a>
       </div>
       <div class="cov-hero__trust">
         <?php foreach ( $cov_hero_trust as $cue ) : ?>
@@ -383,7 +383,7 @@ get_header( 'home' );
         <?php endforeach; ?>
       </div>
       <div class="cov-flow__links">
-        <a href="<?php echo esc_url( home_url( '/how-it-works' ) ); ?>" data-track="how_it_works_click" data-page-type="coverage">How Ensurance works <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 16 ), $ensurance_svg_allowed ); ?></a>
+        <a href="<?php echo esc_url( home_url( '/how-ensurance-works/' ) ); ?>" data-track="how_it_works_click" data-page-type="coverage">How Ensurance works <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 16 ), $ensurance_svg_allowed ); ?></a>
         <a class="cov-flow__link-accent" href="<?php echo esc_url( home_url( '/trust-center' ) ); ?>" data-track="trust_privacy_click" data-page-type="coverage">Read Trust and Privacy <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 16 ), $ensurance_svg_allowed ); ?></a>
       </div>
     </div>

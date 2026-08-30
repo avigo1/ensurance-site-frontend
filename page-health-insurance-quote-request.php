@@ -26,6 +26,30 @@
  * the two can never drift.
  */
 
+// Separate the Health authority page from the nested transactional request page.
+add_filter( 'wpseo_title', function () {
+    return 'Health Insurance Affordability & Coverage Guide | Ensurance';
+} );
+add_filter( 'pre_get_document_title', function () {
+    return 'Health Insurance Affordability & Coverage Guide | Ensurance';
+}, 99 );
+add_filter( 'wpseo_metadesc', function () {
+    return 'Learn what can affect health insurance affordability in 2026, how Marketplace savings work, and what to prepare before starting an organized request.';
+} );
+add_filter( 'wpseo_opengraph_title', function () {
+    return 'Health Insurance Affordability & Coverage Guide';
+} );
+add_filter( 'wpseo_opengraph_desc', function () {
+    return 'Learn what can affect health insurance affordability in 2026, how Marketplace savings work, and what to prepare before starting an organized request.';
+} );
+add_filter( 'wpseo_schema_webpage', function( $data ) {
+    if ( is_array( $data ) ) {
+        $data['name'] = 'Health Insurance Affordability & Coverage Guide | Ensurance';
+        $data['description'] = 'Learn what can affect health insurance affordability in 2026, how Marketplace savings work, and what to prepare before starting an organized request.';
+    }
+    return $data;
+} );
+
 /**
  * Inline Lucide icon renderer (shared with the other Calm Intelligence page
  * templates via the function_exists guard). Only one page template renders per
@@ -66,30 +90,30 @@ $ensurance_svg_allowed = array(
 
 // Resolved destinations (use the site's real slugs, like the Auto page — the
 // standalone design's /trust-and-privacy placeholder maps to /trust-center here).
-$hq_hiw_url      = esc_url( home_url( '/how-it-works' ) );
-$hq_coverage_url = esc_url( home_url( '/coverage' ) );
-$hq_trust_url    = esc_url( home_url( '/trust-center' ) );
-// "Start health request" routes to the health insurance quote funnel.
-$hq_start_url    = esc_url( home_url( '/health-insurance-quote' ) );
+$hq_hiw_url      = esc_url( home_url( '/how-ensurance-works/' ) );
+$hq_coverage_url = esc_url( home_url( '/insurance-coverage/' ) );
+$hq_trust_url    = esc_url( home_url( '/trust-center/' ) );
+// "Start health request" routes to the published health request page.
+$hq_start_url    = esc_url( home_url( '/insurance-coverage/health-insurance-quote-request/health-insurance-quote-help/' ) );
 
 // §Hero — trust cues (icon / label).
 $hq_cues = array(
-    array( 'shield-check', 'Reviewed by licensed professionals' ),
-    array( 'user',         'A person, not an automated list' ),
+    array( 'shield-check', 'Licensed review where available' ),
     array( 'layers',       'One organized request' ),
-    array( 'lock',         'Shared only where appropriate' ),
+    array( 'user',         'A clearer next step' ),
+    array( 'lock',         'Controlled request process' ),
 );
 
 // §The bigger picture — health-enrollment stat band.
 $hq_stat_lead = array(
-    'label' => 'Record enrollment',
-    'value' => '24.3M',
-    'body'  => 'people enrolled in ACA Marketplace coverage for 2025 — a record high for the fourth year in a row.',
-    'src'   => 'Source: KFF analysis of CMS data, 2025',
+    'label' => '2026 Marketplace enrollment',
+    'value' => '23.1M',
+    'body'  => 'consumers selected or were automatically re-enrolled in Marketplace coverage during the 2026 Open Enrollment Period.',
+    'src'   => 'Source: CMS 2026 Open Enrollment Report',
 );
 $hq_stats = array(
-    array( '4 in 5', 'HealthCare.gov consumers could find a plan for $10 or less a month after tax credits.', 'CMS, 2025' ),
-    array( '1 in 7', 'Americans have signed up for coverage through the Marketplace since the ACA passed.', 'CMS, 2025' ),
+    array( '46%', 'of 2026 Marketplace enrollees had household incomes between 100% and 150% of the federal poverty level.', 'CMS, 2026' ),
+    array( '5%', 'fewer consumers enrolled during the 2026 Open Enrollment Period than during the 2025 period.', 'CMS, 2026' ),
 );
 
 // §What your health request may include — cards (icon / title / body / points).
@@ -112,7 +136,7 @@ $hq_steps = array(
 $hq_review = array(
     array( 'user',      'A licensed professional, not a robot', 'Licensed professionals review available options where applicable — a person decides what may fit your situation.' ),
     array( 'file-text', 'One organized request',                'Your coverage details stay together as a single request, so nothing important is missing or repeated.' ),
-    array( 'lock',      'Shared only where appropriate',        'Your structured health request is reviewed where appropriate — not auctioned to a long list of companies.' ),
+    array( 'lock',      'CATE™ controlled access',        'Your protected health request moves through the applicable controlled-access process supported by CATE™, the Controlled Access Trust Engine, with review by eligible licensed professionals where available.' ),
 );
 
 // §FAQ — also feeds the FAQPage JSON-LD below.
@@ -138,7 +162,7 @@ add_action( 'wp_head', function () use ( $hq_faq ) {
     $schema = array(
         '@context'   => 'https://schema.org',
         '@type'      => 'FAQPage',
-        '@id'        => home_url( '/health-insurance-quote-request' ) . '#faq',
+        '@id'        => home_url( '/insurance-coverage/health-insurance-quote-request/' ) . '#faq',
         'mainEntity' => $entities,
     );
     $flags = JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE;
@@ -155,8 +179,8 @@ get_header( 'home' );
     <span class="hq-hero__glow hq-hero__glow--b" aria-hidden="true"></span>
     <div class="hq-hero__inner">
       <span class="hq-pill"><?php echo wp_kses( ensurance_home_icon( 'heart-pulse', 14 ), $ensurance_svg_allowed ); ?> Health insurance</span>
-      <h1 class="hq-hero__title">Your health is personal. So is the <span class="hq-accent">right coverage</span>.</h1>
-      <p class="hq-hero__sub">Skip the form-after-form maze. Answer a few guided questions once, and Ensurance organizes one health request for a licensed professional to review — surfacing available options where applicable, at a pace that's entirely yours.</p>
+      <h1 class="hq-hero__title">Health insurance help, with a <span class="hq-accent">clearer starting point</span>.</h1>
+      <p class="hq-hero__sub">Answer a few guided questions once. Ensurance organizes one health request for licensed review where available, so you can understand the next step without repeating the same information across multiple forms.</p>
       <div class="hq-hero__actions">
         <a class="btn btn-primary btn--lg" href="<?php echo $hq_start_url; ?>" data-track="cta_click_start_health_quote_request" data-cta-text="Start health request" data-page-type="health_insurance">Start health request <?php echo wp_kses( ensurance_home_icon( 'arrow-right', 18 ), $ensurance_svg_allowed ); ?></a>
         <a class="btn btn-ghost btn--lg" href="<?php echo $hq_hiw_url; ?>" data-track="hero_how_it_works_click" data-cta-text="How Ensurance works" data-page-type="health_insurance">How Ensurance works</a>
@@ -173,8 +197,8 @@ get_header( 'home' );
   <section class="hq-section hq-section--lead reveal" aria-label="The bigger picture">
     <div class="hq-head">
       <span class="eyebrow">The bigger picture</span>
-      <h2>More people are shopping for health coverage than ever.</h2>
-      <p>Health insurance shopping is at record highs — and it shouldn't start with the same details typed into form after form. Ensurance structures one request, ready for licensed review.</p>
+      <h2>Marketplace enrollment remains high in 2026.</h2>
+      <p>CMS reports that 23.1 million consumers selected or were automatically re-enrolled in Marketplace coverage for 2026. That is about 1.2 million fewer than 2025, but still about 1.7 million more than 2024 and 6.8 million more than 2023. Ensurance helps organize one health insurance request for licensed review where available.</p>
     </div>
     <div class="hq-stats">
       <div class="hq-stat-lead">
@@ -195,6 +219,13 @@ get_header( 'home' );
       </div>
     </div>
     <p class="hq-stats__note">Figures reflect national ACA Marketplace data and describe the broader market, not Ensurance results. Availability, eligibility, and licensed review determine which options may be available — quotes and savings are not guaranteed.</p>
+
+    <div class="hq-callout" role="note" aria-label="How affordability works in 2026">
+      <h3>What can make health insurance more affordable in 2026?</h3>
+      <p>Marketplace premium tax credits are based on household information and expected income. HealthCare.gov currently states that households with income between 100% and 400% of the federal poverty level qualify for the premium tax credit in all states, and that the Marketplace is the only place to receive that credit.</p>
+      <p>The additional pandemic-era savings ended on December 31, 2025, so people who still qualify for savings may pay more for a Marketplace plan in 2026 than they did in 2025. Eligibility and the amount of any tax credit depend on the household information submitted through the Marketplace.</p>
+      <p><a href="https://www.healthcare.gov/glossary/premium-tax-credit/" rel="noopener noreferrer">HealthCare.gov: Premium tax credit</a> &middot; <a href="https://www.healthcare.gov/lower-costs/save-on-monthly-premiums/" rel="noopener noreferrer">HealthCare.gov: Saving on monthly premiums</a> &middot; <a href="https://www.cms.gov/files/document/health-insurance-exchanges-2026-open-enrollment-report.pdf" rel="noopener noreferrer">CMS: 2026 Open Enrollment Report</a></p>
+    </div>
   </section>
 
   <!-- ── What your health request may include (cards) ─────────────── -->
