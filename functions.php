@@ -7967,7 +7967,7 @@ add_action('wp_footer', function() { ?>
         '<input type="checkbox" class="form-check-input custom-checkbox" id="ageConsentCheckbox" required>' +
         '<label class="form-check-label custom-label" for="ageConsentCheckbox">' +
             'I confirm I am at least 18 years old and I accept Ensurance.com\'s ' +
-            '<a href="/privacy-policy/" target="_blank" rel="noopener noreferrer">Terms of Service</a>' +
+            '<a href="/terms-of-use/" target="_blank" rel="noopener noreferrer">Terms of Use</a>' +
             ' and ' +
             '<a href="/privacy-policy/" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.' +
         '</label></div>').insertAfter(jQuery('textarea[name="field_message"]').closest('div'));
