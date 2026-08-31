@@ -7504,6 +7504,30 @@ function ensurance_terms_of_use_assets() {
 add_action('wp_enqueue_scripts', 'ensurance_terms_of_use_assets', 20);
 
 /**
+ * Terms of Use — guarantee the template body class.
+ *
+ * WordPress only adds `page-template-page-terms-of-use-php` to the body when
+ * the template is explicitly assigned to the page (_wp_page_template). This
+ * page is served through the `page-{slug}.php` hierarchy instead, so that
+ * class is absent and the body keeps Kadence's dark base — the parent-theme
+ * background defense at the top of assets/terms-of-use.css is scoped to it,
+ * and /privacy-policy only works because its template IS assigned.
+ *
+ * Add the class ourselves so the defense fires regardless of what the page's
+ * template setting happens to be in a given environment (staging and
+ * production carry different page trees).
+ */
+function ensurance_terms_of_use_body_class( $classes ) {
+    if ( is_page_template('page-terms-of-use.php') || is_page('terms-of-use') ) {
+        if ( ! in_array( 'page-template-page-terms-of-use-php', $classes, true ) ) {
+            $classes[] = 'page-template-page-terms-of-use-php';
+        }
+    }
+    return $classes;
+}
+add_filter( 'body_class', 'ensurance_terms_of_use_body_class' );
+
+/**
  * Contact form backend — REST endpoint + wp_mail + stored copy.
  *
  * The /contact form (page-contact.php) submits via fetch() to
