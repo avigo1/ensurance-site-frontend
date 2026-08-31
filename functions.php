@@ -7446,6 +7446,64 @@ function ensurance_privacy_policy_assets() {
 add_action('wp_enqueue_scripts', 'ensurance_privacy_policy_assets', 20);
 
 /**
+ * Terms of Use page (/terms-of-use) — Calm Intelligence legal document.
+ *
+ * Sibling of ensurance_privacy_policy_assets above, and the same isolation
+ * pattern as the other Calm Intelligence pages: drop the shared marketing
+ * bundle, load the homepage foundation (fonts + home.css/js), then the
+ * page-specific layer (assets/terms-of-use.css / terms-of-use.js) on top.
+ * Scoped to this template / slug only, so no other page is affected.
+ */
+function ensurance_terms_of_use_assets() {
+    if ( ! is_page_template('page-terms-of-use.php')
+        && ! is_page('terms-of-use') ) {
+        return;
+    }
+
+    // Drop the shared marketing bundle so it cannot fight this design.
+    wp_dequeue_style('ensurance-marketing');
+    wp_dequeue_script('ensurance-marketing');
+    wp_dequeue_style('ensurance-marketing-fonts');
+
+    // Shared Calm Intelligence type system + base (same as the homepage).
+    wp_enqueue_style(
+        'ensurance-home-fonts',
+        'https://fonts.googleapis.com/css2?family=Albert+Sans:wght@700;800;900&family=Rubik:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap',
+        array(),
+        null
+    );
+    wp_enqueue_style(
+        'ensurance-home',
+        get_stylesheet_directory_uri() . '/assets/home.css',
+        array(),
+        filemtime(get_stylesheet_directory() . '/assets/home.css')
+    );
+    wp_enqueue_script(
+        'ensurance-home',
+        get_stylesheet_directory_uri() . '/assets/home.js',
+        array(),
+        filemtime(get_stylesheet_directory() . '/assets/home.js'),
+        true
+    );
+
+    // Page-specific layer — loaded AFTER home.css/home.js via dependency.
+    wp_enqueue_style(
+        'ensurance-terms-of-use',
+        get_stylesheet_directory_uri() . '/assets/terms-of-use.css',
+        array('ensurance-home'),
+        filemtime(get_stylesheet_directory() . '/assets/terms-of-use.css')
+    );
+    wp_enqueue_script(
+        'ensurance-terms-of-use',
+        get_stylesheet_directory_uri() . '/assets/terms-of-use.js',
+        array('ensurance-home'),
+        filemtime(get_stylesheet_directory() . '/assets/terms-of-use.js'),
+        true
+    );
+}
+add_action('wp_enqueue_scripts', 'ensurance_terms_of_use_assets', 20);
+
+/**
  * Contact form backend — REST endpoint + wp_mail + stored copy.
  *
  * The /contact form (page-contact.php) submits via fetch() to
